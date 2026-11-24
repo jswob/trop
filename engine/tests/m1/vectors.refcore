@@ -172636,7 +172636,7 @@ ask k4: bal(konto, 2026-12-31) in k4, rate[q1] in k4
 
 
 ask k15: bal(konto, 2026-12-31) as if {d0 = 5}
-,,1:1,68:refused: LOAD-UNIT the pin of d0 is int, not date (r_s_k15.tally:5)
+,,1:1,97:refused: LOAD-UNIT 5 and date have different units (a value of the wrong type) (r_s_k15.tally:5)
 ,32:fixes/g13/r_s_model_with_r_s_k16,9:fixes-g13,101:run r_s_model.tally r_s_k23.tally r_s_k24.tally r_s_k25.tally r_s_k3.tally r_s_k4.tally r_s_k16.tally,2276:15:r_s_model.tally,1055:model sites
   tally 2
   on 2026-03-01
@@ -172960,7 +172960,7 @@ ask k4: bal(konto, 2026-12-31) in k4, rate[q1] in k4
 
 
 ask k18: n1 + n1 as if {n1 = 2026-01-01}
-,,1:1,68:refused: LOAD-UNIT the pin of n1 is date, not int (r_s_k18.tally:5)
+,,1:1,79:refused: LOAD-UNIT a value of the wrong type: a date for int (r_s_k18.tally:5)
 ,32:fixes/g13/r_s_model_with_r_s_k19,9:fixes-g13,101:run r_s_model.tally r_s_k23.tally r_s_k24.tally r_s_k25.tally r_s_k3.tally r_s_k4.tally r_s_k19.tally,2311:15:r_s_model.tally,1055:model sites
   tally 2
   on 2026-03-01
@@ -173284,7 +173284,7 @@ ask k4: bal(konto, 2026-12-31) in k4, rate[q1] in k4
 
 
 ask k20: fee as if {fee = 3.00 USD}
-,,1:1,73:refused: LOAD-UNIT money in an undeclared currency USD (r_s_k20.tally:5)
+,,1:1,81:refused: LOAD-UNIT 3.00 USD and money PLN have different units (r_s_k20.tally:5)
 ,32:fixes/g13/r_s_model_with_r_s_k21,9:fixes-g13,101:run r_s_model.tally r_s_k23.tally r_s_k24.tally r_s_k25.tally r_s_k3.tally r_s_k4.tally r_s_k21.tally,2276:15:r_s_model.tally,1055:model sites
   tally 2
   on 2026-03-01
@@ -173392,7 +173392,7 @@ ask k4: bal(konto, 2026-12-31) in k4, rate[q1] in k4
 
 
 ask k21: txt as if {txt = 5}
-,,1:1,69:refused: LOAD-UNIT the pin of txt is int, not text (r_s_k21.tally:5)
+,,1:1,97:refused: LOAD-UNIT 5 and text have different units (a value of the wrong type) (r_s_k21.tally:5)
 ,32:fixes/g13/r_s_model_with_r_s_k22,9:fixes-g13,101:run r_s_model.tally r_s_k23.tally r_s_k24.tally r_s_k25.tally r_s_k3.tally r_s_k4.tally r_s_k22.tally,2335:15:r_s_model.tally,1055:model sites
   tally 2
   on 2026-03-01

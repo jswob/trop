@@ -1,0 +1,31 @@
+model none_eq
+  tally 2
+  on 2026-06-30
+  start 2026-01-01
+  end 2026-12-31
+
+source s "probe"
+unit PLN: currency minor 0.01
+index ks = [a, b, c]
+index st = [single, married]
+input status[k in ks]: key st
+input lim[k in ks]: int
+input five: int
+
+ask q_eq: status[k] == married for k in ks
+ask q_ne: status[k] != married for k in ks
+ask q_cnt: count(k in ks where status[k] == married)
+ask q_num: count(k in ks where lim[k] == five)
+ask q_in: count(k in ks where status[k] in [married])
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  status[a] = married "s"
+  status[b] = single "s"
+  status[c] = none "s"
+  lim[a] = 5 "s"
+  lim[b] = 6 "s"
+  lim[c] = none "s"
+  five = 5 "s"

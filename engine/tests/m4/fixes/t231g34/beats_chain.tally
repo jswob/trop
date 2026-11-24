@@ -1,0 +1,32 @@
+model beats_chain
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+
+source s "invented"
+
+input top_on: bool
+input mid_on: bool
+input two: int
+input three: int
+
+def d: int
+  rule base = 1
+  rule mid beats base = two when mid_on
+  rule top beats mid = three when top_on
+
+ask q1: d
+ask q2: d with top_on = false
+ask q3: d with mid_on = false
+ask q4: d with top_on = false, mid_on = false
+ask e1: explain d
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  top_on = true "s"
+  mid_on = true "s"
+  two = 2 "s"
+  three = 3 "s"

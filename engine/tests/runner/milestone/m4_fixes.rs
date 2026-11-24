@@ -18,7 +18,7 @@ mod tests {
 
     /// The groups this target tests, one `#[test]` each: refcore's (`fixes-…`) and the
     /// spec's (`spec-…`).
-    const GROUPS: [&str; 39] = [
+    const GROUPS: [&str; 40] = [
         "fixes-g1",
         "fixes-g2",
         "fixes-g2fix",
@@ -44,6 +44,7 @@ mod tests {
         "fixes-p43",
         "fixes-t231g1",
         "fixes-t231g2",
+        "fixes-t231g34",
         "fixes-t231rv1",
         "fixes-t231rv2",
         "fixes-traced",
@@ -397,6 +398,19 @@ mod tests {
     #[test]
     fn m4_fixes_t231rv1() {
         group_holds(VECTORS, "fixes-t231rv1");
+    }
+
+    /// tally 2.3.1's groups 3 and 4 and the writer's W2d on the fifth pin (#259), refcore's
+    /// bytes from the writer's new tests (`m4/fixes/t231g34/`): R3, a pin is a row of its
+    /// target (`pinrow`, `p5_b3`, `p4_holeone`); R5, keys and periods are points (`points`,
+    /// `keys`, `a5_none`); S21 and S22 (`a6_inv`, `a10_zero`, `b1_reads`); the law date and the
+    /// cut on one line (`lawpin`, `lawpin_q4`, `_q5`, `_q7`, `lawclock`); the singletons
+    /// (`none_eq`, `tuple`, `beats_chain`, `beats_ver`, `order_cycle`, `axis_pins`); a
+    /// made-to-exist instance's day (`i3_later`). Left out: value asks only (rulings 21), and
+    /// the link class (`dl_chk5`, the lead's change of 2026-11-24).
+    #[test]
+    fn m4_fixes_t231g34() {
+        group_holds(VECTORS, "fixes-t231g34");
     }
 
     /// tally 2.3.1 G1's and G2's fix reviews (`tmp/spec-2.3.1/inputs/review-g1fix.md`,

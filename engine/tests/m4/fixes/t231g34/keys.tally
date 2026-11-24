@@ -1,0 +1,44 @@
+model keys
+  tally 2
+  on 2026-06-30
+  start 2026-01-01
+  end 2026-12-31
+
+source s "probe"
+unit PLN: currency minor 0.01
+index tri = year 2026..2035 by 3
+index yrs = year 2026..2035
+index tens = 10..50 by 10
+index qs = month 2026-01..2026-12 by 3
+input y: year
+input mm: month
+input t[k in tri]: int
+input w[k in tens]: int
+
+ask a1: k + 1 for k in tri
+ask a2: y - k for k in tri
+ask a3: k + (y - k) for k in tri
+ask a4: k - j for k in tri, j in yrs where j == y
+ask a5: j + (k - j) for k in tri, j in yrs where j == y
+ask b1: k + 1 for k in tens
+ask b2: w[k + 1] for k in tens
+ask b3: w[k + 10] for k in tens where k < 50
+ask b4: k - j for k in tens, j in tens where j == 10
+ask c1: check y == k for k in tri where k == 2029
+ask c2: check mm == q for q in qs where q == 2026-04
+ask c3: q - mm for q in qs
+ask c4: q + 1 for q in qs
+ask c5: check q == q + 1 for q in qs where q == 2026-04
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  y = 2027 "s"
+  mm = 2026-02 "s"
+  t[2026] = 1 "s"
+  w[10] = 1 "s"
+  w[20] = 2 "s"
+  w[30] = 3 "s"
+  w[40] = 4 "s"
+  w[50] = 5 "s"

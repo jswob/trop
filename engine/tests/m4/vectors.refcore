@@ -198850,7 +198850,7 @@ ask m_same: check month_of(d0) == month_of(d0)
 ask m_differ: check month_of(d1) == month_of(d0)
 ask q_differ: check quarter_of(d2) == quarter_of(d0)
 ask y_differ: check year_of(d0) == year_of(d2)
-,,1:0,83:m_differ: differs: month_of(d1) = 2024-03, month_of(d0) = 2024-02
+,,1:0,97:m_differ: differs: month_of(d1) = 2024-03, month_of(d0) = 2024-02, difference 1
   cut 2026-01-01
 ,21:items/months/q_differ,11:items-paper,31:run months.tally --ask q_differ,482:12:months.tally,461:model months
   tally 2
@@ -198876,7 +198876,7 @@ ask m_same: check month_of(d0) == month_of(d0)
 ask m_differ: check month_of(d1) == month_of(d0)
 ask q_differ: check quarter_of(d2) == quarter_of(d0)
 ask y_differ: check year_of(d0) == year_of(d2)
-,,1:0,87:q_differ: differs: quarter_of(d2) = 2026-Q4, quarter_of(d0) = 2024-Q1
+,,1:0,102:q_differ: differs: quarter_of(d2) = 2026-Q4, quarter_of(d0) = 2024-Q1, difference 11
   cut 2026-01-01
 ,21:items/months/y_differ,11:items-paper,31:run months.tally --ask y_differ,482:12:months.tally,461:model months
   tally 2
@@ -198902,7 +198902,7 @@ ask m_same: check month_of(d0) == month_of(d0)
 ask m_differ: check month_of(d1) == month_of(d0)
 ask q_differ: check quarter_of(d2) == quarter_of(d0)
 ask y_differ: check year_of(d0) == year_of(d2)
-,,1:0,75:y_differ: differs: year_of(d0) = 2024, year_of(d2) = 2026
+,,1:0,90:y_differ: differs: year_of(d0) = 2024, year_of(d2) = 2026, difference -2
   cut 2026-01-01
 ,21:items/explain/e_flows,12:items-walked,29:run plain.tally --ask e_flows,770:11:plain.tally,750:model ex_plain
   tally 2
@@ -201710,7 +201710,7 @@ version v
   hi = 100 PLN "s"
   stp = 10 PLN "s"
   tg = 50 PLN "s"
-,,1:0,1069:q_ax (k = k1, j = j1) [mode = low]: 2.00 PLN
+,,1:0,1265:q_ax (k = k1, j = j1) [mode = low]: 2.00 PLN
   pinned: b[k] = c[k, j] for k in ks, j in js
   reading: mode = low
   law date 2026-03-01, cut 2026-10-25
@@ -201734,8 +201734,13 @@ q_ax (k = k2, j = j1) [mode = high]: 16.00 PLN
   pinned: b[k] = c[k, j] + x for k in ks, j in js
   reading: mode = high
   law date 2026-03-01, cut 2026-10-25
-q_ax (k = k2, j = j2) [mode = *]: ?"which c?" (c[k2, j2])
+q_ax (k = k2, j = j2) [mode = low]: ?"which c?" (c[k2, j2])
   pinned: b[k] = c[k, j] for k in ks, j in js
+  reading: mode = low
+  law date 2026-03-01, cut 2026-10-25
+q_ax (k = k2, j = j2) [mode = high]: ?"which c?" (c[k2, j2])
+  pinned: b[k] = c[k, j] + x for k in ks, j in js
+  reading: mode = high
   law date 2026-03-01, cut 2026-10-25
 ,23:fixes/g1/p3_memo/q_expl,8:fixes-g1,30:run p3_memo.tally --ask q_expl,1640:13:p3_memo.tally,1617:model p3
   tally 2
@@ -202097,7 +202102,7 @@ version v
   c[k1] = 1 PLN "s"
   c[k2] = ?"which c?" "s"
   x = 5 PLN "s"
-,,1:0,387:q_ax (k = k1) [mode = low]: 2.00 PLN
+,,1:0,559:q_ax (k = k1) [mode = low]: 2.00 PLN
   pinned: b[k] = c[k] for k in ks
   reading: mode = low
   law date 2026-03-01, cut 2026-10-25
@@ -202105,8 +202110,13 @@ q_ax (k = k1) [mode = high]: 12.00 PLN
   pinned: b[k] = c[k] + x for k in ks
   reading: mode = high
   law date 2026-03-01, cut 2026-10-25
-q_ax (k = k2) [mode = *]: ?"which c?" (c[k2])
+q_ax (k = k2) [mode = low]: ?"which c?" (c[k2])
   pinned: b[k] = c[k] for k in ks
+  reading: mode = low
+  law date 2026-03-01, cut 2026-10-25
+q_ax (k = k2) [mode = high]: ?"which c?" (c[k2])
+  pinned: b[k] = c[k] + x for k in ks
+  reading: mode = high
   law date 2026-03-01, cut 2026-10-25
 ,23:fixes/g1/p5_axhole/q_hi,8:fixes-g1,30:run p5_axhole.tally --ask q_hi,999:15:p5_axhole.tally,975:model p5
   tally 2
@@ -202243,8 +202253,13 @@ version v
   c[k1] = 1 PLN "s"
   c[k2] = ?"which c?" "s"
   x = 5 PLN "s"
-,,1:0,110:q_axc [mode = *]: ?"which c?" (c[k2])
+,,1:0,274:q_axc [mode = low]: ?"which c?" (c[k2])
   pinned: b[k] = c[k] for k in ks
+  reading: mode = low
+  law date 2026-03-01, cut 2026-10-25
+q_axc [mode = high]: ?"which c?" (c[k2])
+  pinned: b[k] = c[k] + x for k in ks
+  reading: mode = high
   law date 2026-03-01, cut 2026-10-25
 ,25:fixes/g1/p7_explnest/q_e1,8:fixes-g1,32:run p7_explnest.tally --ask q_e1,716:17:p7_explnest.tally,690:model p7
   tally 2
@@ -202506,7 +202521,7 @@ version v
   pi = 7 "s"
   rj[j1] = 4 %/year "s"
   rj[j2] = 6 %/year "s"
-,,1:0,130:q_need: (refused: RUN-DOMAIN accrue: 0 1/year is not a rate, refused: RUN-DOMAIN accrue: 0 1/year is not a rate)
+,,1:0,50:q_need: (0.11 /year, 0.11 /year)
   cut 2026-10-25
 ,20:fixes/g1/a6_inv/q_ip,8:fixes-g1,27:run a6_inv.tally --ask q_ip,1102:12:a6_inv.tally,1080:model a6
   tally 2
@@ -202633,7 +202648,7 @@ version v
   hi = 20 %/year "s"
   st = 1 %/year "s"
   tg = 0.105 "s"
-,,1:0,75:q_p: refused: RUN-DOMAIN periodic: 0 1/year is not a rate
+,,1:0,33:q_p: 0.11 /year
   cut 2026-10-25
 ,19:fixes/g1/a10_zero/q,8:fixes-g1,26:run a10_zero.tally --ask q,775:14:a10_zero.tally,752:model a10
   tally 2
@@ -202673,7 +202688,7 @@ version v
   tg = 30 PLN "s"
   d0 = 2026-01-01 "s"
   d1 = 2027-01-01 "s"
-,,1:0,83:q: (0 PLN, refused: RUN-DOMAIN accrue: 0.01 1/year is not a rate)
+,,1:0,40:q: (0 PLN, 0.03 /year)
   cut 2026-10-25
 ,22:fixes/g1/a10_zero/q_zs,8:fixes-g1,29:run a10_zero.tally --ask q_zs,775:14:a10_zero.tally,752:model a10
   tally 2
@@ -202713,7 +202728,7 @@ version v
   tg = 30 PLN "s"
   d0 = 2026-01-01 "s"
   d1 = 2027-01-01 "s"
-,,1:0,76:q_zs: refused: RUN-DOMAIN periodic: 0 1/year is not a rate
+,,1:0,28:q_zs: 0.15
   cut 2026-10-25
 ,23:fixes/g1/a9_nominal/q_n,8:fixes-g1,30:run a9_nominal.tally --ask q_n,481:16:a9_nominal.tally,456:model a9
   tally 2
@@ -203583,7 +203598,7 @@ version v
   known 2026-01-01
   y = 2021 "s"
   y0 = 2025 "s"
-,,1:0,71:a2: differs: y = 2024, 2025 = 2025
+,,1:0,86:a2: differs: y = 2024, 2025 = 2025, difference -1
   pinned: y = 2024
   cut 2026-10-25
 ,23:fixes/g2/b11_yearmin/a3,8:fixes-g2,30:run b11_yearmin.tally --ask a3,384:17:b11_yearmin.tally,358:model b11
@@ -203651,7 +203666,7 @@ version v
   known 2026-01-01
   r = 5 %/year "s"
   mo = 2026-01 "s"
-,,1:1,75:refused: LOAD-UNIT the pin of mo is year4, not month (b13_ratety.tally:11)
+,,1:1,105:refused: LOAD-UNIT 2026 and month have different units (a value of the wrong type) (b13_ratety.tally:11)
 ,16:fixes/g2/b4_date,8:fixes-g2,17:run b4_date.tally,236:13:b4_date.tally,214:model b4_date
   tally 2
   on 2026-10-25
@@ -203669,7 +203684,7 @@ version v
   governs always
   known 2026-01-01
   d = 2026-01-01 "s"
-,,1:1,70:refused: LOAD-UNIT the pin of d is year4, not date (b4_date.tally:11)
+,,1:1,101:refused: LOAD-UNIT 2026 and date have different units (a value of the wrong type) (b4_date.tally:11)
 ,19:fixes/g2/b2_yearkey,8:fixes-g2,20:run b2_yearkey.tally,356:16:b2_yearkey.tally,331:model b2_yearkey
   tally 2
   on 2026-10-25
@@ -203691,7 +203706,15 @@ version v
   governs always
   known 2026-01-01
   y1 = 2021 "s"
-,,1:1,80:refused: LOAD-KEY the pin of y1 is year4, not a key of ys (b2_yearkey.tally:13)
+,,1:0,220:c3: differs: y1 = 2024, 2020 = 2020, difference 4
+  pinned: y1 = 2024
+  cut 2026-10-25
+c5: 2025
+  pinned: y1 = 2024
+  cut 2026-10-25
+c6: differs: y1 = 2024, 2020 = 2020, difference 4
+  pinned: y1 = 2024
+  cut 2026-10-25
 ,22:fixes/g2/b2_pinkeys/c1,8:fixes-g2,29:run b2_pinkeys.tally --ask c1,676:16:b2_pinkeys.tally,651:model b2
   tally 2
   on 2026-10-25
@@ -203925,7 +203948,7 @@ version v
   amt[r2] = 2 PLN "s"
   a = r1 "s"
   b = r2 "s"
-,,1:0,110:c1: differs: a = r1, b = r2, difference -1
+,,1:0,95:c1: differs: a = r1, b = r2
   cut 2026-10-25
 warning: WARN-UNREAD input amt is read by nothing
 ,20:fixes/g2/a14_open/c2,8:fixes-g2,27:run a14_open.tally --ask c2,400:14:a14_open.tally,377:model a14
@@ -203951,7 +203974,7 @@ version v
   amt[r2] = 2 PLN "s"
   a = r1 "s"
   b = r2 "s"
-,,1:0,111:c2: differs: a = r1, r2 = r2, difference -1
+,,1:0,96:c2: differs: a = r1, r2 = r2
   cut 2026-10-25
 warning: WARN-UNREAD input amt is read by nothing
 ,22:fixes/g2/b5_pctyear/a0,8:fixes-g2,29:run b5_pctyear.tally --ask a0,357:16:b5_pctyear.tally,332:model b5
@@ -204000,8 +204023,8 @@ version v
   g = 2 %/year "s"
   h = 3 "s"
   p = 4 "s"
-,,1:0,53:a1: 5 1/year
-  pinned: g = 5 1/year
+,,1:0,59:a1: 0.05 1/year
+  pinned: g = 0.05 1/year
   cut 2026-10-25
 ,22:fixes/g2/b5_pctyear/a2,8:fixes-g2,29:run b5_pctyear.tally --ask a2,357:16:b5_pctyear.tally,332:model b5
   tally 2
@@ -204147,8 +204170,8 @@ version v
   x = 1 PLN "s"
   i = 1 "s"
   n = 1 "s"
-,,1:0,114:a2: (5 1/year, 10 1/year)
-  pinned: g = 5 1/year
+,,1:0,121:a2: (0.05 1/year, 0.1 1/year)
+  pinned: g = 0.05 1/year
   cut 2026-10-25
 warning: WARN-UNREAD input r is read by nothing
 ,20:fixes/g2/b4_units/a3,8:fixes-g2,27:run b4_units.tally --ask a3,917:14:b4_units.tally,894:model b4
@@ -223546,7 +223569,7 @@ version v
   known 2026-01-01
   yk = 2021 "s"
   x[*] = 1 "s"
-,,1:1,79:refused: LOAD-KEY the pin of yk is year4, not a key of ys (p7_yk_out.tally:11)
+,,1:1,63:refused: LOAD-KEY 2040 is not a key of ys (p7_yk_out.tally:11)
 ,17:fixes/g2fix/p5_b4,11:fixes-g2fix,15:run p5_b4.tally,458:11:p5_b4.tally,438:model p5
   tally 2
   on 2026-10-25
@@ -223573,7 +223596,7 @@ version v
   mk = 2026-04 "s"
   nk = 2 "s"
   y = 2022 "s"
-,,1:1,74:refused: LOAD-KEY the pin of a is year4, not a key of ks (p5_b4.tally:17)
+,,1:1,59:refused: LOAD-KEY 2024 is not a key of ks (p5_b4.tally:17)
 ,20:fixes/g2fix/r3_y4_mk,11:fixes-g2fix,18:run r3_y4_mk.tally,448:14:r3_y4_mk.tally,425:model r3
   tally 2
   on 2026-10-25
@@ -223597,7 +223620,7 @@ version v
   dk = 2026-01-02 "s"
   nk = 2021 "s"
   q = 2026-Q2 "s"
-,,1:1,78:refused: LOAD-KEY the pin of mk is year4, not a key of ms (r3_y4_mk.tally:15)
+,,1:1,62:refused: LOAD-KEY 2026 is not a key of ms (r3_y4_mk.tally:15)
 ,20:fixes/g2fix/r3_y4_dk,11:fixes-g2fix,18:run r3_y4_dk.tally,448:14:r3_y4_dk.tally,425:model r3
   tally 2
   on 2026-10-25
@@ -223621,7 +223644,7 @@ version v
   dk = 2026-01-02 "s"
   nk = 2021 "s"
   q = 2026-Q2 "s"
-,,1:1,78:refused: LOAD-KEY the pin of dk is year4, not a key of ds (r3_y4_dk.tally:15)
+,,1:1,62:refused: LOAD-KEY 2026 is not a key of ds (r3_y4_dk.tally:15)
 ,20:fixes/g2fix/p5_b3/b3,11:fixes-g2fix,24:run p5_b3.tally --ask b3,463:11:p5_b3.tally,443:model p5
   tally 2
   on 2026-10-25
@@ -223648,13 +223671,7 @@ version v
   mk = 2026-04 "s"
   nk = 2 "s"
   y = 2022 "s"
-,,1:0,246:b3: 2026-08
-  pinned: mk = 2026-08
-  cut 2026-10-25
-warning: WARN-UNREAD input a is read by nothing
-warning: WARN-UNREAD input nk is read by nothing
-warning: WARN-UNREAD input y is read by nothing
-warning: WARN-UNREAD input yk is read by nothing
+,,1:1,62:refused: LOAD-KEY 2026-08 is not a key of ms (p5_b3.tally:17)
 ,21:fixes/g2fix/p6_row_mk,11:fixes-g2fix,19:run p6_row_mk.tally,459:15:p6_row_mk.tally,435:model p6
   tally 2
   on 2026-10-25
@@ -223855,7 +223872,27 @@ version v
   known 2026-01-01
   yk = 2021 "s"
   y = 2022 "s"
-,,1:1,75:refused: LOAD-KEY the pin of yk is year4, not a key of ys (p4_yk.tally:11)
+,,1:0,370:y1: 5
+  pinned: yk = 2024
+  cut 2026-10-25
+y2: 2
+  cut 2026-10-25
+y3: 2025
+  pinned: yk = 2024
+  cut 2026-10-25
+y4: differs: yk = 2024, yk as if {...} = 2021, difference 3
+  pinned: yk = 2021
+  pinned: yk = 2024
+  cut 2026-10-25
+y5: true
+  pinned: yk = 2024
+  cut 2026-10-25
+y6: 2
+  pinned: yk = 2024
+  cut 2026-10-25
+y7: 2024-01-01
+  pinned: yk = 2024
+  cut 2026-10-25
 ,21:fixes/g2fix/r1_by3/e1,11:fixes-g2fix,25:run r1_by3.tally --ask e1,633:12:r1_by3.tally,612:model r1
   tally 2
   on 2026-10-25
@@ -297566,4 +297603,4703 @@ f: 0.00 PLN
   unfulfilled: topup[2026-01]
   open: pay[2026-02]
   cut 2026-04-20
+,25:fixes/t231g34/lawclock/q8,13:fixes-t231g34,27:run lawclock.tally --ask q8,608:14:lawclock.tally,585:model lawpin
+  tally 2
+  on 2026-06-30
+  start 2026-01-01
+  end 2026-12-31
+
+source s "probe"
+unit PLN: currency minor 0.01
+input w: date
+input rate: money PLN
+
+def cost: money PLN at reader
+  rule one = rate
+
+ask q8: cost as if {known 2026-03-01} law 2026-03-01
+ask q10: (cost as if {known 2026-09-01}) + cost law 2026-03-01
+
+
+version v
+  cite s
+  governs 2026-01-01..2026-06-30
+  known 2026-01-01
+  rate = 10.00 PLN "s"
+
+version v2
+  cite s
+  governs 2026-07-01..
+  known 2026-01-01
+  rate = 20.00 PLN "s"
+
+version v3
+  cite s
+  governs always
+  known 2026-01-01
+  w = 2026-02-01 "s"
+,,1:0,127:q8: 10.00 PLN
+  pinned: known 2026-03-01
+  law date 2026-03-01, cut 2026-06-30
+warning: WARN-UNREAD input w is read by nothing
+,26:fixes/t231g34/lawclock/q10,13:fixes-t231g34,28:run lawclock.tally --ask q10,608:14:lawclock.tally,585:model lawpin
+  tally 2
+  on 2026-06-30
+  start 2026-01-01
+  end 2026-12-31
+
+source s "probe"
+unit PLN: currency minor 0.01
+input w: date
+input rate: money PLN
+
+def cost: money PLN at reader
+  rule one = rate
+
+ask q8: cost as if {known 2026-03-01} law 2026-03-01
+ask q10: (cost as if {known 2026-09-01}) + cost law 2026-03-01
+
+
+version v
+  cite s
+  governs 2026-01-01..2026-06-30
+  known 2026-01-01
+  rate = 10.00 PLN "s"
+
+version v2
+  cite s
+  governs 2026-07-01..
+  known 2026-01-01
+  rate = 20.00 PLN "s"
+
+version v3
+  cite s
+  governs always
+  known 2026-01-01
+  w = 2026-02-01 "s"
+,,1:1,71:refused: REQ-CLOCK known 2026-09-01 is after the model's on 2026-06-30
+,25:fixes/t231g34/i3_later/d2,13:fixes-t231g34,27:run i3_later.tally --ask d2,1140:14:i3_later.tally,1116:model i3_later
+  tally 2
+  on 2026-04-20
+  start 2026-01-01
+  end 2026-05-31
+
+source s "probe"
+unit PLN: currency minor 0.01
+index month = month 2026-01..2026-05
+place konto: accounts PLN lives 2026-01-01..
+place shop: outside lives 1900-01-01..
+input okw[m in month]: bool
+input amt: money PLN
+input d25: int
+input fm: month
+
+move spend[m in month]: transfers
+  on day_of(m, d25)
+  when okw[m]
+  leg cash from konto to shop amount amt
+
+ask d2: spend[fm].day
+ask a2: spend[fm].cash.amount
+ask x2: spend[fm] == none
+ask f2: flows(spend, fm)
+ask b: bal(konto, 2026-03-31)
+ask kd: spend[fm].day as known 2026-02-28
+ask ka: spend[fm].cash.amount as known 2026-02-28
+ask kf: flows(spend, fm) as known 2026-02-28
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  opening[konto] = 1 000.00 PLN at 2026-01-01 start "s"
+  amt = 10.00 PLN "s"
+  d25 = 25 "s"
+  fm = 2026-02 "s"
+  okw[2026-01] = true "s"
+  okw[2026-02] = false "s"
+  okw[2026-03] = true "s"
+  okw[2026-04] = true "s"
+  okw[2026-05] = true "s"
+
+version v2
+  cite s
+  governs always
+  known 2026-03-01
+  replace okw[2026-02] = true "late: feb did happen"
+,,1:0,32:d2: 2026-02-25
+  cut 2026-04-20
+,25:fixes/t231g34/i3_later/a2,13:fixes-t231g34,27:run i3_later.tally --ask a2,1140:14:i3_later.tally,1116:model i3_later
+  tally 2
+  on 2026-04-20
+  start 2026-01-01
+  end 2026-05-31
+
+source s "probe"
+unit PLN: currency minor 0.01
+index month = month 2026-01..2026-05
+place konto: accounts PLN lives 2026-01-01..
+place shop: outside lives 1900-01-01..
+input okw[m in month]: bool
+input amt: money PLN
+input d25: int
+input fm: month
+
+move spend[m in month]: transfers
+  on day_of(m, d25)
+  when okw[m]
+  leg cash from konto to shop amount amt
+
+ask d2: spend[fm].day
+ask a2: spend[fm].cash.amount
+ask x2: spend[fm] == none
+ask f2: flows(spend, fm)
+ask b: bal(konto, 2026-03-31)
+ask kd: spend[fm].day as known 2026-02-28
+ask ka: spend[fm].cash.amount as known 2026-02-28
+ask kf: flows(spend, fm) as known 2026-02-28
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  opening[konto] = 1 000.00 PLN at 2026-01-01 start "s"
+  amt = 10.00 PLN "s"
+  d25 = 25 "s"
+  fm = 2026-02 "s"
+  okw[2026-01] = true "s"
+  okw[2026-02] = false "s"
+  okw[2026-03] = true "s"
+  okw[2026-04] = true "s"
+  okw[2026-05] = true "s"
+
+version v2
+  cite s
+  governs always
+  known 2026-03-01
+  replace okw[2026-02] = true "late: feb did happen"
+,,1:0,30:a2: 0.00 PLN
+  cut 2026-04-20
+,25:fixes/t231g34/i3_later/x2,13:fixes-t231g34,27:run i3_later.tally --ask x2,1140:14:i3_later.tally,1116:model i3_later
+  tally 2
+  on 2026-04-20
+  start 2026-01-01
+  end 2026-05-31
+
+source s "probe"
+unit PLN: currency minor 0.01
+index month = month 2026-01..2026-05
+place konto: accounts PLN lives 2026-01-01..
+place shop: outside lives 1900-01-01..
+input okw[m in month]: bool
+input amt: money PLN
+input d25: int
+input fm: month
+
+move spend[m in month]: transfers
+  on day_of(m, d25)
+  when okw[m]
+  leg cash from konto to shop amount amt
+
+ask d2: spend[fm].day
+ask a2: spend[fm].cash.amount
+ask x2: spend[fm] == none
+ask f2: flows(spend, fm)
+ask b: bal(konto, 2026-03-31)
+ask kd: spend[fm].day as known 2026-02-28
+ask ka: spend[fm].cash.amount as known 2026-02-28
+ask kf: flows(spend, fm) as known 2026-02-28
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  opening[konto] = 1 000.00 PLN at 2026-01-01 start "s"
+  amt = 10.00 PLN "s"
+  d25 = 25 "s"
+  fm = 2026-02 "s"
+  okw[2026-01] = true "s"
+  okw[2026-02] = false "s"
+  okw[2026-03] = true "s"
+  okw[2026-04] = true "s"
+  okw[2026-05] = true "s"
+
+version v2
+  cite s
+  governs always
+  known 2026-03-01
+  replace okw[2026-02] = true "late: feb did happen"
+,,1:0,27:x2: false
+  cut 2026-04-20
+,25:fixes/t231g34/i3_later/kd,13:fixes-t231g34,27:run i3_later.tally --ask kd,1140:14:i3_later.tally,1116:model i3_later
+  tally 2
+  on 2026-04-20
+  start 2026-01-01
+  end 2026-05-31
+
+source s "probe"
+unit PLN: currency minor 0.01
+index month = month 2026-01..2026-05
+place konto: accounts PLN lives 2026-01-01..
+place shop: outside lives 1900-01-01..
+input okw[m in month]: bool
+input amt: money PLN
+input d25: int
+input fm: month
+
+move spend[m in month]: transfers
+  on day_of(m, d25)
+  when okw[m]
+  leg cash from konto to shop amount amt
+
+ask d2: spend[fm].day
+ask a2: spend[fm].cash.amount
+ask x2: spend[fm] == none
+ask f2: flows(spend, fm)
+ask b: bal(konto, 2026-03-31)
+ask kd: spend[fm].day as known 2026-02-28
+ask ka: spend[fm].cash.amount as known 2026-02-28
+ask kf: flows(spend, fm) as known 2026-02-28
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  opening[konto] = 1 000.00 PLN at 2026-01-01 start "s"
+  amt = 10.00 PLN "s"
+  d25 = 25 "s"
+  fm = 2026-02 "s"
+  okw[2026-01] = true "s"
+  okw[2026-02] = false "s"
+  okw[2026-03] = true "s"
+  okw[2026-04] = true "s"
+  okw[2026-05] = true "s"
+
+version v2
+  cite s
+  governs always
+  known 2026-03-01
+  replace okw[2026-02] = true "late: feb did happen"
+,,1:0,88:kd: refused: RUN-NONE spend[2026-02] doesn't exist: a field read of it
+  cut 2026-02-28
+,28:fixes/t231g34/b1_reads/q_leg,13:fixes-t231g34,30:run b1_reads.tally --ask q_leg,1774:14:b1_reads.tally,1750:model b1_reads
+  tally 2
+  on 2026-10-25
+  start 2026-01-01
+  end 2026-12-31
+
+source s "invented"
+
+unit PLN: currency minor 0.01
+
+index ks = [k1, k2]
+index dd = day 2026-03-01..2026-03-02
+
+place a1: accounts PLN lives 2026-01-01..
+place a2: accounts PLN lives 2026-01-01..
+place world: outside lives 1900-01-01..
+
+input b[k in ks]: money PLN
+input n[k in ks]: int
+input acct[k in ks]: key accounts
+input amt[k in ks]: money PLN
+input pd: date
+
+def dbl[k in ks]: money PLN = b[k] + b[k]
+def nn[k in ks]: int = n[k] + n[k]
+
+move pay[k in ks]: transfers
+  on pd
+  leg cash from world to acct[k] amount amt[k]
+
+def p_flows[k in ks, d in dd]: money PLN = dbl[k] as if {b[k] = flows(acct[k], start_of(month_of(d)) .. d)}
+def p_bal[k in ks, d in dd]: money PLN = dbl[k] as if {b[k] = bal(acct[k], d)}
+def p_value[k in ks, d in dd]: money PLN = dbl[k] as if {b[k] = round(value(acct[k], d) in PLN, minor(PLN), half-up)}
+def p_leg[k in ks, d in dd]: money PLN = dbl[k] as if {b[k] = if d > pd then pay[k].cash.amount else b[k]}
+def p_count[k in ks, d in dd]: int = nn[k] as if {n[k] = count(m in transfers over start_of(month_of(d)) .. d where n[k] > 0)}
+
+ask q_flows: p_flows[k, d] for k in ks, d in dd
+ask q_bal: p_bal[k, d] for k in ks, d in dd
+ask q_value: p_value[k, d] for k in ks, d in dd
+ask q_leg: p_leg[k, d] for k in ks, d in dd
+ask q_count: p_count[k, d] for k in ks, d in dd
+ask q_plain: dbl[k1]
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  b[k1] = 1.00 PLN "s"
+  b[k2] = 2.00 PLN "s"
+  n[k1] = 1 "s"
+  n[k2] = 2 "s"
+  acct[k1] = a1 "s"
+  acct[k2] = a2 "s"
+  amt[k1] = 50.00 PLN "s"
+  amt[k2] = 70.00 PLN "s"
+  pd = 2026-03-01 "s"
+  opening[a1] = 100.00 PLN at 2026-01-01 start "s"
+  opening[a2] = 200.00 PLN at 2026-01-01 start "s"
+,,1:0,564:q_leg (k = k1, d = 2026-03-01): 2.00 PLN
+  pinned: b[k] = if d > pd then pay[k].cash.amount else b[k] for k in ks, d in dd
+  cut 2026-10-25
+q_leg (k = k1, d = 2026-03-02): 100.00 PLN
+  pinned: b[k] = if d > pd then pay[k].cash.amount else b[k] for k in ks, d in dd
+  cut 2026-10-25
+q_leg (k = k2, d = 2026-03-01): 4.00 PLN
+  pinned: b[k] = if d > pd then pay[k].cash.amount else b[k] for k in ks, d in dd
+  cut 2026-10-25
+q_leg (k = k2, d = 2026-03-02): 140.00 PLN
+  pinned: b[k] = if d > pd then pay[k].cash.amount else b[k] for k in ks, d in dd
+  cut 2026-10-25
+,26:fixes/t231g34/none_eq/q_eq,13:fixes-t231g34,28:run none_eq.tally --ask q_eq,706:13:none_eq.tally,684:model none_eq
+  tally 2
+  on 2026-06-30
+  start 2026-01-01
+  end 2026-12-31
+
+source s "probe"
+unit PLN: currency minor 0.01
+index ks = [a, b, c]
+index st = [single, married]
+input status[k in ks]: key st
+input lim[k in ks]: int
+input five: int
+
+ask q_eq: status[k] == married for k in ks
+ask q_ne: status[k] != married for k in ks
+ask q_cnt: count(k in ks where status[k] == married)
+ask q_num: count(k in ks where lim[k] == five)
+ask q_in: count(k in ks where status[k] in [married])
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  status[a] = married "s"
+  status[b] = single "s"
+  status[c] = none "s"
+  lim[a] = 5 "s"
+  lim[b] = 6 "s"
+  lim[c] = none "s"
+  five = 5 "s"
+,,1:0,110:q_eq (k = a): true
+  cut 2026-06-30
+q_eq (k = b): false
+  cut 2026-06-30
+q_eq (k = c): false
+  cut 2026-06-30
+,26:fixes/t231g34/none_eq/q_ne,13:fixes-t231g34,28:run none_eq.tally --ask q_ne,706:13:none_eq.tally,684:model none_eq
+  tally 2
+  on 2026-06-30
+  start 2026-01-01
+  end 2026-12-31
+
+source s "probe"
+unit PLN: currency minor 0.01
+index ks = [a, b, c]
+index st = [single, married]
+input status[k in ks]: key st
+input lim[k in ks]: int
+input five: int
+
+ask q_eq: status[k] == married for k in ks
+ask q_ne: status[k] != married for k in ks
+ask q_cnt: count(k in ks where status[k] == married)
+ask q_num: count(k in ks where lim[k] == five)
+ask q_in: count(k in ks where status[k] in [married])
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  status[a] = married "s"
+  status[b] = single "s"
+  status[c] = none "s"
+  lim[a] = 5 "s"
+  lim[b] = 6 "s"
+  lim[c] = none "s"
+  five = 5 "s"
+,,1:0,109:q_ne (k = a): false
+  cut 2026-06-30
+q_ne (k = b): true
+  cut 2026-06-30
+q_ne (k = c): true
+  cut 2026-06-30
+,27:fixes/t231g34/none_eq/q_cnt,13:fixes-t231g34,29:run none_eq.tally --ask q_cnt,706:13:none_eq.tally,684:model none_eq
+  tally 2
+  on 2026-06-30
+  start 2026-01-01
+  end 2026-12-31
+
+source s "probe"
+unit PLN: currency minor 0.01
+index ks = [a, b, c]
+index st = [single, married]
+input status[k in ks]: key st
+input lim[k in ks]: int
+input five: int
+
+ask q_eq: status[k] == married for k in ks
+ask q_ne: status[k] != married for k in ks
+ask q_cnt: count(k in ks where status[k] == married)
+ask q_num: count(k in ks where lim[k] == five)
+ask q_in: count(k in ks where status[k] in [married])
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  status[a] = married "s"
+  status[b] = single "s"
+  status[c] = none "s"
+  lim[a] = 5 "s"
+  lim[b] = 6 "s"
+  lim[c] = none "s"
+  five = 5 "s"
+,,1:0,26:q_cnt: 1
+  cut 2026-06-30
+,27:fixes/t231g34/none_eq/q_num,13:fixes-t231g34,29:run none_eq.tally --ask q_num,706:13:none_eq.tally,684:model none_eq
+  tally 2
+  on 2026-06-30
+  start 2026-01-01
+  end 2026-12-31
+
+source s "probe"
+unit PLN: currency minor 0.01
+index ks = [a, b, c]
+index st = [single, married]
+input status[k in ks]: key st
+input lim[k in ks]: int
+input five: int
+
+ask q_eq: status[k] == married for k in ks
+ask q_ne: status[k] != married for k in ks
+ask q_cnt: count(k in ks where status[k] == married)
+ask q_num: count(k in ks where lim[k] == five)
+ask q_in: count(k in ks where status[k] in [married])
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  status[a] = married "s"
+  status[b] = single "s"
+  status[c] = none "s"
+  lim[a] = 5 "s"
+  lim[b] = 6 "s"
+  lim[c] = none "s"
+  five = 5 "s"
+,,1:0,26:q_num: 1
+  cut 2026-06-30
+,26:fixes/t231g34/none_eq/q_in,13:fixes-t231g34,28:run none_eq.tally --ask q_in,706:13:none_eq.tally,684:model none_eq
+  tally 2
+  on 2026-06-30
+  start 2026-01-01
+  end 2026-12-31
+
+source s "probe"
+unit PLN: currency minor 0.01
+index ks = [a, b, c]
+index st = [single, married]
+input status[k in ks]: key st
+input lim[k in ks]: int
+input five: int
+
+ask q_eq: status[k] == married for k in ks
+ask q_ne: status[k] != married for k in ks
+ask q_cnt: count(k in ks where status[k] == married)
+ask q_num: count(k in ks where lim[k] == five)
+ask q_in: count(k in ks where status[k] in [married])
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  status[a] = married "s"
+  status[b] = single "s"
+  status[c] = none "s"
+  lim[a] = 5 "s"
+  lim[b] = 6 "s"
+  lim[c] = none "s"
+  five = 5 "s"
+,,1:0,81:q_in: refused: RUN-NONE a value is none here: a membership test
+  cut 2026-06-30
+,27:fixes/t231g34/a6_inv/q_need,13:fixes-t231g34,29:run a6_inv.tally --ask q_need,1102:12:a6_inv.tally,1080:model a6
+  tally 2
+  on 2026-10-25
+  start 2026-01-01
+  end 2026-12-31
+
+source s "invented"
+
+unit PLN: currency minor 0.01
+
+index js = [j1, j2]
+
+input p0: money PLN
+input r: rate
+input d0: date
+input d1: date
+input lo: rate
+input hi: rate
+input st: rate
+input tg: money PLN
+input pi: int
+input rj[j in js]: rate
+
+def need: rate = min(t for t in lo .. hi step st where accrue(p0, t, d0, d1, act365, effective) >= tg)
+def need2: rate = min(t for t in lo .. hi step st where accrue(p0, t, d0, d1, act365, nominal 12) >= tg)
+def ip: num = accrue(pi, r, d0, d1, act365, simple)
+def bigj: num PLN = max(accrue(p0, rj[j], d0, d1, act365, effective) for j in js)
+def argj: key js = argmax(accrue(p0, rj[j], d0, d1, act365, effective) for j in js)
+
+ask q_need: need, need2
+ask q_ip: ip
+ask q_big: bigj, argj
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  p0 = 1000 PLN "s"
+  r = 10 %/year "s"
+  d0 = 2026-01-01 "s"
+  d1 = 2027-01-01 "s"
+  lo = 0 %/year "s"
+  hi = 20 %/year "s"
+  st = 1 %/year "s"
+  tg = 105 PLN "s"
+  pi = 7 "s"
+  rj[j1] = 4 %/year "s"
+  rj[j2] = 6 %/year "s"
+,,1:0,50:q_need: (0.11 /year, 0.11 /year)
+  cut 2026-10-25
+,25:fixes/t231g34/a6_inv/q_ip,13:fixes-t231g34,27:run a6_inv.tally --ask q_ip,1102:12:a6_inv.tally,1080:model a6
+  tally 2
+  on 2026-10-25
+  start 2026-01-01
+  end 2026-12-31
+
+source s "invented"
+
+unit PLN: currency minor 0.01
+
+index js = [j1, j2]
+
+input p0: money PLN
+input r: rate
+input d0: date
+input d1: date
+input lo: rate
+input hi: rate
+input st: rate
+input tg: money PLN
+input pi: int
+input rj[j in js]: rate
+
+def need: rate = min(t for t in lo .. hi step st where accrue(p0, t, d0, d1, act365, effective) >= tg)
+def need2: rate = min(t for t in lo .. hi step st where accrue(p0, t, d0, d1, act365, nominal 12) >= tg)
+def ip: num = accrue(pi, r, d0, d1, act365, simple)
+def bigj: num PLN = max(accrue(p0, rj[j], d0, d1, act365, effective) for j in js)
+def argj: key js = argmax(accrue(p0, rj[j], d0, d1, act365, effective) for j in js)
+
+ask q_need: need, need2
+ask q_ip: ip
+ask q_big: bigj, argj
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  p0 = 1000 PLN "s"
+  r = 10 %/year "s"
+  d0 = 2026-01-01 "s"
+  d1 = 2027-01-01 "s"
+  lo = 0 %/year "s"
+  hi = 20 %/year "s"
+  st = 1 %/year "s"
+  tg = 105 PLN "s"
+  pi = 7 "s"
+  rj[j1] = 4 %/year "s"
+  rj[j2] = 6 %/year "s"
+,,1:0,27:q_ip: 0.7
+  cut 2026-10-25
+,26:fixes/t231g34/a6_inv/q_big,13:fixes-t231g34,28:run a6_inv.tally --ask q_big,1102:12:a6_inv.tally,1080:model a6
+  tally 2
+  on 2026-10-25
+  start 2026-01-01
+  end 2026-12-31
+
+source s "invented"
+
+unit PLN: currency minor 0.01
+
+index js = [j1, j2]
+
+input p0: money PLN
+input r: rate
+input d0: date
+input d1: date
+input lo: rate
+input hi: rate
+input st: rate
+input tg: money PLN
+input pi: int
+input rj[j in js]: rate
+
+def need: rate = min(t for t in lo .. hi step st where accrue(p0, t, d0, d1, act365, effective) >= tg)
+def need2: rate = min(t for t in lo .. hi step st where accrue(p0, t, d0, d1, act365, nominal 12) >= tg)
+def ip: num = accrue(pi, r, d0, d1, act365, simple)
+def bigj: num PLN = max(accrue(p0, rj[j], d0, d1, act365, effective) for j in js)
+def argj: key js = argmax(accrue(p0, rj[j], d0, d1, act365, effective) for j in js)
+
+ask q_need: need, need2
+ask q_ip: ip
+ask q_big: bigj, argj
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  p0 = 1000 PLN "s"
+  r = 10 %/year "s"
+  d0 = 2026-01-01 "s"
+  d1 = 2027-01-01 "s"
+  lo = 0 %/year "s"
+  hi = 20 %/year "s"
+  st = 1 %/year "s"
+  tg = 105 PLN "s"
+  pi = 7 "s"
+  rj[j1] = 4 %/year "s"
+  rj[j2] = 6 %/year "s"
+,,1:0,37:q_big: (60 PLN, j2)
+  cut 2026-10-25
+,24:fixes/t231g34/a10_zero/q,13:fixes-t231g34,26:run a10_zero.tally --ask q,775:14:a10_zero.tally,752:model a10
+  tally 2
+  on 2026-10-25
+  start 2026-01-01
+  end 2026-12-31
+
+source s "invented"
+
+unit PLN: currency minor 0.01
+
+input z: rate
+input lo: rate
+input hi: rate
+input st: rate
+input p0: money PLN
+input tg: money PLN
+input d0: date
+input d1: date
+
+def direct: num PLN = accrue(p0, z, d0, d1, act365, effective)
+def fromone: rate = min(t for t in lo .. hi step st where accrue(p0, t, d0, d1, act365, simple) >= tg)
+def zsum: num = sum(periodic(t, year, effective) for t in z .. hi step st)
+
+ask q: direct, fromone
+ask q_zs: zsum
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  z = 0 %/year "s"
+  lo = 1 %/year "s"
+  hi = 5 %/year "s"
+  st = 1 %/year "s"
+  p0 = 1000 PLN "s"
+  tg = 30 PLN "s"
+  d0 = 2026-01-01 "s"
+  d1 = 2027-01-01 "s"
+,,1:0,40:q: (0 PLN, 0.03 /year)
+  cut 2026-10-25
+,27:fixes/t231g34/a10_zero/q_zs,13:fixes-t231g34,29:run a10_zero.tally --ask q_zs,775:14:a10_zero.tally,752:model a10
+  tally 2
+  on 2026-10-25
+  start 2026-01-01
+  end 2026-12-31
+
+source s "invented"
+
+unit PLN: currency minor 0.01
+
+input z: rate
+input lo: rate
+input hi: rate
+input st: rate
+input p0: money PLN
+input tg: money PLN
+input d0: date
+input d1: date
+
+def direct: num PLN = accrue(p0, z, d0, d1, act365, effective)
+def fromone: rate = min(t for t in lo .. hi step st where accrue(p0, t, d0, d1, act365, simple) >= tg)
+def zsum: num = sum(periodic(t, year, effective) for t in z .. hi step st)
+
+ask q: direct, fromone
+ask q_zs: zsum
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  z = 0 %/year "s"
+  lo = 1 %/year "s"
+  hi = 5 %/year "s"
+  st = 1 %/year "s"
+  p0 = 1000 PLN "s"
+  tg = 30 PLN "s"
+  d0 = 2026-01-01 "s"
+  d1 = 2027-01-01 "s"
+,,1:0,28:q_zs: 0.15
+  cut 2026-10-25
+,24:fixes/t231g34/a5_none/c1,13:fixes-t231g34,26:run a5_none.tally --ask c1,458:13:a5_none.tally,436:model a5
+  tally 2
+  on 2026-10-25
+  start 2026-01-01
+  end 2026-12-31
+
+source s "invented"
+
+index ks = [k1, k2, k3]
+index ms = month 2026-01..2026-12
+input a: key ks
+input m1: key ms
+input c: bool
+def dn: key ks = if c then k2 else none
+ask c1: check a == k1
+ask c2: check dn == k1
+ask c3: check m1 == 2026-01
+ask c4: check k1 == dn
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  a = none "s"
+  m1 = none "s"
+  c = false "s"
+,,1:0,48:c1: differs: a = none, k1 = k1
+  cut 2026-10-25
+,24:fixes/t231g34/a5_none/c2,13:fixes-t231g34,26:run a5_none.tally --ask c2,458:13:a5_none.tally,436:model a5
+  tally 2
+  on 2026-10-25
+  start 2026-01-01
+  end 2026-12-31
+
+source s "invented"
+
+index ks = [k1, k2, k3]
+index ms = month 2026-01..2026-12
+input a: key ks
+input m1: key ms
+input c: bool
+def dn: key ks = if c then k2 else none
+ask c1: check a == k1
+ask c2: check dn == k1
+ask c3: check m1 == 2026-01
+ask c4: check k1 == dn
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  a = none "s"
+  m1 = none "s"
+  c = false "s"
+,,1:0,49:c2: differs: dn = none, k1 = k1
+  cut 2026-10-25
+,24:fixes/t231g34/a5_none/c3,13:fixes-t231g34,26:run a5_none.tally --ask c3,458:13:a5_none.tally,436:model a5
+  tally 2
+  on 2026-10-25
+  start 2026-01-01
+  end 2026-12-31
+
+source s "invented"
+
+index ks = [k1, k2, k3]
+index ms = month 2026-01..2026-12
+input a: key ks
+input m1: key ms
+input c: bool
+def dn: key ks = if c then k2 else none
+ask c1: check a == k1
+ask c2: check dn == k1
+ask c3: check m1 == 2026-01
+ask c4: check k1 == dn
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  a = none "s"
+  m1 = none "s"
+  c = false "s"
+,,1:0,59:c3: differs: m1 = none, 2026-01 = 2026-01
+  cut 2026-10-25
+,24:fixes/t231g34/a5_none/c4,13:fixes-t231g34,26:run a5_none.tally --ask c4,458:13:a5_none.tally,436:model a5
+  tally 2
+  on 2026-10-25
+  start 2026-01-01
+  end 2026-12-31
+
+source s "invented"
+
+index ks = [k1, k2, k3]
+index ms = month 2026-01..2026-12
+input a: key ks
+input m1: key ms
+input c: bool
+def dn: key ks = if c then k2 else none
+ask c1: check a == k1
+ask c2: check dn == k1
+ask c3: check m1 == 2026-01
+ask c4: check k1 == dn
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  a = none "s"
+  m1 = none "s"
+  c = false "s"
+,,1:0,49:c4: differs: k1 = k1, dn = none
+  cut 2026-10-25
+,21:fixes/t231g34/keys/a1,13:fixes-t231g34,23:run keys.tally --ask a1,1095:10:keys.tally,1075:model keys
+  tally 2
+  on 2026-06-30
+  start 2026-01-01
+  end 2026-12-31
+
+source s "probe"
+unit PLN: currency minor 0.01
+index tri = year 2026..2035 by 3
+index yrs = year 2026..2035
+index tens = 10..50 by 10
+index qs = month 2026-01..2026-12 by 3
+input y: year
+input mm: month
+input t[k in tri]: int
+input w[k in tens]: int
+
+ask a1: k + 1 for k in tri
+ask a2: y - k for k in tri
+ask a3: k + (y - k) for k in tri
+ask a4: k - j for k in tri, j in yrs where j == y
+ask a5: j + (k - j) for k in tri, j in yrs where j == y
+ask b1: k + 1 for k in tens
+ask b2: w[k + 1] for k in tens
+ask b3: w[k + 10] for k in tens where k < 50
+ask b4: k - j for k in tens, j in tens where j == 10
+ask c1: check y == k for k in tri where k == 2029
+ask c2: check mm == q for q in qs where q == 2026-04
+ask c3: q - mm for q in qs
+ask c4: q + 1 for q in qs
+ask c5: check q == q + 1 for q in qs where q == 2026-04
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  y = 2027 "s"
+  mm = 2026-02 "s"
+  t[2026] = 1 "s"
+  w[10] = 1 "s"
+  w[20] = 2 "s"
+  w[30] = 3 "s"
+  w[40] = 4 "s"
+  w[50] = 5 "s"
+,,1:0,196:a1 (k = 2026): 2029
+  cut 2026-06-30
+a1 (k = 2029): 2032
+  cut 2026-06-30
+a1 (k = 2032): 2035
+  cut 2026-06-30
+a1 (k = 2035): 2038
+  cut 2026-06-30
+warning: WARN-UNREAD input t is read by nothing
+,21:fixes/t231g34/keys/a2,13:fixes-t231g34,23:run keys.tally --ask a2,1095:10:keys.tally,1075:model keys
+  tally 2
+  on 2026-06-30
+  start 2026-01-01
+  end 2026-12-31
+
+source s "probe"
+unit PLN: currency minor 0.01
+index tri = year 2026..2035 by 3
+index yrs = year 2026..2035
+index tens = 10..50 by 10
+index qs = month 2026-01..2026-12 by 3
+input y: year
+input mm: month
+input t[k in tri]: int
+input w[k in tens]: int
+
+ask a1: k + 1 for k in tri
+ask a2: y - k for k in tri
+ask a3: k + (y - k) for k in tri
+ask a4: k - j for k in tri, j in yrs where j == y
+ask a5: j + (k - j) for k in tri, j in yrs where j == y
+ask b1: k + 1 for k in tens
+ask b2: w[k + 1] for k in tens
+ask b3: w[k + 10] for k in tens where k < 50
+ask b4: k - j for k in tens, j in tens where j == 10
+ask c1: check y == k for k in tri where k == 2029
+ask c2: check mm == q for q in qs where q == 2026-04
+ask c3: q - mm for q in qs
+ask c4: q + 1 for q in qs
+ask c5: check q == q + 1 for q in qs where q == 2026-04
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  y = 2027 "s"
+  mm = 2026-02 "s"
+  t[2026] = 1 "s"
+  w[10] = 1 "s"
+  w[20] = 2 "s"
+  w[30] = 3 "s"
+  w[40] = 4 "s"
+  w[50] = 5 "s"
+,,1:0,187:a2 (k = 2026): 1
+  cut 2026-06-30
+a2 (k = 2029): -2
+  cut 2026-06-30
+a2 (k = 2032): -5
+  cut 2026-06-30
+a2 (k = 2035): -8
+  cut 2026-06-30
+warning: WARN-UNREAD input t is read by nothing
+,21:fixes/t231g34/keys/a3,13:fixes-t231g34,23:run keys.tally --ask a3,1095:10:keys.tally,1075:model keys
+  tally 2
+  on 2026-06-30
+  start 2026-01-01
+  end 2026-12-31
+
+source s "probe"
+unit PLN: currency minor 0.01
+index tri = year 2026..2035 by 3
+index yrs = year 2026..2035
+index tens = 10..50 by 10
+index qs = month 2026-01..2026-12 by 3
+input y: year
+input mm: month
+input t[k in tri]: int
+input w[k in tens]: int
+
+ask a1: k + 1 for k in tri
+ask a2: y - k for k in tri
+ask a3: k + (y - k) for k in tri
+ask a4: k - j for k in tri, j in yrs where j == y
+ask a5: j + (k - j) for k in tri, j in yrs where j == y
+ask b1: k + 1 for k in tens
+ask b2: w[k + 1] for k in tens
+ask b3: w[k + 10] for k in tens where k < 50
+ask b4: k - j for k in tens, j in tens where j == 10
+ask c1: check y == k for k in tri where k == 2029
+ask c2: check mm == q for q in qs where q == 2026-04
+ask c3: q - mm for q in qs
+ask c4: q + 1 for q in qs
+ask c5: check q == q + 1 for q in qs where q == 2026-04
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  y = 2027 "s"
+  mm = 2026-02 "s"
+  t[2026] = 1 "s"
+  w[10] = 1 "s"
+  w[20] = 2 "s"
+  w[30] = 3 "s"
+  w[40] = 4 "s"
+  w[50] = 5 "s"
+,,1:0,196:a3 (k = 2026): 2029
+  cut 2026-06-30
+a3 (k = 2029): 2023
+  cut 2026-06-30
+a3 (k = 2032): 2017
+  cut 2026-06-30
+a3 (k = 2035): 2011
+  cut 2026-06-30
+warning: WARN-UNREAD input t is read by nothing
+,21:fixes/t231g34/keys/a4,13:fixes-t231g34,23:run keys.tally --ask a4,1095:10:keys.tally,1075:model keys
+  tally 2
+  on 2026-06-30
+  start 2026-01-01
+  end 2026-12-31
+
+source s "probe"
+unit PLN: currency minor 0.01
+index tri = year 2026..2035 by 3
+index yrs = year 2026..2035
+index tens = 10..50 by 10
+index qs = month 2026-01..2026-12 by 3
+input y: year
+input mm: month
+input t[k in tri]: int
+input w[k in tens]: int
+
+ask a1: k + 1 for k in tri
+ask a2: y - k for k in tri
+ask a3: k + (y - k) for k in tri
+ask a4: k - j for k in tri, j in yrs where j == y
+ask a5: j + (k - j) for k in tri, j in yrs where j == y
+ask b1: k + 1 for k in tens
+ask b2: w[k + 1] for k in tens
+ask b3: w[k + 10] for k in tens where k < 50
+ask b4: k - j for k in tens, j in tens where j == 10
+ask c1: check y == k for k in tri where k == 2029
+ask c2: check mm == q for q in qs where q == 2026-04
+ask c3: q - mm for q in qs
+ask c4: q + 1 for q in qs
+ask c5: check q == q + 1 for q in qs where q == 2026-04
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  y = 2027 "s"
+  mm = 2026-02 "s"
+  t[2026] = 1 "s"
+  w[10] = 1 "s"
+  w[20] = 2 "s"
+  w[30] = 3 "s"
+  w[40] = 4 "s"
+  w[50] = 5 "s"
+,,1:0,225:a4 (k = 2026, j = 2027): -1
+  cut 2026-06-30
+a4 (k = 2029, j = 2027): 2
+  cut 2026-06-30
+a4 (k = 2032, j = 2027): 5
+  cut 2026-06-30
+a4 (k = 2035, j = 2027): 8
+  cut 2026-06-30
+warning: WARN-UNREAD input t is read by nothing
+,21:fixes/t231g34/keys/a5,13:fixes-t231g34,23:run keys.tally --ask a5,1095:10:keys.tally,1075:model keys
+  tally 2
+  on 2026-06-30
+  start 2026-01-01
+  end 2026-12-31
+
+source s "probe"
+unit PLN: currency minor 0.01
+index tri = year 2026..2035 by 3
+index yrs = year 2026..2035
+index tens = 10..50 by 10
+index qs = month 2026-01..2026-12 by 3
+input y: year
+input mm: month
+input t[k in tri]: int
+input w[k in tens]: int
+
+ask a1: k + 1 for k in tri
+ask a2: y - k for k in tri
+ask a3: k + (y - k) for k in tri
+ask a4: k - j for k in tri, j in yrs where j == y
+ask a5: j + (k - j) for k in tri, j in yrs where j == y
+ask b1: k + 1 for k in tens
+ask b2: w[k + 1] for k in tens
+ask b3: w[k + 10] for k in tens where k < 50
+ask b4: k - j for k in tens, j in tens where j == 10
+ask c1: check y == k for k in tri where k == 2029
+ask c2: check mm == q for q in qs where q == 2026-04
+ask c3: q - mm for q in qs
+ask c4: q + 1 for q in qs
+ask c5: check q == q + 1 for q in qs where q == 2026-04
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  y = 2027 "s"
+  mm = 2026-02 "s"
+  t[2026] = 1 "s"
+  w[10] = 1 "s"
+  w[20] = 2 "s"
+  w[30] = 3 "s"
+  w[40] = 4 "s"
+  w[50] = 5 "s"
+,,1:0,236:a5 (k = 2026, j = 2027): 2026
+  cut 2026-06-30
+a5 (k = 2029, j = 2027): 2029
+  cut 2026-06-30
+a5 (k = 2032, j = 2027): 2032
+  cut 2026-06-30
+a5 (k = 2035, j = 2027): 2035
+  cut 2026-06-30
+warning: WARN-UNREAD input t is read by nothing
+,21:fixes/t231g34/keys/b1,13:fixes-t231g34,23:run keys.tally --ask b1,1095:10:keys.tally,1075:model keys
+  tally 2
+  on 2026-06-30
+  start 2026-01-01
+  end 2026-12-31
+
+source s "probe"
+unit PLN: currency minor 0.01
+index tri = year 2026..2035 by 3
+index yrs = year 2026..2035
+index tens = 10..50 by 10
+index qs = month 2026-01..2026-12 by 3
+input y: year
+input mm: month
+input t[k in tri]: int
+input w[k in tens]: int
+
+ask a1: k + 1 for k in tri
+ask a2: y - k for k in tri
+ask a3: k + (y - k) for k in tri
+ask a4: k - j for k in tri, j in yrs where j == y
+ask a5: j + (k - j) for k in tri, j in yrs where j == y
+ask b1: k + 1 for k in tens
+ask b2: w[k + 1] for k in tens
+ask b3: w[k + 10] for k in tens where k < 50
+ask b4: k - j for k in tens, j in tens where j == 10
+ask c1: check y == k for k in tri where k == 2029
+ask c2: check mm == q for q in qs where q == 2026-04
+ask c3: q - mm for q in qs
+ask c4: q + 1 for q in qs
+ask c5: check q == q + 1 for q in qs where q == 2026-04
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  y = 2027 "s"
+  mm = 2026-02 "s"
+  t[2026] = 1 "s"
+  w[10] = 1 "s"
+  w[20] = 2 "s"
+  w[30] = 3 "s"
+  w[40] = 4 "s"
+  w[50] = 5 "s"
+,,1:0,213:b1 (k = 10): 11
+  cut 2026-06-30
+b1 (k = 20): 21
+  cut 2026-06-30
+b1 (k = 30): 31
+  cut 2026-06-30
+b1 (k = 40): 41
+  cut 2026-06-30
+b1 (k = 50): 51
+  cut 2026-06-30
+warning: WARN-UNREAD input t is read by nothing
+,21:fixes/t231g34/keys/b2,13:fixes-t231g34,23:run keys.tally --ask b2,1095:10:keys.tally,1075:model keys
+  tally 2
+  on 2026-06-30
+  start 2026-01-01
+  end 2026-12-31
+
+source s "probe"
+unit PLN: currency minor 0.01
+index tri = year 2026..2035 by 3
+index yrs = year 2026..2035
+index tens = 10..50 by 10
+index qs = month 2026-01..2026-12 by 3
+input y: year
+input mm: month
+input t[k in tri]: int
+input w[k in tens]: int
+
+ask a1: k + 1 for k in tri
+ask a2: y - k for k in tri
+ask a3: k + (y - k) for k in tri
+ask a4: k - j for k in tri, j in yrs where j == y
+ask a5: j + (k - j) for k in tri, j in yrs where j == y
+ask b1: k + 1 for k in tens
+ask b2: w[k + 1] for k in tens
+ask b3: w[k + 10] for k in tens where k < 50
+ask b4: k - j for k in tens, j in tens where j == 10
+ask c1: check y == k for k in tri where k == 2029
+ask c2: check mm == q for q in qs where q == 2026-04
+ask c3: q - mm for q in qs
+ask c4: q + 1 for q in qs
+ask c5: check q == q + 1 for q in qs where q == 2026-04
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  y = 2027 "s"
+  mm = 2026-02 "s"
+  t[2026] = 1 "s"
+  w[10] = 1 "s"
+  w[20] = 2 "s"
+  w[30] = 3 "s"
+  w[40] = 4 "s"
+  w[50] = 5 "s"
+,,1:0,378:b2 (k = 10): refused: RUN-KEY 11 is outside tens
+  cut 2026-06-30
+b2 (k = 20): refused: RUN-KEY 21 is outside tens
+  cut 2026-06-30
+b2 (k = 30): refused: RUN-KEY 31 is outside tens
+  cut 2026-06-30
+b2 (k = 40): refused: RUN-KEY 41 is outside tens
+  cut 2026-06-30
+b2 (k = 50): refused: RUN-KEY 51 is outside tens
+  cut 2026-06-30
+warning: WARN-UNREAD input t is read by nothing
+,21:fixes/t231g34/keys/b3,13:fixes-t231g34,23:run keys.tally --ask b3,1095:10:keys.tally,1075:model keys
+  tally 2
+  on 2026-06-30
+  start 2026-01-01
+  end 2026-12-31
+
+source s "probe"
+unit PLN: currency minor 0.01
+index tri = year 2026..2035 by 3
+index yrs = year 2026..2035
+index tens = 10..50 by 10
+index qs = month 2026-01..2026-12 by 3
+input y: year
+input mm: month
+input t[k in tri]: int
+input w[k in tens]: int
+
+ask a1: k + 1 for k in tri
+ask a2: y - k for k in tri
+ask a3: k + (y - k) for k in tri
+ask a4: k - j for k in tri, j in yrs where j == y
+ask a5: j + (k - j) for k in tri, j in yrs where j == y
+ask b1: k + 1 for k in tens
+ask b2: w[k + 1] for k in tens
+ask b3: w[k + 10] for k in tens where k < 50
+ask b4: k - j for k in tens, j in tens where j == 10
+ask c1: check y == k for k in tri where k == 2029
+ask c2: check mm == q for q in qs where q == 2026-04
+ask c3: q - mm for q in qs
+ask c4: q + 1 for q in qs
+ask c5: check q == q + 1 for q in qs where q == 2026-04
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  y = 2027 "s"
+  mm = 2026-02 "s"
+  t[2026] = 1 "s"
+  w[10] = 1 "s"
+  w[20] = 2 "s"
+  w[30] = 3 "s"
+  w[40] = 4 "s"
+  w[50] = 5 "s"
+,,1:0,176:b3 (k = 10): 2
+  cut 2026-06-30
+b3 (k = 20): 3
+  cut 2026-06-30
+b3 (k = 30): 4
+  cut 2026-06-30
+b3 (k = 40): 5
+  cut 2026-06-30
+warning: WARN-UNREAD input t is read by nothing
+,21:fixes/t231g34/keys/b4,13:fixes-t231g34,23:run keys.tally --ask b4,1095:10:keys.tally,1075:model keys
+  tally 2
+  on 2026-06-30
+  start 2026-01-01
+  end 2026-12-31
+
+source s "probe"
+unit PLN: currency minor 0.01
+index tri = year 2026..2035 by 3
+index yrs = year 2026..2035
+index tens = 10..50 by 10
+index qs = month 2026-01..2026-12 by 3
+input y: year
+input mm: month
+input t[k in tri]: int
+input w[k in tens]: int
+
+ask a1: k + 1 for k in tri
+ask a2: y - k for k in tri
+ask a3: k + (y - k) for k in tri
+ask a4: k - j for k in tri, j in yrs where j == y
+ask a5: j + (k - j) for k in tri, j in yrs where j == y
+ask b1: k + 1 for k in tens
+ask b2: w[k + 1] for k in tens
+ask b3: w[k + 10] for k in tens where k < 50
+ask b4: k - j for k in tens, j in tens where j == 10
+ask c1: check y == k for k in tri where k == 2029
+ask c2: check mm == q for q in qs where q == 2026-04
+ask c3: q - mm for q in qs
+ask c4: q + 1 for q in qs
+ask c5: check q == q + 1 for q in qs where q == 2026-04
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  y = 2027 "s"
+  mm = 2026-02 "s"
+  t[2026] = 1 "s"
+  w[10] = 1 "s"
+  w[20] = 2 "s"
+  w[30] = 3 "s"
+  w[40] = 4 "s"
+  w[50] = 5 "s"
+,,1:0,252:b4 (k = 10, j = 10): 0
+  cut 2026-06-30
+b4 (k = 20, j = 10): 10
+  cut 2026-06-30
+b4 (k = 30, j = 10): 20
+  cut 2026-06-30
+b4 (k = 40, j = 10): 30
+  cut 2026-06-30
+b4 (k = 50, j = 10): 40
+  cut 2026-06-30
+warning: WARN-UNREAD input t is read by nothing
+,21:fixes/t231g34/keys/c1,13:fixes-t231g34,23:run keys.tally --ask c1,1095:10:keys.tally,1075:model keys
+  tally 2
+  on 2026-06-30
+  start 2026-01-01
+  end 2026-12-31
+
+source s "probe"
+unit PLN: currency minor 0.01
+index tri = year 2026..2035 by 3
+index yrs = year 2026..2035
+index tens = 10..50 by 10
+index qs = month 2026-01..2026-12 by 3
+input y: year
+input mm: month
+input t[k in tri]: int
+input w[k in tens]: int
+
+ask a1: k + 1 for k in tri
+ask a2: y - k for k in tri
+ask a3: k + (y - k) for k in tri
+ask a4: k - j for k in tri, j in yrs where j == y
+ask a5: j + (k - j) for k in tri, j in yrs where j == y
+ask b1: k + 1 for k in tens
+ask b2: w[k + 1] for k in tens
+ask b3: w[k + 10] for k in tens where k < 50
+ask b4: k - j for k in tens, j in tens where j == 10
+ask c1: check y == k for k in tri where k == 2029
+ask c2: check mm == q for q in qs where q == 2026-04
+ask c3: q - mm for q in qs
+ask c4: q + 1 for q in qs
+ask c5: check q == q + 1 for q in qs where q == 2026-04
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  y = 2027 "s"
+  mm = 2026-02 "s"
+  t[2026] = 1 "s"
+  w[10] = 1 "s"
+  w[20] = 2 "s"
+  w[30] = 3 "s"
+  w[40] = 4 "s"
+  w[50] = 5 "s"
+,,1:0,123:c1 (k = 2029): differs: y = 2027, k = 2029, difference -2
+  cut 2026-06-30
+warning: WARN-UNREAD input t is read by nothing
+,21:fixes/t231g34/keys/c2,13:fixes-t231g34,23:run keys.tally --ask c2,1095:10:keys.tally,1075:model keys
+  tally 2
+  on 2026-06-30
+  start 2026-01-01
+  end 2026-12-31
+
+source s "probe"
+unit PLN: currency minor 0.01
+index tri = year 2026..2035 by 3
+index yrs = year 2026..2035
+index tens = 10..50 by 10
+index qs = month 2026-01..2026-12 by 3
+input y: year
+input mm: month
+input t[k in tri]: int
+input w[k in tens]: int
+
+ask a1: k + 1 for k in tri
+ask a2: y - k for k in tri
+ask a3: k + (y - k) for k in tri
+ask a4: k - j for k in tri, j in yrs where j == y
+ask a5: j + (k - j) for k in tri, j in yrs where j == y
+ask b1: k + 1 for k in tens
+ask b2: w[k + 1] for k in tens
+ask b3: w[k + 10] for k in tens where k < 50
+ask b4: k - j for k in tens, j in tens where j == 10
+ask c1: check y == k for k in tri where k == 2029
+ask c2: check mm == q for q in qs where q == 2026-04
+ask c3: q - mm for q in qs
+ask c4: q + 1 for q in qs
+ask c5: check q == q + 1 for q in qs where q == 2026-04
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  y = 2027 "s"
+  mm = 2026-02 "s"
+  t[2026] = 1 "s"
+  w[10] = 1 "s"
+  w[20] = 2 "s"
+  w[30] = 3 "s"
+  w[40] = 4 "s"
+  w[50] = 5 "s"
+,,1:0,133:c2 (q = 2026-04): differs: mm = 2026-02, q = 2026-04, difference -2
+  cut 2026-06-30
+warning: WARN-UNREAD input t is read by nothing
+,21:fixes/t231g34/keys/c3,13:fixes-t231g34,23:run keys.tally --ask c3,1095:10:keys.tally,1075:model keys
+  tally 2
+  on 2026-06-30
+  start 2026-01-01
+  end 2026-12-31
+
+source s "probe"
+unit PLN: currency minor 0.01
+index tri = year 2026..2035 by 3
+index yrs = year 2026..2035
+index tens = 10..50 by 10
+index qs = month 2026-01..2026-12 by 3
+input y: year
+input mm: month
+input t[k in tri]: int
+input w[k in tens]: int
+
+ask a1: k + 1 for k in tri
+ask a2: y - k for k in tri
+ask a3: k + (y - k) for k in tri
+ask a4: k - j for k in tri, j in yrs where j == y
+ask a5: j + (k - j) for k in tri, j in yrs where j == y
+ask b1: k + 1 for k in tens
+ask b2: w[k + 1] for k in tens
+ask b3: w[k + 10] for k in tens where k < 50
+ask b4: k - j for k in tens, j in tens where j == 10
+ask c1: check y == k for k in tri where k == 2029
+ask c2: check mm == q for q in qs where q == 2026-04
+ask c3: q - mm for q in qs
+ask c4: q + 1 for q in qs
+ask c5: check q == q + 1 for q in qs where q == 2026-04
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  y = 2027 "s"
+  mm = 2026-02 "s"
+  t[2026] = 1 "s"
+  w[10] = 1 "s"
+  w[20] = 2 "s"
+  w[30] = 3 "s"
+  w[40] = 4 "s"
+  w[50] = 5 "s"
+,,1:0,197:c3 (q = 2026-01): -1
+  cut 2026-06-30
+c3 (q = 2026-04): 2
+  cut 2026-06-30
+c3 (q = 2026-07): 5
+  cut 2026-06-30
+c3 (q = 2026-10): 8
+  cut 2026-06-30
+warning: WARN-UNREAD input t is read by nothing
+,21:fixes/t231g34/keys/c4,13:fixes-t231g34,23:run keys.tally --ask c4,1095:10:keys.tally,1075:model keys
+  tally 2
+  on 2026-06-30
+  start 2026-01-01
+  end 2026-12-31
+
+source s "probe"
+unit PLN: currency minor 0.01
+index tri = year 2026..2035 by 3
+index yrs = year 2026..2035
+index tens = 10..50 by 10
+index qs = month 2026-01..2026-12 by 3
+input y: year
+input mm: month
+input t[k in tri]: int
+input w[k in tens]: int
+
+ask a1: k + 1 for k in tri
+ask a2: y - k for k in tri
+ask a3: k + (y - k) for k in tri
+ask a4: k - j for k in tri, j in yrs where j == y
+ask a5: j + (k - j) for k in tri, j in yrs where j == y
+ask b1: k + 1 for k in tens
+ask b2: w[k + 1] for k in tens
+ask b3: w[k + 10] for k in tens where k < 50
+ask b4: k - j for k in tens, j in tens where j == 10
+ask c1: check y == k for k in tri where k == 2029
+ask c2: check mm == q for q in qs where q == 2026-04
+ask c3: q - mm for q in qs
+ask c4: q + 1 for q in qs
+ask c5: check q == q + 1 for q in qs where q == 2026-04
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  y = 2027 "s"
+  mm = 2026-02 "s"
+  t[2026] = 1 "s"
+  w[10] = 1 "s"
+  w[20] = 2 "s"
+  w[30] = 3 "s"
+  w[40] = 4 "s"
+  w[50] = 5 "s"
+,,1:0,220:c4 (q = 2026-01): 2026-04
+  cut 2026-06-30
+c4 (q = 2026-04): 2026-07
+  cut 2026-06-30
+c4 (q = 2026-07): 2026-10
+  cut 2026-06-30
+c4 (q = 2026-10): 2027-01
+  cut 2026-06-30
+warning: WARN-UNREAD input t is read by nothing
+,21:fixes/t231g34/keys/c5,13:fixes-t231g34,23:run keys.tally --ask c5,1095:10:keys.tally,1075:model keys
+  tally 2
+  on 2026-06-30
+  start 2026-01-01
+  end 2026-12-31
+
+source s "probe"
+unit PLN: currency minor 0.01
+index tri = year 2026..2035 by 3
+index yrs = year 2026..2035
+index tens = 10..50 by 10
+index qs = month 2026-01..2026-12 by 3
+input y: year
+input mm: month
+input t[k in tri]: int
+input w[k in tens]: int
+
+ask a1: k + 1 for k in tri
+ask a2: y - k for k in tri
+ask a3: k + (y - k) for k in tri
+ask a4: k - j for k in tri, j in yrs where j == y
+ask a5: j + (k - j) for k in tri, j in yrs where j == y
+ask b1: k + 1 for k in tens
+ask b2: w[k + 1] for k in tens
+ask b3: w[k + 10] for k in tens where k < 50
+ask b4: k - j for k in tens, j in tens where j == 10
+ask c1: check y == k for k in tri where k == 2029
+ask c2: check mm == q for q in qs where q == 2026-04
+ask c3: q - mm for q in qs
+ask c4: q + 1 for q in qs
+ask c5: check q == q + 1 for q in qs where q == 2026-04
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  y = 2027 "s"
+  mm = 2026-02 "s"
+  t[2026] = 1 "s"
+  w[10] = 1 "s"
+  w[20] = 2 "s"
+  w[30] = 3 "s"
+  w[40] = 4 "s"
+  w[50] = 5 "s"
+,,1:0,136:c5 (q = 2026-04): differs: q = 2026-04, q + 1 = 2026-07, difference -1
+  cut 2026-06-30
+warning: WARN-UNREAD input t is read by nothing
+,23:fixes/t231g34/points/c1,13:fixes-t231g34,25:run points.tally --ask c1,1055:12:points.tally,1033:model points
+  tally 2
+  on 2026-10-25
+  start 2026-01-01
+  end 2026-12-31
+
+source s "invented"
+index rows: open
+index ks = [k1, k2, k3]
+index ms = month 2026-01..2026-12
+index qs = month 2026-01..2026-12 by 3
+index ys = year 2020..2030
+input amt[r in rows]: int
+input a: key rows
+input b: key rows
+input m1: month
+input m2: month
+input q1: quarter
+input q2: quarter
+input y1: year
+input mk: key ms
+input qk: key qs
+input yk: key ys
+input kn: key ks
+input d1: date
+input d2: date
+
+ask c1: check m1 == m2
+ask c2: check q1 == q2
+ask c3: check y1 == yk
+ask c4: check mk == m2
+ask c5: check qk == m1
+ask c6: check a == b
+ask c7: check a == r2
+ask c8: check kn == k1
+ask c9: check d1 == d2
+ask c10: check kn == none
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  amt[r1] = 1 "s"
+  amt[r2] = 2 "s"
+  a = r1 "s"
+  b = r2 "s"
+  m1 = 2026-03 "s"
+  m2 = 2026-07 "s"
+  q1 = 2026-Q1 "s"
+  q2 = 2026-Q3 "s"
+  y1 = 2024 "s"
+  mk = 2026-02 "s"
+  qk = 2026-04 "s"
+  yk = 2021 "s"
+  kn = k3 "s"
+  d1 = 2026-01-05 "s"
+  d2 = 2026-01-09 "s"
+,,1:0,122:c1: differs: m1 = 2026-03, m2 = 2026-07, difference -4
+  cut 2026-10-25
+warning: WARN-UNREAD input amt is read by nothing
+,23:fixes/t231g34/points/c2,13:fixes-t231g34,25:run points.tally --ask c2,1055:12:points.tally,1033:model points
+  tally 2
+  on 2026-10-25
+  start 2026-01-01
+  end 2026-12-31
+
+source s "invented"
+index rows: open
+index ks = [k1, k2, k3]
+index ms = month 2026-01..2026-12
+index qs = month 2026-01..2026-12 by 3
+index ys = year 2020..2030
+input amt[r in rows]: int
+input a: key rows
+input b: key rows
+input m1: month
+input m2: month
+input q1: quarter
+input q2: quarter
+input y1: year
+input mk: key ms
+input qk: key qs
+input yk: key ys
+input kn: key ks
+input d1: date
+input d2: date
+
+ask c1: check m1 == m2
+ask c2: check q1 == q2
+ask c3: check y1 == yk
+ask c4: check mk == m2
+ask c5: check qk == m1
+ask c6: check a == b
+ask c7: check a == r2
+ask c8: check kn == k1
+ask c9: check d1 == d2
+ask c10: check kn == none
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  amt[r1] = 1 "s"
+  amt[r2] = 2 "s"
+  a = r1 "s"
+  b = r2 "s"
+  m1 = 2026-03 "s"
+  m2 = 2026-07 "s"
+  q1 = 2026-Q1 "s"
+  q2 = 2026-Q3 "s"
+  y1 = 2024 "s"
+  mk = 2026-02 "s"
+  qk = 2026-04 "s"
+  yk = 2021 "s"
+  kn = k3 "s"
+  d1 = 2026-01-05 "s"
+  d2 = 2026-01-09 "s"
+,,1:0,122:c2: differs: q1 = 2026-Q1, q2 = 2026-Q3, difference -2
+  cut 2026-10-25
+warning: WARN-UNREAD input amt is read by nothing
+,23:fixes/t231g34/points/c3,13:fixes-t231g34,25:run points.tally --ask c3,1055:12:points.tally,1033:model points
+  tally 2
+  on 2026-10-25
+  start 2026-01-01
+  end 2026-12-31
+
+source s "invented"
+index rows: open
+index ks = [k1, k2, k3]
+index ms = month 2026-01..2026-12
+index qs = month 2026-01..2026-12 by 3
+index ys = year 2020..2030
+input amt[r in rows]: int
+input a: key rows
+input b: key rows
+input m1: month
+input m2: month
+input q1: quarter
+input q2: quarter
+input y1: year
+input mk: key ms
+input qk: key qs
+input yk: key ys
+input kn: key ks
+input d1: date
+input d2: date
+
+ask c1: check m1 == m2
+ask c2: check q1 == q2
+ask c3: check y1 == yk
+ask c4: check mk == m2
+ask c5: check qk == m1
+ask c6: check a == b
+ask c7: check a == r2
+ask c8: check kn == k1
+ask c9: check d1 == d2
+ask c10: check kn == none
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  amt[r1] = 1 "s"
+  amt[r2] = 2 "s"
+  a = r1 "s"
+  b = r2 "s"
+  m1 = 2026-03 "s"
+  m2 = 2026-07 "s"
+  q1 = 2026-Q1 "s"
+  q2 = 2026-Q3 "s"
+  y1 = 2024 "s"
+  mk = 2026-02 "s"
+  qk = 2026-04 "s"
+  yk = 2021 "s"
+  kn = k3 "s"
+  d1 = 2026-01-05 "s"
+  d2 = 2026-01-09 "s"
+,,1:0,115:c3: differs: y1 = 2024, yk = 2021, difference 3
+  cut 2026-10-25
+warning: WARN-UNREAD input amt is read by nothing
+,23:fixes/t231g34/points/c4,13:fixes-t231g34,25:run points.tally --ask c4,1055:12:points.tally,1033:model points
+  tally 2
+  on 2026-10-25
+  start 2026-01-01
+  end 2026-12-31
+
+source s "invented"
+index rows: open
+index ks = [k1, k2, k3]
+index ms = month 2026-01..2026-12
+index qs = month 2026-01..2026-12 by 3
+index ys = year 2020..2030
+input amt[r in rows]: int
+input a: key rows
+input b: key rows
+input m1: month
+input m2: month
+input q1: quarter
+input q2: quarter
+input y1: year
+input mk: key ms
+input qk: key qs
+input yk: key ys
+input kn: key ks
+input d1: date
+input d2: date
+
+ask c1: check m1 == m2
+ask c2: check q1 == q2
+ask c3: check y1 == yk
+ask c4: check mk == m2
+ask c5: check qk == m1
+ask c6: check a == b
+ask c7: check a == r2
+ask c8: check kn == k1
+ask c9: check d1 == d2
+ask c10: check kn == none
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  amt[r1] = 1 "s"
+  amt[r2] = 2 "s"
+  a = r1 "s"
+  b = r2 "s"
+  m1 = 2026-03 "s"
+  m2 = 2026-07 "s"
+  q1 = 2026-Q1 "s"
+  q2 = 2026-Q3 "s"
+  y1 = 2024 "s"
+  mk = 2026-02 "s"
+  qk = 2026-04 "s"
+  yk = 2021 "s"
+  kn = k3 "s"
+  d1 = 2026-01-05 "s"
+  d2 = 2026-01-09 "s"
+,,1:0,122:c4: differs: mk = 2026-02, m2 = 2026-07, difference -5
+  cut 2026-10-25
+warning: WARN-UNREAD input amt is read by nothing
+,23:fixes/t231g34/points/c5,13:fixes-t231g34,25:run points.tally --ask c5,1055:12:points.tally,1033:model points
+  tally 2
+  on 2026-10-25
+  start 2026-01-01
+  end 2026-12-31
+
+source s "invented"
+index rows: open
+index ks = [k1, k2, k3]
+index ms = month 2026-01..2026-12
+index qs = month 2026-01..2026-12 by 3
+index ys = year 2020..2030
+input amt[r in rows]: int
+input a: key rows
+input b: key rows
+input m1: month
+input m2: month
+input q1: quarter
+input q2: quarter
+input y1: year
+input mk: key ms
+input qk: key qs
+input yk: key ys
+input kn: key ks
+input d1: date
+input d2: date
+
+ask c1: check m1 == m2
+ask c2: check q1 == q2
+ask c3: check y1 == yk
+ask c4: check mk == m2
+ask c5: check qk == m1
+ask c6: check a == b
+ask c7: check a == r2
+ask c8: check kn == k1
+ask c9: check d1 == d2
+ask c10: check kn == none
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  amt[r1] = 1 "s"
+  amt[r2] = 2 "s"
+  a = r1 "s"
+  b = r2 "s"
+  m1 = 2026-03 "s"
+  m2 = 2026-07 "s"
+  q1 = 2026-Q1 "s"
+  q2 = 2026-Q3 "s"
+  y1 = 2024 "s"
+  mk = 2026-02 "s"
+  qk = 2026-04 "s"
+  yk = 2021 "s"
+  kn = k3 "s"
+  d1 = 2026-01-05 "s"
+  d2 = 2026-01-09 "s"
+,,1:0,121:c5: differs: qk = 2026-04, m1 = 2026-03, difference 1
+  cut 2026-10-25
+warning: WARN-UNREAD input amt is read by nothing
+,23:fixes/t231g34/points/c6,13:fixes-t231g34,25:run points.tally --ask c6,1055:12:points.tally,1033:model points
+  tally 2
+  on 2026-10-25
+  start 2026-01-01
+  end 2026-12-31
+
+source s "invented"
+index rows: open
+index ks = [k1, k2, k3]
+index ms = month 2026-01..2026-12
+index qs = month 2026-01..2026-12 by 3
+index ys = year 2020..2030
+input amt[r in rows]: int
+input a: key rows
+input b: key rows
+input m1: month
+input m2: month
+input q1: quarter
+input q2: quarter
+input y1: year
+input mk: key ms
+input qk: key qs
+input yk: key ys
+input kn: key ks
+input d1: date
+input d2: date
+
+ask c1: check m1 == m2
+ask c2: check q1 == q2
+ask c3: check y1 == yk
+ask c4: check mk == m2
+ask c5: check qk == m1
+ask c6: check a == b
+ask c7: check a == r2
+ask c8: check kn == k1
+ask c9: check d1 == d2
+ask c10: check kn == none
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  amt[r1] = 1 "s"
+  amt[r2] = 2 "s"
+  a = r1 "s"
+  b = r2 "s"
+  m1 = 2026-03 "s"
+  m2 = 2026-07 "s"
+  q1 = 2026-Q1 "s"
+  q2 = 2026-Q3 "s"
+  y1 = 2024 "s"
+  mk = 2026-02 "s"
+  qk = 2026-04 "s"
+  yk = 2021 "s"
+  kn = k3 "s"
+  d1 = 2026-01-05 "s"
+  d2 = 2026-01-09 "s"
+,,1:0,95:c6: differs: a = r1, b = r2
+  cut 2026-10-25
+warning: WARN-UNREAD input amt is read by nothing
+,23:fixes/t231g34/points/c7,13:fixes-t231g34,25:run points.tally --ask c7,1055:12:points.tally,1033:model points
+  tally 2
+  on 2026-10-25
+  start 2026-01-01
+  end 2026-12-31
+
+source s "invented"
+index rows: open
+index ks = [k1, k2, k3]
+index ms = month 2026-01..2026-12
+index qs = month 2026-01..2026-12 by 3
+index ys = year 2020..2030
+input amt[r in rows]: int
+input a: key rows
+input b: key rows
+input m1: month
+input m2: month
+input q1: quarter
+input q2: quarter
+input y1: year
+input mk: key ms
+input qk: key qs
+input yk: key ys
+input kn: key ks
+input d1: date
+input d2: date
+
+ask c1: check m1 == m2
+ask c2: check q1 == q2
+ask c3: check y1 == yk
+ask c4: check mk == m2
+ask c5: check qk == m1
+ask c6: check a == b
+ask c7: check a == r2
+ask c8: check kn == k1
+ask c9: check d1 == d2
+ask c10: check kn == none
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  amt[r1] = 1 "s"
+  amt[r2] = 2 "s"
+  a = r1 "s"
+  b = r2 "s"
+  m1 = 2026-03 "s"
+  m2 = 2026-07 "s"
+  q1 = 2026-Q1 "s"
+  q2 = 2026-Q3 "s"
+  y1 = 2024 "s"
+  mk = 2026-02 "s"
+  qk = 2026-04 "s"
+  yk = 2021 "s"
+  kn = k3 "s"
+  d1 = 2026-01-05 "s"
+  d2 = 2026-01-09 "s"
+,,1:0,96:c7: differs: a = r1, r2 = r2
+  cut 2026-10-25
+warning: WARN-UNREAD input amt is read by nothing
+,23:fixes/t231g34/points/c8,13:fixes-t231g34,25:run points.tally --ask c8,1055:12:points.tally,1033:model points
+  tally 2
+  on 2026-10-25
+  start 2026-01-01
+  end 2026-12-31
+
+source s "invented"
+index rows: open
+index ks = [k1, k2, k3]
+index ms = month 2026-01..2026-12
+index qs = month 2026-01..2026-12 by 3
+index ys = year 2020..2030
+input amt[r in rows]: int
+input a: key rows
+input b: key rows
+input m1: month
+input m2: month
+input q1: quarter
+input q2: quarter
+input y1: year
+input mk: key ms
+input qk: key qs
+input yk: key ys
+input kn: key ks
+input d1: date
+input d2: date
+
+ask c1: check m1 == m2
+ask c2: check q1 == q2
+ask c3: check y1 == yk
+ask c4: check mk == m2
+ask c5: check qk == m1
+ask c6: check a == b
+ask c7: check a == r2
+ask c8: check kn == k1
+ask c9: check d1 == d2
+ask c10: check kn == none
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  amt[r1] = 1 "s"
+  amt[r2] = 2 "s"
+  a = r1 "s"
+  b = r2 "s"
+  m1 = 2026-03 "s"
+  m2 = 2026-07 "s"
+  q1 = 2026-Q1 "s"
+  q2 = 2026-Q3 "s"
+  y1 = 2024 "s"
+  mk = 2026-02 "s"
+  qk = 2026-04 "s"
+  yk = 2021 "s"
+  kn = k3 "s"
+  d1 = 2026-01-05 "s"
+  d2 = 2026-01-09 "s"
+,,1:0,111:c8: differs: kn = k3, k1 = k1, difference 2
+  cut 2026-10-25
+warning: WARN-UNREAD input amt is read by nothing
+,23:fixes/t231g34/points/c9,13:fixes-t231g34,25:run points.tally --ask c9,1055:12:points.tally,1033:model points
+  tally 2
+  on 2026-10-25
+  start 2026-01-01
+  end 2026-12-31
+
+source s "invented"
+index rows: open
+index ks = [k1, k2, k3]
+index ms = month 2026-01..2026-12
+index qs = month 2026-01..2026-12 by 3
+index ys = year 2020..2030
+input amt[r in rows]: int
+input a: key rows
+input b: key rows
+input m1: month
+input m2: month
+input q1: quarter
+input q2: quarter
+input y1: year
+input mk: key ms
+input qk: key qs
+input yk: key ys
+input kn: key ks
+input d1: date
+input d2: date
+
+ask c1: check m1 == m2
+ask c2: check q1 == q2
+ask c3: check y1 == yk
+ask c4: check mk == m2
+ask c5: check qk == m1
+ask c6: check a == b
+ask c7: check a == r2
+ask c8: check kn == k1
+ask c9: check d1 == d2
+ask c10: check kn == none
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  amt[r1] = 1 "s"
+  amt[r2] = 2 "s"
+  a = r1 "s"
+  b = r2 "s"
+  m1 = 2026-03 "s"
+  m2 = 2026-07 "s"
+  q1 = 2026-Q1 "s"
+  q2 = 2026-Q3 "s"
+  y1 = 2024 "s"
+  mk = 2026-02 "s"
+  qk = 2026-04 "s"
+  yk = 2021 "s"
+  kn = k3 "s"
+  d1 = 2026-01-05 "s"
+  d2 = 2026-01-09 "s"
+,,1:0,113:c9: differs: d1 = 2026-01-05, d2 = 2026-01-09
+  cut 2026-10-25
+warning: WARN-UNREAD input amt is read by nothing
+,24:fixes/t231g34/points/c10,13:fixes-t231g34,26:run points.tally --ask c10,1055:12:points.tally,1033:model points
+  tally 2
+  on 2026-10-25
+  start 2026-01-01
+  end 2026-12-31
+
+source s "invented"
+index rows: open
+index ks = [k1, k2, k3]
+index ms = month 2026-01..2026-12
+index qs = month 2026-01..2026-12 by 3
+index ys = year 2020..2030
+input amt[r in rows]: int
+input a: key rows
+input b: key rows
+input m1: month
+input m2: month
+input q1: quarter
+input q2: quarter
+input y1: year
+input mk: key ms
+input qk: key qs
+input yk: key ys
+input kn: key ks
+input d1: date
+input d2: date
+
+ask c1: check m1 == m2
+ask c2: check q1 == q2
+ask c3: check y1 == yk
+ask c4: check mk == m2
+ask c5: check qk == m1
+ask c6: check a == b
+ask c7: check a == r2
+ask c8: check kn == k1
+ask c9: check d1 == d2
+ask c10: check kn == none
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  amt[r1] = 1 "s"
+  amt[r2] = 2 "s"
+  a = r1 "s"
+  b = r2 "s"
+  m1 = 2026-03 "s"
+  m2 = 2026-07 "s"
+  q1 = 2026-Q1 "s"
+  q2 = 2026-Q3 "s"
+  y1 = 2024 "s"
+  mk = 2026-02 "s"
+  qk = 2026-04 "s"
+  yk = 2021 "s"
+  kn = k3 "s"
+  d1 = 2026-01-05 "s"
+  d2 = 2026-01-09 "s"
+,,1:0,102:c10: differs: kn = k3, none = none
+  cut 2026-10-25
+warning: WARN-UNREAD input amt is read by nothing
+,28:fixes/t231g34/beats_chain/q1,13:fixes-t231g34,30:run beats_chain.tally --ask q1,568:17:beats_chain.tally,542:model beats_chain
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+
+source s "invented"
+
+input top_on: bool
+input mid_on: bool
+input two: int
+input three: int
+
+def d: int
+  rule base = 1
+  rule mid beats base = two when mid_on
+  rule top beats mid = three when top_on
+
+ask q1: d
+ask q2: d with top_on = false
+ask q3: d with mid_on = false
+ask q4: d with top_on = false, mid_on = false
+ask e1: explain d
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  top_on = true "s"
+  mid_on = true "s"
+  two = 2 "s"
+  three = 3 "s"
+,,1:0,92:q1: refused: RUN-CONFLICT rules top and base both win for d on no law date
+  cut 2026-12-31
+,28:fixes/t231g34/beats_chain/q2,13:fixes-t231g34,30:run beats_chain.tally --ask q2,568:17:beats_chain.tally,542:model beats_chain
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+
+source s "invented"
+
+input top_on: bool
+input mid_on: bool
+input two: int
+input three: int
+
+def d: int
+  rule base = 1
+  rule mid beats base = two when mid_on
+  rule top beats mid = three when top_on
+
+ask q1: d
+ask q2: d with top_on = false
+ask q3: d with mid_on = false
+ask q4: d with top_on = false, mid_on = false
+ask e1: explain d
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  top_on = true "s"
+  mid_on = true "s"
+  two = 2 "s"
+  three = 3 "s"
+,,1:0,48:q2: 2
+  pinned: top_on = false
+  cut 2026-12-31
+,28:fixes/t231g34/beats_chain/q3,13:fixes-t231g34,30:run beats_chain.tally --ask q3,568:17:beats_chain.tally,542:model beats_chain
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+
+source s "invented"
+
+input top_on: bool
+input mid_on: bool
+input two: int
+input three: int
+
+def d: int
+  rule base = 1
+  rule mid beats base = two when mid_on
+  rule top beats mid = three when top_on
+
+ask q1: d
+ask q2: d with top_on = false
+ask q3: d with mid_on = false
+ask q4: d with top_on = false, mid_on = false
+ask e1: explain d
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  top_on = true "s"
+  mid_on = true "s"
+  two = 2 "s"
+  three = 3 "s"
+,,1:0,92:q3: refused: RUN-CONFLICT rules top and base both win for d on no law date
+  cut 2026-12-31
+,28:fixes/t231g34/beats_chain/q4,13:fixes-t231g34,30:run beats_chain.tally --ask q4,568:17:beats_chain.tally,542:model beats_chain
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+
+source s "invented"
+
+input top_on: bool
+input mid_on: bool
+input two: int
+input three: int
+
+def d: int
+  rule base = 1
+  rule mid beats base = two when mid_on
+  rule top beats mid = three when top_on
+
+ask q1: d
+ask q2: d with top_on = false
+ask q3: d with mid_on = false
+ask q4: d with top_on = false, mid_on = false
+ask e1: explain d
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  top_on = true "s"
+  mid_on = true "s"
+  two = 2 "s"
+  three = 3 "s"
+,,1:0,73:q4: 1
+  pinned: mid_on = false
+  pinned: top_on = false
+  cut 2026-12-31
+,26:fixes/t231g34/beats_ver/q1,13:fixes-t231g34,28:run beats_ver.tally --ask q1,396:15:beats_ver.tally,372:model beats_ver
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+
+source s "invented"
+
+def d: int at reader
+  rule a = 1
+  rule b beats a = 2
+
+ask q1: d law 2026-03-01
+ask q2: d law 2026-09-01
+
+version v
+  cite s
+  governs 2026-01-01..2026-06-30
+  known 2026-01-01
+
+version v2
+  cite s
+  governs 2026-07-01..
+  known 2026-01-01
+  replace rule d.a beats b = 3
+,,1:1,72:refused: LOAD-CYCLE a beats cycle in d: a -> b -> a (beats_ver.tally:9)
+,26:fixes/t231g34/beats_ver/q2,13:fixes-t231g34,28:run beats_ver.tally --ask q2,396:15:beats_ver.tally,372:model beats_ver
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+
+source s "invented"
+
+def d: int at reader
+  rule a = 1
+  rule b beats a = 2
+
+ask q1: d law 2026-03-01
+ask q2: d law 2026-09-01
+
+version v
+  cite s
+  governs 2026-01-01..2026-06-30
+  known 2026-01-01
+
+version v2
+  cite s
+  governs 2026-07-01..
+  known 2026-01-01
+  replace rule d.a beats b = 3
+,,1:1,72:refused: LOAD-CYCLE a beats cycle in d: a -> b -> a (beats_ver.tally:9)
+,26:fixes/t231g34/lawpin_q4/q4,13:fixes-t231g34,28:run lawpin_q4.tally --ask q4,541:15:lawpin_q4.tally,517:model lawpin
+  tally 2
+  on 2026-06-30
+  start 2026-01-01
+  end 2026-12-31
+
+source s "probe"
+unit PLN: currency minor 0.01
+input w: date
+input rate: money PLN
+
+def cost: money PLN at reader
+  rule one = rate
+
+ask q4: cost with law 2026-02-01 law 2026-09-01
+
+
+version v
+  cite s
+  governs 2026-01-01..2026-06-30
+  known 2026-01-01
+  rate = 10.00 PLN "s"
+
+version v2
+  cite s
+  governs 2026-07-01..
+  known 2026-01-01
+  rate = 20.00 PLN "s"
+
+version v3
+  cite s
+  governs always
+  known 2026-01-01
+  w = 2026-02-01 "s"
+,,1:1,117:refused: LOAD-OVERLAP pins law 2026-02-01 and law 2026-09-01 of the law date overlap at no keys (lawpin_q4.tally:15)
+,23:fixes/t231g34/lawpin/q0,13:fixes-t231g34,25:run lawpin.tally --ask q0,1037:12:lawpin.tally,1015:model lawpin
+  tally 2
+  on 2026-06-30
+  start 2026-01-01
+  end 2026-12-31
+
+source s "probe"
+unit PLN: currency minor 0.01
+input w: date
+input rate: money PLN
+
+def cost: money PLN at reader
+  rule one = rate
+
+ask q0: cost law w
+ask q1: cost with w = 2026-09-01 law w
+ask q2: cost with w = 2026-09-01, law w
+ask q3: cost with law w, w = 2026-09-01
+ask q6: cost with w = 2026-02-01 law 2026-09-01 as known w
+ask q11: cost as if {known 2026-03-01} law 2026-03-01 as known 2026-05-01
+ask t1: cost as if {law 2026-02-01} + cost as if {law 2026-09-01}
+ask t2: cost as if {law 2026-02-01} law 2026-09-01
+ask t3: cost + cost as if {law 2026-02-01} law 2026-09-01
+ask t4: cost law 2027-03-01
+ask t5: cost as if {known 2026-03-01} law 2026-09-01 as known 2026-05-01
+
+version v
+  cite s
+  governs 2026-01-01..2026-06-30
+  known 2026-01-01
+  rate = 10.00 PLN "s"
+
+version v2
+  cite s
+  governs 2026-07-01..
+  known 2026-01-01
+  rate = 20.00 PLN "s"
+
+version v3
+  cite s
+  governs always
+  known 2026-01-01
+  w = 2026-02-01 "s"
+,,1:0,52:q0: 10.00 PLN
+  law date 2026-02-01, cut 2026-06-30
+,23:fixes/t231g34/lawpin/q1,13:fixes-t231g34,25:run lawpin.tally --ask q1,1037:12:lawpin.tally,1015:model lawpin
+  tally 2
+  on 2026-06-30
+  start 2026-01-01
+  end 2026-12-31
+
+source s "probe"
+unit PLN: currency minor 0.01
+input w: date
+input rate: money PLN
+
+def cost: money PLN at reader
+  rule one = rate
+
+ask q0: cost law w
+ask q1: cost with w = 2026-09-01 law w
+ask q2: cost with w = 2026-09-01, law w
+ask q3: cost with law w, w = 2026-09-01
+ask q6: cost with w = 2026-02-01 law 2026-09-01 as known w
+ask q11: cost as if {known 2026-03-01} law 2026-03-01 as known 2026-05-01
+ask t1: cost as if {law 2026-02-01} + cost as if {law 2026-09-01}
+ask t2: cost as if {law 2026-02-01} law 2026-09-01
+ask t3: cost + cost as if {law 2026-02-01} law 2026-09-01
+ask t4: cost law 2027-03-01
+ask t5: cost as if {known 2026-03-01} law 2026-09-01 as known 2026-05-01
+
+version v
+  cite s
+  governs 2026-01-01..2026-06-30
+  known 2026-01-01
+  rate = 10.00 PLN "s"
+
+version v2
+  cite s
+  governs 2026-07-01..
+  known 2026-01-01
+  rate = 20.00 PLN "s"
+
+version v3
+  cite s
+  governs always
+  known 2026-01-01
+  w = 2026-02-01 "s"
+,,1:0,52:q1: 10.00 PLN
+  law date 2026-02-01, cut 2026-06-30
+,23:fixes/t231g34/lawpin/q2,13:fixes-t231g34,25:run lawpin.tally --ask q2,1037:12:lawpin.tally,1015:model lawpin
+  tally 2
+  on 2026-06-30
+  start 2026-01-01
+  end 2026-12-31
+
+source s "probe"
+unit PLN: currency minor 0.01
+input w: date
+input rate: money PLN
+
+def cost: money PLN at reader
+  rule one = rate
+
+ask q0: cost law w
+ask q1: cost with w = 2026-09-01 law w
+ask q2: cost with w = 2026-09-01, law w
+ask q3: cost with law w, w = 2026-09-01
+ask q6: cost with w = 2026-02-01 law 2026-09-01 as known w
+ask q11: cost as if {known 2026-03-01} law 2026-03-01 as known 2026-05-01
+ask t1: cost as if {law 2026-02-01} + cost as if {law 2026-09-01}
+ask t2: cost as if {law 2026-02-01} law 2026-09-01
+ask t3: cost + cost as if {law 2026-02-01} law 2026-09-01
+ask t4: cost law 2027-03-01
+ask t5: cost as if {known 2026-03-01} law 2026-09-01 as known 2026-05-01
+
+version v
+  cite s
+  governs 2026-01-01..2026-06-30
+  known 2026-01-01
+  rate = 10.00 PLN "s"
+
+version v2
+  cite s
+  governs 2026-07-01..
+  known 2026-01-01
+  rate = 20.00 PLN "s"
+
+version v3
+  cite s
+  governs always
+  known 2026-01-01
+  w = 2026-02-01 "s"
+,,1:0,81:q2: 10.00 PLN
+  pinned: law w = 2026-02-01
+  law date 2026-02-01, cut 2026-06-30
+,23:fixes/t231g34/lawpin/q3,13:fixes-t231g34,25:run lawpin.tally --ask q3,1037:12:lawpin.tally,1015:model lawpin
+  tally 2
+  on 2026-06-30
+  start 2026-01-01
+  end 2026-12-31
+
+source s "probe"
+unit PLN: currency minor 0.01
+input w: date
+input rate: money PLN
+
+def cost: money PLN at reader
+  rule one = rate
+
+ask q0: cost law w
+ask q1: cost with w = 2026-09-01 law w
+ask q2: cost with w = 2026-09-01, law w
+ask q3: cost with law w, w = 2026-09-01
+ask q6: cost with w = 2026-02-01 law 2026-09-01 as known w
+ask q11: cost as if {known 2026-03-01} law 2026-03-01 as known 2026-05-01
+ask t1: cost as if {law 2026-02-01} + cost as if {law 2026-09-01}
+ask t2: cost as if {law 2026-02-01} law 2026-09-01
+ask t3: cost + cost as if {law 2026-02-01} law 2026-09-01
+ask t4: cost law 2027-03-01
+ask t5: cost as if {known 2026-03-01} law 2026-09-01 as known 2026-05-01
+
+version v
+  cite s
+  governs 2026-01-01..2026-06-30
+  known 2026-01-01
+  rate = 10.00 PLN "s"
+
+version v2
+  cite s
+  governs 2026-07-01..
+  known 2026-01-01
+  rate = 20.00 PLN "s"
+
+version v3
+  cite s
+  governs always
+  known 2026-01-01
+  w = 2026-02-01 "s"
+,,1:0,81:q3: 10.00 PLN
+  pinned: law w = 2026-02-01
+  law date 2026-02-01, cut 2026-06-30
+,23:fixes/t231g34/lawpin/q6,13:fixes-t231g34,25:run lawpin.tally --ask q6,1037:12:lawpin.tally,1015:model lawpin
+  tally 2
+  on 2026-06-30
+  start 2026-01-01
+  end 2026-12-31
+
+source s "probe"
+unit PLN: currency minor 0.01
+input w: date
+input rate: money PLN
+
+def cost: money PLN at reader
+  rule one = rate
+
+ask q0: cost law w
+ask q1: cost with w = 2026-09-01 law w
+ask q2: cost with w = 2026-09-01, law w
+ask q3: cost with law w, w = 2026-09-01
+ask q6: cost with w = 2026-02-01 law 2026-09-01 as known w
+ask q11: cost as if {known 2026-03-01} law 2026-03-01 as known 2026-05-01
+ask t1: cost as if {law 2026-02-01} + cost as if {law 2026-09-01}
+ask t2: cost as if {law 2026-02-01} law 2026-09-01
+ask t3: cost + cost as if {law 2026-02-01} law 2026-09-01
+ask t4: cost law 2027-03-01
+ask t5: cost as if {known 2026-03-01} law 2026-09-01 as known 2026-05-01
+
+version v
+  cite s
+  governs 2026-01-01..2026-06-30
+  known 2026-01-01
+  rate = 10.00 PLN "s"
+
+version v2
+  cite s
+  governs 2026-07-01..
+  known 2026-01-01
+  rate = 20.00 PLN "s"
+
+version v3
+  cite s
+  governs always
+  known 2026-01-01
+  w = 2026-02-01 "s"
+,,1:0,103:q6: 20.00 PLN
+  held: rate = 20.00 PLN (v2), read for 2026-09-01
+  law date 2026-09-01, cut 2026-02-01
+,24:fixes/t231g34/lawpin/q11,13:fixes-t231g34,26:run lawpin.tally --ask q11,1037:12:lawpin.tally,1015:model lawpin
+  tally 2
+  on 2026-06-30
+  start 2026-01-01
+  end 2026-12-31
+
+source s "probe"
+unit PLN: currency minor 0.01
+input w: date
+input rate: money PLN
+
+def cost: money PLN at reader
+  rule one = rate
+
+ask q0: cost law w
+ask q1: cost with w = 2026-09-01 law w
+ask q2: cost with w = 2026-09-01, law w
+ask q3: cost with law w, w = 2026-09-01
+ask q6: cost with w = 2026-02-01 law 2026-09-01 as known w
+ask q11: cost as if {known 2026-03-01} law 2026-03-01 as known 2026-05-01
+ask t1: cost as if {law 2026-02-01} + cost as if {law 2026-09-01}
+ask t2: cost as if {law 2026-02-01} law 2026-09-01
+ask t3: cost + cost as if {law 2026-02-01} law 2026-09-01
+ask t4: cost law 2027-03-01
+ask t5: cost as if {known 2026-03-01} law 2026-09-01 as known 2026-05-01
+
+version v
+  cite s
+  governs 2026-01-01..2026-06-30
+  known 2026-01-01
+  rate = 10.00 PLN "s"
+
+version v2
+  cite s
+  governs 2026-07-01..
+  known 2026-01-01
+  rate = 20.00 PLN "s"
+
+version v3
+  cite s
+  governs always
+  known 2026-01-01
+  w = 2026-02-01 "s"
+,,1:0,80:q11: 10.00 PLN
+  pinned: known 2026-03-01
+  law date 2026-03-01, cut 2026-05-01
+,23:fixes/t231g34/lawpin/t1,13:fixes-t231g34,25:run lawpin.tally --ask t1,1037:12:lawpin.tally,1015:model lawpin
+  tally 2
+  on 2026-06-30
+  start 2026-01-01
+  end 2026-12-31
+
+source s "probe"
+unit PLN: currency minor 0.01
+input w: date
+input rate: money PLN
+
+def cost: money PLN at reader
+  rule one = rate
+
+ask q0: cost law w
+ask q1: cost with w = 2026-09-01 law w
+ask q2: cost with w = 2026-09-01, law w
+ask q3: cost with law w, w = 2026-09-01
+ask q6: cost with w = 2026-02-01 law 2026-09-01 as known w
+ask q11: cost as if {known 2026-03-01} law 2026-03-01 as known 2026-05-01
+ask t1: cost as if {law 2026-02-01} + cost as if {law 2026-09-01}
+ask t2: cost as if {law 2026-02-01} law 2026-09-01
+ask t3: cost + cost as if {law 2026-02-01} law 2026-09-01
+ask t4: cost law 2027-03-01
+ask t5: cost as if {known 2026-03-01} law 2026-09-01 as known 2026-05-01
+
+version v
+  cite s
+  governs 2026-01-01..2026-06-30
+  known 2026-01-01
+  rate = 10.00 PLN "s"
+
+version v2
+  cite s
+  governs 2026-07-01..
+  known 2026-01-01
+  rate = 20.00 PLN "s"
+
+version v3
+  cite s
+  governs always
+  known 2026-01-01
+  w = 2026-02-01 "s"
+,,1:0,132:t1: 30.00 PLN
+  pinned: law 2026-02-01
+  pinned: law 2026-09-01
+  held: rate = 20.00 PLN (v2), read for 2026-09-01
+  cut 2026-06-30
+,23:fixes/t231g34/lawpin/t2,13:fixes-t231g34,25:run lawpin.tally --ask t2,1037:12:lawpin.tally,1015:model lawpin
+  tally 2
+  on 2026-06-30
+  start 2026-01-01
+  end 2026-12-31
+
+source s "probe"
+unit PLN: currency minor 0.01
+input w: date
+input rate: money PLN
+
+def cost: money PLN at reader
+  rule one = rate
+
+ask q0: cost law w
+ask q1: cost with w = 2026-09-01 law w
+ask q2: cost with w = 2026-09-01, law w
+ask q3: cost with law w, w = 2026-09-01
+ask q6: cost with w = 2026-02-01 law 2026-09-01 as known w
+ask q11: cost as if {known 2026-03-01} law 2026-03-01 as known 2026-05-01
+ask t1: cost as if {law 2026-02-01} + cost as if {law 2026-09-01}
+ask t2: cost as if {law 2026-02-01} law 2026-09-01
+ask t3: cost + cost as if {law 2026-02-01} law 2026-09-01
+ask t4: cost law 2027-03-01
+ask t5: cost as if {known 2026-03-01} law 2026-09-01 as known 2026-05-01
+
+version v
+  cite s
+  governs 2026-01-01..2026-06-30
+  known 2026-01-01
+  rate = 10.00 PLN "s"
+
+version v2
+  cite s
+  governs 2026-07-01..
+  known 2026-01-01
+  rate = 20.00 PLN "s"
+
+version v3
+  cite s
+  governs always
+  known 2026-01-01
+  w = 2026-02-01 "s"
+,,1:0,77:t2: 10.00 PLN
+  pinned: law 2026-02-01
+  law date 2026-09-01, cut 2026-06-30
+,23:fixes/t231g34/lawpin/t3,13:fixes-t231g34,25:run lawpin.tally --ask t3,1037:12:lawpin.tally,1015:model lawpin
+  tally 2
+  on 2026-06-30
+  start 2026-01-01
+  end 2026-12-31
+
+source s "probe"
+unit PLN: currency minor 0.01
+input w: date
+input rate: money PLN
+
+def cost: money PLN at reader
+  rule one = rate
+
+ask q0: cost law w
+ask q1: cost with w = 2026-09-01 law w
+ask q2: cost with w = 2026-09-01, law w
+ask q3: cost with law w, w = 2026-09-01
+ask q6: cost with w = 2026-02-01 law 2026-09-01 as known w
+ask q11: cost as if {known 2026-03-01} law 2026-03-01 as known 2026-05-01
+ask t1: cost as if {law 2026-02-01} + cost as if {law 2026-09-01}
+ask t2: cost as if {law 2026-02-01} law 2026-09-01
+ask t3: cost + cost as if {law 2026-02-01} law 2026-09-01
+ask t4: cost law 2027-03-01
+ask t5: cost as if {known 2026-03-01} law 2026-09-01 as known 2026-05-01
+
+version v
+  cite s
+  governs 2026-01-01..2026-06-30
+  known 2026-01-01
+  rate = 10.00 PLN "s"
+
+version v2
+  cite s
+  governs 2026-07-01..
+  known 2026-01-01
+  rate = 20.00 PLN "s"
+
+version v3
+  cite s
+  governs always
+  known 2026-01-01
+  w = 2026-02-01 "s"
+,,1:0,128:t3: 30.00 PLN
+  pinned: law 2026-02-01
+  held: rate = 20.00 PLN (v2), read for 2026-09-01
+  law date 2026-09-01, cut 2026-06-30
+,23:fixes/t231g34/lawpin/t4,13:fixes-t231g34,25:run lawpin.tally --ask t4,1037:12:lawpin.tally,1015:model lawpin
+  tally 2
+  on 2026-06-30
+  start 2026-01-01
+  end 2026-12-31
+
+source s "probe"
+unit PLN: currency minor 0.01
+input w: date
+input rate: money PLN
+
+def cost: money PLN at reader
+  rule one = rate
+
+ask q0: cost law w
+ask q1: cost with w = 2026-09-01 law w
+ask q2: cost with w = 2026-09-01, law w
+ask q3: cost with law w, w = 2026-09-01
+ask q6: cost with w = 2026-02-01 law 2026-09-01 as known w
+ask q11: cost as if {known 2026-03-01} law 2026-03-01 as known 2026-05-01
+ask t1: cost as if {law 2026-02-01} + cost as if {law 2026-09-01}
+ask t2: cost as if {law 2026-02-01} law 2026-09-01
+ask t3: cost + cost as if {law 2026-02-01} law 2026-09-01
+ask t4: cost law 2027-03-01
+ask t5: cost as if {known 2026-03-01} law 2026-09-01 as known 2026-05-01
+
+version v
+  cite s
+  governs 2026-01-01..2026-06-30
+  known 2026-01-01
+  rate = 10.00 PLN "s"
+
+version v2
+  cite s
+  governs 2026-07-01..
+  known 2026-01-01
+  rate = 20.00 PLN "s"
+
+version v3
+  cite s
+  governs always
+  known 2026-01-01
+  w = 2026-02-01 "s"
+,,1:0,103:t4: 20.00 PLN
+  held: rate = 20.00 PLN (v2), read for 2027-03-01
+  law date 2027-03-01, cut 2026-06-30
+,23:fixes/t231g34/lawpin/t5,13:fixes-t231g34,25:run lawpin.tally --ask t5,1037:12:lawpin.tally,1015:model lawpin
+  tally 2
+  on 2026-06-30
+  start 2026-01-01
+  end 2026-12-31
+
+source s "probe"
+unit PLN: currency minor 0.01
+input w: date
+input rate: money PLN
+
+def cost: money PLN at reader
+  rule one = rate
+
+ask q0: cost law w
+ask q1: cost with w = 2026-09-01 law w
+ask q2: cost with w = 2026-09-01, law w
+ask q3: cost with law w, w = 2026-09-01
+ask q6: cost with w = 2026-02-01 law 2026-09-01 as known w
+ask q11: cost as if {known 2026-03-01} law 2026-03-01 as known 2026-05-01
+ask t1: cost as if {law 2026-02-01} + cost as if {law 2026-09-01}
+ask t2: cost as if {law 2026-02-01} law 2026-09-01
+ask t3: cost + cost as if {law 2026-02-01} law 2026-09-01
+ask t4: cost law 2027-03-01
+ask t5: cost as if {known 2026-03-01} law 2026-09-01 as known 2026-05-01
+
+version v
+  cite s
+  governs 2026-01-01..2026-06-30
+  known 2026-01-01
+  rate = 10.00 PLN "s"
+
+version v2
+  cite s
+  governs 2026-07-01..
+  known 2026-01-01
+  rate = 20.00 PLN "s"
+
+version v3
+  cite s
+  governs always
+  known 2026-01-01
+  w = 2026-02-01 "s"
+,,1:0,130:t5: 20.00 PLN
+  pinned: known 2026-03-01
+  held: rate = 20.00 PLN (v2), read for 2026-09-01
+  law date 2026-09-01, cut 2026-05-01
+,26:fixes/t231g34/lawpin_q5/q5,13:fixes-t231g34,28:run lawpin_q5.tally --ask q5,542:15:lawpin_q5.tally,518:model lawpin
+  tally 2
+  on 2026-06-30
+  start 2026-01-01
+  end 2026-12-31
+
+source s "probe"
+unit PLN: currency minor 0.01
+input w: date
+input rate: money PLN
+
+def cost: money PLN at reader
+  rule one = rate
+
+ask q5: cost with law 2026-09-01, law 2026-02-01
+
+
+version v
+  cite s
+  governs 2026-01-01..2026-06-30
+  known 2026-01-01
+  rate = 10.00 PLN "s"
+
+version v2
+  cite s
+  governs 2026-07-01..
+  known 2026-01-01
+  rate = 20.00 PLN "s"
+
+version v3
+  cite s
+  governs always
+  known 2026-01-01
+  w = 2026-02-01 "s"
+,,1:1,117:refused: LOAD-OVERLAP pins law 2026-09-01 and law 2026-02-01 of the law date overlap at no keys (lawpin_q5.tally:15)
+,26:fixes/t231g34/lawpin_q7/q7,13:fixes-t231g34,28:run lawpin_q7.tally --ask q7,563:15:lawpin_q7.tally,539:model lawpin
+  tally 2
+  on 2026-06-30
+  start 2026-01-01
+  end 2026-12-31
+
+source s "probe"
+unit PLN: currency minor 0.01
+input w: date
+input rate: money PLN
+
+def cost: money PLN at reader
+  rule one = rate
+
+ask q7: cost with known 2026-03-01 law 2026-03-01 as known 2026-05-01
+
+
+version v
+  cite s
+  governs 2026-01-01..2026-06-30
+  known 2026-01-01
+  rate = 10.00 PLN "s"
+
+version v2
+  cite s
+  governs 2026-07-01..
+  known 2026-01-01
+  rate = 20.00 PLN "s"
+
+version v3
+  cite s
+  governs always
+  known 2026-01-01
+  w = 2026-02-01 "s"
+,,1:1,119:refused: LOAD-OVERLAP pins known 2026-03-01 and as known 2026-05-01 of the cut overlap at no keys (lawpin_q7.tally:15)
+,23:fixes/t231g34/pinrow/y1,13:fixes-t231g34,25:run pinrow.tally --ask y1,851:12:pinrow.tally,830:model pinrow
+  tally 2
+  on 2026-10-25
+  start 2026-01-01
+  end 2026-12-31
+
+source s "invented"
+
+unit PLN: currency minor 0.01
+unit EUR: currency minor 0.01
+index ys = year 2020..2030
+input yk: key ys
+input g: num %/year
+input ratio: num
+input pct: num %
+input fx[u in currencies]: num PLN/u
+input x: money PLN
+
+def gg: num %/year = g + g
+
+ask y1: yk + 1 with yk = 2024
+ask y2: check yk == 2020 with yk = (2024)
+ask y3: yk as if {yk = 2021}
+ask g1: g with g = 5
+ask g2: gg with g = 5
+ask g3: g with g = 5 %/year
+ask r1: ratio with ratio = 50 %
+ask r2: ratio + ratio with ratio = 50 %
+ask p1: pct with pct = 5
+ask f1: fx[EUR] with fx[EUR] = 4.5
+ask x1: x with x = -(12.5)
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  yk = 2021 "s"
+  g = 2 %/year "s"
+  ratio = 1 "s"
+  pct = 1 % "s"
+  fx[EUR] = 4.3 "s"
+  x = 1 PLN "s"
+,,1:0,46:y1: 2025
+  pinned: yk = 2024
+  cut 2026-10-25
+,23:fixes/t231g34/pinrow/y2,13:fixes-t231g34,25:run pinrow.tally --ask y2,851:12:pinrow.tally,830:model pinrow
+  tally 2
+  on 2026-10-25
+  start 2026-01-01
+  end 2026-12-31
+
+source s "invented"
+
+unit PLN: currency minor 0.01
+unit EUR: currency minor 0.01
+index ys = year 2020..2030
+input yk: key ys
+input g: num %/year
+input ratio: num
+input pct: num %
+input fx[u in currencies]: num PLN/u
+input x: money PLN
+
+def gg: num %/year = g + g
+
+ask y1: yk + 1 with yk = 2024
+ask y2: check yk == 2020 with yk = (2024)
+ask y3: yk as if {yk = 2021}
+ask g1: g with g = 5
+ask g2: gg with g = 5
+ask g3: g with g = 5 %/year
+ask r1: ratio with ratio = 50 %
+ask r2: ratio + ratio with ratio = 50 %
+ask p1: pct with pct = 5
+ask f1: fx[EUR] with fx[EUR] = 4.5
+ask x1: x with x = -(12.5)
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  yk = 2021 "s"
+  g = 2 %/year "s"
+  ratio = 1 "s"
+  pct = 1 % "s"
+  fx[EUR] = 4.3 "s"
+  x = 1 PLN "s"
+,,1:0,87:y2: differs: yk = 2024, 2020 = 2020, difference 4
+  pinned: yk = 2024
+  cut 2026-10-25
+,23:fixes/t231g34/pinrow/y3,13:fixes-t231g34,25:run pinrow.tally --ask y3,851:12:pinrow.tally,830:model pinrow
+  tally 2
+  on 2026-10-25
+  start 2026-01-01
+  end 2026-12-31
+
+source s "invented"
+
+unit PLN: currency minor 0.01
+unit EUR: currency minor 0.01
+index ys = year 2020..2030
+input yk: key ys
+input g: num %/year
+input ratio: num
+input pct: num %
+input fx[u in currencies]: num PLN/u
+input x: money PLN
+
+def gg: num %/year = g + g
+
+ask y1: yk + 1 with yk = 2024
+ask y2: check yk == 2020 with yk = (2024)
+ask y3: yk as if {yk = 2021}
+ask g1: g with g = 5
+ask g2: gg with g = 5
+ask g3: g with g = 5 %/year
+ask r1: ratio with ratio = 50 %
+ask r2: ratio + ratio with ratio = 50 %
+ask p1: pct with pct = 5
+ask f1: fx[EUR] with fx[EUR] = 4.5
+ask x1: x with x = -(12.5)
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  yk = 2021 "s"
+  g = 2 %/year "s"
+  ratio = 1 "s"
+  pct = 1 % "s"
+  fx[EUR] = 4.3 "s"
+  x = 1 PLN "s"
+,,1:0,46:y3: 2021
+  pinned: yk = 2021
+  cut 2026-10-25
+,23:fixes/t231g34/pinrow/g1,13:fixes-t231g34,25:run pinrow.tally --ask g1,851:12:pinrow.tally,830:model pinrow
+  tally 2
+  on 2026-10-25
+  start 2026-01-01
+  end 2026-12-31
+
+source s "invented"
+
+unit PLN: currency minor 0.01
+unit EUR: currency minor 0.01
+index ys = year 2020..2030
+input yk: key ys
+input g: num %/year
+input ratio: num
+input pct: num %
+input fx[u in currencies]: num PLN/u
+input x: money PLN
+
+def gg: num %/year = g + g
+
+ask y1: yk + 1 with yk = 2024
+ask y2: check yk == 2020 with yk = (2024)
+ask y3: yk as if {yk = 2021}
+ask g1: g with g = 5
+ask g2: gg with g = 5
+ask g3: g with g = 5 %/year
+ask r1: ratio with ratio = 50 %
+ask r2: ratio + ratio with ratio = 50 %
+ask p1: pct with pct = 5
+ask f1: fx[EUR] with fx[EUR] = 4.5
+ask x1: x with x = -(12.5)
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  yk = 2021 "s"
+  g = 2 %/year "s"
+  ratio = 1 "s"
+  pct = 1 % "s"
+  fx[EUR] = 4.3 "s"
+  x = 1 PLN "s"
+,,1:0,59:g1: 0.05 1/year
+  pinned: g = 0.05 1/year
+  cut 2026-10-25
+,23:fixes/t231g34/pinrow/g2,13:fixes-t231g34,25:run pinrow.tally --ask g2,851:12:pinrow.tally,830:model pinrow
+  tally 2
+  on 2026-10-25
+  start 2026-01-01
+  end 2026-12-31
+
+source s "invented"
+
+unit PLN: currency minor 0.01
+unit EUR: currency minor 0.01
+index ys = year 2020..2030
+input yk: key ys
+input g: num %/year
+input ratio: num
+input pct: num %
+input fx[u in currencies]: num PLN/u
+input x: money PLN
+
+def gg: num %/year = g + g
+
+ask y1: yk + 1 with yk = 2024
+ask y2: check yk == 2020 with yk = (2024)
+ask y3: yk as if {yk = 2021}
+ask g1: g with g = 5
+ask g2: gg with g = 5
+ask g3: g with g = 5 %/year
+ask r1: ratio with ratio = 50 %
+ask r2: ratio + ratio with ratio = 50 %
+ask p1: pct with pct = 5
+ask f1: fx[EUR] with fx[EUR] = 4.5
+ask x1: x with x = -(12.5)
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  yk = 2021 "s"
+  g = 2 %/year "s"
+  ratio = 1 "s"
+  pct = 1 % "s"
+  fx[EUR] = 4.3 "s"
+  x = 1 PLN "s"
+,,1:0,58:g2: 0.1 1/year
+  pinned: g = 0.05 1/year
+  cut 2026-10-25
+,23:fixes/t231g34/pinrow/g3,13:fixes-t231g34,25:run pinrow.tally --ask g3,851:12:pinrow.tally,830:model pinrow
+  tally 2
+  on 2026-10-25
+  start 2026-01-01
+  end 2026-12-31
+
+source s "invented"
+
+unit PLN: currency minor 0.01
+unit EUR: currency minor 0.01
+index ys = year 2020..2030
+input yk: key ys
+input g: num %/year
+input ratio: num
+input pct: num %
+input fx[u in currencies]: num PLN/u
+input x: money PLN
+
+def gg: num %/year = g + g
+
+ask y1: yk + 1 with yk = 2024
+ask y2: check yk == 2020 with yk = (2024)
+ask y3: yk as if {yk = 2021}
+ask g1: g with g = 5
+ask g2: gg with g = 5
+ask g3: g with g = 5 %/year
+ask r1: ratio with ratio = 50 %
+ask r2: ratio + ratio with ratio = 50 %
+ask p1: pct with pct = 5
+ask f1: fx[EUR] with fx[EUR] = 4.5
+ask x1: x with x = -(12.5)
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  yk = 2021 "s"
+  g = 2 %/year "s"
+  ratio = 1 "s"
+  pct = 1 % "s"
+  fx[EUR] = 4.3 "s"
+  x = 1 PLN "s"
+,,1:0,59:g3: 0.05 1/year
+  pinned: g = 0.05 1/year
+  cut 2026-10-25
+,23:fixes/t231g34/pinrow/r1,13:fixes-t231g34,25:run pinrow.tally --ask r1,851:12:pinrow.tally,830:model pinrow
+  tally 2
+  on 2026-10-25
+  start 2026-01-01
+  end 2026-12-31
+
+source s "invented"
+
+unit PLN: currency minor 0.01
+unit EUR: currency minor 0.01
+index ys = year 2020..2030
+input yk: key ys
+input g: num %/year
+input ratio: num
+input pct: num %
+input fx[u in currencies]: num PLN/u
+input x: money PLN
+
+def gg: num %/year = g + g
+
+ask y1: yk + 1 with yk = 2024
+ask y2: check yk == 2020 with yk = (2024)
+ask y3: yk as if {yk = 2021}
+ask g1: g with g = 5
+ask g2: gg with g = 5
+ask g3: g with g = 5 %/year
+ask r1: ratio with ratio = 50 %
+ask r2: ratio + ratio with ratio = 50 %
+ask p1: pct with pct = 5
+ask f1: fx[EUR] with fx[EUR] = 4.5
+ask x1: x with x = -(12.5)
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  yk = 2021 "s"
+  g = 2 %/year "s"
+  ratio = 1 "s"
+  pct = 1 % "s"
+  fx[EUR] = 4.3 "s"
+  x = 1 PLN "s"
+,,1:0,47:r1: 0.5
+  pinned: ratio = 0.5
+  cut 2026-10-25
+,23:fixes/t231g34/pinrow/r2,13:fixes-t231g34,25:run pinrow.tally --ask r2,851:12:pinrow.tally,830:model pinrow
+  tally 2
+  on 2026-10-25
+  start 2026-01-01
+  end 2026-12-31
+
+source s "invented"
+
+unit PLN: currency minor 0.01
+unit EUR: currency minor 0.01
+index ys = year 2020..2030
+input yk: key ys
+input g: num %/year
+input ratio: num
+input pct: num %
+input fx[u in currencies]: num PLN/u
+input x: money PLN
+
+def gg: num %/year = g + g
+
+ask y1: yk + 1 with yk = 2024
+ask y2: check yk == 2020 with yk = (2024)
+ask y3: yk as if {yk = 2021}
+ask g1: g with g = 5
+ask g2: gg with g = 5
+ask g3: g with g = 5 %/year
+ask r1: ratio with ratio = 50 %
+ask r2: ratio + ratio with ratio = 50 %
+ask p1: pct with pct = 5
+ask f1: fx[EUR] with fx[EUR] = 4.5
+ask x1: x with x = -(12.5)
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  yk = 2021 "s"
+  g = 2 %/year "s"
+  ratio = 1 "s"
+  pct = 1 % "s"
+  fx[EUR] = 4.3 "s"
+  x = 1 PLN "s"
+,,1:0,45:r2: 1
+  pinned: ratio = 0.5
+  cut 2026-10-25
+,23:fixes/t231g34/pinrow/p1,13:fixes-t231g34,25:run pinrow.tally --ask p1,851:12:pinrow.tally,830:model pinrow
+  tally 2
+  on 2026-10-25
+  start 2026-01-01
+  end 2026-12-31
+
+source s "invented"
+
+unit PLN: currency minor 0.01
+unit EUR: currency minor 0.01
+index ys = year 2020..2030
+input yk: key ys
+input g: num %/year
+input ratio: num
+input pct: num %
+input fx[u in currencies]: num PLN/u
+input x: money PLN
+
+def gg: num %/year = g + g
+
+ask y1: yk + 1 with yk = 2024
+ask y2: check yk == 2020 with yk = (2024)
+ask y3: yk as if {yk = 2021}
+ask g1: g with g = 5
+ask g2: gg with g = 5
+ask g3: g with g = 5 %/year
+ask r1: ratio with ratio = 50 %
+ask r2: ratio + ratio with ratio = 50 %
+ask p1: pct with pct = 5
+ask f1: fx[EUR] with fx[EUR] = 4.5
+ask x1: x with x = -(12.5)
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  yk = 2021 "s"
+  g = 2 %/year "s"
+  ratio = 1 "s"
+  pct = 1 % "s"
+  fx[EUR] = 4.3 "s"
+  x = 1 PLN "s"
+,,1:0,45:p1: 5 %
+  pinned: pct = 5 %
+  cut 2026-10-25
+,23:fixes/t231g34/pinrow/f1,13:fixes-t231g34,25:run pinrow.tally --ask f1,851:12:pinrow.tally,830:model pinrow
+  tally 2
+  on 2026-10-25
+  start 2026-01-01
+  end 2026-12-31
+
+source s "invented"
+
+unit PLN: currency minor 0.01
+unit EUR: currency minor 0.01
+index ys = year 2020..2030
+input yk: key ys
+input g: num %/year
+input ratio: num
+input pct: num %
+input fx[u in currencies]: num PLN/u
+input x: money PLN
+
+def gg: num %/year = g + g
+
+ask y1: yk + 1 with yk = 2024
+ask y2: check yk == 2020 with yk = (2024)
+ask y3: yk as if {yk = 2021}
+ask g1: g with g = 5
+ask g2: gg with g = 5
+ask g3: g with g = 5 %/year
+ask r1: ratio with ratio = 50 %
+ask r2: ratio + ratio with ratio = 50 %
+ask p1: pct with pct = 5
+ask f1: fx[EUR] with fx[EUR] = 4.5
+ask x1: x with x = -(12.5)
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  yk = 2021 "s"
+  g = 2 %/year "s"
+  ratio = 1 "s"
+  pct = 1 % "s"
+  fx[EUR] = 4.3 "s"
+  x = 1 PLN "s"
+,,1:0,65:f1: 4.5 PLN/EUR
+  pinned: fx[EUR] = 4.5 PLN/EUR
+  cut 2026-10-25
+,23:fixes/t231g34/pinrow/x1,13:fixes-t231g34,25:run pinrow.tally --ask x1,851:12:pinrow.tally,830:model pinrow
+  tally 2
+  on 2026-10-25
+  start 2026-01-01
+  end 2026-12-31
+
+source s "invented"
+
+unit PLN: currency minor 0.01
+unit EUR: currency minor 0.01
+index ys = year 2020..2030
+input yk: key ys
+input g: num %/year
+input ratio: num
+input pct: num %
+input fx[u in currencies]: num PLN/u
+input x: money PLN
+
+def gg: num %/year = g + g
+
+ask y1: yk + 1 with yk = 2024
+ask y2: check yk == 2020 with yk = (2024)
+ask y3: yk as if {yk = 2021}
+ask g1: g with g = 5
+ask g2: gg with g = 5
+ask g3: g with g = 5 %/year
+ask r1: ratio with ratio = 50 %
+ask r2: ratio + ratio with ratio = 50 %
+ask p1: pct with pct = 5
+ask f1: fx[EUR] with fx[EUR] = 4.5
+ask x1: x with x = -(12.5)
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  yk = 2021 "s"
+  g = 2 %/year "s"
+  ratio = 1 "s"
+  pct = 1 % "s"
+  fx[EUR] = 4.3 "s"
+  x = 1 PLN "s"
+,,1:0,57:x1: -12.50 PLN
+  pinned: x = -12.50 PLN
+  cut 2026-10-25
+,22:fixes/t231g34/p5_b3/b3,13:fixes-t231g34,24:run p5_b3.tally --ask b3,463:11:p5_b3.tally,443:model p5
+  tally 2
+  on 2026-10-25
+  start 2026-01-01
+  end 2026-12-31
+
+source s "invented"
+index ks = [k1, k2, k3]
+index ys = year 2020..2030
+index ms = month 2026-01..2026-12 by 3
+index ns = int 1..5
+input a: key ks
+input yk: key ys
+input mk: key ms
+input nk: key ns
+input y: year
+ask b3: mk with mk = 2026-08
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  a = k1 "s"
+  yk = 2021 "s"
+  mk = 2026-04 "s"
+  nk = 2 "s"
+  y = 2022 "s"
+,,1:1,62:refused: LOAD-KEY 2026-08 is not a key of ms (p5_b3.tally:17)
+,30:fixes/t231g34/p4_holeone/q_one,13:fixes-t231g34,32:run p4_holeone.tally --ask q_one,768:16:p4_holeone.tally,743:model p4
+  tally 2
+  on 2026-10-25
+  start 2026-01-01
+  end 2026-12-31
+
+source s "invented"
+
+unit PLN: currency minor 0.01
+
+index ks = [k1, k2]
+
+input b[k in ks]: money PLN
+input c[k in ks]: money PLN
+input x: money PLN
+
+def dbl[k in ks]: money PLN = b[k] + b[k]
+def two[k in ks]: money PLN = (dbl[k] as if {b[k] = c[k]}) - (dbl[k] as if {b[k] = c[k] + x})
+def twoc: money PLN = (dbl[k2] as if {b[k2] = c[k2]}) - (dbl[k2] as if {b[k2] = c[k2] + x})
+
+ask q_one: two[k] for k in ks
+ask q_for: (dbl[k] as if {b[k] = c[k]}) - (dbl[k] as if {b[k] = c[k] + x}) for k in ks
+ask q_c: twoc
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  b[k1] = 100 PLN "s"
+  b[k2] = 200 PLN "s"
+  c[k1] = 1 PLN "s"
+  c[k2] = ?"which c?" "s"
+  x = 5 PLN "s"
+,,1:0,241:q_one (k = k1): -10.00 PLN
+  pinned: b[k] = c[k] + x for k in ks
+  pinned: b[k] = c[k] for k in ks
+  cut 2026-10-25
+q_one (k = k2): ?"which c?" (c[k2])
+  pinned: b[k] = c[k] + x for k in ks
+  pinned: b[k] = c[k] for k in ks
+  cut 2026-10-25
+,30:fixes/t231g34/p4_holeone/q_for,13:fixes-t231g34,32:run p4_holeone.tally --ask q_for,768:16:p4_holeone.tally,743:model p4
+  tally 2
+  on 2026-10-25
+  start 2026-01-01
+  end 2026-12-31
+
+source s "invented"
+
+unit PLN: currency minor 0.01
+
+index ks = [k1, k2]
+
+input b[k in ks]: money PLN
+input c[k in ks]: money PLN
+input x: money PLN
+
+def dbl[k in ks]: money PLN = b[k] + b[k]
+def two[k in ks]: money PLN = (dbl[k] as if {b[k] = c[k]}) - (dbl[k] as if {b[k] = c[k] + x})
+def twoc: money PLN = (dbl[k2] as if {b[k2] = c[k2]}) - (dbl[k2] as if {b[k2] = c[k2] + x})
+
+ask q_one: two[k] for k in ks
+ask q_for: (dbl[k] as if {b[k] = c[k]}) - (dbl[k] as if {b[k] = c[k] + x}) for k in ks
+ask q_c: twoc
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  b[k1] = 100 PLN "s"
+  b[k2] = 200 PLN "s"
+  c[k1] = 1 PLN "s"
+  c[k2] = ?"which c?" "s"
+  x = 5 PLN "s"
+,,1:0,241:q_for (k = k1): -10.00 PLN
+  pinned: b[k] = c[k] + x for k in ks
+  pinned: b[k] = c[k] for k in ks
+  cut 2026-10-25
+q_for (k = k2): ?"which c?" (c[k2])
+  pinned: b[k] = c[k] + x for k in ks
+  pinned: b[k] = c[k] for k in ks
+  cut 2026-10-25
+,28:fixes/t231g34/p4_holeone/q_c,13:fixes-t231g34,30:run p4_holeone.tally --ask q_c,768:16:p4_holeone.tally,743:model p4
+  tally 2
+  on 2026-10-25
+  start 2026-01-01
+  end 2026-12-31
+
+source s "invented"
+
+unit PLN: currency minor 0.01
+
+index ks = [k1, k2]
+
+input b[k in ks]: money PLN
+input c[k in ks]: money PLN
+input x: money PLN
+
+def dbl[k in ks]: money PLN = b[k] + b[k]
+def two[k in ks]: money PLN = (dbl[k] as if {b[k] = c[k]}) - (dbl[k] as if {b[k] = c[k] + x})
+def twoc: money PLN = (dbl[k2] as if {b[k2] = c[k2]}) - (dbl[k2] as if {b[k2] = c[k2] + x})
+
+ask q_one: two[k] for k in ks
+ask q_for: (dbl[k] as if {b[k] = c[k]}) - (dbl[k] as if {b[k] = c[k] + x}) for k in ks
+ask q_c: twoc
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  b[k1] = 100 PLN "s"
+  b[k2] = 200 PLN "s"
+  c[k1] = 1 PLN "s"
+  c[k2] = ?"which c?" "s"
+  x = 5 PLN "s"
+,,1:0,80:q_c: ?"which c?" (c[k2])
+  pinned: b[k2] = ?"which c?" (c[k2])
+  cut 2026-10-25
+,22:fixes/t231g34/tuple/t1,13:fixes-t231g34,24:run tuple.tally --ask t1,1006:11:tuple.tally,986:model tuple
+  tally 2
+  on 2026-10-18
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+unit PLN: currency minor 0.01
+index ks = [k1, k2, k3]
+index js = [j1, j2]
+input v[k in ks, j in js]: money PLN
+input r[k in ks]: rate
+input best_k: key ks
+input best_j: key js
+
+
+ask t1: argmin(v[k, j] for k in ks, j in js) == argmax(v[k, j] for k in ks, j in js)
+ask t2: argmin(v[k, j] for k in ks, j in js) != argmax(v[k, j] for k in ks, j in js)
+ask t3: argmin(v[k, j] for k in ks, j in js) == argmin(v[k, j] for k in ks, j in js)
+ask t4: v[argmin(v[k, j] for k in ks, j in js)]
+ask t5: v[first(k in ks, j in js where v[k, j] > v[k2, j1])]
+ask m1: mean(r[k] for k in ks)
+
+version ver
+  cite s
+  governs always
+  known 2026-01-01
+  v[k1, j1] = 5.00 PLN "s"
+  v[k1, j2] = 7.00 PLN "s"
+  v[k2, j1] = 3.00 PLN "s"
+  v[k2, j2] = 9.00 PLN "s"
+  v[k3, j1] = 4.00 PLN "s"
+  v[k3, j2] = 6.00 PLN "s"
+  r[k1] = 2 %/year "s"
+  r[k2] = 4 %/year "s"
+  r[k3] = 6 %/year "s"
+  best_k = k2 "s"
+  best_j = j1 "s"
+,,1:0,133:t1: false
+  cut 2026-10-18
+warning: WARN-UNREAD input best_j is read by nothing
+warning: WARN-UNREAD input best_k is read by nothing
+,22:fixes/t231g34/tuple/t2,13:fixes-t231g34,24:run tuple.tally --ask t2,1006:11:tuple.tally,986:model tuple
+  tally 2
+  on 2026-10-18
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+unit PLN: currency minor 0.01
+index ks = [k1, k2, k3]
+index js = [j1, j2]
+input v[k in ks, j in js]: money PLN
+input r[k in ks]: rate
+input best_k: key ks
+input best_j: key js
+
+
+ask t1: argmin(v[k, j] for k in ks, j in js) == argmax(v[k, j] for k in ks, j in js)
+ask t2: argmin(v[k, j] for k in ks, j in js) != argmax(v[k, j] for k in ks, j in js)
+ask t3: argmin(v[k, j] for k in ks, j in js) == argmin(v[k, j] for k in ks, j in js)
+ask t4: v[argmin(v[k, j] for k in ks, j in js)]
+ask t5: v[first(k in ks, j in js where v[k, j] > v[k2, j1])]
+ask m1: mean(r[k] for k in ks)
+
+version ver
+  cite s
+  governs always
+  known 2026-01-01
+  v[k1, j1] = 5.00 PLN "s"
+  v[k1, j2] = 7.00 PLN "s"
+  v[k2, j1] = 3.00 PLN "s"
+  v[k2, j2] = 9.00 PLN "s"
+  v[k3, j1] = 4.00 PLN "s"
+  v[k3, j2] = 6.00 PLN "s"
+  r[k1] = 2 %/year "s"
+  r[k2] = 4 %/year "s"
+  r[k3] = 6 %/year "s"
+  best_k = k2 "s"
+  best_j = j1 "s"
+,,1:0,132:t2: true
+  cut 2026-10-18
+warning: WARN-UNREAD input best_j is read by nothing
+warning: WARN-UNREAD input best_k is read by nothing
+,22:fixes/t231g34/tuple/t3,13:fixes-t231g34,24:run tuple.tally --ask t3,1006:11:tuple.tally,986:model tuple
+  tally 2
+  on 2026-10-18
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+unit PLN: currency minor 0.01
+index ks = [k1, k2, k3]
+index js = [j1, j2]
+input v[k in ks, j in js]: money PLN
+input r[k in ks]: rate
+input best_k: key ks
+input best_j: key js
+
+
+ask t1: argmin(v[k, j] for k in ks, j in js) == argmax(v[k, j] for k in ks, j in js)
+ask t2: argmin(v[k, j] for k in ks, j in js) != argmax(v[k, j] for k in ks, j in js)
+ask t3: argmin(v[k, j] for k in ks, j in js) == argmin(v[k, j] for k in ks, j in js)
+ask t4: v[argmin(v[k, j] for k in ks, j in js)]
+ask t5: v[first(k in ks, j in js where v[k, j] > v[k2, j1])]
+ask m1: mean(r[k] for k in ks)
+
+version ver
+  cite s
+  governs always
+  known 2026-01-01
+  v[k1, j1] = 5.00 PLN "s"
+  v[k1, j2] = 7.00 PLN "s"
+  v[k2, j1] = 3.00 PLN "s"
+  v[k2, j2] = 9.00 PLN "s"
+  v[k3, j1] = 4.00 PLN "s"
+  v[k3, j2] = 6.00 PLN "s"
+  r[k1] = 2 %/year "s"
+  r[k2] = 4 %/year "s"
+  r[k3] = 6 %/year "s"
+  best_k = k2 "s"
+  best_j = j1 "s"
+,,1:0,132:t3: true
+  cut 2026-10-18
+warning: WARN-UNREAD input best_j is read by nothing
+warning: WARN-UNREAD input best_k is read by nothing
+,22:fixes/t231g34/tuple/t4,13:fixes-t231g34,24:run tuple.tally --ask t4,1006:11:tuple.tally,986:model tuple
+  tally 2
+  on 2026-10-18
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+unit PLN: currency minor 0.01
+index ks = [k1, k2, k3]
+index js = [j1, j2]
+input v[k in ks, j in js]: money PLN
+input r[k in ks]: rate
+input best_k: key ks
+input best_j: key js
+
+
+ask t1: argmin(v[k, j] for k in ks, j in js) == argmax(v[k, j] for k in ks, j in js)
+ask t2: argmin(v[k, j] for k in ks, j in js) != argmax(v[k, j] for k in ks, j in js)
+ask t3: argmin(v[k, j] for k in ks, j in js) == argmin(v[k, j] for k in ks, j in js)
+ask t4: v[argmin(v[k, j] for k in ks, j in js)]
+ask t5: v[first(k in ks, j in js where v[k, j] > v[k2, j1])]
+ask m1: mean(r[k] for k in ks)
+
+version ver
+  cite s
+  governs always
+  known 2026-01-01
+  v[k1, j1] = 5.00 PLN "s"
+  v[k1, j2] = 7.00 PLN "s"
+  v[k2, j1] = 3.00 PLN "s"
+  v[k2, j2] = 9.00 PLN "s"
+  v[k3, j1] = 4.00 PLN "s"
+  v[k3, j2] = 6.00 PLN "s"
+  r[k1] = 2 %/year "s"
+  r[k2] = 4 %/year "s"
+  r[k3] = 6 %/year "s"
+  best_k = k2 "s"
+  best_j = j1 "s"
+,,1:0,136:t4: 3.00 PLN
+  cut 2026-10-18
+warning: WARN-UNREAD input best_j is read by nothing
+warning: WARN-UNREAD input best_k is read by nothing
+,22:fixes/t231g34/tuple/t5,13:fixes-t231g34,24:run tuple.tally --ask t5,1006:11:tuple.tally,986:model tuple
+  tally 2
+  on 2026-10-18
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+unit PLN: currency minor 0.01
+index ks = [k1, k2, k3]
+index js = [j1, j2]
+input v[k in ks, j in js]: money PLN
+input r[k in ks]: rate
+input best_k: key ks
+input best_j: key js
+
+
+ask t1: argmin(v[k, j] for k in ks, j in js) == argmax(v[k, j] for k in ks, j in js)
+ask t2: argmin(v[k, j] for k in ks, j in js) != argmax(v[k, j] for k in ks, j in js)
+ask t3: argmin(v[k, j] for k in ks, j in js) == argmin(v[k, j] for k in ks, j in js)
+ask t4: v[argmin(v[k, j] for k in ks, j in js)]
+ask t5: v[first(k in ks, j in js where v[k, j] > v[k2, j1])]
+ask m1: mean(r[k] for k in ks)
+
+version ver
+  cite s
+  governs always
+  known 2026-01-01
+  v[k1, j1] = 5.00 PLN "s"
+  v[k1, j2] = 7.00 PLN "s"
+  v[k2, j1] = 3.00 PLN "s"
+  v[k2, j2] = 9.00 PLN "s"
+  v[k3, j1] = 4.00 PLN "s"
+  v[k3, j2] = 6.00 PLN "s"
+  r[k1] = 2 %/year "s"
+  r[k2] = 4 %/year "s"
+  r[k3] = 6 %/year "s"
+  best_k = k2 "s"
+  best_j = j1 "s"
+,,1:0,136:t5: 5.00 PLN
+  cut 2026-10-18
+warning: WARN-UNREAD input best_j is read by nothing
+warning: WARN-UNREAD input best_k is read by nothing
+,22:fixes/t231g34/tuple/m1,13:fixes-t231g34,24:run tuple.tally --ask m1,1006:11:tuple.tally,986:model tuple
+  tally 2
+  on 2026-10-18
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+unit PLN: currency minor 0.01
+index ks = [k1, k2, k3]
+index js = [j1, j2]
+input v[k in ks, j in js]: money PLN
+input r[k in ks]: rate
+input best_k: key ks
+input best_j: key js
+
+
+ask t1: argmin(v[k, j] for k in ks, j in js) == argmax(v[k, j] for k in ks, j in js)
+ask t2: argmin(v[k, j] for k in ks, j in js) != argmax(v[k, j] for k in ks, j in js)
+ask t3: argmin(v[k, j] for k in ks, j in js) == argmin(v[k, j] for k in ks, j in js)
+ask t4: v[argmin(v[k, j] for k in ks, j in js)]
+ask t5: v[first(k in ks, j in js where v[k, j] > v[k2, j1])]
+ask m1: mean(r[k] for k in ks)
+
+version ver
+  cite s
+  governs always
+  known 2026-01-01
+  v[k1, j1] = 5.00 PLN "s"
+  v[k1, j2] = 7.00 PLN "s"
+  v[k2, j1] = 3.00 PLN "s"
+  v[k2, j2] = 9.00 PLN "s"
+  v[k3, j1] = 4.00 PLN "s"
+  v[k3, j2] = 6.00 PLN "s"
+  r[k1] = 2 %/year "s"
+  r[k2] = 4 %/year "s"
+  r[k3] = 6 %/year "s"
+  best_k = k2 "s"
+  best_j = j1 "s"
+,,1:0,139:m1: 0.04 1/year
+  cut 2026-10-18
+warning: WARN-UNREAD input best_j is read by nothing
+warning: WARN-UNREAD input best_k is read by nothing
+,27:fixes/t231g34/order_cycle/a,13:fixes-t231g34,29:run order_cycle.tally --ask a,1011:17:order_cycle.tally,985:model order_cycle
+  tally 2
+  on 2026-10-18
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+unit PLN: currency minor 0.01
+input day: date
+input fee: money PLN
+place konto: accounts PLN lives 2025-01-01..
+place savings: accounts PLN lives 2025-01-01..
+place kasa: accounts PLN lives 2025-01-01..
+place world: outside lives 1900-01-01..
+
+move save: transfers
+  on day
+  reads konto
+  before spend
+  leg cash from konto to savings amount min(bal(konto), fee)
+
+move spend: transfers
+  on day
+  reads kasa
+  before top
+  leg cash from kasa to world amount min(bal(kasa), fee)
+
+move top: transfers
+  on day
+  reads savings
+  before save
+  leg cash from savings to kasa amount min(bal(savings), fee)
+
+ask a: bal(kasa, 2026-01-15)
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  day = 2026-01-15 "s"
+  fee = 5.00 PLN "s"
+  opening[konto] = 100.00 PLN at 2026-01-01 start "s"
+  opening[savings] = 0.00 PLN at 2026-01-01 start "s"
+  opening[kasa] = 10.00 PLN at 2026-01-01 start "s"
+,,1:1,113:refused: LOAD-ORDER save before spend before top before save: written orders form a cycle (order_cycle.tally:16)
+,26:fixes/t231g34/axis_pins/q1,13:fixes-t231g34,28:run axis_pins.tally --ask q1,342:15:axis_pins.tally,318:model axis_pins
+  tally 2
+  on 2026-10-18
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+axis mode
+  ma "a"
+  mb "b"
+input k: int
+input j: int
+
+def d: int = if mode == ma then (k as if {k = j}) else k
+
+ask q1: d
+ask q2: d with j = 7
+
+version ver
+  cite s
+  governs always
+  known 2026-01-01
+  k = 5 "s"
+  j = 5 "s"
+,,1:0,128:q1 [mode = ma]: 5
+  pinned: k = 5
+  reading: mode = ma
+  cut 2026-10-18
+q1 [mode = mb]: 5
+  reading: mode = mb
+  cut 2026-10-18
+,26:fixes/t231g34/axis_pins/q2,13:fixes-t231g34,28:run axis_pins.tally --ask q2,342:15:axis_pins.tally,318:model axis_pins
+  tally 2
+  on 2026-10-18
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+axis mode
+  ma "a"
+  mb "b"
+input k: int
+input j: int
+
+def d: int = if mode == ma then (k as if {k = j}) else k
+
+ask q1: d
+ask q2: d with j = 7
+
+version ver
+  cite s
+  governs always
+  known 2026-01-01
+  k = 5 "s"
+  j = 5 "s"
+,,1:0,144:q2 [mode = ma]: 7
+  pinned: j = 7
+  pinned: k = 7
+  reading: mode = ma
+  cut 2026-10-18
+q2 [mode = mb]: 5
+  reading: mode = mb
+  cut 2026-10-18
+,34:fixes/t231rv2/f09_three_explain/c9,13:fixes-t231rv2,36:run f09_three_explain.tally --ask c9,931:23:f09_three_explain.tally,899:model f09
+  tally 2
+  on 2026-06-10
+  start 2026-01-01
+  end 2026-12-31
+source s "probe"
+unit PLN: currency minor 0.01
+place wa: accounts PLN lives 2025-01-01..
+place world: outside lives 1900-01-01..
+input d1: date
+input d2: date
+input d3: date
+input a: money PLN
+move x1: transfers
+  on d1
+  leg cash from world to wa amount a
+move x2: transfers
+  on d2
+  leg cash from world to wa amount a
+move x3: transfers
+  on d3
+  leg cash from world to wa amount a
+ask e9: explain bal(wa, 2026-03-31)
+ask e8: explain bal(wa, 2026-03-08)
+ask c9: count(t in transfers over 2026-03)
+ask pd: bal(wa, 2026-03-31) with d2 = 2026-03-10
+ask pe: explain bal(wa, 2026-03-31) with d2 = 2026-03-10
+version v
+  cite s
+  governs always
+  known 2025-12-01
+  opening[wa] = 0.00 PLN at 2026-01-01 start "s"
+  d1 = 2026-03-05 "s"
+  d2 = 2026-03-07 "s"
+  d3 = 2026-03-09 "s"
+  a = 100.00 PLN "s"
+  same x1 = x2
+  same x2 = x3
+,,1:0,77:c9: 1
+  unfulfilled: x1
+  unfulfilled: x2
+  unfulfilled: x3
+  cut 2026-06-10
+,34:fixes/t231rv2/f12_dec_sides_min/b6,13:fixes-t231rv2,36:run f12_dec_sides_min.tally --ask b6,1159:23:f12_dec_sides_min.tally,1126:model f12
+  tally 2
+  on 2026-06-10
+  start 2026-01-01
+  end 2026-12-31
+source s "probe"
+unit PLN: currency minor 0.01
+place wallet: accounts PLN lives 2025-01-01..
+place w2: accounts PLN lives 2025-01-01..
+place other: accounts PLN lives 2025-01-01..
+place world: outside lives 1900-01-01..
+input a: money PLN
+input d1: date
+input d2: date
+move in1: transfers
+  reads other
+  on d1
+  leg cash from world to wallet amount a + 0 * bal(other)
+move in2: transfers
+  reads other
+  on d2
+  leg cash from world to wallet amount a + 0 * bal(other)
+move j1: transfers
+  on d1
+  leg cash from world to w2 amount a
+move j2: transfers
+  reads other
+  on d2
+  leg cash from world to w2 amount a + 0 * bal(other)
+ask b6: bal(wallet, 2026-03-06)
+ask b8: bal(wallet, 2026-03-08)
+ask c6: bal(w2, 2026-03-06)
+ask c8: bal(w2, 2026-03-08)
+version v
+  cite s
+  governs always
+  known 2025-12-01
+  opening[wallet] = 0.00 PLN at 2026-01-01 start "s"
+  opening[w2] = 0.00 PLN at 2026-01-01 start "s"
+  opening[other] = 5.00 PLN at 2026-01-01 start "s"
+  a = 100.00 PLN "s"
+  d1 = 2026-03-05 "s"
+  d2 = 2026-03-07 "s"
+  same in1 = in2
+  same j1 = j2
+,,1:0,166:b6: ?"in1 and in2 are one, but the leg at wallet differs on 2026-03-05: 100.00 PLN (in1) and its day 2026-03-07 (in2)" (in1, in2)
+  unfulfilled: in1
+  cut 2026-06-10
+,34:fixes/t231rv2/f12_dec_sides_min/b8,13:fixes-t231rv2,36:run f12_dec_sides_min.tally --ask b8,1159:23:f12_dec_sides_min.tally,1126:model f12
+  tally 2
+  on 2026-06-10
+  start 2026-01-01
+  end 2026-12-31
+source s "probe"
+unit PLN: currency minor 0.01
+place wallet: accounts PLN lives 2025-01-01..
+place w2: accounts PLN lives 2025-01-01..
+place other: accounts PLN lives 2025-01-01..
+place world: outside lives 1900-01-01..
+input a: money PLN
+input d1: date
+input d2: date
+move in1: transfers
+  reads other
+  on d1
+  leg cash from world to wallet amount a + 0 * bal(other)
+move in2: transfers
+  reads other
+  on d2
+  leg cash from world to wallet amount a + 0 * bal(other)
+move j1: transfers
+  on d1
+  leg cash from world to w2 amount a
+move j2: transfers
+  reads other
+  on d2
+  leg cash from world to w2 amount a + 0 * bal(other)
+ask b6: bal(wallet, 2026-03-06)
+ask b8: bal(wallet, 2026-03-08)
+ask c6: bal(w2, 2026-03-06)
+ask c8: bal(w2, 2026-03-08)
+version v
+  cite s
+  governs always
+  known 2025-12-01
+  opening[wallet] = 0.00 PLN at 2026-01-01 start "s"
+  opening[w2] = 0.00 PLN at 2026-01-01 start "s"
+  opening[other] = 5.00 PLN at 2026-01-01 start "s"
+  a = 100.00 PLN "s"
+  d1 = 2026-03-05 "s"
+  d2 = 2026-03-07 "s"
+  same in1 = in2
+  same j1 = j2
+,,1:0,70:b8: 100.00 PLN
+  unfulfilled: in1
+  unfulfilled: in2
+  cut 2026-06-10
+,34:fixes/t231rv2/f12_dec_sides_min/c8,13:fixes-t231rv2,36:run f12_dec_sides_min.tally --ask c8,1159:23:f12_dec_sides_min.tally,1126:model f12
+  tally 2
+  on 2026-06-10
+  start 2026-01-01
+  end 2026-12-31
+source s "probe"
+unit PLN: currency minor 0.01
+place wallet: accounts PLN lives 2025-01-01..
+place w2: accounts PLN lives 2025-01-01..
+place other: accounts PLN lives 2025-01-01..
+place world: outside lives 1900-01-01..
+input a: money PLN
+input d1: date
+input d2: date
+move in1: transfers
+  reads other
+  on d1
+  leg cash from world to wallet amount a + 0 * bal(other)
+move in2: transfers
+  reads other
+  on d2
+  leg cash from world to wallet amount a + 0 * bal(other)
+move j1: transfers
+  on d1
+  leg cash from world to w2 amount a
+move j2: transfers
+  reads other
+  on d2
+  leg cash from world to w2 amount a + 0 * bal(other)
+ask b6: bal(wallet, 2026-03-06)
+ask b8: bal(wallet, 2026-03-08)
+ask c6: bal(w2, 2026-03-06)
+ask c8: bal(w2, 2026-03-08)
+version v
+  cite s
+  governs always
+  known 2025-12-01
+  opening[wallet] = 0.00 PLN at 2026-01-01 start "s"
+  opening[w2] = 0.00 PLN at 2026-01-01 start "s"
+  opening[other] = 5.00 PLN at 2026-01-01 start "s"
+  a = 100.00 PLN "s"
+  d1 = 2026-03-05 "s"
+  d2 = 2026-03-07 "s"
+  same in1 = in2
+  same j1 = j2
+,,1:0,68:c8: 100.00 PLN
+  unfulfilled: j1
+  unfulfilled: j2
+  cut 2026-06-10
+,37:fixes/t231rv2/f13_three_shared_day/c9,13:fixes-t231rv2,39:run f13_three_shared_day.tally --ask c9,1113:26:f13_three_shared_day.tally,1077:model f13
+  tally 2
+  on 2026-06-10
+  start 2026-01-01
+  end 2026-12-31
+source s "probe"
+unit PLN: currency minor 0.01
+place wa: accounts PLN lives 2025-01-01..
+place world: outside lives 1900-01-01..
+input d1: date
+input d2: date
+input d3: date
+input a: money PLN
+move x1: transfers
+  on d1
+  leg cash from world to wa amount a
+move x2: transfers
+  on d2
+  leg cash from world to wa amount a
+move x3: transfers
+  on d3
+  leg cash from world to wa amount a
+ask e9: explain bal(wa, 2026-03-31)
+ask e8: explain bal(wa, 2026-03-08)
+ask c9: count(t in transfers over 2026-03)
+ask pd: bal(wa, 2026-03-31) with d2 = 2026-03-10
+ask pe: explain bal(wa, 2026-03-31) with d3 = 2026-03-05
+ask b6: bal(wa, 2026-03-06)
+ask ka: bal(wa, 2026-03-31) as known 2026-03-06
+ask s3: sum(t.cash.amount for t in transfers over 2026-03)
+ask n3: count(t in transfers over 2026-03)
+version v
+  cite s
+  governs always
+  known 2025-12-01
+  opening[wa] = 0.00 PLN at 2026-01-01 start "s"
+  d1 = 2026-03-05 "s"
+  d2 = 2026-03-05 "s"
+  d3 = 2026-03-09 "s"
+  a = 100.00 PLN "s"
+  same x1 = x2
+  same x2 = x3
+,,1:0,77:c9: 1
+  unfulfilled: x1
+  unfulfilled: x2
+  unfulfilled: x3
+  cut 2026-06-10
+,37:fixes/t231rv2/f13_three_shared_day/s3,13:fixes-t231rv2,39:run f13_three_shared_day.tally --ask s3,1113:26:f13_three_shared_day.tally,1077:model f13
+  tally 2
+  on 2026-06-10
+  start 2026-01-01
+  end 2026-12-31
+source s "probe"
+unit PLN: currency minor 0.01
+place wa: accounts PLN lives 2025-01-01..
+place world: outside lives 1900-01-01..
+input d1: date
+input d2: date
+input d3: date
+input a: money PLN
+move x1: transfers
+  on d1
+  leg cash from world to wa amount a
+move x2: transfers
+  on d2
+  leg cash from world to wa amount a
+move x3: transfers
+  on d3
+  leg cash from world to wa amount a
+ask e9: explain bal(wa, 2026-03-31)
+ask e8: explain bal(wa, 2026-03-08)
+ask c9: count(t in transfers over 2026-03)
+ask pd: bal(wa, 2026-03-31) with d2 = 2026-03-10
+ask pe: explain bal(wa, 2026-03-31) with d3 = 2026-03-05
+ask b6: bal(wa, 2026-03-06)
+ask ka: bal(wa, 2026-03-31) as known 2026-03-06
+ask s3: sum(t.cash.amount for t in transfers over 2026-03)
+ask n3: count(t in transfers over 2026-03)
+version v
+  cite s
+  governs always
+  known 2025-12-01
+  opening[wa] = 0.00 PLN at 2026-01-01 start "s"
+  d1 = 2026-03-05 "s"
+  d2 = 2026-03-05 "s"
+  d3 = 2026-03-09 "s"
+  a = 100.00 PLN "s"
+  same x1 = x2
+  same x2 = x3
+,,1:0,86:s3: 100.00 PLN
+  unfulfilled: x1
+  unfulfilled: x2
+  unfulfilled: x3
+  cut 2026-06-10
+,37:fixes/t231rv2/f13_three_shared_day/n3,13:fixes-t231rv2,39:run f13_three_shared_day.tally --ask n3,1113:26:f13_three_shared_day.tally,1077:model f13
+  tally 2
+  on 2026-06-10
+  start 2026-01-01
+  end 2026-12-31
+source s "probe"
+unit PLN: currency minor 0.01
+place wa: accounts PLN lives 2025-01-01..
+place world: outside lives 1900-01-01..
+input d1: date
+input d2: date
+input d3: date
+input a: money PLN
+move x1: transfers
+  on d1
+  leg cash from world to wa amount a
+move x2: transfers
+  on d2
+  leg cash from world to wa amount a
+move x3: transfers
+  on d3
+  leg cash from world to wa amount a
+ask e9: explain bal(wa, 2026-03-31)
+ask e8: explain bal(wa, 2026-03-08)
+ask c9: count(t in transfers over 2026-03)
+ask pd: bal(wa, 2026-03-31) with d2 = 2026-03-10
+ask pe: explain bal(wa, 2026-03-31) with d3 = 2026-03-05
+ask b6: bal(wa, 2026-03-06)
+ask ka: bal(wa, 2026-03-31) as known 2026-03-06
+ask s3: sum(t.cash.amount for t in transfers over 2026-03)
+ask n3: count(t in transfers over 2026-03)
+version v
+  cite s
+  governs always
+  known 2025-12-01
+  opening[wa] = 0.00 PLN at 2026-01-01 start "s"
+  d1 = 2026-03-05 "s"
+  d2 = 2026-03-05 "s"
+  d3 = 2026-03-09 "s"
+  a = 100.00 PLN "s"
+  same x1 = x2
+  same x2 = x3
+,,1:0,77:n3: 1
+  unfulfilled: x1
+  unfulfilled: x2
+  unfulfilled: x3
+  cut 2026-06-10
+,19:fixes/t231rv2/s5/b6,13:fixes-t231rv2,29:run r.tally up.tally --ask b6,2123:7:r.tally,1948:model s5
+  tally 2
+  on 2026-06-10
+  start 2026-01-01
+  end 2026-12-31
+
+source s "probe"
+unit PLN: currency minor 0.01
+place wallet: accounts PLN lives 2025-01-01..
+place w2: accounts PLN lives 2025-01-01..
+place w3: accounts PLN lives 2025-01-01..
+place other: accounts PLN lives 2025-01-01..
+place world: outside lives 1900-01-01..
+input d1: date
+input d2: date
+input a: money PLN
+input a2: money PLN
+
+move in1: transfers
+  reads other
+  on d1
+  at d1
+  leg cash from world to wallet amount a + 0 * bal(other)
+move in2: transfers
+  reads other
+  on d2
+  at d2
+  leg cash from world to wallet amount a + 0 * bal(other)
+move j1: transfers
+  on d1
+  at d1
+  leg cash from world to w2 amount a
+move j2: transfers
+  reads other
+  on d2
+  at d2
+  leg cash from world to w2 amount a2 + 0 * bal(other)
+move k1: transfers
+  reads w3
+  on d1
+  at d1
+  leg cash from world to w3 amount a + 0 * bal(w3)
+move k2: transfers
+  on d2
+  at d2
+  leg cash from world to w3 amount a
+
+ask b6: bal(wallet, 2026-03-06)
+ask b8: bal(wallet, 2026-03-08)
+ask c6: bal(w2, 2026-03-06)
+ask c8: bal(w2, 2026-03-08)
+ask cu: bal(w2, 2026-03-08) in up
+ask cu6: bal(w2, 2026-03-06) in up
+ask ku: bal(w3, 2026-03-08) in up
+ask ex: explain bal(wallet, 2026-03-08)
+ask k8: bal(w3, 2026-03-08) as known 2026-03-06
+ask k9: bal(w3, 2026-03-08)
+
+ask b31: bal(wallet, 2026-05-31)
+ask c31: bal(w2, 2026-05-31)
+ask cu31: bal(w2, 2026-05-31) in up
+ask k31: bal(w3, 2026-05-31)
+ask ku31: bal(w3, 2026-05-31) in up
+ask eb31: explain bal(wallet, 2026-05-31)
+ask ec31: explain bal(w2, 2026-05-31) in up
+
+version v
+  cite s
+  governs always
+  known 2025-12-01
+  opening[wallet] = 0.00 PLN at 2026-01-01 start "s"
+  opening[w2] = 0.00 PLN at 2026-01-01 start "s"
+  opening[w3] = 0.00 PLN at 2026-01-01 start "s"
+  opening[other] = 5.00 PLN at 2026-01-01 start "s"
+  d1 = 2026-03-05 "s"
+  d2 = 2026-05-07 "s"
+  a = 100.00 PLN "s"
+  a2 = 130.00 PLN "s"
+  same in1 = in2
+  same j1 = j2
+  same k1 = k2
+,8:up.tally,143:scenario up over s5
+  tally 2
+  from 2026-04-01
+
+version w
+  cite s
+  governs 2026-04..
+  known 2026-04-01
+  replace a2 = 100.00 PLN "what if"
+,,1:0,166:b6: ?"in1 and in2 are one, but the leg at wallet differs on 2026-03-05: 100.00 PLN (in1) and its day 2026-05-07 (in2)" (in1, in2)
+  unfulfilled: in1
+  cut 2026-06-10
+,19:fixes/t231rv2/s5/b8,13:fixes-t231rv2,29:run r.tally up.tally --ask b8,2123:7:r.tally,1948:model s5
+  tally 2
+  on 2026-06-10
+  start 2026-01-01
+  end 2026-12-31
+
+source s "probe"
+unit PLN: currency minor 0.01
+place wallet: accounts PLN lives 2025-01-01..
+place w2: accounts PLN lives 2025-01-01..
+place w3: accounts PLN lives 2025-01-01..
+place other: accounts PLN lives 2025-01-01..
+place world: outside lives 1900-01-01..
+input d1: date
+input d2: date
+input a: money PLN
+input a2: money PLN
+
+move in1: transfers
+  reads other
+  on d1
+  at d1
+  leg cash from world to wallet amount a + 0 * bal(other)
+move in2: transfers
+  reads other
+  on d2
+  at d2
+  leg cash from world to wallet amount a + 0 * bal(other)
+move j1: transfers
+  on d1
+  at d1
+  leg cash from world to w2 amount a
+move j2: transfers
+  reads other
+  on d2
+  at d2
+  leg cash from world to w2 amount a2 + 0 * bal(other)
+move k1: transfers
+  reads w3
+  on d1
+  at d1
+  leg cash from world to w3 amount a + 0 * bal(w3)
+move k2: transfers
+  on d2
+  at d2
+  leg cash from world to w3 amount a
+
+ask b6: bal(wallet, 2026-03-06)
+ask b8: bal(wallet, 2026-03-08)
+ask c6: bal(w2, 2026-03-06)
+ask c8: bal(w2, 2026-03-08)
+ask cu: bal(w2, 2026-03-08) in up
+ask cu6: bal(w2, 2026-03-06) in up
+ask ku: bal(w3, 2026-03-08) in up
+ask ex: explain bal(wallet, 2026-03-08)
+ask k8: bal(w3, 2026-03-08) as known 2026-03-06
+ask k9: bal(w3, 2026-03-08)
+
+ask b31: bal(wallet, 2026-05-31)
+ask c31: bal(w2, 2026-05-31)
+ask cu31: bal(w2, 2026-05-31) in up
+ask k31: bal(w3, 2026-05-31)
+ask ku31: bal(w3, 2026-05-31) in up
+ask eb31: explain bal(wallet, 2026-05-31)
+ask ec31: explain bal(w2, 2026-05-31) in up
+
+version v
+  cite s
+  governs always
+  known 2025-12-01
+  opening[wallet] = 0.00 PLN at 2026-01-01 start "s"
+  opening[w2] = 0.00 PLN at 2026-01-01 start "s"
+  opening[w3] = 0.00 PLN at 2026-01-01 start "s"
+  opening[other] = 5.00 PLN at 2026-01-01 start "s"
+  d1 = 2026-03-05 "s"
+  d2 = 2026-05-07 "s"
+  a = 100.00 PLN "s"
+  a2 = 130.00 PLN "s"
+  same in1 = in2
+  same j1 = j2
+  same k1 = k2
+,8:up.tally,143:scenario up over s5
+  tally 2
+  from 2026-04-01
+
+version w
+  cite s
+  governs 2026-04..
+  known 2026-04-01
+  replace a2 = 100.00 PLN "what if"
+,,1:0,166:b8: ?"in1 and in2 are one, but the leg at wallet differs on 2026-03-05: 100.00 PLN (in1) and its day 2026-05-07 (in2)" (in1, in2)
+  unfulfilled: in1
+  cut 2026-06-10
+,20:fixes/t231rv2/s5/b31,13:fixes-t231rv2,30:run r.tally up.tally --ask b31,2123:7:r.tally,1948:model s5
+  tally 2
+  on 2026-06-10
+  start 2026-01-01
+  end 2026-12-31
+
+source s "probe"
+unit PLN: currency minor 0.01
+place wallet: accounts PLN lives 2025-01-01..
+place w2: accounts PLN lives 2025-01-01..
+place w3: accounts PLN lives 2025-01-01..
+place other: accounts PLN lives 2025-01-01..
+place world: outside lives 1900-01-01..
+input d1: date
+input d2: date
+input a: money PLN
+input a2: money PLN
+
+move in1: transfers
+  reads other
+  on d1
+  at d1
+  leg cash from world to wallet amount a + 0 * bal(other)
+move in2: transfers
+  reads other
+  on d2
+  at d2
+  leg cash from world to wallet amount a + 0 * bal(other)
+move j1: transfers
+  on d1
+  at d1
+  leg cash from world to w2 amount a
+move j2: transfers
+  reads other
+  on d2
+  at d2
+  leg cash from world to w2 amount a2 + 0 * bal(other)
+move k1: transfers
+  reads w3
+  on d1
+  at d1
+  leg cash from world to w3 amount a + 0 * bal(w3)
+move k2: transfers
+  on d2
+  at d2
+  leg cash from world to w3 amount a
+
+ask b6: bal(wallet, 2026-03-06)
+ask b8: bal(wallet, 2026-03-08)
+ask c6: bal(w2, 2026-03-06)
+ask c8: bal(w2, 2026-03-08)
+ask cu: bal(w2, 2026-03-08) in up
+ask cu6: bal(w2, 2026-03-06) in up
+ask ku: bal(w3, 2026-03-08) in up
+ask ex: explain bal(wallet, 2026-03-08)
+ask k8: bal(w3, 2026-03-08) as known 2026-03-06
+ask k9: bal(w3, 2026-03-08)
+
+ask b31: bal(wallet, 2026-05-31)
+ask c31: bal(w2, 2026-05-31)
+ask cu31: bal(w2, 2026-05-31) in up
+ask k31: bal(w3, 2026-05-31)
+ask ku31: bal(w3, 2026-05-31) in up
+ask eb31: explain bal(wallet, 2026-05-31)
+ask ec31: explain bal(w2, 2026-05-31) in up
+
+version v
+  cite s
+  governs always
+  known 2025-12-01
+  opening[wallet] = 0.00 PLN at 2026-01-01 start "s"
+  opening[w2] = 0.00 PLN at 2026-01-01 start "s"
+  opening[w3] = 0.00 PLN at 2026-01-01 start "s"
+  opening[other] = 5.00 PLN at 2026-01-01 start "s"
+  d1 = 2026-03-05 "s"
+  d2 = 2026-05-07 "s"
+  a = 100.00 PLN "s"
+  a2 = 130.00 PLN "s"
+  same in1 = in2
+  same j1 = j2
+  same k1 = k2
+,8:up.tally,143:scenario up over s5
+  tally 2
+  from 2026-04-01
+
+version w
+  cite s
+  governs 2026-04..
+  known 2026-04-01
+  replace a2 = 100.00 PLN "what if"
+,,1:0,71:b31: 100.00 PLN
+  unfulfilled: in1
+  unfulfilled: in2
+  cut 2026-06-10
+,21:fixes/t231rv2/s5/cu31,13:fixes-t231rv2,31:run r.tally up.tally --ask cu31,2123:7:r.tally,1948:model s5
+  tally 2
+  on 2026-06-10
+  start 2026-01-01
+  end 2026-12-31
+
+source s "probe"
+unit PLN: currency minor 0.01
+place wallet: accounts PLN lives 2025-01-01..
+place w2: accounts PLN lives 2025-01-01..
+place w3: accounts PLN lives 2025-01-01..
+place other: accounts PLN lives 2025-01-01..
+place world: outside lives 1900-01-01..
+input d1: date
+input d2: date
+input a: money PLN
+input a2: money PLN
+
+move in1: transfers
+  reads other
+  on d1
+  at d1
+  leg cash from world to wallet amount a + 0 * bal(other)
+move in2: transfers
+  reads other
+  on d2
+  at d2
+  leg cash from world to wallet amount a + 0 * bal(other)
+move j1: transfers
+  on d1
+  at d1
+  leg cash from world to w2 amount a
+move j2: transfers
+  reads other
+  on d2
+  at d2
+  leg cash from world to w2 amount a2 + 0 * bal(other)
+move k1: transfers
+  reads w3
+  on d1
+  at d1
+  leg cash from world to w3 amount a + 0 * bal(w3)
+move k2: transfers
+  on d2
+  at d2
+  leg cash from world to w3 amount a
+
+ask b6: bal(wallet, 2026-03-06)
+ask b8: bal(wallet, 2026-03-08)
+ask c6: bal(w2, 2026-03-06)
+ask c8: bal(w2, 2026-03-08)
+ask cu: bal(w2, 2026-03-08) in up
+ask cu6: bal(w2, 2026-03-06) in up
+ask ku: bal(w3, 2026-03-08) in up
+ask ex: explain bal(wallet, 2026-03-08)
+ask k8: bal(w3, 2026-03-08) as known 2026-03-06
+ask k9: bal(w3, 2026-03-08)
+
+ask b31: bal(wallet, 2026-05-31)
+ask c31: bal(w2, 2026-05-31)
+ask cu31: bal(w2, 2026-05-31) in up
+ask k31: bal(w3, 2026-05-31)
+ask ku31: bal(w3, 2026-05-31) in up
+ask eb31: explain bal(wallet, 2026-05-31)
+ask ec31: explain bal(w2, 2026-05-31) in up
+
+version v
+  cite s
+  governs always
+  known 2025-12-01
+  opening[wallet] = 0.00 PLN at 2026-01-01 start "s"
+  opening[w2] = 0.00 PLN at 2026-01-01 start "s"
+  opening[w3] = 0.00 PLN at 2026-01-01 start "s"
+  opening[other] = 5.00 PLN at 2026-01-01 start "s"
+  d1 = 2026-03-05 "s"
+  d2 = 2026-05-07 "s"
+  a = 100.00 PLN "s"
+  a2 = 130.00 PLN "s"
+  same in1 = in2
+  same j1 = j2
+  same k1 = k2
+,8:up.tally,143:scenario up over s5
+  tally 2
+  from 2026-04-01
+
+version w
+  cite s
+  governs 2026-04..
+  known 2026-04-01
+  replace a2 = 100.00 PLN "what if"
+,,1:0,82:cu31: 100.00 PLN
+  world: up
+  unfulfilled: j1
+  unfulfilled: j2
+  cut 2026-06-10
 ,
