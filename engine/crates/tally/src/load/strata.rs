@@ -26,9 +26,10 @@ use super::srows::check_srow_reads;
 use super::steps::{Loader, refuse};
 use crate::base::{Code, Load, Refusal, Warn};
 use crate::model::{
-    Domain, GapRole, Graph, Mark, MoveInfo, Node, NodeKind, Reality, Rel, Shift, Target, Ty,
+    Domain, Fulfils, GapRole, Graph, Mark, MoveInfo, Node, NodeKind, Reality, Rel, Shift, Target,
+    Ty,
 };
-use crate::syntax::{AskBody, Field, Lit, Order, Section, Stop, Value as Written};
+use crate::syntax::{AskBody, Expr, Field, Lit, Order, Section, Stop, Value as Written};
 use std::collections::{BTreeMap, BTreeSet};
 
 /// An invariant of the graph's own searches broken: a cycle or a layer that must exist.
@@ -665,7 +666,10 @@ fn move_reads(m: &Reality, graph: &Graph, id: &str, mv: &MoveInfo) -> Option<Str
         format!("{id} reaches a running read or projection of {name} without reads {name}")
     };
     if !mv.decision {
-        return reached.first().map(|(_, target)| without(target));
+        if let Some((_, target)) = reached.first() {
+            return Some(without(target));
+        }
+        return reached_link(m, graph, id).map(|d| without(&Target::Move(d)));
     }
     if let Some((_, target)) = reached_marks(graph, &Node::new(NodeKind::MoveOn, id)).first() {
         return Some(format!(
@@ -692,6 +696,82 @@ fn move_reads(m: &Reality, graph: &Graph, id: &str, mv: &MoveInfo) -> Option<Str
         }
     }
     None
+}
+
+/// The first decision, by id, whose existence plan `id` reaches through a row's link: the
+/// plan, its day and the defs they read reach an observed input, and a row of it in some
+/// version fulfils an instance of a decision whose `when` reads running state. A row's
+/// record rests on its link, and that decision's link is judged at its walk point, so the
+/// plan reaches a running read (E §3.1 step 7, a decision's existence a mark; L §5.19 Links;
+/// tally 2.3.1 C-9, rulings 15, 16 Q4; G2's review B6).
+fn reached_link(m: &Reality, graph: &Graph, id: &str) -> Option<String> {
+    let mut inputs = BTreeSet::new();
+    let mut seen = BTreeSet::new();
+    let mut stack = vec![
+        Node::new(NodeKind::Move, id),
+        Node::new(NodeKind::MoveOn, id),
+    ];
+    while let Some(next) = stack.pop() {
+        if !seen.insert(next.clone()) {
+            continue;
+        }
+        for target in graph.reads(&next).into_iter().flat_map(BTreeMap::keys) {
+            if target.kind == NodeKind::Input {
+                inputs.insert(target.id.clone());
+            } else if carries_marks(target) {
+                stack.push(target.clone());
+            }
+        }
+    }
+    let mut named = BTreeSet::new();
+    for input in &inputs {
+        let Some(info) = m.inputs.get(input).filter(|info| info.observed) else {
+            continue;
+        };
+        for row in &info.observations {
+            if let Some(Fulfils::Instance(d, _)) = &row.fulfils {
+                named.insert(d.as_str());
+            }
+        }
+    }
+    named
+        .into_iter()
+        .find(|d| {
+            m.moves.get(d).is_some_and(|mv| {
+                mv.decision
+                    && mv
+                        .decl
+                        .when
+                        .as_ref()
+                        .is_some_and(|w| reads_running(m, graph, w))
+            })
+        })
+        .map(str::to_owned)
+}
+
+/// Whether expression `e`, a decision's `when`, reads running state: a `bal(x)` with no day,
+/// or a def that reaches one (E §3.1 step 7; L §5.14.1 Running reads).
+fn reads_running(m: &Reality, graph: &Graph, e: &Expr) -> bool {
+    let mut work = vec![e];
+    while let Some(x) = work.pop() {
+        if let Expr::Bal(b) = x
+            && b.args.is_empty()
+            && !b.modelled
+            && b.proj.from.is_none()
+        {
+            return true;
+        }
+        if let Expr::Name(n) = x
+            && m.defs.get(n).is_some()
+            && reached_marks(graph, &Node::new(NodeKind::Def, n))
+                .iter()
+                .any(|(mark, _)| *mark == Mark::BalNow)
+        {
+            return true;
+        }
+        work.extend(super::texts::children(x));
+    }
+    false
 }
 
 /// Whether a node is a def or a band.

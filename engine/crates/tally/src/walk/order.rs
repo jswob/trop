@@ -1541,6 +1541,37 @@ version feb
     }
 
     #[test]
+    fn a_plan_that_reaches_a_running_decisions_link_is_refused_at_load() {
+        // E §3.1 step 7, L §8.3 (tally 2.3.1 C-9, rulings 15, 16 Q4; G2's review B6): `pay`'s
+        // amount reads `lo`, which reads the row linked to `topup`, whose `when` reads running
+        // state, so load refuses it whatever the asks; the asks alone don't (DEC_LINK loads)
+        let plan = "def lo[m in month]: money PLN at start_of(m)\n  rule guessed = 0.00 PLN\n  \
+                    rule seen beats guessed = sum(o.cash.amount for o in bank over m where \
+                    o.fulfils == none) when covered(konto, m)\n\nmove pay[m in month]: \
+                    transfers\n  on day_of(m, d5)\n  leg cash from konto to shop amount \
+                    lo[fm]\n\nask q: amt\n\nask loose:";
+        let text = DEC_LINK
+            .replace("LIM", "600.00 PLN")
+            .replace("ask loose:", plan)
+            .replace("input d5: int", "input d5: int\n\ninput fm: month")
+            .replace("  d5 = 5 \"s\"", "  d5 = 5 \"s\"\n  fm = 2026-02 \"s\"");
+        let given = vec![Given {
+            path: "dec_s7.tally".to_owned(),
+            bytes: Some(text.into_bytes()),
+        }];
+        let asks = Asks::Named(vec!["q".to_owned()]);
+        let answer = run(Files::new(given), &Request::new(asks)).expect("an answer");
+        let first = answer.lines().first().cloned().expect("a line");
+        assert!(
+            first.starts_with(
+                "refused: LOAD-READS pay reaches a running read or projection of topup without \
+                 reads topup (dec_s7.tally:"
+            ),
+            "{first}"
+        );
+    }
+
+    #[test]
     fn a_row_before_its_decisions_point_whose_link_is_refused_refuses_from_its_day() {
         // L §8.4 l.2356, §5.19 Links (tally 2.3.1 C-9; G2's review B1, rulings 16 Q2): the row
         // is dated 02-03, the decision's point 02-05; at 500.00 PLN the point refuses the link,
