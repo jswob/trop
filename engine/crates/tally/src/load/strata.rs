@@ -746,11 +746,12 @@ fn rows_read(graph: &Graph, id: &str) -> BTreeMap<String, Option<BTreeSet<String
                 }
                 continue;
             }
+            let only_by_id = rels.iter().all(|rel| *rel == Rel::Any);
             let by_id = graph
                 .named_rows
                 .get(&next)
                 .and_then(|by_input| by_input.get(&target.id))
-                .filter(|_| rels.iter().all(|rel| *rel == Rel::Any));
+                .filter(|_| only_by_id);
             let held = rows
                 .entry(target.id.clone())
                 .or_insert_with(|| Some(BTreeSet::new()));

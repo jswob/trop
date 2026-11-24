@@ -450,9 +450,9 @@ impl Engine {
         });
         // a link to it rests on its refused existence (tally 2.3.1 R2, C-9)
         let un = Unlinked {
-            why: Some(&err),
+            why: Some(err.clone()),
             point: key.day,
-            read: &read,
+            read,
         };
         self.unlink_run(id, &tid, &un)
     }
@@ -821,9 +821,9 @@ impl Engine {
                 walk.leg_bad(m, (&mv_id, lg, &read), &err, key)?;
             }
             let un = Unlinked {
-                why: Some(&err),
+                why: Some(err.clone()),
                 point: key.day,
-                read: &read,
+                read,
             };
             self.unlink_run(id, &mv_id, &un)?;
             return Ok(ix);
@@ -836,7 +836,7 @@ impl Engine {
             let un = Unlinked {
                 why: None,
                 point: key.day,
-                read: &Collected::default(),
+                read: Collected::default(),
             };
             self.unlink_run(id, &inst.id, &un)?;
             self.book_own_obs(m, id, &inst, key)?;
@@ -917,7 +917,7 @@ impl Engine {
     /// # Errors
     ///
     /// `ENGINE-INVARIANT` for a walk the engine lacks.
-    fn unlink_run(&mut self, id: usize, tid: &str, un: &Unlinked<'_>) -> Result<(), Stop> {
+    fn unlink_run(&mut self, id: usize, tid: &str, un: &Unlinked) -> Result<(), Stop> {
         let (cut, main) = {
             let walk = self.walk(id)?;
             (walk.cut, walk.proj.is_none())
@@ -925,8 +925,8 @@ impl Engine {
         if !main {
             return Ok(());
         }
-        self.link_reads_at_point(id, tid, un.read)?;
-        let refused = self.unlink_at_point(tid, cut, un.why);
+        self.link_reads_at_point(id, tid, &un.read)?;
+        let refused = self.unlink_at_point(tid, cut, un.why.as_ref());
         let walk = self.walk_mut(id)?;
         let mut early = Vec::new();
         for (obs, err) in refused {
@@ -1096,13 +1096,13 @@ pub enum Tested {
 /// A decision instance's links refused at its point: why, its run's refusal (none where its
 /// `when` says it doesn't exist), the point's day, and the reads that refused them, which
 /// every reader of a refused row carries (L §8.2 l.2252, §8.4; tally 2.3.1 rulings 19 C).
-struct Unlinked<'a> {
+struct Unlinked {
     /// The run's refusal, or none for `RUN-RECORD`.
-    why: Option<&'a Refusal>,
+    why: Option<Refusal>,
     /// The point's day.
     point: Day,
     /// The reads that refused the links.
-    read: &'a Collected,
+    read: Collected,
 }
 
 /// What orders one instance of a cycle (refcore's `run_group`, its `info`). L §5.14.2.

@@ -82,13 +82,12 @@ impl Checker {
                 }
             };
             // the row read by its id, for step 7's row-precise mark (tally 2.3.1 rulings 19 D)
-            self.graph
-                .named_rows
+            let named = &mut self.graph.named_rows;
+            let by_input = named
                 .entry(scope.item.clone())
-                .or_insert_with(BTreeMap::new)
-                .entry(id.to_owned())
-                .or_insert_with(BTreeSet::new)
-                .insert(row);
+                .or_insert_with(BTreeMap::new);
+            let rows = by_input.entry(id.to_owned()).or_insert_with(BTreeSet::new);
+            rows.insert(row);
             self.edge(&scope.item, Node::new(NodeKind::Input, id), Rel::Any);
             return Ok(Ty::Key("events".to_owned()));
         }

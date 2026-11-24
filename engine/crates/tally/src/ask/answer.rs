@@ -571,10 +571,12 @@ impl World {
             let before = (self.seen.warnings.clone(), self.seen.booked.clone());
             let lines = answer_one(m, ask, days, &mut self.seen);
             let found = core::mem::take(&mut self.seen.early_found);
-            let new: Vec<_> = found
-                .into_iter()
-                .filter(|row| !self.seen.early.iter().any(|seen| seen.same_row(row)))
-                .collect();
+            let mut new = Vec::new();
+            for row in found {
+                if !self.seen.early.iter().any(|seen| seen.same_row(&row)) {
+                    new.push(row);
+                }
+            }
             if new.is_empty() {
                 return lines;
             }
