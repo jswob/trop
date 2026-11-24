@@ -185,7 +185,7 @@ except milestones.MilestoneError as e:
 case: slow-report-never-fails
 tool: run
 exit: any
-expect: ::notice title=R-88 report::tally-runner::s_kernel tests::planted_slow: 36.8 s here, 21.0 s on the median runner; information only
+expect: ::notice title=R-88 report::tally-runner::s_kernel tests::planted_slow: 36.8 s here, 21.0 s on the median runner, its cap 120 s; information only
 expect: report: 1 T test over 20 s (R-88: never a failure, never a re-run)
 expect: r88-report-passed
 --- write tools/milestones.toml
@@ -203,7 +203,7 @@ case: slow-report-on-a-thin-history-never-fails
 tool: run
 exit: any
 expect: the runner's speed rests on 0 tests the history also times, under 10: raw times alone
-expect: ::notice title=R-88 report::tally-runner::s_kernel tests::planted_slow: 54.0 s here; information only
+expect: ::notice title=R-88 report::tally-runner::s_kernel tests::planted_slow: 54.0 s here, its cap 120 s; information only
 expect: r88-thin-passed
 --- write tools/milestones.toml
 milestones = ["S", "M0", "M1", "M2", "M3", "M4", "M5a", "M5b", "M5c", "M6", "M7", "M8", "M9"]
@@ -215,6 +215,30 @@ mutants_leave_out = ["m0_load"]
 {"mutants": {}, "tests": {"tally-runner::s_kernel tests::fill_0": {"kills": 0, "seconds": 4.0}, "tally-runner::s_kernel tests::fill_1": {"kills": 0, "seconds": 4.0}, "tally-runner::s_kernel tests::fill_2": {"kills": 0, "seconds": 4.0}, "tally-runner::s_kernel tests::fill_3": {"kills": 0, "seconds": 4.0}, "tally-runner::s_kernel tests::fill_4": {"kills": 0, "seconds": 4.0}, "tally-runner::s_kernel tests::fill_5": {"kills": 0, "seconds": 4.0}, "tally-runner::s_kernel tests::fill_6": {"kills": 0, "seconds": 4.0}, "tally-runner::s_kernel tests::fill_7": {"kills": 0, "seconds": 4.0}, "tally-runner::s_kernel tests::fill_8": {"kills": 0, "seconds": 4.0}, "tally-runner::s_kernel tests::fill_9": {"kills": 0, "seconds": 4.0}}, "speeds": {}}
 --- run
 tools/mutants-gate slow zz-gate/times.json zz-gate/history.json && echo r88-thin-passed
+
+# The process step after M4 (2026-11-24; the user's start paste, "You are the process step after
+# M4 …"): each line names the test's cap in the mutants profile, and a warning names a test
+# whose time on the median runner, at the slowest runner seen, passes its cap, so a dispatch
+# isn't lost at its baseline (M4's 45226322989 and 45306116263). The planted tests: one at 80 s
+# (131 s at 1.64x, past the profile's 120 s), and m4_checks_green at 100 s under its own 300 s.
+
+case: slow-report-names-a-test-near-its-cap
+tool: run
+exit: any
+expect: tally-runner::m4_checks tests::m4_checks_green: 100.0 s here, 100.0 s on the median runner, its cap 300 s
+expect: ::warning title=R-88 cap::tally-runner::s_kernel tests::planted_near: 80.0 s on the median runner, 131 s at the slowest runner seen (1.64x), past its cap of 120 s
+expect: caps: 1 T test a slow runner would end at its cap
+expect: r88-caps-passed
+--- write tools/milestones.toml
+milestones = ["S", "M0", "M1", "M2", "M3", "M4", "M5a", "M5b", "M5c", "M6", "M7", "M8", "M9"]
+gating = ["S", "M0", "M1"]
+mutants_leave_out = ["m0_load"]
+--- write zz-gate/times.json
+{"tally-runner::s_kernel tests::fill_0": 4.0, "tally-runner::s_kernel tests::fill_1": 4.0, "tally-runner::s_kernel tests::fill_2": 4.0, "tally-runner::s_kernel tests::fill_3": 4.0, "tally-runner::s_kernel tests::fill_4": 4.0, "tally-runner::s_kernel tests::fill_5": 4.0, "tally-runner::s_kernel tests::fill_6": 4.0, "tally-runner::s_kernel tests::fill_7": 4.0, "tally-runner::s_kernel tests::fill_8": 4.0, "tally-runner::s_kernel tests::fill_9": 4.0, "tally-runner::s_kernel tests::planted_near": 80.0, "tally-runner::m4_checks tests::m4_checks_green": 100.0}
+--- write zz-gate/history.json
+{"mutants": {}, "tests": {"tally-runner::s_kernel tests::fill_0": {"kills": 0, "seconds": 4.0}, "tally-runner::s_kernel tests::fill_1": {"kills": 0, "seconds": 4.0}, "tally-runner::s_kernel tests::fill_2": {"kills": 0, "seconds": 4.0}, "tally-runner::s_kernel tests::fill_3": {"kills": 0, "seconds": 4.0}, "tally-runner::s_kernel tests::fill_4": {"kills": 0, "seconds": 4.0}, "tally-runner::s_kernel tests::fill_5": {"kills": 0, "seconds": 4.0}, "tally-runner::s_kernel tests::fill_6": {"kills": 0, "seconds": 4.0}, "tally-runner::s_kernel tests::fill_7": {"kills": 0, "seconds": 4.0}, "tally-runner::s_kernel tests::fill_8": {"kills": 0, "seconds": 4.0}, "tally-runner::s_kernel tests::fill_9": {"kills": 0, "seconds": 4.0}}, "speeds": {}}
+--- run
+tools/mutants-gate slow zz-gate/times.json zz-gate/history.json && echo r88-caps-passed
 
 case: slow-report-unreadable-never-fails
 tool: run

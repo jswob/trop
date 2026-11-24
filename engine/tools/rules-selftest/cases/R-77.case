@@ -321,14 +321,17 @@ tools/check groups
 tools/check groups --matrix > zz_matrix.txt || echo "no matrix: $(wc -c < zz_matrix.txt | tr -d ' ') bytes"
 
 # R-77 as amended 2026-11-19 (the process study after M2, change 7): T's gating targets run in
-# a job of their own, `dev-gating`, apart from the workspace's dev tests in `dev-tests`; the
-# two are two jobs of the matrix, and a gating step dropped from its group fails `groups`.
+# a job of their own, apart from the workspace's dev tests in `dev-tests`; since the process
+# step after M4 (2026-11-24; the user's start paste, "You are the process step after M4 …"),
+# the runner's own suites in `dev-gating` and the gating targets in `dev-gating-2`. Each is a
+# job of the matrix, and a gating step dropped from its group fails `groups`.
 case: groups-dev-gating-apart
 tool: run
 exit: any
-expect: dev-gating: runner gating milestone-report
+expect: dev-gating: runner milestone-report
+expect: dev-gating-2: gating
 expect: dev-tests: test-dev doctest
-expect: "dev-gating", "dev-tests"
+expect: "dev-gating", "dev-gating-2", "dev-tests"
 --- run
 tools/check groups
 tools/check groups --matrix 2>/dev/null
@@ -338,9 +341,9 @@ tool: run
 exit: any
 expect: FAIL groups: the step gating is in no group
 --- replace tools/check.py
-    "dev-gating": ["runner", "gating", "milestone-report"],
+    "dev-gating-2": ["gating"],
 --- with
-    "dev-gating": ["runner", "milestone-report"],
+    "dev-gating-2": [],
 --- run
 tools/check groups
 

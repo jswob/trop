@@ -2,7 +2,7 @@
 (R-84, R-88, R-133; the mutation study, approved 2026-11-12).
 
     engine/tools/mutants-gate baseline DIR             T's tests unmutated; DIR/times.json
-    engine/tools/mutants-gate slow TIMES.json HISTORY  reports the T tests over 20 s; never fails
+    engine/tools/mutants-gate slow TIMES.json HISTORY  reports the T tests over 20 s and near their caps; never fails
     engine/tools/mutants-gate list OUT.json            cargo-mutants' mutants, with the key
     engine/tools/mutants-gate coverage OUT.json        the coverage map (R-133)
     engine/tools/mutants-gate same-map A.json B.json   two maps are equal (the nightly's twin)
@@ -102,6 +102,14 @@ TIMEOUT, BUILD_TIMEOUT = 600, 600
 # runner, is named in a notice; nothing fails on it. 20 s on the median runner is about 33 s
 # on the slowest runner seen (1.64x), under half the mutants profile's 120 s kill
 SLOW = 20.0
+# each report line names the test's kill in the mutants profile (.config/nextest.toml), and a
+# warning names a test whose time on the median runner, at the slowest runner seen (the
+# history's slowest shard, or 1.64x), passes it: before a dispatch, run `slow` on the last
+# run's mutants-plan artifact and give such a test its own cap first (M4's P35 and P45, two
+# baselines ended at 120 s after the dispatch had started; the process step after M4)
+NEXTEST = os.path.join(ENGINE, ".config", "nextest.toml")
+SLOWEST_SEEN = 1.64
+ONE_TEST = re.compile(r"binary_id\((?P<binary>[^)]+)\) & test\(=(?P<test>[^)]+)\)")
 # the runner's speed rests on at least this many tests the history also times, or the
 # report names the raw times alone
 SPEED_TESTS = 10
@@ -754,6 +762,27 @@ def history(out, dirs):
     return 0
 
 
+def kill_seconds(timeout):
+    """A nextest slow-timeout's kill: its period (`30s`) times terminate-after."""
+    period = str(timeout["period"])
+    if not period.endswith("s") or not period[:-1].isdigit():
+        raise ValueError(f"a slow-timeout period nextest.toml writes other than in seconds: {period}")
+    return int(period[:-1]) * int(timeout["terminate-after"])
+
+
+def mutants_caps():
+    """The mutants profile's kill, in seconds (R-88): the profile's own, and each override of
+    one test (`binary_id(B) & test(=T)`, P35's and P45's form) by the baseline's key `B T`."""
+    with open(NEXTEST, "rb") as f:
+        profile = tomllib.load(f)["profile"]["mutants"]
+    one = {}
+    for o in profile.get("overrides", []):
+        m = ONE_TEST.fullmatch(o.get("filter", ""))
+        if m and "slow-timeout" in o:
+            one[f"{m['binary']} {m['test']}"] = kill_seconds(o["slow-timeout"])
+    return kill_seconds(profile["slow-timeout"]), one
+
+
 def slow_report(times, past):
     """`slow`: a report that never fails (R-88, 2026-11-14, issue #165). It names, as GitHub
     notices, the T tests over 20 s in the baseline: raw, and over the runner's speed against
@@ -769,11 +798,24 @@ def slow_report(times, past):
         print(f"mutants-gate: the baseline runner's speed {speed:.2f}x the median runner's, over {n} tests")
     over = sorted(((s, t) for t, s in times.items() if s > SLOW or (speed is not None and s / speed > SLOW)),
                   reverse=True)
+    cap, caps = mutants_caps()
     for s, t in over:
         there = f", {s / speed:.1f} s on the median runner" if speed is not None else ""
-        print(f"::notice title=R-88 report::{t}: {s:.1f} s here{there}; information only, nothing fails on it")
+        print(f"::notice title=R-88 report::{t}: {s:.1f} s here{there}, its cap {caps.get(t, cap)} s; "
+              "information only, nothing fails on it")
     print(f"mutants-gate: report: {len(over)} T test{'' if len(over) == 1 else 's'} over {SLOW:.0f} s "
           "(R-88: never a failure, never a re-run)")
+    speeds = past.get("speeds", {}) if isinstance(past, dict) else {}
+    slowest = max([SLOWEST_SEEN, *(v for v in speeds.values() if isinstance(v, (int, float)))])
+    near = sorted(((s / (speed or 1.0) * slowest, t) for t, s in times.items()
+                   if s / (speed or 1.0) * slowest >= caps.get(t, cap)), reverse=True)
+    for worst, t in near:
+        median = times[t] / (speed or 1.0)
+        print(f"::warning title=R-88 cap::{t}: {median:.1f} s on the {'median runner' if speed else 'runner'}, "
+              f"{worst:.0f} s at the slowest runner seen ({slowest:.2f}x), past its cap of {caps.get(t, cap)} s: "
+              "before the next dispatch, give it a cap of its own (.config/nextest.toml, a rules step)")
+    print(f"mutants-gate: caps: {len(near)} T test{'' if len(near) == 1 else 's'} a slow runner would end at its "
+          f"cap (the mutants profile's {cap} s, or its own)")
     return 0
 
 

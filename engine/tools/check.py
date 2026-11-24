@@ -243,8 +243,13 @@ GROUPS = {
              "check-rules", "headers", "trace", "ast-grep-scan", "ast-grep-test", "deny", "deny-tally", "tree-probe",
              "special-casing", "spec-loadcheck-selftest", "spec-loadcheck", "guard-test"],
     # the gating targets apart from the workspace's dev tests (the process study after M2,
-    # change 7, 2026-11-19): together they were CI's longest job, 16 to 22 minutes at M2's end
-    "dev-gating": ["runner", "gating", "milestone-report"],
+    # change 7, 2026-11-19): together they were CI's longest job, 16 to 22 minutes at M2's end;
+    # and the runner's own suites apart from the gating targets (the process step after M4,
+    # 2026-11-24): one after the other they were again CI's longest job, 12.6 minutes median
+    # over M4's last ten green runs, the runner's step held by m4_narrow_c1_r2 (past 300 s in a
+    # debug build) and the gating step by m4_checks_green (158 s)
+    "dev-gating": ["runner", "milestone-report"],
+    "dev-gating-2": ["gating"],
     "dev-tests": ["test-dev", "doctest"],
     # the workspace's default targets in the release profile, in two halves (2026-11-19), as
     # release-gating: the one job took 10 to 13 minutes

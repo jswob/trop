@@ -163,8 +163,9 @@ jobs:
       # newest nightly's; the nightly builds cold and saves its own, so a stale cache can't
       # hide a failure there. rules-selftest's shards build in their own scratch target. A
       # group split from another (dev-gating from dev-tests, release-gating-2 and
-      # release-tests-2 from their first halves, 2026-11-19) falls back to that
-      # group's cache, the same profile's build, until a nightly saves its own
+      # release-tests-2 from their first halves, 2026-11-19; dev-gating-2 from dev-gating,
+      # 2026-11-24) falls back to that group's cache, the same profile's build, until a
+      # nightly saves its own
       - uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         if: github.event_name == 'pull_request' && !startsWith(matrix.group, 'rules-selftest-')
         with:
@@ -182,7 +183,7 @@ jobs:
           key: engine-build-${{ runner.os }}-${{ env.NIGHTLY }}-${{ hashFiles('engine/Cargo.lock', 'engine/rust-toolchain.toml') }}-${{ matrix.group }}-${{ github.run_id }}
           restore-keys: |
             engine-build-${{ runner.os }}-${{ env.NIGHTLY }}-${{ hashFiles('engine/Cargo.lock', 'engine/rust-toolchain.toml') }}-${{ matrix.group }}-
-            engine-build-${{ runner.os }}-${{ env.NIGHTLY }}-${{ hashFiles('engine/Cargo.lock', 'engine/rust-toolchain.toml') }}-${{ matrix.group == 'dev-gating' && 'dev-tests' || matrix.group == 'release-gating-2' && 'release-gating' || matrix.group == 'release-tests-2' && 'release-tests' || matrix.group }}-
+            engine-build-${{ runner.os }}-${{ env.NIGHTLY }}-${{ hashFiles('engine/Cargo.lock', 'engine/rust-toolchain.toml') }}-${{ matrix.group == 'dev-gating' && 'dev-tests' || matrix.group == 'dev-gating-2' && 'dev-gating' || matrix.group == 'release-gating-2' && 'release-gating' || matrix.group == 'release-tests-2' && 'release-tests' || matrix.group }}-
       - name: engine/tools/check group ${{ matrix.group }}
         run: engine/tools/check group ${{ matrix.group }} ${{ github.event_name != 'pull_request' && '--fresh' || '' }}
       - uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0

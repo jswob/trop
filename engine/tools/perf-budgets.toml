@@ -23,6 +23,8 @@
 #                    is <row> (or the named ones), each once, cold, a budget each: the row is
 #                    judged by its slowest run's wall and largest peak, each output by the
 #                    list's sha256 where it holds one (P8-L2, P8-L10; pick P5 (a) on #252)
+#     "run:<cwd> <word>…"  one `tally run` of a text T stores that no list names, from <cwd>
+#                    under the repository's root, the words the run's own (P8-2; [growth])
 #     "waits: ..."   nothing runs it yet; the text says what it waits for
 #   wall_s, footprint_mb, workers: the Mac's budget (absent: the row sets none)
 #   less: a micro row's criterion bench id whose median is subtracted from its own (P8-M4:
@@ -30,7 +32,12 @@
 #   counts: the count budgets T's runner checks at 1 worker (absent: reported only)
 #   instructions: the gungraun hard limit on Ir, from its first Linux measurement x 1.2
 #                 (absent: no limit yet; the bench still runs and reports its count)
-#   blocks: "pr" (counts and instructions, Linux CI) or "tag" (wall and footprint, the Mac)
+#   blocks: "pr" (counts and instructions, Linux CI), "tag" (wall and footprint, the Mac) or
+#           "report" (printed beside its budget, failing nothing but a wrong answer)
+#
+# [growth], at the end: one text at two horizons, `short` and `long`, each a `run:` recipe
+# whose first file is the header that sets the horizon; `perf growth` times both for the
+# milestone's report and prints the ratios. It judges nothing.
 
 # 8.1 Group I: the interactive targets kept
 [[row]]
@@ -50,13 +57,20 @@ blocks = "tag"
 id = "P8-2"
 group = "I"
 what = "a deterministic run, cold: 33 years daily at 10x the household"
-# its 1x twin from M1 (pick P11, 2026-11-09): T's slowest M1 check of household X on refcore,
-# I:X:pit37@c7_fast (1.40 s there; engine/tests/MILESTONE-M1.md row 5), until T's generator
-# (SO8-10) gives the 10x run; T writes its digest in engine/tests/perf-digests.tsv
-recipe = "check:I:X:pit37@c7_fast"
+# Its 1x twin since the process step after M4 (2026-11-24; the user's "Sounds resonable",
+# 2026-11-23): R7, the prototype's reality over its bank history (engine/tests/m2/bank/), from
+# 2024-01-01 to 2056-11-30, a day walk of 33 years with a projection every 15th, asked
+# pin_2056 (pins_long.tsv holds its figures, the prototype's). From M1 to M4 the twin was
+# I:X:pit37@c7_fast (pick P11), a tax ask that never walks the timeline, so the copying that
+# grew with the horizon went unseen until M4 (#256). It reports and gates no tag (`blocks =
+# "report"`) until the long runs' remedy, the study after M4 then its own run, measures this
+# row: that run sets its 1x budget and moves `blocks` back to "tag". At 10x it waits for T's
+# generator (SO8-10), as PERFORMANCE §8.1 says. No refcore digest: refcore passes 8 GB past
+# 2032 (GOLDENS.md P2).
+recipe = "run:engine/tests/m2/bank r7/to2056.tally bank.tally r7/forward.tally r7/business.tally r7/joint.tally records/ --ask pin_2056"
 wall_s = 1.0
 footprint_mb = 1024
-blocks = "tag"
+blocks = "report"
 
 [[row]]
 id = "P8-3"
@@ -207,8 +221,8 @@ blocks = "pr"
 #
 # X's repeated walks: one row per change set whose checks share a start (T's names,
 # `I:X:*@c[1-4,6,7]_fast` and `@v[34]_fast`, one run of three asks each), each timed on its
-# pit37 check, the slowest X ask on refcore at M1 (P8-2's 1x twin, pick P11), so the rows
-# compare across sets; F6-c7 times P8-2's check. The budget is §8.2's for a check at 1x,
+# pit37 check, the slowest X ask on refcore at M1 (P8-2's 1x twin from M1 to M4, pick P11),
+# so the rows compare across sets; F6-c7 times that check. The budget is §8.2's for a check at 1x,
 # 1 worker: 1 s, 512 MB; a row is judged once T writes its digest in
 # engine/tests/perf-digests.tsv (T's chunk C8), unjudged until then. They are also F6's
 # benchmark (R-91): X end to end through tools/perf, no bench file of its own. Fixed
@@ -548,3 +562,15 @@ recipe = "bench:b1_list"
 wall_s = 0.232
 instructions = 2779597660
 blocks = "pr"
+
+# The growth with the horizon (the process step after M4, 2026-11-24; the user's "Sounds
+# resonable", 2026-11-23): every milestone's timing run measures one text at two horizons and
+# writes both, with the ratios, into engine/perf/M<n>.md, so a cost that grows faster than the
+# horizon shows at the milestone that brings it (M4's G5 curve, BUILD-LOG 2026-11-22, cut one
+# stage text by hand; R7 is the same means, its horizon set by its header, stored by T). Both
+# ask one net worth; the walk to the end carries the cost, not the ask (G5; to2028's three
+# asks lie within 0.02 s of each other).
+[growth]
+what = "R7 (engine/tests/m2/bank/), to 2028-06-30 and to 2050-03-31, one net worth asked"
+short = "run:engine/tests/m2/bank r7/to2028.tally bank.tally r7/forward.tally r7/business.tally r7/joint.tally records/ --ask pin_net_worth_2027"
+long = "run:engine/tests/m2/bank r7/to2050.tally bank.tally r7/forward.tally r7/business.tally r7/joint.tally records/ --ask g6_net_worth"

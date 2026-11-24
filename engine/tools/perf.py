@@ -14,6 +14,8 @@
     engine/tools/perf profile ID [--runs NAME] [--bin PATH]
                                                   samply's profile of one run, summarised as text (macOS)
     engine/tools/perf limits BENCH                the gungraun hard limit of a bench, as its command-line flag
+    engine/tools/perf growth [--runs N] [--warmups N] [--bin PATH]
+                                                  the [growth] text at its two horizons: both rows and the ratios
 
 Each timed run is the release binary under /usr/bin/time -l (macOS): wall time is this
 script's clock around it, peak memory footprint and instructions retired are time's. A row
@@ -42,6 +44,26 @@ many), `--quick` the quick profile's binary, so a builder can measure one run of
 the middle of a group; `--runs N` and `--warmups` don't apply. `perf counts` gives each run's
 counts, `perf profile` one named run's profile.
 
+A run row (`run:<cwd> <word> …`, P8-2's 1x twin) is one `tally run` of a text T stores that no
+list names: the words after the folder (from the repository's root) are the run's own, files
+first, then `--ask` and its ids. It is timed and counted as a check row is; its digest is the
+row id's line of perf-digests.tsv, unjudged while it has none.
+
+A row whose `blocks` is "report" (P8-2 until the long runs' remedy, issue #256) prints its
+figures beside its budget, marked `report`, and never fails on them: no tag waits on it. A
+wrong answer fails it as any row.
+
+`perf counts` reads the engine's exit code first: 69 ("not implemented", a later milestone's
+check) prints `not built` for the row and fails nothing; any other code but 0 fails, since a
+run that didn't answer counts nothing; then the counters' line against the budgets, and the
+run's seconds beside the 90 s it may take.
+
+`perf growth` times the budget table's [growth] text (`short`, `long`: two `run:` recipes of
+one text whose horizon its header sets) as a row is timed, reads each header's `start` and
+`end`, and prints a Markdown table of the two and the ratios of the span, the time and the
+peak, each with its exponent (1 is linear in the span), for the milestone's report
+`engine/perf/M<n>.md`. It reports and never judges; it exits 1 only when a run gave no figure.
+
 A micro row (`bench:<name>`, P8-M*) runs its criterion bench, crates/tally/benches/<name>.rs,
 whose id is the row's: the wall time is criterion's median (less the median of the bench id
 the row's `less` names, if any: P8-M4's run less the plain run), and the bench itself fails
@@ -55,10 +77,13 @@ exits 1 always. Standard library only, like run.py.
 """
 
 import csv
+import datetime
 import hashlib
 import json
+import math
 import os
 import platform
+import re
 import signal
 import statistics
 import subprocess
@@ -86,6 +111,8 @@ OUT = os.path.join(ENGINE, "target", "perf")
 CEILING_KB = 8 * 1024 * 1024  # D4-7: 8 GB on any run
 TIMEOUT_S = 90.0  # the user's hard budget for one run
 COUNT_KEYS = ("def_misses", "days_stepped", "walks_shared")  # walks shared: fence F6's (PERFORMANCE §2.5)
+NOT_BUILT = 69  # tally-cli's EXIT_NOT_IMPLEMENTED: a run past the part of the engine built so far
+SPAN = re.compile(r"^\s+(start|end) (\d{4}-\d{2}-\d{2})\s*$")  # a model header's `start` and `end` lines
 
 
 def rows():
@@ -98,6 +125,11 @@ def row_of(row_id):
     if not found:
         sys.exit(f"perf: no row {row_id} in tools/perf-budgets.toml")
     return found[0]
+
+
+def reported(r):
+    """Whether the row only reports (`blocks = "report"`): its misses print, and fail nothing."""
+    return r.get("blocks") == "report"
 
 
 def set_at_s():
@@ -167,8 +199,23 @@ def check_row(check_id):
     sys.exit(f"perf: no check {check_id} in engine/tests/checks.tsv")
 
 
+def run_words(text, who):
+    """A `run:<cwd> <word> …` recipe's (argv after the binary, cwd): `run` and its words, from
+    the folder the first word names under the repository's root."""
+    words = text[len("run:"):].split()
+    if len(words) < 2:
+        sys.exit(f"perf: {who}: a run recipe names its folder and the run's words: run:<cwd> <file> … [--ask <id> …]")
+    cwd = os.path.join(ROOT, words[0])
+    if not os.path.isdir(cwd):
+        sys.exit(f"perf: {who}: no folder {words[0]}")
+    return ["run", *words[1:]], cwd
+
+
 def recipe(r):
-    """(argv after the binary, cwd), as run.py runs the check, or None for a row that runs no one check."""
+    """(argv after the binary, cwd), as run.py runs the check or as a `run:` recipe names the
+    run, or None for a row that runs no one process."""
+    if r["recipe"].startswith("run:"):
+        return run_words(r["recipe"], r["id"])
     if not r["recipe"].startswith("check:"):
         return None
     c = check_row(r["recipe"][len("check:"):])
@@ -202,7 +249,8 @@ def steps(r):
     expected exit code or None)], or None for a row that runs none (a bench, a test, a wait)."""
     plan = recipe(r)
     if plan is not None:
-        return [(r["recipe"][len("check:"):], *plan, None)]
+        digest_id = r["recipe"][len("check:"):] if r["recipe"].startswith("check:") else r["id"]
+        return [(digest_id, *plan, None)]
     if not r["recipe"].startswith("turn:"):
         return None
     vectors = m3_vectors()
@@ -408,6 +456,8 @@ def time_row(r, binary, runs, warmups, only=None):
     results = []
     for _ in range(warmups + runs):
         one = timed_turn(binary, plan)
+        if one is None and reported(r):
+            return f"report {r['id']}: a run passed 8 GB or {TIMEOUT_S:.0f} s and was killed (D4-7); no tag waits on it", False
         if one is None:
             return f"BUDGET {r['id']}: a run passed 8 GB or {TIMEOUT_S:.0f} s and was killed (D4-7)", True
         results.append(one)
@@ -434,6 +484,9 @@ def time_row(r, binary, runs, warmups, only=None):
     wrong = bool(wrong_lines)
     misses += wrong_lines
     notes += judged_notes
+    if reported(r) and not wrong:
+        return (f"report {r['id']} " + "; ".join(misses + notes)
+                + f" ({runs} runs; beside the budget: {budget_text(r)}; reported, no tag waits on it)"), False
     if misses:
         return f"BUDGET {r['id']} " + "; ".join(misses + notes), wrong or set_at_s()
     return f"ok {r['id']} " + "; ".join(notes) + f" ({runs} runs; budget: {budget_text(r)})", False
@@ -537,9 +590,86 @@ def time_load(r, binary, only):
     unjudged = sum(1 for _, _, _, want in plan if want is None)
     count = f"{len(plan)} of {whole} runs (--runs)" if len(plan) < whole else f"{len(plan)} run{'s' * (len(plan) > 1)}"
     notes.append(f"{count}, each once, cold" + (f"; {unjudged} unjudged (sha256 -)" if unjudged else ""))
+    if reported(r) and not wrong:
+        return (f"report {r['id']} " + "; ".join(misses + notes)
+                + f" (beside the budget: {budget_text(r)}, each run; reported, no tag waits on it)"), False
     if misses:
         return f"BUDGET {r['id']} " + "; ".join(misses + notes), bool(wrong or killed) or set_at_s()
     return f"ok {r['id']} " + "; ".join(notes) + f" (budget: {budget_text(r)}, each run)", False
+
+
+# -- growth with the horizon ----------------------------------------------------------------------------------------
+
+
+def growth_table():
+    """The budget table's [growth]: `what`, and `short` and `long`, two `run:` recipes of one text."""
+    with open(TABLE, "rb") as f:
+        g = tomllib.load(f).get("growth")
+    if not g or not all(isinstance(g.get(k), str) and g[k].startswith("run:") for k in ("short", "long")):
+        sys.exit("perf: tools/perf-budgets.toml's [growth] names `short` and `long`, each a `run:` recipe")
+    return g
+
+
+def span_of(cwd, header, who):
+    """(start, end, days from start through end) from the model header's own `start` and `end`
+    lines: the run's first file."""
+    found = {}
+    try:
+        with open(os.path.join(cwd, header), encoding="utf-8") as f:
+            for line in f:
+                m = SPAN.match(line)
+                if m and m.group(1) not in found:
+                    found[m.group(1)] = m.group(2)
+    except OSError:
+        sys.exit(f"perf: growth {who}: no header {header}")
+    if set(found) != {"start", "end"}:
+        sys.exit(f"perf: growth {who}: {header} states no `start` and `end` lines: the run's first file is its header")
+    days = (datetime.date.fromisoformat(found["end"]) - datetime.date.fromisoformat(found["start"])).days + 1
+    return found["start"], found["end"], days
+
+
+def ratio(a, b, span):
+    """b / a with its exponent over the span's ratio (1 is linear in the span)."""
+    if a is None or b is None or a <= 0:
+        return "unreported"
+    return f"x{b / a:.2f} (exponent {math.log(b / a) / math.log(span):.2f})"
+
+
+def cmd_growth(opts):
+    """The [growth] text at its two horizons, each timed as a row is (the warm-ups, then the
+    median), a Markdown table and the ratios for engine/perf/M<n>.md."""
+    g = growth_table()
+    print(fingerprint())
+    binary = opts["bin"] or build()
+    measured = []
+    for key in ("short", "long"):
+        argv, cwd = run_words(g[key], f"[growth] {key}")
+        start, end, days = span_of(cwd, argv[1], key)
+        kept = []
+        for _ in range(opts["warmups"] + opts["runs"]):
+            one = timed(binary, argv, cwd)
+            if one is None or one[3] != 0:
+                why = f"passed 8 GB or {TIMEOUT_S:.0f} s and was killed (D4-7)" if one is None else f"exited {one[3]}"
+                print(f"growth {key}: {' '.join(argv)} {why}: no figure")
+                return 1
+            kept.append(one)
+        kept = kept[opts["warmups"]:]
+        peaks = [k[1] for k in kept if k[1] is not None]
+        counted = [k[2] for k in kept if k[2] is not None]
+        measured.append((key, " ".join(argv[1:]), start, end, days, statistics.median(k[0] for k in kept),
+                         max(peaks) if peaks else None, statistics.median(counted) if counted else None))
+    print(f"\n{g.get('what', 'the [growth] text')}, {opts['runs']} runs after {opts['warmups']} warm-ups each:\n")
+    print("| Horizon | Span | Days | Wall, median | Peak | Instructions |")
+    print("| --- | --- | --- | --- | --- | --- |")
+    for key, words, start, end, days, wall, peak, ir in measured:
+        print(f"| {key}: `{words.split()[0]}` | {start} .. {end} | {days} | {seconds(wall)} | "
+              f"{megabytes(peak) if peak is not None else 'unreported'} | "
+              f"{f'{ir / 1e9:.2f} G' if ir is not None else 'unreported'} |")
+    (_, _, _, _, d1, w1, p1, i1), (_, _, _, _, d2, w2, p2, i2) = measured
+    span = d2 / d1
+    print(f"\ngrowth: the span x{span:.2f}; time {ratio(w1, w2, span)}; peak {ratio(p1, p2, span)}; "
+          f"instructions {ratio(i1, i2, span)}; linear in the span is x{span:.2f}, exponent 1")
+    return 0
 
 
 # -- the commands --------------------------------------------------------------------------------------------------
@@ -599,6 +729,12 @@ def cmd_time(selected, opts):
     return 1 if failed else 0
 
 
+def first_line(output):
+    """A run's first line that isn't empty, shortened: what a run that didn't answer said."""
+    lines = [x.strip() for x in output.decode("utf-8", "replace").split("\n") if x.strip()]
+    return lines[0][:200] if lines else "no output"
+
+
 def stats_of(output):
     """The counters' line, `stats: key=value ...`, from a run's output."""
     for line in output.decode("utf-8", "replace").split("\n"):
@@ -610,8 +746,9 @@ def stats_of(output):
 def load_counts(r, binary, only):
     """A load row's counts: each run's `stats:` line, a line each, and the row's against its
     count budgets (each run's own); whether it failed."""
-    over, shown = [], []
+    over, shown, unbuilt = [], [], []
     for name, argv, cwd, _ in load_runs(r, only):
+        began = time.perf_counter()
         try:
             done = subprocess.run([binary, *argv, "--stats"], cwd=cwd, capture_output=True, timeout=TIMEOUT_S,
                                   check=False)
@@ -619,20 +756,34 @@ def load_counts(r, binary, only):
             print(f"  {r['id']} {name}: killed at {TIMEOUT_S:.0f} s, no counts")
             over.append(f"{name} killed at {TIMEOUT_S:.0f} s")
             continue
+        if done.returncode == NOT_BUILT:
+            print(f"  {r['id']} {name}: not built (exit {NOT_BUILT}, \"not implemented\"), nothing counted")
+            unbuilt.append(name)
+            continue
+        if done.returncode != 0:
+            print(f"  {r['id']} {name}: exit {done.returncode}, not an answer, nothing counted")
+            over.append(f"{name} exit {done.returncode}: a run that didn't answer counts nothing")
+            continue
         stats = stats_of(done.stdout + done.stderr)
         if stats is None:
             print(f"  {r['id']} {name}: no `stats:` line (exit {done.returncode})")
             over.append(f"{name}: no `stats:` line (D4-8)")
             continue
         print(f"  {r['id']} {name}: " + ", ".join(f"{k} {stats.get(k, 0)}" for k in COUNT_KEYS)
-              + f" (exit {done.returncode})")
+              + f" (exit {done.returncode}; {time.perf_counter() - began:.1f} s of perf's {TIMEOUT_S:.0f} s a run)")
         shown.append(name)
         over += [f"{name} {k} {stats.get(k, 0):,} > {v:,}".replace(",", " ")
                  for k, v in r.get("counts", {}).items() if stats.get(k, 0) > v]
     if over:
         print(f"COUNT {r['id']} " + "; ".join(over))
         return True
-    print(f"ok {r['id']} counts(1w): {len(shown)} runs (budget: {budget_text(r)}, each run)")
+    if unbuilt and not shown:
+        runs = f"{len(unbuilt)} run stops" if len(unbuilt) == 1 else f"{len(unbuilt)} runs stop"
+        print(f"not built {r['id']}: {runs} \"not implemented\" (exit {NOT_BUILT}), nothing counted "
+              f"(budget: {budget_text(r)}, each run)")
+        return False
+    later = f"; {len(unbuilt)} not built: {' '.join(unbuilt)}" if unbuilt else ""
+    print(f"ok {r['id']} counts(1w): {len(shown)} runs{later} (budget: {budget_text(r)}, each run)")
     return False
 
 
@@ -650,7 +801,18 @@ def cmd_counts(selected, opts):
             print(f"{r['id']}: {r['recipe']}{timed_only}")
             continue
         argv, cwd = plan
+        began = time.perf_counter()
         done = subprocess.run([binary, *argv, "--stats"], cwd=cwd, capture_output=True, timeout=TIMEOUT_S, check=False)
+        took = f"{time.perf_counter() - began:.1f} s of perf's {TIMEOUT_S:.0f} s"
+        if done.returncode == NOT_BUILT:
+            print(f"not built {r['id']}: the engine stops \"not implemented\" (exit {NOT_BUILT}), nothing counted "
+                  f"(budget: {budget_text(r)})")
+            continue
+        if done.returncode != 0:
+            print(f"COUNT {r['id']}: exit {done.returncode}, not an answer: a run that didn't answer counts nothing "
+                  f"({first_line(done.stdout + done.stderr)})")
+            failed = True
+            continue
         stats = stats_of(done.stdout + done.stderr)
         if stats is None:
             print(f"COUNT {r['id']}: no `stats:` line (exit {done.returncode}): the counters build prints one (D4-8)")
@@ -660,10 +822,10 @@ def cmd_counts(selected, opts):
                 for k, v in r.get("counts", {}).items() if stats.get(k, 0) > v]
         shown = ", ".join(f"{k} {stats.get(k, 0)}" for k in COUNT_KEYS)
         if over:
-            print(f"COUNT {r['id']} " + "; ".join(over) + f" (exit {done.returncode})")
+            print(f"COUNT {r['id']} " + "; ".join(over))
             failed = failed or set_at_s()
         else:
-            print(f"ok {r['id']} counts(1w): {shown} (exit {done.returncode}; budget: {budget_text(r)})")
+            print(f"ok {r['id']} counts(1w): {shown} ({took}; budget: {budget_text(r)})")
     return 1 if failed else 0
 
 
@@ -726,6 +888,8 @@ def main(argv):
         return cmd_profile(row_of(ids[0]), opts)
     if command == "limits" and len(ids) == 1:
         return cmd_limits(ids[0])
+    if command == "growth" and not ids:
+        return cmd_growth(opts)
     print(__doc__, file=sys.stderr)
     return 2
 
