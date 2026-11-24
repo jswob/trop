@@ -8192,3 +8192,50 @@ Scratch: `tmp/sortwork/fix/` (untracked: the texts, `cross.sh`, `mut.sh`, `out/`
 - **Open STOP-REPORTs:** none.
 - **Usage:** about 0.28 % of the week this turn (0.91 % for the session) by `engine/tools/usage` before this entry.
 - **Checks:** `check quick: green, 11 steps (118s)`; `check fences: green, 1 step (56s)`; `check commit: green, 24 steps (214s)`.
+
+## 2026-11-24 M4 gate, `ed`: a link's `when` under a traced binding, P42 (issue #252)
+
+Pick P42 rules `ed` (`tmp/sortwork/fix/c2_link.tally`, `explain dl[2026-02]`, a def whose binding over observed rows holds one naming the decision instance `dd[2026-02]`) by P40's statement. An existence read takes the reads that decide that the instance exists, its `when` among them, and `explain` prints the register's rows (L §8.2). The engine's explanation lacked the `when`'s row, though its register held it (`c3_dec` qd's `assumed:` line). On `build/m4` from f30ad579. Scratch: `tmp/sortwork/fix/` (README, `trace_ok.py`, `c4_when.tally`, `c5_wref.tally`).
+
+**Where refcore reads it.** A wrapper around refcore's `trace_row` (`trace_ok.py`) shows the path: the binding (`span_members`) → `o.target` → `_judge_link` → `obs_links_for` → `link_tuple`. That reads the named move's binding tuples, then its `when`, for any move, a decision too.
+
+**The change** (`walk/tuples.rs` `trace_link_when`, P31's print of that read; L §5.19 Links, §8.2; E §10):
+- **Decisions are no longer left out.** The engine's judging (`link_tuple` → `when_at_cut`) already read a decision's `when`. Only the trace skipped it.
+- **The tuples are read inside the traced read set, before the `when`** (new step `tuple_when`). Their rows now print first, in the order the judging reads them, as refcore's `link_tuple` does.
+- **The second point by D12.** It is the same form, and `c4_when` `en` (a plain plan tuple, `own[2026-04]`) differed by exactly that order: the engine printed `ok2[2026-04]` before `ten` and `dz[…]`.
+
+**`ed`:**
+- Before: `[2] row v:d5 = 5`, with no `when` row.
+- After: `[2] row v:ok[2026-02] = true`, `[3] row v:d5 = 5`, refcore's bytes. This holds alone, with qd in both orders, after dq and before qdd.
+
+**Crossings** (`tmp/sortwork/fix/README.md`):
+- **Refcore's bytes:**
+  - `c4_when`: `en`, `epo` (a pinned `when` false), `ed`, `ez`, `ept` and `epf` (`ok[2026-02]` pinned true and false), qd, qn and qz. Each alone, and two orders of eight of them.
+  - `c2_link`: ez, en and ed, alone and in orders, and both full orders.
+  - `c3_dec`: ed and qd.
+  - `c1_stop`: e.
+- **The differences left, none of this form:**
+  - `c4_when` `efo`: `tally run: not implemented`, the explanation of a list holding a back-pay hole booking. The same before the change.
+  - `c4_when` qo: the engine refuses it at load (`LOAD-READS bal(konto) with no day outside a decision`) and refcore answers. It came with the decision `dr`, whose `when` reads `bal(konto)` and which no row of `bank2` names. It is load, so this change can't reach it, and it is for a ruling.
+  - `c5_wref` ew: refcore adds the other instances' rows from `find_inst`'s whole list. That is P22's held form, for #255. The rows that decide `wz[2026-02]` exists, its refused `when`'s among them, match.
+  - `c1_stop` `f e` and `e f`: refcore's B2 fault (#255).
+
+**The sort's rows this moves** (hand-built mutants against refcore's kept bytes, `out/mut.*`):
+- **Row 71** (`==` → `!=`, the tuple search, now in `tuple_when`) is now K: caught by `c4_when` en, ed and epo, and `c2_link` ed.
+- **Row 70** (`&&` → `||`, both sites) is now K: caught by `c4_when` en and ed, and `c2_link` ed and ez.
+- **Row 74's site** (the decision guard's `||`) is gone.
+- **Rows 72 and 73** (the `Load` guard) moved to `trace_link_when`'s last `match`.
+  - Row 73 (`→ true`) is reached by `c5_wref` ew, by reading: the refused `when` would stop the explanation. Refcore's bytes for that ask wait on #255 (P22's rows).
+  - Row 72 still has no text: a load refusal at run in a link's `when`.
+- **New sites for T:**
+  - `tuple_when` → `Ok(Value::None)`: `c2_link` ed.
+  - `trace_link_when`'s `delete !` on `self.tracing()`: `c2_link` ed, whose explanation loses the rows.
+  - `tuple_when`'s `Law::Hole` arm: needs a move whose `at` is a hole at the named keys. No probe.
+
+- **Size** (`git diff --shortstat -- engine/crates`): 1 file, +36 −17.
+- **Files:** `walk/tuples.rs`.
+- **Exceptions:** +0.
+- **Mutants:** none proved by `mutants-local`. The hand-built ones are above.
+- **Open STOP-REPORTs:** none.
+- **Usage:** about 0.18 % of the week this turn (1.11 % for the session) by `engine/tools/usage` before this entry.
+- **Checks:** `check quick: green, 11 steps (69s)`; `check commit: green, 24 steps (137s)`.
