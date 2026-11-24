@@ -8507,3 +8507,52 @@ The builder's turn on G1's review (`tmp/spec-2.3.1/inputs/review-g1.md`, 6 block
 - **Usage:** about 0.25 % of the week this turn, 1.25 % in all, by `engine/tools/usage tmp/spec-2.3.1/g1-ids.txt` before this entry.
 - **Time:** about 45 minutes, about 30 of them checks (`check quick` 13 runs, the release binary 9, `check commit` 1).
 - **Checks:** `check quick: green, 11 steps (51s)` (before N7's commit); `check commit: red at tests, stopped after 10 of 24 steps (115s)`, red only on the 81 ids above.
+
+## 2026-11-24 tally 2.3.1 G2, the review's fixes and the rulings' answers (issue #259)
+
+The builder's second turn on group 2: G2's review (`tmp/spec-2.3.1/inputs/review-g2.md`, 6 blocking), rulings items 15 and 16 (P8, P9), 14's N5, and the group's rest. On `build/2.3.1` after G1's fixes (e0a641d8). The stop (D12): before each commit I swept the review's probes (`tmp/spec-2.3.1/g2/sweep.sh`: every text under `inputs/review/g2/`, each ask alone, forward and reversed, as `both.sh` runs them) against my base sweep at e0a641d8, and every line that turned is named in its commit. **Waiting for T and the pin.**
+
+**Commits** (none pushed):
+- 89fab47f `fix(eval): a field at a refused tuple's later keys is its refusal` (B2)
+- 5dc806a9 `fix(walk): a link to a refused instance is refused, observed too` (B5, rulings 16 Q1)
+- ca6ad0da `fix(ask): a row refused at its decision's later point refuses its day` (B1, Q2)
+- c57f8d88 `fix(eval): a refused movement compared, with none too, is refused` (Q3)
+- f2b6f1db `fix(load): a plan reaching a running decision's link is refused at load` (B6, Q4)
+- ff89b7c4 `fix(walk): what decided a decision at its point is its link's read set` (B3)
+- cd11809a `fix(book): a binding takes no modelled pins from outside its span` (B4)
+- 1a49fb13 `refactor(load): reached_link names its decision in a loop` (the exceptions step's nested-closure report on f2b6f1db)
+- 4e9b2cd2 `fix(walk): a refused-when link is judged at its instance's booking cut` (Q1 narrowed, D12)
+- 0dff4127 `fix(eval): only a written m[k] of a plan's refused instance is refused` (Q3 narrowed, D12)
+
+**Each finding, its probe's line now** (this worktree's engine, from the review's folder):
+- **B1** `g_early`: `b: refused: RUN-RECORD observation bank[r1] fulfils topup[2026-02], …` (was 900.00 PLN); `x/dl500early` b4, b6, b8 and b the same, from the row's day 02-03; `x/dl500late` refuses from its row's day only (b4, b6 500.00 PLN). How: a point that refuses the link of a row dated before it notes the row (`unlink_run`); the ask is answered again with the row refused from its day in every walk of its own timeline, the first answer's warnings and bookings put back (`ask/answer.rs` `answer_lent`; seeded in `walk/agenda.rs` `plan_walk`); each round adds a row. **Q2** follows: `g2/q2_between.tally` (a decision on 02-03 between the row's 02-02 and the point 02-05) gives `fc: refused: RUN-RECORD …` at lim 500, `fc: 400.00 PLN` at 600. Side effect: in the second answer `topup[2026-02]` is refused, not absent (its `when` reads the refused row), so `x/dl500early` dy is `RUN-RECORD`, where `x/dl500late` dy is `RUN-NONE … doesn't exist`.
+- **B2** `b2_prefix`: `dy`, `am` `refused: RUN-DIV division by zero` (were `RUN-NONE spend[2026-02, a] doesn't exist`); r6a, r6c, `x/r6_window`, w2k's three the same. `move_ref` takes the refused tuple whose keys begin the written ones.
+- **B3** `x/da_runwhen2` f: `400.00 PLN`, `assumed: feb guess (ok[2026-02])`, iof lists `ok[2026-02]`, as `x/da_runwhen`; `x/dl_pin` lp: `pinned: lim = 500.00 PLN`. The `when` is read under its own register in `move_body`; at the point those reads join the link's cell, the rows that name it and the walk's copies (`link_reads_at_point`). They include the running balance's register, so every reader of a decision's link in `x/dl*`, `x/dlc*`, `x/dlk*` and dec_link gains `unfulfilled: topup[2026-01]` and, in inputs-of, amt, lim, opening[konto]; no value moves. That is the rule as ruled ("the walk point's reads … are the link's read set"); say if the balance's own register should stay out.
+- **B4** `x/first_bind` sm, `x/first_cuts` kf: no `assumed:` line. `movements_of` takes a modelled-past instance's pins and assumptions only where its day rests in the span.
+- **B5** `x/dl500` ob: `refused: RUN-RECORD …` (was 400.00 PLN); `x/lf_readers` ob, `x/nb3_at` q_obs: `RUN-RECORD` (were `RUN-NONE observed(…) is none here`); `x/dl_whenref` ob, `x/lf_whenref` ob: `RUN-DIV`. `observed_of` reads a decision's links as its point judged them and is refused where every row is.
+- **B6** `x/s7_lone`: `check` and every ask give `refused: LOAD-READS pay reaches a running read or projection of topup without reads topup (x/s7_lone.tally:30)`, exit 1, refcore's line. `move_reads` for a plan follows its defs and day to the observed inputs they read; a row of one, in any version, naming a decision whose `when` reads running state (`reads_running`) is the mark. Asks and defs reading such rows still load (dec_link, c4_when `ok`). The run guard in `obs_links_for` stays for forms load can't see (a binding over a kind); its message is still not the catalogue's (non-blocking 2).
+
+**Rulings 16's other answers, 14's N5:**
+- **Q1, built narrow** (4e9b2cd2): a link whose tuple's `when` is refused is refused with the instance, a plan's and a decision's (`x/lf_whenref` n, loose, ob `RUN-DIV`; `x/dl_whenref` ob); an instance dated before the cut is judged by its `when` at its booking cut (`m1/fixes/gate8/linkdiv2` stays 12.00 PLN, gate 8's C13). **Not built: a tuple refused by its `where`** keeps its link. Judging it through the list's refused instance (`refused_tuple` inside `link_tuple`, 5dc806a9 as first written) moved stored answers to defects: `ENGINE-INVARIANT a booked plan amount changed` (spec/p22/n4_own, spec/p30/x1g_order, x1h_order_min), `RUN-CYCLE spend reads its own instances` (spec/p30/x1d_selfk_min, spec/p32, spec/p40fix/p40b, spec/p43/c6_own), and c4_when's efo, epo, qo, qn, nq, ez, en to `RUN-DIV`, against ruling 15's qo. By D12 it gave way. The case needs the tuple's existence cell read without the list's guard (R6's per-tuple cell, as `linked_refused` reads it for `o.fulfils`).
+- **Q3, built narrow** (0dff4127): a plan's refused instance written `m[k]` and compared is its refusal (x5 `RUN-DIV` in r6a, r6b, r6c, `x/r6_window`, w2k's three). A movement reached through `o.fulfils`, or a decision's instance, compares as before. The general form read the plan's list from inside its own `where` or amount (the RUN-CYCLE and ENGINE-INVARIANT above, through `o.fulfils == none`), and a decision's run made asks walk (c2_link and c3_dec gained `WARN-NEGATIVE konto …`). Both gave way (D12).
+- **Q5, not built:** `x/dlc3_600k` fc reached `RUN-ORDER decision topup[2026-02] is read before it has run` only through the general Q3 and went back to 30.00 PLN with it; `x/dlc3_500k` fc is `RUN-RECORD`. The form needs `o.fulfils` of a row linked to a decision not yet run at the reader's point to be `RUN-ORDER` in the link's own read (`obs_target` inside a walk), not in the comparison.
+- **N5, not built** (`review/g1/p03c_anyall_when`: am, lm, am2, lm2 still `RUN-DIV`): `span_members` stops at a refused member. It needs a refused status on `MvMember` and `aggregate::Member`, `any`/`all` deciding past it (rulings 17 A) and every other aggregate refusing on it.
+- **Non-blocking 1:** untouched; no fix reached `mv_field`'s parse of the id.
+
+**The group's rest, not built** (hand-off; nothing started this turn): selfread and Q1.10 as in my first entry; Q2.24 (`Collected::outside()` already keeps the day's rows; it needs its probe); Q2.38, Q2.39, N250.3; N250.9 (`g2/n250_9.tally`: `lw … law window(2026-02-01, 2026-02-10)` prints only the hole on both engines; the bytes the row wants aren't in my inputs).
+
+**What `check commit` shows red** (87 ids; T's stores at the group's start):
+- **The 81 of my first entry, unchanged as a set:** G1's 15; R6 34; item 3 6; item 6 21; C-9 5 (c4_when, ruled by item 15). Lines moved inside them by this turn: `fixes/g4/nb3_at` q_obs to `RUN-RECORD` (B5).
+- **New, 6, Q1's form** (5dc806a9, kept by 4e9b2cd2): `fixes/p40/c5_wref/` dq, qd, qdd, qw and `spec/p40fix/c5_wref/` ed, ew. `bank3[w3]` names `wz[2026-02]`, whose `when` (`ten / dz2[m] > 0`, dz2 0 in every version) is refused at every cut, so its link is refused and `dl[2026-02]` with it (`RUN-DIV`).
+- **None outside a class.** Two passes of `check commit` along the way showed 71 to 81 more, each named above under Q1 and Q3, and gone after the narrowing.
+- The steps after the tests step didn't run, so doc, build, deny, the fuzz build and the rest are unconfirmed.
+
+- **Size** (`git diff --shortstat e0a641d8 HEAD -- engine/crates`): 14 files, +641 −32; code +380 −32, unit tests +261 (eight new tests and one extended, each a small text through `api::run`).
+- **Kernel files touched:** `ask/answer.rs`, `book/members.rs`, `book/observe.rs`, `book/same.rs`, `eval/expr.rs`, `eval/state.rs`, `eval/timelines.rs`, `load/strata.rs`, `walk/agenda.rs`, `walk/body.rs`, `walk/order.rs`, `walk/plan.rs` (tests only), `walk/tuples.rs`, `lib.rs` (an export).
+- **Fences:** no edit to `walk/narrow.rs` or its twin this turn, so `check fences` wasn't run; the fences' suites pass in the last `check commit` (none of its red tests is one).
+- **Exceptions:** +0 (`EXCEPTIONS.lock` unchanged; one report-only hit, fixed by 1a49fb13).
+- **Mutants:** none proved. Sites for T: `unlink_run`'s `wo.obs.day < point` and `base`; `answer_lent`'s round test; `refused_when_link`'s `*d < cut`; `names_movement`; `reached_link`'s `info.observed` and `mv.decision`; `reads_running`'s `b.args.is_empty()`; `movements_of`'s `outside`; `link_reads_at_point`'s `links_at_point` test.
+- **Open STOP-REPORTs:** none new.
+- **Usage:** about 0.82 % of the week this turn (1.07 % to 1.89 %) by `engine/tools/usage tmp/spec-2.3.1/g2-ids.txt` before this entry.
+- **Time:** about 65 minutes, about 40 of them checks (`check quick` about 28 runs, `check commit` 5, the sweeps about 1).
+- **Checks:** `check quick: green, 11 steps (59s)`; `check commit: red at tests, stopped after 10 of 24 steps (107s)`, red only on the 87 ids above.
