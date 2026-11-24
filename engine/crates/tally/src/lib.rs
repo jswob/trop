@@ -268,7 +268,7 @@ pub mod walk {
         ALL, Change, Checkpoint, Ent, Group, Log, Progress, Projected, St, Taken, Today, Walk,
         WalkObs,
     };
-    pub use tuples::Law;
+    pub use tuples::{Law, LinkVerdict};
 }
 
 /// The book (E §5, §6.1, §6.3): observations the cut sees, the places versions cover and the

@@ -1884,4 +1884,39 @@ version jan
             "March doesn't"
         );
     }
+
+    #[test]
+    fn a_link_to_a_refused_instance_is_refused_with_it_observed_too() {
+        // L §5.19 Links, §8.4 (tally 2.3.1 R2, rulings 16 Q1, G2's review B5): January's
+        // `when` is refused, so its instance is refused, and the row that fulfils it with it:
+        // its realised movement is refused, not none
+        let text = FIRST
+            .replace("OK", "true \"ok jan\"")
+            .replace("  when ok[m]", "  when ok[m] and d5 / dz[m] > 0")
+            .replace(
+                "input d5: int",
+                "input d5: int\n\ninput dz[m in month]: int",
+            )
+            .replace(
+                "  d5 = 5 \"s\"",
+                "  d5 = 5 \"s\"\n  dz[2026-01] = 0 \"s\"\n  dz[2026-02] = 1 \"s\"\n  \
+                 dz[2026-03] = 1 \"s\"\n  dz[2026-04] = 1 \"s\"\n  dz[2026-05] = 1 \"s\"\n  \
+                 dz[2026-06] = 1 \"s\"",
+            )
+            .replace(
+                "ask c:",
+                "ask ob: observed(rent[2026-01]).cash.amount\n\nask c:",
+            );
+        let files = [("first.tally", text.as_str())];
+        for ask in ["a", "ob"] {
+            assert_eq!(
+                answer(&files, ask),
+                [
+                    format!("{ask}: refused: RUN-DIV division by zero"),
+                    "  cut 2026-05-20".to_owned()
+                ],
+                "{ask}"
+            );
+        }
+    }
 }

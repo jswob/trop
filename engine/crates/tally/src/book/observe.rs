@@ -24,7 +24,7 @@ use crate::eval::{Collected, Engine, Rows};
 use crate::model::{Fulfils, InputInfo, KeyVal, MvRef, MvSrc, Reality, Span, Value, World};
 use crate::syntax::{Expr, Key, Stop};
 use crate::time::Day;
-use crate::walk::{Amount, Dated, End, Inst, LegVal, Term, invariant};
+use crate::walk::{Amount, Dated, End, Inst, LegVal, LinkVerdict, Term, invariant};
 
 /// The id an observed row is read by, as written: `r5` of `bank[r5]` (refcore's
 /// `resolve_text` of the read's one key). L §5.19.
@@ -413,7 +413,16 @@ impl Engine {
                 .moves
                 .get(move_id)
                 .ok_or_else(|| invariant("a link to a move load didn't build"))?;
-            let found = self.link_tuple(m, mv, keys, cut)?;
+            let found = match self.link_tuple(m, mv, keys, cut)? {
+                LinkVerdict::Missing => None,
+                LinkVerdict::Stands(env) => Some(env),
+                // a link to a refused instance is refused with it (tally 2.3.1 R2, rulings 16
+                // Q1; L §8.4)
+                LinkVerdict::Refused(err) => {
+                    errs.push((o.id.clone(), err));
+                    continue;
+                }
+            };
             let mut bad = found.is_none();
             if let Some(env) = &found {
                 let places = self.link_places(m, mv, env, cut)?;
@@ -595,7 +604,12 @@ impl Engine {
     /// The links to `tid` judged, or `None` while judging them is refused by anything but
     /// load: the observation's verdict waits until it can be judged (refcore's
     /// `ObsMv._judge_link`). L §5.19 Links.
-    fn judged(&mut self, m: &Reality, tid: &str, cut: Day) -> Result<Option<Vec<String>>, Stop> {
+    pub(crate) fn judged(
+        &mut self,
+        m: &Reality,
+        tid: &str,
+        cut: Day,
+    ) -> Result<Option<Vec<String>>, Stop> {
         let good = match self.obs_links_for(m, tid, cut) {
             Ok(good) => good,
             Err(Stop::Refused(r)) if !matches!(r.code(), Code::Load(_)) => return Ok(None),

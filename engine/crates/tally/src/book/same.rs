@@ -623,8 +623,10 @@ impl Engine {
     /// sum the legs of the observations that fulfil it, rows stated `same` counted once and
     /// their disagreement a leg's `HOLE-SAME` amount, a `from` or `to` none where their legs
     /// name different places, and whose `day` is the last of their days; none when nothing
-    /// fulfils it (refcore's `m_c_observed`). L §5.19 Realised amounts, One movement on two
-    /// statements.
+    /// fulfils it (refcore's `m_c_observed`); refused where every row that fulfils it is
+    /// refused, its link refused with the instance, a decision's at its walk point (L §5.19
+    /// Links, §8.4; tally 2.3.1 R2, C-9; G2's review B5). L §5.19 Realised amounts, One
+    /// movement on two statements.
     ///
     /// # Errors
     ///
@@ -636,7 +638,12 @@ impl Engine {
         if let Some(bad) = self.bad_links.get(&(cut, v.id.clone())) {
             return Err(Stop::Refused(bad.clone()));
         }
+        // a decision's links as its walk point judged them
+        let links = self.judged(m, &v.id, cut)?.unwrap_or(links);
         if links.is_empty() {
+            if let Some(err) = self.refused_link(m, &v.id, cut)? {
+                return Err(Stop::Refused(err));
+            }
             return Ok(Value::None);
         }
         let all = self.observations(m, cut)?;

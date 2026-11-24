@@ -355,10 +355,12 @@ impl Engine {
     }
 
     /// The binding tuple of `mv` at `keys` under cut `cut`, its `when` read at the cut: none
-    /// when no tuple has those keys or its `when` is false; a `when` that is a hole or refused,
-    /// or a refused `where`, is taken as existing, its link judged where its instance is
-    /// (refcore's `link_tuple`); a decision's whose `when` reads running state is judged at
-    /// its walk point. L §5.19 Links, E §4.1 step 2, §4.2 step 3 (tally 2.3.1 R6, C-9).
+    /// when no tuple has those keys or its `when` is false; a `when` that is a hole is taken
+    /// as existing, its link judged where its instance is (refcore's `link_tuple`); a refused
+    /// `when`, or a tuple refused before its later keys whose day and `when` leave a refused
+    /// instance, refuses the link with it, a plan's and a decision's (tally 2.3.1 R6, R2,
+    /// rulings 16 Q1); a decision's whose `when` reads running state is judged at its walk
+    /// point. L §5.19 Links, E §4.1 step 2, §4.2 step 3 (tally 2.3.1 R6, C-9).
     ///
     /// # Errors
     ///
@@ -369,7 +371,7 @@ impl Engine {
         mv: &MoveInfo,
         keys: &[KeyVal],
         cut: Day,
-    ) -> Result<Option<Env>, Stop> {
+    ) -> Result<LinkVerdict, Stop> {
         let tctx = self.timeline_ctx(None, cut);
         // the move's tuples at the cut, kept once for every link and read there (fence F7)
         let found = match self.kept_tuple(m, mv, keys, cut)? {
@@ -377,19 +379,24 @@ impl Engine {
             KeptTuple::Own => tuple_at(self.move_tuples(m, mv, tctx)?, keys),
         };
         let Some(tuple) = found else {
-            return Ok(None);
+            return Ok(LinkVerdict::Missing);
         };
         if tuple.exists == Exists::No {
-            return Ok(None);
+            return Ok(LinkVerdict::Missing);
         }
-        if let (Some(when), Exists::Yes, None, None) = (
-            &mv.decl.when,
-            &tuple.exists,
-            &tuple.domain_hole,
-            &tuple.refused,
-        ) {
+        if let Some(err) = tuple.refused.clone() {
+            // its day and `when` decide whether the refused instance is there (R6's order)
+            let made = self.refused_tuple(m, mv, (tuple, None), err, tctx)?;
+            return Ok(match made {
+                None => LinkVerdict::Missing,
+                Some(Inst { err: Some(why), .. }) => LinkVerdict::Refused(why),
+                Some(_) => return Err(invariant("a refused tuple's instance with no refusal")),
+            });
+        }
+        if let (Some(when), Exists::Yes, None) = (&mv.decl.when, &tuple.exists, &tuple.domain_hole)
+        {
             match self.when_at_cut(m, mv, when, &tuple.env, tctx) {
-                Ok(false) => return Ok(None),
+                Ok(false) => return Ok(LinkVerdict::Missing),
                 Ok(true) => {}
                 // a decision's `when` that reads running state is read at its walk point, where
                 // its link is judged (`book_run`): taken as existing until then; but a plan
@@ -403,13 +410,17 @@ impl Engine {
                     let id = crate::book::inst_id(&mv.id, keys);
                     self.links_at_point.insert((cut, id));
                 }
-                // a cycle is never taken as existing: the link would stand unjudged
+                // a refused `when` is a refused instance, and its link is refused with it; a
+                // cycle is never taken as existing: the link would stand unjudged
                 Err(Stop::Refused(r))
-                    if !matches!(r.code(), Code::Load(_) | Code::Run(Run::Cycle)) => {}
+                    if !matches!(r.code(), Code::Load(_) | Code::Run(Run::Cycle)) =>
+                {
+                    return Ok(LinkVerdict::Refused(r));
+                }
                 Err(stop) => return Err(stop),
             }
         }
-        Ok(Some(tuple.env))
+        Ok(LinkVerdict::Stands(tuple.env))
     }
 
     /// What `o.fulfils` names at keys `keys` of move `mv` under cut `cut`: the instance the
@@ -628,6 +639,18 @@ impl Engine {
         }
         Ok(places)
     }
+}
+
+/// What a link's binding tuple says of the instance it names under a cut (L §5.19 Links, §5.14
+/// An instance's existence is a cell; tally 2.3.1 R6, R2, rulings 16 Q1).
+#[derive(Debug)]
+pub enum LinkVerdict {
+    /// No instance at the keys: the link names nothing.
+    Missing,
+    /// The instance exists, or waits for its walk point: its tuple's bindings.
+    Stands(Env),
+    /// Its existence is refused, and the link with it.
+    Refused(Refusal),
 }
 
 /// A move's law date: none, a day, or a hole (L §4.3, §5.14 `at e`).

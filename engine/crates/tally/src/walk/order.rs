@@ -1527,6 +1527,39 @@ version feb
     }
 
     #[test]
+    fn the_observed_movement_of_a_decision_rests_on_its_link_at_the_walk_point() {
+        // L §5.19 Links, Realised amounts, §8.4 (tally 2.3.1 C-9, R2; G2's review B5): where
+        // February's `when` is false at its point, the row's link is refused, and its realised
+        // movement with it; where it runs, the row is its realised movement
+        let text = DEC_LINK.replace(
+            "ask b:",
+            "ask ob: observed(topup[2026-02]).cash.amount\n\nask b:",
+        );
+        let ob = |lim: &str| {
+            let given = vec![Given {
+                path: "dec_obs.tally".to_owned(),
+                bytes: Some(text.replace("LIM", lim).into_bytes()),
+            }];
+            let asks = Asks::Named(vec!["ob".to_owned()]);
+            let answer = run(Files::new(given), &Request::new(asks)).expect("an answer");
+            answer.lines().first().cloned()
+        };
+        assert_eq!(
+            ob("600.00 PLN").as_deref(),
+            Some("ob: 400.00 PLN"),
+            "it runs: the row is its realised movement"
+        );
+        assert_eq!(
+            ob("500.00 PLN").as_deref(),
+            Some(
+                "ob: refused: RUN-RECORD observation bank[r1] fulfils topup[2026-02], which \
+                 doesn't exist or doesn't touch its places"
+            ),
+            "it doesn't: the realised movement rests on the refused link"
+        );
+    }
+
+    #[test]
     fn a_link_to_a_decision_whose_run_is_refused_is_refused_with_it() {
         // L §5.19 Links, §8.4, §5.14.2; E §4.2 step 3 (tally 2.3.1 R2, C-9): `spend` and
         // `topup` read each other on each 5th with no order, so `topup[2026-02]`'s existence
