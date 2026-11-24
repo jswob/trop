@@ -193,8 +193,8 @@ fn level_in_range(m: &Reality, read: &Value, q: &Num) -> Result<(), Stop> {
 }
 
 /// `mean(t for b)`: the terms added as `sum` adds them, divided by their count, exactly; a
-/// mean of rates is a `num` of their unit, a rate being a `num` with a period (refcore's
-/// `e_query`, its `Num(acc.q / n, acc.u)`; tally 2.3.1 S17, N256.5). L §5.11, §3.3.
+/// mean of rates is a rate of their period, the mean keeping its terms' unit (tally 2.3.1
+/// S17, N256.5; G3's review B3, pick P22: refcore mends to it). L §5.11, §3.3.
 fn mean(m: &Reality, terms: Vec<Value>) -> Result<Value, Stop> {
     let count = i64::try_from(terms.len()).map_err(|_| too_many())?;
     let mut it = terms.into_iter();
@@ -210,7 +210,12 @@ fn mean(m: &Reality, terms: Vec<Value>) -> Result<Value, Stop> {
         class: Class::Rate(unit),
     }) = acc
     {
-        acc = Value::Number(Number::plain(q, unit));
+        // a rate divided by a count is no rate arithmetic L §3.3 names; the mean is the rate
+        let q = q.checked_div(&Num::int(count)).map_err(num_stop)?;
+        return Ok(Value::Number(Number {
+            q,
+            class: Class::Rate(unit),
+        }));
     }
     arith(m, Op::Div, &acc, &Value::int(count))
 }
@@ -251,10 +256,12 @@ mod tests {
 
     #[test]
     fn a_mean_of_rates_keeps_their_unit() {
-        // L §5.11 (tally 2.3.1 S17): a rate is a num with a period
+        // L §5.11 (tally 2.3.1 S17; G3's review B3): the mean is a rate of their period, so
+        // rate arithmetic of one period takes it
         let text = "model m\n  tally 2\n  on 2026-10-18\n  start 2026-01-01\n  end 2026-12-31\n\n\
                     source s \"s\"\nindex ks = [k1, k2, k3]\ninput r[k in ks]: rate\n\n\
-                    ask m1: mean(r[k] for k in ks)\n\nversion ver\n  cite s\n  governs always\n  \
+                    ask m1: mean(r[k] for k in ks)\nask m2: mean(r[k] for k in ks) + r[k1]\n\n\
+                    version ver\n  cite s\n  governs always\n  \
                     known 2026-01-01\n  r[k1] = 2 %/year \"s\"\n  r[k2] = 4 %/year \"s\"\n  \
                     r[k3] = 6 %/year \"s\"\n";
         let given = vec![Given {
@@ -267,8 +274,13 @@ mod tests {
             .to_vec();
         assert_eq!(
             lines.first().map(String::as_str),
-            Some("m1: 0.04 1/year"),
+            Some("m1: 0.04 /year"),
             "the mean in the rates' unit"
+        );
+        assert_eq!(
+            lines.get(2).map(String::as_str),
+            Some("m2: 0.06 /year"),
+            "a rate plus a rate of one period"
         );
     }
 }
