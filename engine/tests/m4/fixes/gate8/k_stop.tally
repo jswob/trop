@@ -1,0 +1,39 @@
+model k_stop
+  tally 2
+  on 2026-04-20
+  start 2026-01-01
+  end 2026-05-31
+
+source s "probe"
+unit PLN: currency minor 0.01
+index month = month 2026-01..2026-05
+place konto: accounts PLN lives 2026-01-01..
+place pot: accounts PLN lives 2026-01-01..
+place shop: outside lives 1900-01-01..
+input d5: int
+input d20: int
+input amt: money PLN
+index kinds = [a, b]
+input ten: int
+input dz[k in kinds]: int
+
+move fee[k in kinds where ten / dz[k] > 0, m in month]: transfers
+  on day_of(m, d5)
+  leg cash from pot to shop amount amt
+
+move top[m in month]: transfers
+  on day_of(m, d20)
+  leg cash from konto to shop amount flows(fee[b], m)
+
+ask q: flows(top, 2026-02 .. 2026-02)
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  d5 = 5 "s"
+  d20 = 20 "s"
+  amt = 10.00 PLN "s"
+  ten = 10 "s"
+  dz[a] = 0 "s"
+  dz[b] = 1 "s"

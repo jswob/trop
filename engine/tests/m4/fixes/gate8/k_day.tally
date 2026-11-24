@@ -1,0 +1,43 @@
+model k_day
+  tally 2
+  on 2026-04-20
+  start 2026-01-01
+  end 2026-05-31
+
+source s "probe"
+unit PLN: currency minor 0.01
+index month = month 2026-01..2026-05
+place konto: accounts PLN lives 2026-01-01..
+place pot: accounts PLN lives 2026-01-01..
+place shop: outside lives 1900-01-01..
+input d5: int
+input d20: int
+input amt: money PLN
+input ten: int
+input dz[m in month]: int
+
+move fee[m in month]: transfers
+  on day_of(m, ten / dz[m])
+  leg cash from pot to shop amount amt
+
+move top[m in month]: transfers
+  on day_of(m, d20)
+  leg cash from konto to shop amount flows(fee, m)
+
+ask q: flows(top, 2026-03 .. 2026-03)
+
+ask r: flows(fee, 2026-03 .. 2026-03)
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  d5 = 5 "s"
+  d20 = 20 "s"
+  amt = 10.00 PLN "s"
+  ten = 10 "s"
+  dz[2026-01] = 1 "s"
+  dz[2026-02] = 0 "refused: a division by zero"
+  dz[2026-03] = 1 "s"
+  dz[2026-04] = 1 "s"
+  dz[2026-05] = 1 "s"

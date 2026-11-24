@@ -971,3 +971,34 @@ fixes/gatelead/x3_settled/e5	fixes-gatelead		engine/tests/m4/fixes/gatelead	engi
 fixes/gate/p_g5x/q8	fixes-gate		engine/tests/m4/fixes/gate	engine/tests/m4/fixes/gate/p_g5x.tally	q8		-
 fixes/gate/p_g5x/xx7	fixes-gate		engine/tests/m4/fixes/gate	engine/tests/m4/fixes/gate/p_g5x.tally	xx7		-
 fixes/gate/p_g5x/xx8	fixes-gate		engine/tests/m4/fixes/gate	engine/tests/m4/fixes/gate/p_g5x.tally	xx8		-
+fixes/gate8/k_stop/q	fixes-gate8		engine/tests/m4/fixes/gate8	engine/tests/m4/fixes/gate8/k_stop.tally	q		-
+fixes/gate8/k_pin/q	fixes-gate8		engine/tests/m4/fixes/gate8	engine/tests/m4/fixes/gate8/k_pin.tally	q		-
+fixes/gate8/k_hole/q	fixes-gate8		engine/tests/m4/fixes/gate8	engine/tests/m4/fixes/gate8/k_hole.tally	q		-
+fixes/gate8/k_unc/q	fixes-gate8		engine/tests/m4/fixes/gate8	engine/tests/m4/fixes/gate8/k_unc.tally	q		-
+fixes/gate8/k_day/q	fixes-gate8		engine/tests/m4/fixes/gate8	engine/tests/m4/fixes/gate8/k_day.tally	q		-
+fixes/gate8/k_b1/zp	fixes-gate8		engine/tests/m4/fixes/gate8	engine/tests/m4/fixes/gate8/k_b1.tally	zp		-
+fixes/gate8/x1r/l4	fixes-gate8		engine/tests/m4/fixes/gate8	engine/tests/m4/fixes/gate8/x1r.tally	l4		-
+fixes/gate8/x1r/f	fixes-gate8		engine/tests/m4/fixes/gate8	engine/tests/m4/fixes/gate8/x1r.tally	f		-
+fixes/gate8/x1r/l24	fixes-gate8		engine/tests/m4/fixes/gate8	engine/tests/m4/fixes/gate8/x1r.tally	l24		-
+fixes/gate8/x1r/l24__l4	fixes-gate8		engine/tests/m4/fixes/gate8	engine/tests/m4/fixes/gate8/x1r.tally	l24 l4		-
+fixes/gate8/x1r/l4__l24	fixes-gate8		engine/tests/m4/fixes/gate8	engine/tests/m4/fixes/gate8/x1r.tally	l4 l24		-
+fixes/gate8/x1r/l24__f	fixes-gate8		engine/tests/m4/fixes/gate8	engine/tests/m4/fixes/gate8/x1r.tally	l24 f		-
+fixes/gate8/x1r/f__l24	fixes-gate8		engine/tests/m4/fixes/gate8	engine/tests/m4/fixes/gate8/x1r.tally	f l24		-
+fixes/gate8/k_dayref/l	fixes-gate8		engine/tests/m4/fixes/gate8	engine/tests/m4/fixes/gate8/k_dayref.tally	l		-
+fixes/gate8/k_r35/q	fixes-gate8		engine/tests/m4/fixes/gate8	engine/tests/m4/fixes/gate8/k_r35.tally	q		-
+fixes/gate8/k_r60/q9	fixes-gate8		engine/tests/m4/fixes/gate8	engine/tests/m4/fixes/gate8/k_r60.tally	q9		-
+fixes/gate8/k_r65/l	fixes-gate8		engine/tests/m4/fixes/gate8	engine/tests/m4/fixes/gate8/k_r65.tally	l		-
+fixes/gate8/k_r65/fd	fixes-gate8		engine/tests/m4/fixes/gate8	engine/tests/m4/fixes/gate8/k_r65.tally	fd		-
+fixes/gate8/k_r65/fi	fixes-gate8		engine/tests/m4/fixes/gate8	engine/tests/m4/fixes/gate8/k_r65.tally	fi		-
+fixes/gate8/k_link/qa	fixes-p40		engine/tests/m4/fixes/gate8	engine/tests/m4/fixes/gate8/k_link.tally	qa		-
+fixes/gate8/k_link/qz	fixes-p40		engine/tests/m4/fixes/gate8	engine/tests/m4/fixes/gate8/k_link.tally	qz		-
+fixes/gate8/k_link/qa__qz	fixes-p40		engine/tests/m4/fixes/gate8	engine/tests/m4/fixes/gate8/k_link.tally	qa qz		-
+fixes/gate8/k_link/qz__qa	fixes-p40		engine/tests/m4/fixes/gate8	engine/tests/m4/fixes/gate8/k_link.tally	qz qa		-
+fixes/gate8/k_stop3/f	fixes-p40		engine/tests/m4/fixes/gate8	engine/tests/m4/fixes/gate8/k_stop3.tally	f		-
+fixes/gate8/k_stop3/l4	fixes-p40		engine/tests/m4/fixes/gate8	engine/tests/m4/fixes/gate8/k_stop3.tally	l4		-
+fixes/gate8/k_stop3/f__l4	fixes-p40		engine/tests/m4/fixes/gate8	engine/tests/m4/fixes/gate8/k_stop3.tally	f l4		-
+fixes/gate8/k_stop3/l4__f	fixes-p40		engine/tests/m4/fixes/gate8	engine/tests/m4/fixes/gate8/k_stop3.tally	l4 f		-
+fixes/gate8/k_stop2/l2	fixes-p40		engine/tests/m4/fixes/gate8	engine/tests/m4/fixes/gate8/k_stop2.tally	l2		-
+fixes/gate8/k_stop2/f	fixes-p40		engine/tests/m4/fixes/gate8	engine/tests/m4/fixes/gate8/k_stop2.tally	f		-
+fixes/gate8/k_stop2/l2__f	fixes-p40		engine/tests/m4/fixes/gate8	engine/tests/m4/fixes/gate8/k_stop2.tally	l2 f		-
+fixes/gate8/k_stop2/f__l2	fixes-p40		engine/tests/m4/fixes/gate8	engine/tests/m4/fixes/gate8/k_stop2.tally	f l2		-
