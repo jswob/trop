@@ -8868,3 +8868,60 @@ The builder's turn after the lead's ruling of Q1.10 (option (a), pick P16) and t
 - **Open STOP-REPORTs:** none new. Q1.10's is ruled (P16).
 - **Usage:** about 3.61 % of the week by `engine/tools/usage tmp/spec-2.3.1/g2-ids.txt` before this entry, about 0.42 % this turn.
 - **Checks:** `check quick: green, 11 steps (70s)`; `check commit: red at tests, stopped after 10 of 24 steps`, red only on the 80 ids above.
+
+## 2026-11-24 tally 2.3.1 G2, the review's fixes, statement E (issue #259)
+
+The builder's turn on G2's rest review (`tmp/spec-2.3.1/inputs/review-g2rest.md`) and statement E (rulings 20, pick P17). Before each commit, the probes of all three reviews were swept:
+- `g2/` and `g2fix/` in three orders, over the last turn's `cy`;
+- `g2rest/` `ex/` and `q5/`, each ask alone, against the reviewer's lines at 3e51d647 (`g2/sweep3.sh`);
+- `g2rest/` `t/` and `cy/` by hand.
+
+Every moved line is below.
+
+**Commits** (none pushed):
+- 264df10d `fix(walk): every decision's link waits for its walk point`
+- 775eca47 `fix(book): a field read of a none instance lists its cell's reads`
+
+**Statement E, as built.** It is not one function. The readers of a decision's or a hole-day plan's existence now agree on the review's probes, through the link's verdict:
+- **Every decision's link waits for its walk point**, whatever its `when` reads (`link_tuple_read`). A plan's list reading such a link is `LOAD-READS` only where load marks the decision (`obs_links_for`).
+- **A hole day doesn't let a false `when` end a cell an earlier read refused** (L l.1361; `Existence::Hole`).
+- **A `RUN-NONE` field read lists the cell's reads** (`mv_field`).
+
+The one function E asks for, the instance's existence cell read by every reader (field, `== none`, `observed`, link, `o.fulfils`, `flows`, binding, `explain`, `inputs-of`) with one value, refusal, hole and register, isn't built. It is the hand-off below.
+
+**Each finding and note, its probe's line now** (`review/g2rest/`):
+- **B1** (`t/hd_false`): n and ob are `refused: RUN-DIV division by zero`, as d, e and f are. `ex/wr_dh_nf` n, ob2 and x are `RUN-DIV` too, as all its readers are.
+- **B2** (`t/cyc_link`): eq, ful, loose and ob are `refused: RUN-ORDER decisions chk and topup read each other on 2026-02-05`, as dy and ft are. Its twin `cyc_link_runwhen` is unchanged.
+- **Q5 for every decision** (P17), moved for refcore to follow at the writer's turn:
+  - `q5/q5_prev_o_nowhen` and `q5_same_o_nowhen` fc are `RUN-ORDER` (`30.00 PLN` before);
+  - `q5_same_k_nowhen` cn, ful and loose are `RUN-ORDER`;
+  - `q5_prev_k_nowhen` b, eb and ful are `RUN-ORDER` (chk's run is refused, so the balance is too);
+  - of the old probes, `x/c4_when` ept and its explanation are `RUN-ORDER` (dd and dr on one day).
+- **N3** (`g2fix/b1_early_alim` dy): `RUN-NONE topup[2026-02] doesn't exist: a field read of it` / `assumed: lim guess (lim)` / `unfulfilled: topup[2026-01]`, the lines ob lists. The same lines join the dy answers of `x/dl500`, `dl500early`, `dl500late`, `dlc10_500`, `dlc3_500`, `dlc3_500k`, `dlk500`, `b1_early_assumed`, `b1_point_alim`, `b1_point_assumed` and `q5/*_500`.
+- **N8:** `cycle_at` is taken where it is read (`through_existence`) and cleared where a link's read begins.
+- **N10:** `link_awaited` and `fulfils_awaited` cite E §4.2 step 3; `none_by_own_row` cites L §5.14, §8.4 and E §4.2 step 3.
+- **Not done:**
+  - **N1** (`t/hd_false_nowhere`): ob is still `RUN-RECORD … doesn't exist`, where the cell is the hole `?"feb day"`. A link would need a hole verdict (`LinkVerdict` has none), and `observed` would need to read it.
+  - **N2** (`cy/two_def`): still oa, fa `RUN-RECORD`, bp `RUN-CYCLE the link to a[2026-02] reads its own observations`. A cycle met while judging a link is swallowed in `judged` (`Err(Refused) → Ok(None)`), and the link guard (`link_active`) has its own message.
+  - **N7:** untouched. **N9:** the `exist_coll` fallback stays; it goes with the one function.
+  - **N11**, files over 1 000 lines (R-127): `book/members.rs` 2 453, `walk/order.rs` 1 976, `walk/plan.rs` 1 949, `eval/state.rs` 1 071. A split belongs to the one function's turn (the existence cell's own module).
+
+**What `check commit` shows red** (one run, after the last commit): 99 ids, all 80 of the last list among them, none green. 19 are new, each E's:
+- 12 `fixes/p40` ids gain `warning: WARN-NEGATIVE konto is below zero from 2026-01-05`. Judging every decision's link at its point runs the main walk on these asks, and the walk warns. Refcore runs it too once it is mended to P17. The ids: `c2_link` ed, qd; `c3_dec` ed, ed__qd, qd, qd__ed; `c4_when` ed, ept, qd; `c5_wref` dq, qd, qw.
+- 7 gain the cell's register under a `RUN-NONE` field read (N3): `fixes/g12/r_p_mr_q4`, `r_p_mr2_q4`, `r_p_mr2_x1`, `r_p_mr2_x3`, `r_p_mr3_q4` (`top[2026-02].day`: `unfulfilled: rent[2026-0x]`), and `fixes/t231rv2/b1_point_alim/dy`, `b1_point_assumed/dy`.
+- The steps after the tests didn't run.
+
+- **Size** (`git diff --shortstat 13d1b008 HEAD -- engine/crates`): 5 files, +46 −25.
+- **Fences:** no edit to `walk/narrow.rs` or its twin.
+- **Exceptions:** +0 (`exceptions --check`: no FAIL).
+- **Mutants:** none proved. Sites for T:
+  - `link_tuple_read`'s `mv.decision && self.plans_making == 0`;
+  - `hole_day && bad.is_some()`;
+  - `obs_links_for`'s `marked` test;
+  - `through_existence`'s `take`.
+- **Open STOP-REPORTs:** none.
+- **Hand-off:**
+  - Statement E's one function: an `existence_cell(m, mv, keys, cut, ctx)` giving `Missing | Exists | Hole | Refused | Awaited` with its reads, called by `mv_field`, `refused_movement`, `observed_of`, `link_tuple`, `fulfils_of`, `count_move`, `span_members`, `trace_existence`. It would also decide N1, N2 and N9.
+  - N7.
+- **Usage:** about 3.86 % of the week by `engine/tools/usage tmp/spec-2.3.1/g2-ids.txt` before this entry, about 0.22 % this turn.
+- **Checks:** `check quick: green`; `check commit: red at tests, stopped after 10 of 24 steps`, red only on the 99 ids above.
