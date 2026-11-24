@@ -267,3 +267,21 @@ fixes/p40/p40b/f3__f	m4_fixes	#255	M4 P40's fix, its crossings: refcore refuses 
 fixes/p40/p40b/f__f3	m4_fixes	#255	M4 P40's fix, its crossings: refcore refuses with its list guard (RUN-CYCLE) or its B2 ENGINE-INVARIANT; spec/p40fix/p40b/f__f3
 fixes/p40/p40b/f__l4__c4__f3	m4_fixes	#255	M4 P40's fix, its crossings: refcore refuses with its list guard (RUN-CYCLE) or its B2 ENGINE-INVARIANT; spec/p40fix/p40b/f__l4__c4__f3
 fixes/p40/p40b/f3__c4__l4__f	m4_fixes	#255	M4 P40's fix, its crossings: refcore refuses with its list guard (RUN-CYCLE) or its B2 ENGINE-INVARIANT; spec/p40fix/p40b/f3__c4__l4__f
+fixes/p40/c2_link/ez	m4_fixes	#255	M4 P43/P44: refcore lists an existence read's tuple rows before the named instance's `where` row; spec/p43/c2_link/ez
+fixes/p40/c2_link/en	m4_fixes	#255	M4 P43/P44: refcore lists an existence read's tuple rows before the named instance's `where` row; spec/p43/c2_link/en
+fixes/p40/c2_link/qa__qz__zq__qzq__qo__qn__nq__qd__dq__qdd__ez__en__ed	m4_fixes	#255	M4 P43/P44: refcore lists an existence read's tuple rows before the named instance's `where` row; spec/p43/c2_link/qa__qz__zq__qzq__qo__qn__nq__qd__dq__qdd__ez__en__ed
+fixes/p40/c2_link/ed__en__ez__qdd__dq__qd__nq__qn__qo__qzq__zq__qz__qa	m4_fixes	#255	M4 P43/P44: refcore lists an existence read's tuple rows before the named instance's `where` row; spec/p43/c2_link/ed__en__ez__qdd__dq__qd__nq__qn__qo__qzq__zq__qz__qa
+fixes/p40/c4_when/en	m4_fixes	#255	M4 P43/P44: refcore lists an existence read's tuple rows before the named instance's `where` row; spec/p43/c4_when/en
+fixes/p40/c4_when/epo	m4_fixes	#255	M4 P43/P44: refcore lists an existence read's tuple rows before the named instance's `where` row; spec/p43/c4_when/epo
+fixes/p40/c4_when/ez	m4_fixes	#255	M4 P43/P44: refcore lists an existence read's tuple rows before the named instance's `where` row; spec/p43/c4_when/ez
+fixes/p40/c4_when/en__epo__ed__ez__ept__epf__qd__qn	m4_fixes	#255	M4 P43/P44: refcore lists an existence read's tuple rows before the named instance's `where` row; spec/p43/c4_when/en__epo__ed__ez__ept__epf__qd__qn
+fixes/p40/c4_when/qn__qd__epf__ept__ez__ed__epo__en	m4_fixes	#255	M4 P43/P44: refcore lists an existence read's tuple rows before the named instance's `where` row; spec/p43/c4_when/qn__qd__epf__ept__ez__ed__epo__en
+fixes/p40/c5_wref/ez	m4_fixes	#255	M4 P43/P44: refcore lists an existence read's tuple rows before the named instance's `where` row; spec/p43/c5_wref/ez
+fixes/p40/c5_wref/en	m4_fixes	#255	M4 P43/P44: refcore lists an existence read's tuple rows before the named instance's `where` row; spec/p43/c5_wref/en
+fixes/p40/p40b/e4	m4_fixes	#255	M4 P43: refcore's explain adds the whole list's rows (and after f its list guard, B2); spec/p43/p40b/e4
+fixes/p40/p40b/f__e4	m4_fixes	#255	M4 P43: refcore's explain adds the whole list's rows (and after f its list guard, B2); spec/p43/p40b/f__e4
+fixes/p40/p40b/e4__f	m4_fixes	#255	M4 P43: refcore's explain adds the whole list's rows (and after f its list guard, B2); spec/p43/p40b/e4__f
+fixes/p40/c6_own/efs	m4_fixes	#255	M4 P30/P43: refcore refuses RUN-CYCLE (its list guard) or adds the whole list's rows; spec/p43/c6_own/efs
+fixes/p40/c6_own/qfs	m4_fixes	#255	M4 P30/P43: refcore refuses RUN-CYCLE (its list guard) or adds the whole list's rows; spec/p43/c6_own/qfs
+fixes/p40/c6_own/f	m4_fixes	#255	M4 P30/P43: refcore refuses RUN-CYCLE (its list guard) or adds the whole list's rows; spec/p43/c6_own/f
+fixes/p40/c6_own/e4	m4_fixes	#255	M4 P30/P43: refcore refuses RUN-CYCLE (its list guard) or adds the whole list's rows; spec/p43/c6_own/e4

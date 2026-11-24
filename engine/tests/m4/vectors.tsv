@@ -1086,3 +1086,13 @@ fixes/p40/p40b/f3__f	fixes-p40fix		engine/tests/m4/fixes/p40	engine/tests/m4/fix
 fixes/p40/p40b/f__f3	fixes-p40fix		engine/tests/m4/fixes/p40	engine/tests/m4/fixes/p40/p40b.tally	f f3		-
 fixes/p40/p40b/f__l4__c4__f3	fixes-p40fix		engine/tests/m4/fixes/p40	engine/tests/m4/fixes/p40/p40b.tally	f l4 c4 f3		-
 fixes/p40/p40b/f3__c4__l4__f	fixes-p40fix		engine/tests/m4/fixes/p40	engine/tests/m4/fixes/p40/p40b.tally	f3 c4 l4 f		-
+fixes/p40/p40b/e4	fixes-p43		engine/tests/m4/fixes/p40	engine/tests/m4/fixes/p40/p40b.tally	e4		-
+fixes/p40/p40b/f__e4	fixes-p43		engine/tests/m4/fixes/p40	engine/tests/m4/fixes/p40/p40b.tally	f e4		-
+fixes/p40/p40b/e4__f	fixes-p43		engine/tests/m4/fixes/p40	engine/tests/m4/fixes/p40/p40b.tally	e4 f		-
+fixes/p40/c6_own/efs	fixes-p43		engine/tests/m4/fixes/p40	engine/tests/m4/fixes/p40/c6_own.tally	efs		-
+fixes/p40/c6_own/qfs	fixes-p43		engine/tests/m4/fixes/p40	engine/tests/m4/fixes/p40/c6_own.tally	qfs		-
+fixes/p40/c6_own/f	fixes-p43		engine/tests/m4/fixes/p40	engine/tests/m4/fixes/p40/c6_own.tally	f		-
+fixes/p40/c6_own/e4	fixes-p43		engine/tests/m4/fixes/p40	engine/tests/m4/fixes/p40/c6_own.tally	e4		-
+fixes/p40/c6_own/l4	fixes-p43		engine/tests/m4/fixes/p40	engine/tests/m4/fixes/p40/c6_own.tally	l4		-
+fixes/p40/c6_own/c4	fixes-p43		engine/tests/m4/fixes/p40	engine/tests/m4/fixes/p40/c6_own.tally	c4		-
+fixes/p40/c6_own/f3	fixes-p43		engine/tests/m4/fixes/p40	engine/tests/m4/fixes/p40/c6_own.tally	f3		-

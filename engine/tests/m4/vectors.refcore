@@ -264024,4 +264024,981 @@ warning: WARN-UNREAD input amt is read by nothing
 warning: WARN-UNREAD input d20 is read by nothing
 warning: WARN-UNREAD input d5 is read by nothing
 warning: WARN-UNREAD place pot is read by nothing
+,17:fixes/p40/p40b/e4,9:fixes-p43,23:run p40b.tally --ask e4,1685:10:p40b.tally,1665:model k_stop3
+  tally 2
+  on 2026-04-20
+  start 2026-01-01
+  end 2026-05-31
+
+source s "probe"
+unit PLN: currency minor 0.01
+index month = month 2026-01..2026-05
+place konto: accounts PLN lives 2026-01-01..
+place pot: accounts PLN lives 2026-01-01..
+place shop: outside lives 1900-01-01..
+input d5: int
+input d20: int
+input amt: money PLN
+place card: accounts PLN lives 2026-01-01..
+index kinds = [a]
+input bank: observed
+input ten: int
+input dz[m in month]: int
+input base: money PLN
+input d25: int
+
+move spend[m in month where ten / dz[m] > 0, k in kinds]: transfers
+  on day_of(m, d25)
+  leg cash from konto to shop amount max(0, base - loose[m])
+
+input guess: money PLN
+
+def loose[m in month]: money PLN at start_of(m)
+  rule guessed = guess
+  rule seen beats guessed = sum(o.cash.amount for o in bank over m where o.fulfils == none) when covered(card, m)
+
+ask f: flows(spend, 2026-04 .. 2026-04)
+
+ask l4: loose[2026-04]
+
+ask e4: explain loose[2026-04]
+
+ask c4: check loose[2026-04] == guess
+
+ask f3: flows(spend, 2026-03 .. 2026-03) as known 2026-03-01
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  d5 = 5 "s"
+  d20 = 20 "s"
+  amt = 10.00 PLN "s"
+  ten = 10 "s"
+  guess = 100.00 PLN "s"
+  base = 300.00 PLN "s"
+  d25 = 25 "s"
+  dz[2026-01] = 1 "s"
+  dz[2026-02] = 1 "s"
+  dz[2026-03] = 1 "s"
+  dz[2026-04] = 1 "s"
+  dz[2026-05] = 1 "s"
+
+version apr
+  cite s
+  governs 2026-04
+  known 2026-04-10
+  covers card
+  bank[r0404] = (on: 2026-04-04, kind: transfers, leg cash from konto to shop amount 250.00 PLN, fulfils: spend[2026-01, a]) "names jan"
+  bank[r0406] = (on: 2026-04-06, kind: transfers, leg cash from card to shop amount 30.00 PLN) "loose"
+,,1:0,2368:e4: 30.00 PLN
+  [1] loose[2026-04] = 30.00 PLN, law date 2026-04-01
+      rule guessed: beaten by seen
+      rule seen: won
+        [2] row v:ten = 10
+            version v, source s, "probe", locator "s", governs always, known 2026-01-01
+        [3] row v:dz[2026-01] = 1
+            version v, source s, "probe", locator "s", governs always, known 2026-01-01
+        [4] row v:dz[2026-02] = 1
+            version v, source s, "probe", locator "s", governs always, known 2026-01-01
+        [5] row v:dz[2026-03] = 1
+            version v, source s, "probe", locator "s", governs always, known 2026-01-01
+        [6] row v:dz[2026-04] = 1
+            version v, source s, "probe", locator "s", governs always, known 2026-01-01
+        [7] row v:dz[2026-05] = 1
+            version v, source s, "probe", locator "s", governs always, known 2026-01-01
+        [8] row v:d25 = 25
+            version v, source s, "probe", locator "s", governs always, known 2026-01-01
+        [9] row v:base = 300.00 PLN
+            version v, source s, "probe", locator "s", governs always, known 2026-01-01
+        [10] loose[2026-01] = 100.00 PLN, law date 2026-01-01
+            rule guessed: won
+              [11] row v:guess = 100.00 PLN
+                  version v, source s, "probe", locator "s", governs always, known 2026-01-01
+            rule seen: not applicable
+        [12] loose[2026-02] = 100.00 PLN, law date 2026-02-01
+            rule guessed: won
+              (v:guess: see [11])
+            rule seen: not applicable
+        [13] loose[2026-03] = 100.00 PLN, law date 2026-03-01
+            rule guessed: won
+              (v:guess: see [11])
+            rule seen: not applicable
+        [14] loose[2026-05] = 100.00 PLN, law date 2026-05-01
+            rule guessed: won
+              (v:guess: see [11])
+            rule seen: not applicable
+        [15] row apr:bank[r0406] = (from: card, to: shop, amount: 30.00 PLN, day: 2026-04-06)
+            version apr, source s, "probe", locator "loose", on 2026-04-06, known 2026-04-10
+  cut 2026-04-20
+warning: WARN-NEGATIVE card is below zero from 2026-04-06
+warning: WARN-NEGATIVE konto is below zero from 2026-02-25
+warning: WARN-UNREAD input amt is read by nothing
+warning: WARN-UNREAD input d20 is read by nothing
+warning: WARN-UNREAD input d5 is read by nothing
+warning: WARN-UNREAD place pot is read by nothing
+,20:fixes/p40/p40b/f__e4,9:fixes-p43,25:run p40b.tally --ask f e4,1685:10:p40b.tally,1665:model k_stop3
+  tally 2
+  on 2026-04-20
+  start 2026-01-01
+  end 2026-05-31
+
+source s "probe"
+unit PLN: currency minor 0.01
+index month = month 2026-01..2026-05
+place konto: accounts PLN lives 2026-01-01..
+place pot: accounts PLN lives 2026-01-01..
+place shop: outside lives 1900-01-01..
+input d5: int
+input d20: int
+input amt: money PLN
+place card: accounts PLN lives 2026-01-01..
+index kinds = [a]
+input bank: observed
+input ten: int
+input dz[m in month]: int
+input base: money PLN
+input d25: int
+
+move spend[m in month where ten / dz[m] > 0, k in kinds]: transfers
+  on day_of(m, d25)
+  leg cash from konto to shop amount max(0, base - loose[m])
+
+input guess: money PLN
+
+def loose[m in month]: money PLN at start_of(m)
+  rule guessed = guess
+  rule seen beats guessed = sum(o.cash.amount for o in bank over m where o.fulfils == none) when covered(card, m)
+
+ask f: flows(spend, 2026-04 .. 2026-04)
+
+ask l4: loose[2026-04]
+
+ask e4: explain loose[2026-04]
+
+ask c4: check loose[2026-04] == guess
+
+ask f3: flows(spend, 2026-03 .. 2026-03) as known 2026-03-01
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  d5 = 5 "s"
+  d20 = 20 "s"
+  amt = 10.00 PLN "s"
+  ten = 10 "s"
+  guess = 100.00 PLN "s"
+  base = 300.00 PLN "s"
+  d25 = 25 "s"
+  dz[2026-01] = 1 "s"
+  dz[2026-02] = 1 "s"
+  dz[2026-03] = 1 "s"
+  dz[2026-04] = 1 "s"
+  dz[2026-05] = 1 "s"
+
+version apr
+  cite s
+  governs 2026-04
+  known 2026-04-10
+  covers card
+  bank[r0404] = (on: 2026-04-04, kind: transfers, leg cash from konto to shop amount 250.00 PLN, fulfils: spend[2026-01, a]) "names jan"
+  bank[r0406] = (on: 2026-04-06, kind: transfers, leg cash from card to shop amount 30.00 PLN) "loose"
+,,1:0,2281:f: refused: RUN-CYCLE spend reads its own instances
+  cut 2026-04-20
+e4: refused: ENGINE-INVARIANT a booked plan amount changed: spend[2026-04, a] booked at 2026-04-20 differs between the cuts 2026-04-20 and 2026-04-20 (E §9 invariant 5)
+  [1] loose[2026-04] = refused: ENGINE-INVARIANT a booked plan amount changed: spend[2026-04, a] booked at 2026-04-20 differs between the cuts 2026-04-20 and 2026-04-20 (E §9 invariant 5), law date 2026-04-01
+      rule guessed: beaten by seen
+      rule seen: won
+        [2] row v:ten = 10
+            version v, source s, "probe", locator "s", governs always, known 2026-01-01
+        [3] row v:dz[2026-01] = 1
+            version v, source s, "probe", locator "s", governs always, known 2026-01-01
+        [4] row v:dz[2026-02] = 1
+            version v, source s, "probe", locator "s", governs always, known 2026-01-01
+        [5] row v:dz[2026-03] = 1
+            version v, source s, "probe", locator "s", governs always, known 2026-01-01
+        [6] row v:dz[2026-04] = 1
+            version v, source s, "probe", locator "s", governs always, known 2026-01-01
+        [7] row v:dz[2026-05] = 1
+            version v, source s, "probe", locator "s", governs always, known 2026-01-01
+        [8] row v:d25 = 25
+            version v, source s, "probe", locator "s", governs always, known 2026-01-01
+        [9] row v:base = 300.00 PLN
+            version v, source s, "probe", locator "s", governs always, known 2026-01-01
+        [10] loose[2026-01] = 100.00 PLN, law date 2026-01-01
+            rule guessed: won
+              [11] row v:guess = 100.00 PLN
+                  version v, source s, "probe", locator "s", governs always, known 2026-01-01
+            rule seen: not applicable
+        [12] loose[2026-02] = 100.00 PLN, law date 2026-02-01
+            rule guessed: won
+              (v:guess: see [11])
+            rule seen: not applicable
+        [13] loose[2026-03] = 100.00 PLN, law date 2026-03-01
+            rule guessed: won
+              (v:guess: see [11])
+            rule seen: not applicable
+  cut 2026-04-20
+warning: WARN-UNREAD input amt is read by nothing
+warning: WARN-UNREAD input d20 is read by nothing
+warning: WARN-UNREAD input d5 is read by nothing
+warning: WARN-UNREAD place pot is read by nothing
+,20:fixes/p40/p40b/e4__f,9:fixes-p43,25:run p40b.tally --ask e4 f,1685:10:p40b.tally,1665:model k_stop3
+  tally 2
+  on 2026-04-20
+  start 2026-01-01
+  end 2026-05-31
+
+source s "probe"
+unit PLN: currency minor 0.01
+index month = month 2026-01..2026-05
+place konto: accounts PLN lives 2026-01-01..
+place pot: accounts PLN lives 2026-01-01..
+place shop: outside lives 1900-01-01..
+input d5: int
+input d20: int
+input amt: money PLN
+place card: accounts PLN lives 2026-01-01..
+index kinds = [a]
+input bank: observed
+input ten: int
+input dz[m in month]: int
+input base: money PLN
+input d25: int
+
+move spend[m in month where ten / dz[m] > 0, k in kinds]: transfers
+  on day_of(m, d25)
+  leg cash from konto to shop amount max(0, base - loose[m])
+
+input guess: money PLN
+
+def loose[m in month]: money PLN at start_of(m)
+  rule guessed = guess
+  rule seen beats guessed = sum(o.cash.amount for o in bank over m where o.fulfils == none) when covered(card, m)
+
+ask f: flows(spend, 2026-04 .. 2026-04)
+
+ask l4: loose[2026-04]
+
+ask e4: explain loose[2026-04]
+
+ask c4: check loose[2026-04] == guess
+
+ask f3: flows(spend, 2026-03 .. 2026-03) as known 2026-03-01
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  d5 = 5 "s"
+  d20 = 20 "s"
+  amt = 10.00 PLN "s"
+  ten = 10 "s"
+  guess = 100.00 PLN "s"
+  base = 300.00 PLN "s"
+  d25 = 25 "s"
+  dz[2026-01] = 1 "s"
+  dz[2026-02] = 1 "s"
+  dz[2026-03] = 1 "s"
+  dz[2026-04] = 1 "s"
+  dz[2026-05] = 1 "s"
+
+version apr
+  cite s
+  governs 2026-04
+  known 2026-04-10
+  covers card
+  bank[r0404] = (on: 2026-04-04, kind: transfers, leg cash from konto to shop amount 250.00 PLN, fulfils: spend[2026-01, a]) "names jan"
+  bank[r0406] = (on: 2026-04-06, kind: transfers, leg cash from card to shop amount 30.00 PLN) "loose"
+,,1:0,2554:e4: 30.00 PLN
+  [1] loose[2026-04] = 30.00 PLN, law date 2026-04-01
+      rule guessed: beaten by seen
+      rule seen: won
+        [2] row v:ten = 10
+            version v, source s, "probe", locator "s", governs always, known 2026-01-01
+        [3] row v:dz[2026-01] = 1
+            version v, source s, "probe", locator "s", governs always, known 2026-01-01
+        [4] row v:dz[2026-02] = 1
+            version v, source s, "probe", locator "s", governs always, known 2026-01-01
+        [5] row v:dz[2026-03] = 1
+            version v, source s, "probe", locator "s", governs always, known 2026-01-01
+        [6] row v:dz[2026-04] = 1
+            version v, source s, "probe", locator "s", governs always, known 2026-01-01
+        [7] row v:dz[2026-05] = 1
+            version v, source s, "probe", locator "s", governs always, known 2026-01-01
+        [8] row v:d25 = 25
+            version v, source s, "probe", locator "s", governs always, known 2026-01-01
+        [9] row v:base = 300.00 PLN
+            version v, source s, "probe", locator "s", governs always, known 2026-01-01
+        [10] loose[2026-01] = 100.00 PLN, law date 2026-01-01
+            rule guessed: won
+              [11] row v:guess = 100.00 PLN
+                  version v, source s, "probe", locator "s", governs always, known 2026-01-01
+            rule seen: not applicable
+        [12] loose[2026-02] = 100.00 PLN, law date 2026-02-01
+            rule guessed: won
+              (v:guess: see [11])
+            rule seen: not applicable
+        [13] loose[2026-03] = 100.00 PLN, law date 2026-03-01
+            rule guessed: won
+              (v:guess: see [11])
+            rule seen: not applicable
+        [14] loose[2026-05] = 100.00 PLN, law date 2026-05-01
+            rule guessed: won
+              (v:guess: see [11])
+            rule seen: not applicable
+        [15] row apr:bank[r0406] = (from: card, to: shop, amount: 30.00 PLN, day: 2026-04-06)
+            version apr, source s, "probe", locator "loose", on 2026-04-06, known 2026-04-10
+  cut 2026-04-20
+f: refused: ENGINE-INVARIANT a booked plan amount changed: spend[2026-04, a] booked at 2026-04-20 differs between the cuts 2026-04-20 and 2026-04-20 (E §9 invariant 5)
+  cut 2026-04-20
+warning: WARN-NEGATIVE card is below zero from 2026-04-06
+warning: WARN-NEGATIVE konto is below zero from 2026-02-25
+warning: WARN-UNREAD input amt is read by nothing
+warning: WARN-UNREAD input d20 is read by nothing
+warning: WARN-UNREAD input d5 is read by nothing
+warning: WARN-UNREAD place pot is read by nothing
+,20:fixes/p40/c6_own/efs,9:fixes-p43,26:run c6_own.tally --ask efs,1788:12:c6_own.tally,1766:model k_stop3
+  tally 2
+  on 2026-04-20
+  start 2026-01-01
+  end 2026-05-31
+
+source s "probe"
+unit PLN: currency minor 0.01
+index month = month 2026-01..2026-05
+place konto: accounts PLN lives 2026-01-01..
+place pot: accounts PLN lives 2026-01-01..
+place shop: outside lives 1900-01-01..
+input d5: int
+input d20: int
+input amt: money PLN
+place card: accounts PLN lives 2026-01-01..
+index kinds = [a]
+input bank: observed
+input ten: int
+input dz[m in month]: int
+input base: money PLN
+input d25: int
+
+move spend[m in month where ten / dz[m] > 0, k in kinds]: transfers
+  on day_of(m, d25)
+  leg cash from konto to shop amount max(0, base - loose[m])
+
+input guess: money PLN
+
+def loose[m in month]: money PLN at start_of(m)
+  rule guessed = guess
+  rule seen beats guessed = sum(o.cash.amount for o in bank over m where o.fulfils == none) when covered(card, m)
+
+def fs[m in month]: money PLN = flows(spend, m)
+
+ask efs: explain fs[2026-04]
+
+ask qfs: fs[2026-04]
+
+ask f: flows(spend, 2026-04 .. 2026-04)
+
+ask l4: loose[2026-04]
+
+ask e4: explain loose[2026-04]
+
+ask c4: check loose[2026-04] == guess
+
+ask f3: flows(spend, 2026-03 .. 2026-03) as known 2026-03-01
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  d5 = 5 "s"
+  d20 = 20 "s"
+  amt = 10.00 PLN "s"
+  ten = 10 "s"
+  guess = 100.00 PLN "s"
+  base = 300.00 PLN "s"
+  d25 = 25 "s"
+  dz[2026-01] = 1 "s"
+  dz[2026-02] = 1 "s"
+  dz[2026-03] = 1 "s"
+  dz[2026-04] = 1 "s"
+  dz[2026-05] = 1 "s"
+
+version apr
+  cite s
+  governs 2026-04
+  known 2026-04-10
+  covers card
+  bank[r0404] = (on: 2026-04-04, kind: transfers, leg cash from konto to shop amount 250.00 PLN, fulfils: spend[2026-01, a]) "names jan"
+  bank[r0406] = (on: 2026-04-06, kind: transfers, leg cash from card to shop amount 30.00 PLN) "loose"
+,,1:0,2478:efs: refused: RUN-CYCLE spend reads its own instances
+  [1] fs[2026-04] = refused: RUN-CYCLE spend reads its own instances
+      rule base: won
+        [2] row v:ten = 10
+            version v, source s, "probe", locator "s", governs always, known 2026-01-01
+        [3] row v:dz[2026-01] = 1
+            version v, source s, "probe", locator "s", governs always, known 2026-01-01
+        [4] row v:dz[2026-02] = 1
+            version v, source s, "probe", locator "s", governs always, known 2026-01-01
+        [5] row v:dz[2026-03] = 1
+            version v, source s, "probe", locator "s", governs always, known 2026-01-01
+        [6] row v:dz[2026-04] = 1
+            version v, source s, "probe", locator "s", governs always, known 2026-01-01
+        [7] row v:dz[2026-05] = 1
+            version v, source s, "probe", locator "s", governs always, known 2026-01-01
+        [8] row v:d25 = 25
+            version v, source s, "probe", locator "s", governs always, known 2026-01-01
+        [9] row v:base = 300.00 PLN
+            version v, source s, "probe", locator "s", governs always, known 2026-01-01
+        [10] loose[2026-01] = 100.00 PLN, law date 2026-01-01
+            rule guessed: won
+              [11] row v:guess = 100.00 PLN
+                  version v, source s, "probe", locator "s", governs always, known 2026-01-01
+            rule seen: not applicable
+        [12] loose[2026-02] = 100.00 PLN, law date 2026-02-01
+            rule guessed: won
+              (v:guess: see [11])
+            rule seen: not applicable
+        [13] loose[2026-03] = 100.00 PLN, law date 2026-03-01
+            rule guessed: won
+              (v:guess: see [11])
+            rule seen: not applicable
+        [14] loose[2026-04] = refused: RUN-CYCLE spend reads its own instances, law date 2026-04-01
+            rule guessed: beaten by seen
+            rule seen: won
+              (v:ten: see [2])
+              (v:dz[2026-01]: see [3])
+              (v:dz[2026-02]: see [4])
+              (v:dz[2026-03]: see [5])
+              (v:dz[2026-04]: see [6])
+              (v:dz[2026-05]: see [7])
+        [15] loose[2026-05] = 100.00 PLN, law date 2026-05-01
+            rule guessed: won
+              (v:guess: see [11])
+            rule seen: not applicable
+  cut 2026-04-20
+warning: WARN-UNREAD input amt is read by nothing
+warning: WARN-UNREAD input d20 is read by nothing
+warning: WARN-UNREAD input d5 is read by nothing
+warning: WARN-UNREAD place pot is read by nothing
+,20:fixes/p40/c6_own/qfs,9:fixes-p43,26:run c6_own.tally --ask qfs,1788:12:c6_own.tally,1766:model k_stop3
+  tally 2
+  on 2026-04-20
+  start 2026-01-01
+  end 2026-05-31
+
+source s "probe"
+unit PLN: currency minor 0.01
+index month = month 2026-01..2026-05
+place konto: accounts PLN lives 2026-01-01..
+place pot: accounts PLN lives 2026-01-01..
+place shop: outside lives 1900-01-01..
+input d5: int
+input d20: int
+input amt: money PLN
+place card: accounts PLN lives 2026-01-01..
+index kinds = [a]
+input bank: observed
+input ten: int
+input dz[m in month]: int
+input base: money PLN
+input d25: int
+
+move spend[m in month where ten / dz[m] > 0, k in kinds]: transfers
+  on day_of(m, d25)
+  leg cash from konto to shop amount max(0, base - loose[m])
+
+input guess: money PLN
+
+def loose[m in month]: money PLN at start_of(m)
+  rule guessed = guess
+  rule seen beats guessed = sum(o.cash.amount for o in bank over m where o.fulfils == none) when covered(card, m)
+
+def fs[m in month]: money PLN = flows(spend, m)
+
+ask efs: explain fs[2026-04]
+
+ask qfs: fs[2026-04]
+
+ask f: flows(spend, 2026-04 .. 2026-04)
+
+ask l4: loose[2026-04]
+
+ask e4: explain loose[2026-04]
+
+ask c4: check loose[2026-04] == guess
+
+ask f3: flows(spend, 2026-03 .. 2026-03) as known 2026-03-01
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  d5 = 5 "s"
+  d20 = 20 "s"
+  amt = 10.00 PLN "s"
+  ten = 10 "s"
+  guess = 100.00 PLN "s"
+  base = 300.00 PLN "s"
+  d25 = 25 "s"
+  dz[2026-01] = 1 "s"
+  dz[2026-02] = 1 "s"
+  dz[2026-03] = 1 "s"
+  dz[2026-04] = 1 "s"
+  dz[2026-05] = 1 "s"
+
+version apr
+  cite s
+  governs 2026-04
+  known 2026-04-10
+  covers card
+  bank[r0404] = (on: 2026-04-04, kind: transfers, leg cash from konto to shop amount 250.00 PLN, fulfils: spend[2026-01, a]) "names jan"
+  bank[r0406] = (on: 2026-04-06, kind: transfers, leg cash from card to shop amount 30.00 PLN) "loose"
+,,1:0,270:qfs: refused: RUN-CYCLE spend reads its own instances
+  cut 2026-04-20
+warning: WARN-UNREAD input amt is read by nothing
+warning: WARN-UNREAD input d20 is read by nothing
+warning: WARN-UNREAD input d5 is read by nothing
+warning: WARN-UNREAD place pot is read by nothing
+,18:fixes/p40/c6_own/f,9:fixes-p43,24:run c6_own.tally --ask f,1788:12:c6_own.tally,1766:model k_stop3
+  tally 2
+  on 2026-04-20
+  start 2026-01-01
+  end 2026-05-31
+
+source s "probe"
+unit PLN: currency minor 0.01
+index month = month 2026-01..2026-05
+place konto: accounts PLN lives 2026-01-01..
+place pot: accounts PLN lives 2026-01-01..
+place shop: outside lives 1900-01-01..
+input d5: int
+input d20: int
+input amt: money PLN
+place card: accounts PLN lives 2026-01-01..
+index kinds = [a]
+input bank: observed
+input ten: int
+input dz[m in month]: int
+input base: money PLN
+input d25: int
+
+move spend[m in month where ten / dz[m] > 0, k in kinds]: transfers
+  on day_of(m, d25)
+  leg cash from konto to shop amount max(0, base - loose[m])
+
+input guess: money PLN
+
+def loose[m in month]: money PLN at start_of(m)
+  rule guessed = guess
+  rule seen beats guessed = sum(o.cash.amount for o in bank over m where o.fulfils == none) when covered(card, m)
+
+def fs[m in month]: money PLN = flows(spend, m)
+
+ask efs: explain fs[2026-04]
+
+ask qfs: fs[2026-04]
+
+ask f: flows(spend, 2026-04 .. 2026-04)
+
+ask l4: loose[2026-04]
+
+ask e4: explain loose[2026-04]
+
+ask c4: check loose[2026-04] == guess
+
+ask f3: flows(spend, 2026-03 .. 2026-03) as known 2026-03-01
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  d5 = 5 "s"
+  d20 = 20 "s"
+  amt = 10.00 PLN "s"
+  ten = 10 "s"
+  guess = 100.00 PLN "s"
+  base = 300.00 PLN "s"
+  d25 = 25 "s"
+  dz[2026-01] = 1 "s"
+  dz[2026-02] = 1 "s"
+  dz[2026-03] = 1 "s"
+  dz[2026-04] = 1 "s"
+  dz[2026-05] = 1 "s"
+
+version apr
+  cite s
+  governs 2026-04
+  known 2026-04-10
+  covers card
+  bank[r0404] = (on: 2026-04-04, kind: transfers, leg cash from konto to shop amount 250.00 PLN, fulfils: spend[2026-01, a]) "names jan"
+  bank[r0406] = (on: 2026-04-06, kind: transfers, leg cash from card to shop amount 30.00 PLN) "loose"
+,,1:0,268:f: refused: RUN-CYCLE spend reads its own instances
+  cut 2026-04-20
+warning: WARN-UNREAD input amt is read by nothing
+warning: WARN-UNREAD input d20 is read by nothing
+warning: WARN-UNREAD input d5 is read by nothing
+warning: WARN-UNREAD place pot is read by nothing
+,19:fixes/p40/c6_own/e4,9:fixes-p43,25:run c6_own.tally --ask e4,1788:12:c6_own.tally,1766:model k_stop3
+  tally 2
+  on 2026-04-20
+  start 2026-01-01
+  end 2026-05-31
+
+source s "probe"
+unit PLN: currency minor 0.01
+index month = month 2026-01..2026-05
+place konto: accounts PLN lives 2026-01-01..
+place pot: accounts PLN lives 2026-01-01..
+place shop: outside lives 1900-01-01..
+input d5: int
+input d20: int
+input amt: money PLN
+place card: accounts PLN lives 2026-01-01..
+index kinds = [a]
+input bank: observed
+input ten: int
+input dz[m in month]: int
+input base: money PLN
+input d25: int
+
+move spend[m in month where ten / dz[m] > 0, k in kinds]: transfers
+  on day_of(m, d25)
+  leg cash from konto to shop amount max(0, base - loose[m])
+
+input guess: money PLN
+
+def loose[m in month]: money PLN at start_of(m)
+  rule guessed = guess
+  rule seen beats guessed = sum(o.cash.amount for o in bank over m where o.fulfils == none) when covered(card, m)
+
+def fs[m in month]: money PLN = flows(spend, m)
+
+ask efs: explain fs[2026-04]
+
+ask qfs: fs[2026-04]
+
+ask f: flows(spend, 2026-04 .. 2026-04)
+
+ask l4: loose[2026-04]
+
+ask e4: explain loose[2026-04]
+
+ask c4: check loose[2026-04] == guess
+
+ask f3: flows(spend, 2026-03 .. 2026-03) as known 2026-03-01
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  d5 = 5 "s"
+  d20 = 20 "s"
+  amt = 10.00 PLN "s"
+  ten = 10 "s"
+  guess = 100.00 PLN "s"
+  base = 300.00 PLN "s"
+  d25 = 25 "s"
+  dz[2026-01] = 1 "s"
+  dz[2026-02] = 1 "s"
+  dz[2026-03] = 1 "s"
+  dz[2026-04] = 1 "s"
+  dz[2026-05] = 1 "s"
+
+version apr
+  cite s
+  governs 2026-04
+  known 2026-04-10
+  covers card
+  bank[r0404] = (on: 2026-04-04, kind: transfers, leg cash from konto to shop amount 250.00 PLN, fulfils: spend[2026-01, a]) "names jan"
+  bank[r0406] = (on: 2026-04-06, kind: transfers, leg cash from card to shop amount 30.00 PLN) "loose"
+,,1:0,2368:e4: 30.00 PLN
+  [1] loose[2026-04] = 30.00 PLN, law date 2026-04-01
+      rule guessed: beaten by seen
+      rule seen: won
+        [2] row v:ten = 10
+            version v, source s, "probe", locator "s", governs always, known 2026-01-01
+        [3] row v:dz[2026-01] = 1
+            version v, source s, "probe", locator "s", governs always, known 2026-01-01
+        [4] row v:dz[2026-02] = 1
+            version v, source s, "probe", locator "s", governs always, known 2026-01-01
+        [5] row v:dz[2026-03] = 1
+            version v, source s, "probe", locator "s", governs always, known 2026-01-01
+        [6] row v:dz[2026-04] = 1
+            version v, source s, "probe", locator "s", governs always, known 2026-01-01
+        [7] row v:dz[2026-05] = 1
+            version v, source s, "probe", locator "s", governs always, known 2026-01-01
+        [8] row v:d25 = 25
+            version v, source s, "probe", locator "s", governs always, known 2026-01-01
+        [9] row v:base = 300.00 PLN
+            version v, source s, "probe", locator "s", governs always, known 2026-01-01
+        [10] loose[2026-01] = 100.00 PLN, law date 2026-01-01
+            rule guessed: won
+              [11] row v:guess = 100.00 PLN
+                  version v, source s, "probe", locator "s", governs always, known 2026-01-01
+            rule seen: not applicable
+        [12] loose[2026-02] = 100.00 PLN, law date 2026-02-01
+            rule guessed: won
+              (v:guess: see [11])
+            rule seen: not applicable
+        [13] loose[2026-03] = 100.00 PLN, law date 2026-03-01
+            rule guessed: won
+              (v:guess: see [11])
+            rule seen: not applicable
+        [14] loose[2026-05] = 100.00 PLN, law date 2026-05-01
+            rule guessed: won
+              (v:guess: see [11])
+            rule seen: not applicable
+        [15] row apr:bank[r0406] = (from: card, to: shop, amount: 30.00 PLN, day: 2026-04-06)
+            version apr, source s, "probe", locator "loose", on 2026-04-06, known 2026-04-10
+  cut 2026-04-20
+warning: WARN-NEGATIVE card is below zero from 2026-04-06
+warning: WARN-NEGATIVE konto is below zero from 2026-02-25
+warning: WARN-UNREAD input amt is read by nothing
+warning: WARN-UNREAD input d20 is read by nothing
+warning: WARN-UNREAD input d5 is read by nothing
+warning: WARN-UNREAD place pot is read by nothing
+,19:fixes/p40/c6_own/l4,9:fixes-p43,25:run c6_own.tally --ask l4,1788:12:c6_own.tally,1766:model k_stop3
+  tally 2
+  on 2026-04-20
+  start 2026-01-01
+  end 2026-05-31
+
+source s "probe"
+unit PLN: currency minor 0.01
+index month = month 2026-01..2026-05
+place konto: accounts PLN lives 2026-01-01..
+place pot: accounts PLN lives 2026-01-01..
+place shop: outside lives 1900-01-01..
+input d5: int
+input d20: int
+input amt: money PLN
+place card: accounts PLN lives 2026-01-01..
+index kinds = [a]
+input bank: observed
+input ten: int
+input dz[m in month]: int
+input base: money PLN
+input d25: int
+
+move spend[m in month where ten / dz[m] > 0, k in kinds]: transfers
+  on day_of(m, d25)
+  leg cash from konto to shop amount max(0, base - loose[m])
+
+input guess: money PLN
+
+def loose[m in month]: money PLN at start_of(m)
+  rule guessed = guess
+  rule seen beats guessed = sum(o.cash.amount for o in bank over m where o.fulfils == none) when covered(card, m)
+
+def fs[m in month]: money PLN = flows(spend, m)
+
+ask efs: explain fs[2026-04]
+
+ask qfs: fs[2026-04]
+
+ask f: flows(spend, 2026-04 .. 2026-04)
+
+ask l4: loose[2026-04]
+
+ask e4: explain loose[2026-04]
+
+ask c4: check loose[2026-04] == guess
+
+ask f3: flows(spend, 2026-03 .. 2026-03) as known 2026-03-01
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  d5 = 5 "s"
+  d20 = 20 "s"
+  amt = 10.00 PLN "s"
+  ten = 10 "s"
+  guess = 100.00 PLN "s"
+  base = 300.00 PLN "s"
+  d25 = 25 "s"
+  dz[2026-01] = 1 "s"
+  dz[2026-02] = 1 "s"
+  dz[2026-03] = 1 "s"
+  dz[2026-04] = 1 "s"
+  dz[2026-05] = 1 "s"
+
+version apr
+  cite s
+  governs 2026-04
+  known 2026-04-10
+  covers card
+  bank[r0404] = (on: 2026-04-04, kind: transfers, leg cash from konto to shop amount 250.00 PLN, fulfils: spend[2026-01, a]) "names jan"
+  bank[r0406] = (on: 2026-04-06, kind: transfers, leg cash from card to shop amount 30.00 PLN) "loose"
+,,1:0,347:l4: 30.00 PLN
+  cut 2026-04-20
+warning: WARN-NEGATIVE card is below zero from 2026-04-06
+warning: WARN-NEGATIVE konto is below zero from 2026-02-25
+warning: WARN-UNREAD input amt is read by nothing
+warning: WARN-UNREAD input d20 is read by nothing
+warning: WARN-UNREAD input d5 is read by nothing
+warning: WARN-UNREAD place pot is read by nothing
+,19:fixes/p40/c6_own/c4,9:fixes-p43,25:run c6_own.tally --ask c4,1788:12:c6_own.tally,1766:model k_stop3
+  tally 2
+  on 2026-04-20
+  start 2026-01-01
+  end 2026-05-31
+
+source s "probe"
+unit PLN: currency minor 0.01
+index month = month 2026-01..2026-05
+place konto: accounts PLN lives 2026-01-01..
+place pot: accounts PLN lives 2026-01-01..
+place shop: outside lives 1900-01-01..
+input d5: int
+input d20: int
+input amt: money PLN
+place card: accounts PLN lives 2026-01-01..
+index kinds = [a]
+input bank: observed
+input ten: int
+input dz[m in month]: int
+input base: money PLN
+input d25: int
+
+move spend[m in month where ten / dz[m] > 0, k in kinds]: transfers
+  on day_of(m, d25)
+  leg cash from konto to shop amount max(0, base - loose[m])
+
+input guess: money PLN
+
+def loose[m in month]: money PLN at start_of(m)
+  rule guessed = guess
+  rule seen beats guessed = sum(o.cash.amount for o in bank over m where o.fulfils == none) when covered(card, m)
+
+def fs[m in month]: money PLN = flows(spend, m)
+
+ask efs: explain fs[2026-04]
+
+ask qfs: fs[2026-04]
+
+ask f: flows(spend, 2026-04 .. 2026-04)
+
+ask l4: loose[2026-04]
+
+ask e4: explain loose[2026-04]
+
+ask c4: check loose[2026-04] == guess
+
+ask f3: flows(spend, 2026-03 .. 2026-03) as known 2026-03-01
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  d5 = 5 "s"
+  d20 = 20 "s"
+  amt = 10.00 PLN "s"
+  ten = 10 "s"
+  guess = 100.00 PLN "s"
+  base = 300.00 PLN "s"
+  d25 = 25 "s"
+  dz[2026-01] = 1 "s"
+  dz[2026-02] = 1 "s"
+  dz[2026-03] = 1 "s"
+  dz[2026-04] = 1 "s"
+  dz[2026-05] = 1 "s"
+
+version apr
+  cite s
+  governs 2026-04
+  known 2026-04-10
+  covers card
+  bank[r0404] = (on: 2026-04-04, kind: transfers, leg cash from konto to shop amount 250.00 PLN, fulfils: spend[2026-01, a]) "names jan"
+  bank[r0406] = (on: 2026-04-06, kind: transfers, leg cash from card to shop amount 30.00 PLN) "loose"
+,,1:0,416:c4: differs: loose[2026-04] = 30.00 PLN, guess = 100.00 PLN, difference -70.00 PLN
+  cut 2026-04-20
+warning: WARN-NEGATIVE card is below zero from 2026-04-06
+warning: WARN-NEGATIVE konto is below zero from 2026-02-25
+warning: WARN-UNREAD input amt is read by nothing
+warning: WARN-UNREAD input d20 is read by nothing
+warning: WARN-UNREAD input d5 is read by nothing
+warning: WARN-UNREAD place pot is read by nothing
+,19:fixes/p40/c6_own/f3,9:fixes-p43,25:run c6_own.tally --ask f3,1788:12:c6_own.tally,1766:model k_stop3
+  tally 2
+  on 2026-04-20
+  start 2026-01-01
+  end 2026-05-31
+
+source s "probe"
+unit PLN: currency minor 0.01
+index month = month 2026-01..2026-05
+place konto: accounts PLN lives 2026-01-01..
+place pot: accounts PLN lives 2026-01-01..
+place shop: outside lives 1900-01-01..
+input d5: int
+input d20: int
+input amt: money PLN
+place card: accounts PLN lives 2026-01-01..
+index kinds = [a]
+input bank: observed
+input ten: int
+input dz[m in month]: int
+input base: money PLN
+input d25: int
+
+move spend[m in month where ten / dz[m] > 0, k in kinds]: transfers
+  on day_of(m, d25)
+  leg cash from konto to shop amount max(0, base - loose[m])
+
+input guess: money PLN
+
+def loose[m in month]: money PLN at start_of(m)
+  rule guessed = guess
+  rule seen beats guessed = sum(o.cash.amount for o in bank over m where o.fulfils == none) when covered(card, m)
+
+def fs[m in month]: money PLN = flows(spend, m)
+
+ask efs: explain fs[2026-04]
+
+ask qfs: fs[2026-04]
+
+ask f: flows(spend, 2026-04 .. 2026-04)
+
+ask l4: loose[2026-04]
+
+ask e4: explain loose[2026-04]
+
+ask c4: check loose[2026-04] == guess
+
+ask f3: flows(spend, 2026-03 .. 2026-03) as known 2026-03-01
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  d5 = 5 "s"
+  d20 = 20 "s"
+  amt = 10.00 PLN "s"
+  ten = 10 "s"
+  guess = 100.00 PLN "s"
+  base = 300.00 PLN "s"
+  d25 = 25 "s"
+  dz[2026-01] = 1 "s"
+  dz[2026-02] = 1 "s"
+  dz[2026-03] = 1 "s"
+  dz[2026-04] = 1 "s"
+  dz[2026-05] = 1 "s"
+
+version apr
+  cite s
+  governs 2026-04
+  known 2026-04-10
+  covers card
+  bank[r0404] = (on: 2026-04-04, kind: transfers, leg cash from konto to shop amount 250.00 PLN, fulfils: spend[2026-01, a]) "names jan"
+  bank[r0406] = (on: 2026-04-06, kind: transfers, leg cash from card to shop amount 30.00 PLN) "loose"
+,,1:0,290:f3: 200.00 PLN
+  cut 2026-03-01
+warning: WARN-NEGATIVE konto is below zero from 2026-01-25
+warning: WARN-UNREAD input amt is read by nothing
+warning: WARN-UNREAD input d20 is read by nothing
+warning: WARN-UNREAD input d5 is read by nothing
+warning: WARN-UNREAD place pot is read by nothing
 ,

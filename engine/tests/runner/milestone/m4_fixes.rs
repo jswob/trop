@@ -18,7 +18,7 @@ mod tests {
 
     /// The groups this target tests, one `#[test]` each: refcore's (`fixes-…`) and the
     /// spec's (`spec-…`).
-    const GROUPS: [&str; 39] = [
+    const GROUPS: [&str; 41] = [
         "fixes-g1",
         "fixes-g2",
         "fixes-g2fix",
@@ -41,6 +41,7 @@ mod tests {
         "fixes-p32",
         "fixes-p40",
         "fixes-p40fix",
+        "fixes-p43",
         "fixes-traced",
         "spec-g1",
         "spec-g2",
@@ -58,6 +59,7 @@ mod tests {
         "spec-p32",
         "spec-p40",
         "spec-p40fix",
+        "spec-p43",
     ];
 
     /// Runs every vector of `group` in `store` on the engine and holds it to the stored run.
@@ -319,10 +321,22 @@ mod tests {
     /// `when`, `c5_wref` with a refused `when`); P40's probes (`p40a` a stopping list, `p40b` a
     /// whole one; `e4` left out). Where refcore prints its B2 fault after another ask, its list
     /// guard, P22's whole-list reads or an answer load refuses (P43, `c4_when` `qo`), held for
-    /// #255 with the text's lines in `spec-p40fix`; `c4_when` `efo` isn't stored (#256).
+    /// #255 with the text's lines in `spec-p40fix`; `c4_when` `efo` isn't stored (#256). Since
+    /// P43's fix (ca2f2ea2) and P44, eleven `explain` asks of `c2_link`, `c4_when` and `c5_wref`
+    /// list the named instance's own `where` row first: held for #255, `spec-p43`'s lines.
     #[test]
     fn m4_fixes_p40fix() {
         group_holds(VECTORS, "fixes-p40fix");
+    }
+
+    /// P43's fix (ca2f2ea2): `explain` lists the `where` rows an existence read rests on.
+    /// Refcore's bytes for `p40b` `e4`, alone and beside `f`, and the builder's `c6_own` (a
+    /// def reading its own move's flows through an existence read); held for #255 where refcore
+    /// adds the whole list's rows or refuses with its list guard (`RUN-CYCLE`), the text's lines
+    /// in `spec-p43`; `c6_own` `l4`, `c4`, `f3` gate.
+    #[test]
+    fn m4_fixes_p43() {
+        group_holds(VECTORS, "fixes-p43");
     }
 
     /// Picks P23 and P24, G4 `backlog`'s: refcore's bytes for `explain` under an axis `*`
@@ -520,5 +534,15 @@ mod tests {
     #[test]
     fn m4_fixes_spec_p40fix() {
         group_holds(SPEC, "spec-p40fix");
+    }
+
+    /// P43's and P44's answers (#255), written from build/m4's run at ca2f2ea2: an existence
+    /// read's `explain` lists the `where` rows it rests on, the named instance's own first (the
+    /// eleven of `fixes-p40fix`); `p40b` `e4` lists `ten`, `dz[2026-01]`, `d25` and r0406, alone
+    /// and in either order with `f`; `c6_own`'s 270.00 PLN (P30). Each multi-ask answer's
+    /// blocks checked equal to their asks run alone.
+    #[test]
+    fn m4_fixes_spec_p43() {
+        group_holds(SPEC, "spec-p43");
     }
 }
