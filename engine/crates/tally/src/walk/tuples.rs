@@ -382,8 +382,10 @@ impl Engine {
     /// or, with the list in progress, as the list makes it; and where the move's tuples stop
     /// its list, the list's stop (refcore's `find_inst`). A traced read reads as an untraced
     /// one: its explanation lists the rows the answer rests on, none of the list's bodies (E
-    /// §10). What reading them meets is the plan's, no reader's. L §5.19 Links, §5.11, E §4.1
-    /// steps 1–2, §3.2 (P22, P30).
+    /// §10). What reading them meets is the plan's, no reader's, and a list it makes leaves
+    /// what judging the list's links meets to the list's next reader of its instances
+    /// ([`Engine::existence_list`]). L §5.19 Links, §5.11, E §4.1 steps 1–2, §3.2 (P22, P30,
+    /// P40).
     ///
     /// # Errors
     ///
@@ -420,7 +422,7 @@ impl Engine {
                 _ => {}
             }
         }
-        let insts = self.move_instances(m, mv, cut)?;
+        let insts = self.existence_list(m, mv, cut)?;
         Ok(insts
             .iter()
             .find(|i| i.keys == keys)

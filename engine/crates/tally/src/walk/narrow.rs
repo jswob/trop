@@ -449,7 +449,10 @@ impl Engine {
         let outer = self.holding(Node::new(NodeKind::Move, &mv.id));
         let mark = self.reads_apart();
         let tctx = self.timeline_ctx(None, cut);
+        // what it books stays with the instance it keeps, never a list's still being made
+        let booked = self.booked_open.len();
         let made = self.tuple_instance(m, mv, (tuple, cut, None), tctx, None);
+        self.booked_kept(booked);
         self.reads_back(mark);
         self.holder = outer;
         self.plan_active.remove(&key);
