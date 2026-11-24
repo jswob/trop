@@ -153,7 +153,10 @@ class Result:
         self.trace = trace
 
     def key(self):
-        return tuple(rkey(v) for v in self.vals)
+        # options give the line's result together only where their pinned: sets are one too (L §5.5, §8.2; tally
+        # 2.3.1 S8, Q2.7)
+        pins = tuple(sorted(repr(e) for e in (getattr(self.coll, 'reg', None) or ()) if e[0] == 'pinned'))
+        return tuple(rkey(v) for v in self.vals) + (pins,)
 
     def carry_vals(self):
         return list(self.vals) + ([self.trace] if self.trace is not None else [])

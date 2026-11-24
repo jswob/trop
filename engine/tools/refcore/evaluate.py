@@ -258,6 +258,11 @@ class Engine:
     def e_paren(self, n, env, ctx):
         return self.ev(n.e, env, ctx)
 
+    def e_tupitem(self, n, env, ctx):
+        """One key of the tuple argmin, argmax, first or last returns, at its position (L §5.11; tally 2.3.1 S6)."""
+        v = self.ev(n.e, env, ctx)
+        return v.items[n.i] if isinstance(v, Tup) else v
+
     def e_num(self, n, env, ctx):
         t = n._t
         if t.k == 'flex':
@@ -2455,6 +2460,9 @@ class Engine:
                    (isinstance(a, Mv) and isinstance(b, Mv))):
             # things and keys compare by == and != whatever their order (L §5.7, §5.6); a movement is a thing of its
             # kind (L §1, §5.14: "A movement ... is a thing of its kind"), one by its stable id (L §2.5) (MC-X-F9)
+            return (a.key() == b.key()) == (op == '==')
+        if eq and isinstance(a, Tup) and isinstance(b, Tup):
+            # a returned tuple is its keys: equal where every key is (L §5.11's aggregate paragraph; tally 2.3.1 S6)
             return (a.key() == b.key()) == (op == '==')
         c = self.cmp3(a, b, n)
         return {'==': c == 0, '!=': c != 0, '<': c < 0, '<=': c <= 0, '>': c > 0, '>=': c >= 0}[op]

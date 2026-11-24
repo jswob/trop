@@ -24,16 +24,26 @@ from .values import (range_key, Num, Int, Money, Text, Key, Thing, Code, Rec, Ls
 
 
 def collect(paths):
+    """The files under the paths given, each taken once by its full path (`./z` is `z`; a path given twice, or a file
+    under two directories given, once: OPERATIONS §2 For all three, tally 2.3.1 S12, N245.13, N245.14), the first
+    name it was given by kept."""
     files = []
+    seen = set()
+
+    def add(f):
+        full = os.path.abspath(f)
+        if full not in seen:
+            seen.add(full)
+            files.append(f)
     for p in paths:
         if os.path.isdir(p):
             for root, dirs, fs in os.walk(p):
                 dirs.sort()
                 for f in sorted(fs):
                     if f.endswith('.tally'):
-                        files.append(os.path.join(root, f))
+                        add(os.path.join(root, f))
         else:
-            files.append(p)
+            add(p)
     return files
 
 

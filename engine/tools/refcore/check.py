@@ -913,6 +913,11 @@ class Checker:
     def t_paren(self, n, sc, expect):
         return self.tc(n.e, sc, expect)
 
+    def t_tupitem(self, n, sc, expect):
+        # one key of a returned tuple standing in a key position (check.read; tally 2.3.1 S6)
+        t = n.e._t if n.e._t is not None else self.tc(n.e, sc)
+        return t.items[n.i]
+
     def t_num(self, n, sc, expect):
         if n.unit:
             u, f = U.from_syntax(self.unit_terms(n.unit, n.loc))
@@ -1385,6 +1390,13 @@ class Checker:
     def read(self, n, kind, info, keys, sc):
         """A read of an input or def at keys (or a fill's output, writer 2)."""
         binds = info.binds
+        if len(keys) == 1 and len(binds) > 1 and keys is getattr(n, 'keys', None):
+            # the tuple argmin, argmax, first or last returns stands in a key position of the same indexes, its keys
+            # one per position (L §5.11's aggregate paragraph; tally 2.3.1 S6, Q1.12)
+            t0 = self.tc(keys[0], sc)
+            if t0.k == 'tuple' and len(t0.items) == len(binds):
+                src = keys[0]
+                keys[:] = [Node('tupitem', loc=src.loc, e=src, i=i) for i in range(len(binds))]
         if len(keys) != len(binds) and not (kind == 'input' and info.observed):
             raise LoadError('LOAD-KEY', 'wrong number of keys for %s: %d, not %d' % (info.id, len(keys), len(binds)),
                             n.loc)
@@ -2210,6 +2222,11 @@ class Checker:
         if lk == 'keylit' or rk == 'keylit':
             raise LoadError('LOAD-KEY', 'ambiguous key %s: nothing names its index' % (
                 lt.n if lk == 'keylit' else rt.n), loc)
+        if lk == 'tuple' and rk == 'tuple' and eq and len(lt.items) == len(rt.items) and all(
+                a.k == 'key' and b.k == 'key' and a.ix == b.ix for a, b in zip(lt.items, rt.items)):
+            # the tuple argmin, argmax, first or last returns is its keys: it compares with == and != key by key
+            # (L §5.11's aggregate paragraph; tally 2.3.1 S6, Q1.11)
+            return
         if lk == 'record' or rk == 'record':
             # L §3.1 (round 12): "Two records are never compared: ==, != and orders on them are refused (§8.4), and
             # their fields are compared instead; a test against none stays"

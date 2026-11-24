@@ -853,7 +853,15 @@ def usage_error(argv):
         return True
     if argv[0] == 'test':
         return False
-    return any(a.startswith('--') and a not in OPTIONS[argv[0]] for a in argv[1:])
+    if any(a.startswith('--') and a not in OPTIONS[argv[0]] for a in argv[1:]):
+        return True
+    # a missing operand (OPERATIONS §2 For all three; tally 2.3.1 S12, N245.11, N245.12): no path, or `--ask` with no
+    # id after it
+    words = argv[1:]
+    paths = [a for i, a in enumerate(words) if not a.startswith('--') and '--ask' not in words[:i]]
+    if not paths:
+        return True
+    return '--ask' in words and not [a for a in words[words.index('--ask') + 1:] if not a.startswith('--')]
 
 
 def exit_code(command, lines):

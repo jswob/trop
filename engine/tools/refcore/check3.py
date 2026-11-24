@@ -1707,6 +1707,30 @@ def m_strata(self):
     # the walk orders a cycle's instances by the same pairs (m.written_order). Orders written both ways stay as
     # written
     wo = set(m.written_order)
+    # L §5.14.2 (tally 2.3.1 S11, N245.8): written orders that compose into a cycle are refused (LOAD-ORDER), a move
+    # before itself its smallest case (above); refcore stood them as written
+    bef = {}
+    for (x, z) in wo:
+        bef.setdefault(z, set()).add(x)
+    seen = {}
+
+    def cycle_from(x, path):
+        seen[x] = 1
+        for y in sorted(bef.get(x, ())):
+            if seen.get(y) == 1:
+                return path[path.index(y):] + [y]
+            if seen.get(y) is None:
+                c = cycle_from(y, path + [y])
+                if c:
+                    return c
+        seen[x] = 2
+        return None
+    for x in sorted(bef):
+        if seen.get(x) is None:
+            cyc = cycle_from(x, [x])
+            if cyc:
+                raise LoadError('LOAD-ORDER', '%s: written orders form a cycle' % ' before '.join(cyc),
+                                m.moves[cyc[0]].decl.loc)
     closure = set(wo)
     grew = True
     while grew:
