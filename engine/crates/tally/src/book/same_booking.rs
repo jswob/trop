@@ -672,13 +672,16 @@ ask b_after: bal(wallet, 2026-03-31)
 ask f_both: flows(wallet, 2026-03)
 
 ask f_one: flows(wallet, 2026-03-01 .. 2026-03-06)
+
+ask f_between: flows(wallet, 2026-03-06 .. 2026-03-06)
 "#;
 
     #[test]
     fn a_same_movement_of_two_days_is_known_after_both() {
-        // L §5.14 `on d`, §6.1 (tally 2.3.1 R1, N245.21): `same`'s two days are its bounds, so
-        // the balance is known before the first and after the last, the hole between them; a
-        // span holding both days counts it, one holding one day is that hole
+        // L §5.14 `on d`, §6.1 (tally 2.3.1 R1, N245.21, rulings 17 statement B): `same`'s two
+        // days are its bounds, so the balance is known before the first and after the last,
+        // the hole between them; a span holding both days counts it, one holding one day or
+        // lying between them is that hole
         let given = vec![Given {
             path: "two_days.tally".to_owned(),
             bytes: Some(TWO_DAYS.as_bytes().to_vec()),
@@ -698,6 +701,7 @@ ask f_one: flows(wallet, 2026-03-01 .. 2026-03-06)
                 "b_after: 100.00 PLN".to_owned(),
                 "b_before: 0.00 PLN".to_owned(),
                 format!("b_between: {hole}"),
+                format!("f_between: {hole}"),
                 "f_both: 100.00 PLN".to_owned(),
                 format!("f_one: {hole}")
             ],

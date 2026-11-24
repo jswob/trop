@@ -557,11 +557,14 @@ impl Sums {
     }
 }
 
-/// The holes of the movements of two days in log `ents`, each a [`Change::Open`] and its
-/// [`Change::Close`], of which one day alone is in the span after `lo` up to `limit`: such a
-/// movement may fall in the span or out of it; one with both its days in the span counts as
-/// its last day books it, one with neither not at all (L §6.1, §5.14 `on d`: `same`'s two days
-/// are its bounds; tally 2.3.1 R1, N245.21).
+/// The holes of the movements of several days in log `ents`, each a [`Change::Open`] and its
+/// [`Change::Close`], whose days the span after `lo` up to `limit` meets without holding
+/// them all: one movement whose day is a hole from its first day to its last, it may fall in
+/// the span or out of it, a span strictly between its days included; one with all its days in
+/// the span counts as its last day books it, one whose days the span misses not at all; one
+/// whose last side ended no hole is the hole where its first day is in the span (L §6.1,
+/// §5.14 `on d`: `same`'s days are its bounds; tally 2.3.1 R1, N245.21, rulings 17
+/// statement B).
 fn one_end_inside(ents: &[Ent], (lo, limit): (At, At)) -> Vec<Hole> {
     let inside = |at: At| lo < at && at <= limit;
     let mut out = Vec::new();
@@ -572,7 +575,11 @@ fn one_end_inside(ents: &[Ent], (lo, limit): (At, At)) -> Vec<Hole> {
         let closed = ents
             .iter()
             .find(|c| c.at > e.at && matches!(&c.change, Change::Close(x) if x == h));
-        if inside(e.at) != closed.is_some_and(|c| inside(c.at)) {
+        let may_fall = match closed {
+            Some(c) => e.at <= limit && lo < c.at && !(inside(e.at) && inside(c.at)),
+            None => inside(e.at),
+        };
+        if may_fall {
             out.push(h.clone());
         }
     }
