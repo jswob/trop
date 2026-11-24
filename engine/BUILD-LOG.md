@@ -8368,3 +8368,89 @@ The builder's turn on group 1 of the ruled plan (`tmp/spec-2.3.1/inputs/plan.md`
 - **Usage:** about 0.96 % of the week this turn by `engine/tools/usage` before this entry.
 - **Time:** about 64 minutes, about 34 of them checks (`check quick` 20 runs, `check commit` 6, the release binary 4, `check fences` 1).
 - **Checks:** `check quick: green, 11 steps (45s)`; `check fences: green, 1 step (69s)`; `check commit: red at tests, stopped after 10 of 24 steps (158s)`, red only on the ids above.
+
+## 2026-11-24 tally 2.3.1 G2, existence and one read set: R6, R2's link rows, C-9 (issue #259)
+
+The builder's turn on group 2 of the ruled plan (`tmp/spec-2.3.1/inputs/plan.md` §0, §7, §3, §9, §10, §16's group 2 row; rulings 7, 11, 12; answer.md C-1, C-2, C-9, C-13.1, C-13.5, C-13.6, C-13.8, C-13.10). On `build/2.3.1` from G1's 67eaacd9, before the pin: T's stores still hold today's bytes, so the ids each change moves are red until T's turn. **Waiting for T and the pin.** Five ids sit outside a class as written, under the STOP-REPORT below (c4_when).
+
+**Commits** (none pushed):
+- 3241ef4b `fix(walk): a tuple refused before its later keys stands for itself` (R6: one existence cell per binding tuple; P40's list stop goes)
+- 29ed633a `fix(book): a field read of an instance that doesn't exist is refused` (item 3)
+- e63a07b5 `fix(walk): a link's reads go only to the reads that rest on that link` (item 6, R2, C-13.6)
+- cbb928dc `fix(walk): a link to a decision is judged at its walk point` (C-9)
+- 6eb19ff1 `fix(walk): a link to a refused decision run is refused with it` (C-9's refused run, R2; explain's existence trace agrees with the value)
+
+**Each probe, the plan's row and the engine's line** (`tmp/spec-2.3.1/g2/probes.sh`, each ask alone and all; this worktree's engine beside refcore of tally 2.3, in `g2/final/` and `g2/refcore/`):
+
+| Probe | Plan's row | Engine now (refcore) |
+|---|---|---|
+| `planner/ex/first` | b has no `assumed:` line (item 6) | `b: 100.00 PLN`, `unfulfilled: rent[2026-03]`, no `assumed:`; a and c keep `assumed: jan is a guess (ok[2026-01])` (refcore: b carries it) |
+| `planner/ex/where2` | values (C-1; the refused tuple is its own movement, its day read) | `f: 10.00 PLN`, `b: 970.00 PLN`, `c: 3` (`RUN-DIV` all) |
+| M4 `k_stop3`, `planner/ex/k_stop3_nodiv` | l4 30.00 PLN, f 270.00 PLN, both orders | `l4: 30.00 PLN`, `f: 270.00 PLN` in every order (`RUN-DIV`; nodiv's f `RUN-CYCLE`) |
+| M4 `k_stop2`, `fix/c1_stop` | values | k_stop2 `l2: 30.00 PLN`, `f: 270.00 PLN` (+ `unfulfilled: spend[2026-02, a]`); c1_stop `f: 200.00 PLN`, x, d, e `30.00 PLN` (refcore `ENGINE-INVARIANT`, `RUN-DIV`) |
+| M4 `k_refw` | 290.00 PLN, no instance (kept) | `l: 290.00 PLN` (`REFCORE-NOT-YET`) |
+| `critic/w1_day` | b3 970.00, f2 10.00, c 3; b5, f5, n `RUN-DIV` | the same; e5 `RUN-DIV` |
+| `critic/w2_none` | no instance: b5 960.00, f5 0.00, n 4; e5 `RUN-NONE spend[2026-05] doesn't exist: a field read of it` | the same |
+| `critic/w3_hole` | f2, f5 refused too (a refused day as a hole one) | all seven `RUN-DIV` (f2, f5 the hole) |
+| `critic/w4_false` | no instance: b5 960.00, f5 0.00, n 4 | the same; e5 `RUN-NONE` (item 3) |
+| `critic/w5_whenhole` | no row; by R6's order and R1 the refused `where` comes first, as w1 | b3 970.00, f2 10.00, c 3; b5, f5, n, e5 `RUN-DIV` (the same) |
+| `critic/x_none` | d2 (and dd) `RUN-NONE spend[2026-02] doesn't exist: a field read of it` | d2, a2, dd that line; d3 `2026-03-20`, isn `false`, n_un 1, n_eq 0, n_eq3 1 (d2 `2026-02-20`) |
+| `critic/selfread` | no cycle: values | **not built:** b, f3, g3 `RUN-CYCLE pay reads its own instances` (the same) |
+| `critic/dec_link` | loads and answers | loads; at the text's lim 500.00 PLN, Feb's `when` (500.00 < 500.00) is false at its point, so b, f, loose `RUN-RECORD observation bank[r1] fulfils topup[2026-02], which doesn't exist or doesn't touch its places`; at 600.00 PLN (`g2/dec_link_on`) b 870.00, f 400.00, loose 30.00 PLN, in any ask order (refcore `LOAD-READS` all) |
+| `critic/l_false` | a refused `RUN-RECORD` (C-13.6) | a `RUN-RECORD observation bank[a1] fulfils rent[2026-01], …`, b 100.00 PLN, c `RUN-RECORD` (a 0.00 PLN) |
+| `planner/ex/hdfalse` | the hole | b, f, n `?"which day?" (hd)` (the same) |
+| `g2/step7b` (mine) | E §3.1 step 7's kept part: a plan that reaches a decision's existence is `LOAD-READS` | `pay`'s amount reads a row linked to `topup`: `LOAD-READS bal(konto) with no day outside a decision`, every ask (the same) |
+
+**How each is built** (L, E as ruled; where the plan leaves a reading open I took the recommended one, written here):
+- **R6** (`walk/plan.rs` `refused_tuple`, `stopped_tuple`, `stopped_parts`, `stopped_when`, `reads_unbound`; `walk/tuples.rs` `tuple_at`, `linked_instance`; `walk/narrow.rs` `kept_tuple`): a tuple refused before its later keys is one refused instance at the keys it has, no longer a stop of the list. Its day is still read, and its `when` too where neither reads a key it lacks: a `never` or `none` day, or a false `when`, gives no instance whatever came before; a hole day keeps a hole day; a known day dates the refusal, which refuses the places of its legs from that day (all places from the run's start where its day can't be read). A lookup at longer keys finds it by prefix. The `Reader` enum, `links_met`, `links_left` and `links_judged` go. A refused instance on a hole day books its refusal (`walk/move_flows.rs`, w3).
+- **Item 3** (`book/members.rs` `mv_field`, `made_to_exist`, `not_there`): a field read, `.day` included, of an instance that doesn't exist or isn't there (no record, or `exists` No, or status None, and no adjustment makes it) is `RUN-NONE <m>[k] doesn't exist: a field read of it`; legs too. Decisions are untouched by `made_to_exist`.
+- **Item 6** (`walk/plan.rs` the status loops, `book/observe.rs` `refused_link`, `walk/move_flows.rs` `count_move`, `walk/narrow.rs` `judge_named`): each instance's status is read under its own register (`push` / `pop_alone`, merged into that instance), so a link's `assumed:` lines go only to the readers that rest on it. A `flows` whose span holds an unfulfilled instance named by a refused link is refused with that link (C-13.6, l_false). `judge_each` is read apart in both the memo's read set and the register: without the register's half the narrow path printed an `assumed:` line the plain twin didn't (`check fences` red once, then green). The link bound stays (C-13.8).
+- **C-9** (`walk/tuples.rs` `link_tuple`'s decision arm, `trace_existence`; `book/observe.rs` `judged`, `unlink_at_point`, `obs_links_for`'s guard; `walk/order.rs` `book_run`, `unlink_run`, `refused_run`; `eval/state.rs`, `eval/timelines.rs` `links_at_point`, `plans_making`): a decision's `when` that reads running state is not read when its link is judged; the link waits for the main walk. At the instance's point the run decides it: exists No refuses the naming rows `RUN-RECORD`; a run refused there (`RUN-ORDER`, `RUN-TIE`, a refused body) refuses them with its own refusal (6eb19ff1, R2). A read from outside the walk runs the main walk first. While a plan's instances are being made (`plans_making`), reaching such a link is `LOAD-READS` (step 7's kept part, `step7b`). explain's existence trace leaves the same `when` to the walk point, so `edw` and `qdw` agree.
+- **A limit I know of:** a row linked to a decision and dated before its point is booked on its own day before the verdict; only the walk's later readers see the refusal.
+
+**What `check commit` shows red, by change** (81 ids; T's stores at 67eaacd9's bytes):
+- **G1's 15:** `paper/agg__refusal_first/t1`, `t2`, `fixes/g2/q1_s4`, `fixes/gate8/m2_g3_h`, `paper/kleene_agg_argm__hole/a`, `t23-g1/surv-hole-dec`, `d77/lifespan_end`, `fixes/g13/rf_w_model_with_rf_w_n14`, `spec/g1/a9_nominal/q_0`, `spec/p12/accrue/h_a__z_c`, `h_b__z_c`, `h_dc__z_c`, `h_p__z_c`, `h_r__z_c`, `spec/p12/periodic/h_r__z_c`.
+- **R6, 3241ef4b (34, P40's list stop):** `fixes/gate8/k_stop/q`; `fixes/p40/c1_stop/` d, d2, d2__d, df, e, f, f2, f2__f, fd, fd__xf, x, x__f, xf; `fixes/p40/p40a/` c4, f, f__f3, f3, f3__f, l4; `g6/refused_where_later_key`; `spec/p40/k_stop2/` f, f__l2, l2, l2__f; `spec/p40/k_stop3/` f__l4, l4__f; `spec/p40fix/c1_stop/` d__f, e__f, f__e, f__x__d__e__f2__d2__fd__df__xf, xf__df__fd__d2__f2__e__d__x__f; `spec/p40fix/p40a/` f__l4__c4__f3, f3__c4__l4__f.
+- **Item 3, 29ed633a (6, `.day` or a field of an instance whose `when` is false):** `fixes/g12/` r_p_mr_q4, r_p_mr2_q4, r_p_mr2_x1, r_p_mr2_x3, r_p_mr3_q4; `fixes/g14/t_mb5_l`.
+- **Item 6, e63a07b5 (21):** `fixes/g12/` pm2_g10_observe_observe, pm3_observe_observe, pm4_g10_observe_observe, pm8_g10_observe_observe (`rare_ok`'s `assumed:` left rent's explanation: it decides only `rare`); `fixes/gate8/k_link/` qa, qa__qz, qz__qa; `fixes/gate8/k_pin/q`; `fixes/p40/c2_link/` nq, qa, qo, qzq, zq; `fixes/p40/c5_wref/` nq, qa, qo, qzq, zq; `spec/p43/c2_link/` both orders; `fixes/g4/nb3_at` (C-13.6: q_sw 0.00 PLN to `RUN-RECORD`).
+- **C-9, cbb928dc and 6eb19ff1 (5), outside the class as the plan writes it:** `fixes/p40/c4_when/` edw, emx, exm, qdw; `spec/p40fix/c4_when/qo`. The STOP-REPORT below.
+- The tests red: the m1 g12 explain parts 1, 2, 11 to 14, 16, 22, 23; `m1_fixes_g13_reads_ranges_and_sites`, `m1_fixes_g14_the_sweep_part_2`, `m1_fixes_g2_windows_and_powers`, `m1_fixes_gate8_survivors`, `m2_fixes_records`, `m2_fixes_tally_218_d`, `m3_fixes_t23_g1`, `m4_constructs_paper`, `m4_fixes_gate8`, `m4_fixes_p40`, `m4_fixes_p40fix`, `m4_fixes_spec_g1`, `m4_fixes_spec_p12`, `m4_fixes_spec_p40`, `m4_fixes_spec_p40fix`, `m4_fixes_spec_p43`, `s_kernel_g6_plan_pass` (26 of 1 553). The steps after the tests step didn't run.
+
+**Not built, for the hand-off** (each with what I found):
+- **selfread** (no cycle: values): a tuple reading another tuple of its own move needs the list's instances evaluated one tuple at a time while the list is being made, and pay2's `where` needs a tuple made at its own keys alone, or the read recurses. A list cell made tuple by tuple, with `plan_active` keyed by (move, keys), is the shape; about 0.15 to 0.25 k.
+- **Q1.10** (a `count` holds each run's existence and day, no amount; the g3 count rows get new bytes): needs the existence reads kept apart from the amount reads on `Inst`, `Body`, the members and the run trace, so a count takes only the first; about 0.15 k.
+- **Q2.24** (`inputs-of flows(…)` lists an instance whose day is outside the span): `Collected::outside()` (`eval/register.rs`) already keeps the day's rows; the case needs its own probe to show where the engine drops it.
+- **Q2.38 = N256.2** (an `on` read from an `assumed` window row prints `assumed:`), **Q2.39** (a plan with a false `when` lists what decided it, as a decision does), **N250.3** (`explain` of a hole-day instance lists the adjustment a binding over `adjustments` read), **N250.9** (an ask whose `law` is a window prints `unknown day:` and `cut`): not started.
+- N250.15 stays as built.
+
+- **Size** (`git diff --shortstat 67eaacd9 -- engine/crates`): 9 files, +877 −195; code +507 −195, my unit tests +370 (six new tests and one updated, each a whole small text through `api::run`). The plan: R6 0.45 to 0.9 k, R2 0.35 to 0.5 k, with tests; this is about 1.07 k with tests for R6, item 3, item 6 and C-9, with five R2 rows and selfread not built.
+- **Kernel files touched:** `walk/plan.rs`, `walk/tuples.rs`, `walk/narrow.rs` (fence F7: `check fences` red once, then green), `walk/move_flows.rs`, `walk/order.rs`, `book/observe.rs`, `book/members.rs`, `eval/state.rs`, `eval/timelines.rs`.
+- **Fences:** `check fences: green, 1 step (53s)` after the last edit to `narrow.rs`; the fences' suites pass in the last `check commit` (none of its 26 red tests is one).
+- **Exceptions:** +0 (`EXCEPTIONS.lock` unchanged).
+- **Mutants:** none proved. Sites new for T: `reads_unbound`'s `skip(bound)`; `stopped_parts`'s `Ok(true)` for a hole day and for a decision; `tuple_at`'s `starts_with`; `link_tuple`'s and `trace_existence`'s `plans_making == 0`; `obs_links_for`'s `plans_making > 0`; `judged`'s four conditions; `made_to_exist`'s `a.made`; `mv_field`'s `exists == No || status == None`; `count_move`'s hole-day refusal arm; `refused_link`'s `find_map`; `unlink_at_point`'s `why`.
+- **Open STOP-REPORTs:** one, below (c4_when).
+- **Usage:** about 1.04 % of the week this turn by `engine/tools/usage tmp/spec-2.3.1/g2-ids.txt` before this entry.
+- **Time:** about 95 minutes, about 33 of them checks (`check quick` 22 runs, `check commit` 6, `check fences` 3).
+- **Checks:** `check quick: green, 11 steps (40s)`; `check fences: green, 1 step (53s)`; `check commit: red at tests, stopped after 10 of 24 steps (127s)`, red only on the ids above.
+
+## STOP-REPORT 2026-11-24: c4_when's LOAD-READS answers by R6 and C-9, where the plan keeps it
+
+- **Kind:** other (the ruled plan's row against the rule it cites)
+- **Where:**
+  - The text: `engine/tests/m4/fixes/p40/c4_when.tally` l.74 to 78 (`dr`, `when bal(konto) > lim`), l.172 (`bank4[w2]` fulfils `dr[2026-02]`), l.45 to 52 (`own`'s amount reads `ln`, which sums `bank2`'s rows).
+  - The plan: `tmp/spec-2.3.1/inputs/plan.md` l.269 (P43: "`c4_when`: both `LOAD-READS` (stays)"), l.467, l.497 ("`c4_when`'s `qo` `LOAD-READS`, P43's kept part").
+  - The code: `walk/tuples.rs` `link_tuple`'s decision arm, `book/observe.rs` `judged`.
+- **Rule or gate:** E §3.1 step 7 ("existence" added), E §4.2 step 3, L §5.14.2 l.1423; tally 2.3.1 R6, C-9, P43.
+- **What happens:**
+  - `engine/tools/check commit`, exit 1. Beside the classes it is red on `fixes/p40/c4_when/` edw, emx, exm, qdw and `spec/p40fix/c4_when/qo`.
+  - qdw shows: `refcore "refused: LOAD-READS bal(konto) with no day outside a decision", the engine "qdw: refused: RUN-ORDER decisions dd and dr read each other on 2026-02-05"`. edw, emx and exm give the same RUN-ORDER, and qo gives `?"own[2026-02] on 2026-02-05 changed after it was paid (version febk); is back pay due, and when?" (own[2026-02])`.
+- **What I tried:**
+  - I traced the old LOAD-READS. It came only from the main walk judging every row's link outside the decision's point (`bank4[w2]` to `dr[2026-02]`'s `when`), the path `critic/dec_link` takes and C-9 overturns.
+  - The plan's reason for qo, "`own`'s amount reads `ln`, which reads the rows' links", holds. But `ln` reads `bank2`, whose rows name only `own`, so no plan of this text reaches a decision's existence, and step 7's kept part doesn't apply.
+  - That part is built and still refuses where it should: `tmp/spec-2.3.1/g2/step7b.tally`, a plan whose amount reads a row linked to a running-read decision, gives `LOAD-READS` on both engines.
+  - Keeping c4_when at LOAD-READS would need one of two things. One is a load rule refusing any reality where a row links to such a decision, which refuses `dec_link` too, against C-9. The other is a refusal tied to the ask, which is special-casing. I did neither.
+- **What I ask:** the lead rules c4_when by R6 and C-9:
+  - emx, exm, edw and qdw get `RUN-ORDER decisions dd and dr read each other on 2026-02-05`, and qo gets the back-pay hole; T re-stores the five.
+  - The plan's three lines are corrected at the round, with `step7b`'s form as the case step 7 keeps.
+  - Or the lead names the narrower rule wanted.
+- **State:** the last green commit is 6eb19ff1 on `check quick`; this entry is committed with it. Nothing is uncommitted; my scratch is in `tmp/spec-2.3.1/g2/`.
