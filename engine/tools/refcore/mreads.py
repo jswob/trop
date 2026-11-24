@@ -980,8 +980,10 @@ def m_span_members(self, dom, sp, ctx, owner=None):
         d = x.day if sh is None else sh
         st = True
         if d is None and x.err is not None:
-            # refused before its day was known: whether it is a member is refused with it (L §8.4)
-            raise x.err
+            # refused before its day was known: whether it is a member is refused with it (L §8.4), a refused member
+            # (rulings 17 A: `any`/`all` decide past it; every other reader is refused by it)
+            out.append((x.mv(), x.err, x))
+            continue
         if isinstance(d, Hole):
             st = d
         elif isinstance(d, datetime.date):
@@ -1003,7 +1005,9 @@ def m_span_members(self, dom, sp, ctx, owner=None):
                 d.window_text(), b._dom[1]), x.id)]), d)
             st = h if st is True else merge(st, h)
         if isinstance(x, Inst) and x.err is not None:
-            raise x.err
+            # a refused member (rulings 17 A)
+            out.append((x.mv(), x.err, x))
+            continue
         if isinstance(x, ObsMv) and x.target is not None:
             fulfilled.add(x.target.id)
         if b._dom[0] == 'event':
@@ -1854,7 +1858,26 @@ def m_flows_place_walk(self, w, limit, place, units, lo, sp, last, env, ctx, fk,
         # a perm before the span is a hole of the span unless its window ended before it (an unperm: the decision has
         # fallen, walk.dec_win_end; B5 of group 3's review)
         perms = []
+        # a `same` group is one movement, its day a hole bounded by its sides' days (rulings 17 B; L l.1359): a span
+        # holding the first and the last counts it known (the first's hole and the last's `unsame` both inside), one
+        # holding the last alone is its hole (G1's review, N9: p09 f_a, f_b)
+        in_sp = [e for e in lg.ents if lo < e.key <= limit]
+        before = set(e.qs for e in lg.ents if e.key <= lo and e.kind == 'hole' and e.qs)
+        opened = set(e.qs for e in in_sp if e.kind == 'hole' and e.qs) - before
+        closing = set(e.qs for e in in_sp if e.kind == 'unsame' and e.qs in opened)
+        prev_unsame = None
         for e in lg.ents:
+            if prev_unsame is not None and e.kind == 'delta' and e.key == prev_unsame.key:
+                # the leg the late `unsame` books: its group may have fallen before the span, so the hole stands
+                prev_unsame = None
+                continue
+            prev_unsame = None
+            if lo < e.key <= limit and e.kind == 'hole' and e.qs in closing:
+                continue
+            if lo < e.key <= limit and e.kind == 'unsame' and e.qs and e.qs not in opened:
+                holes.append(_reask(Hole(e.qs), 'flows of %s' % place))
+                prev_unsame = e
+                continue
             if e.kind == 'delta' and e.wid is not None:
                 closed.add(e.wid)
             if e.key <= lo:

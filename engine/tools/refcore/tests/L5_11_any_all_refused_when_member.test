@@ -1,0 +1,75 @@
+# tally 2.3.1 rulings 14 N5 (option B with R6): a movement whose `when` is refused is a refused member of a
+# binding over its kind, so a deciding member decides: am true, lm2 false; am2, lm, cm refused. Before: am and
+# lm2 RUN-DIV.
+=== p03c_anyall_when.tally
+model p03
+  tally 2
+  on 2026-06-30
+  start 2026-01-01
+  end 2026-12-31
+
+source s "probe"
+unit PLN: currency minor 0.01
+place konto: accounts PLN lives 2026-01-01..
+place save: accounts PLN lives 2026-01-01..
+place world: outside lives 1900-01-01..
+input amt: money PLN
+input d1: date
+input d2: date
+input d3: date
+input z: int
+input ten: int
+input big: money PLN
+input lim[p in accounts]: int
+
+move mb: transfers
+  on d2
+  leg cash from world to konto amount amt
+move mw: transfers
+  on d3
+  when ten / z > 0
+  leg cash from world to save amount amt
+
+ask am: any(t.cash.amount > big for t in transfers over 2026-03)
+ask lm: all(t.cash.amount > big for t in transfers over 2026-03)
+ask am2: any(t.cash.amount < big for t in transfers over 2026-03)
+ask lm2: all(t.cash.amount < big for t in transfers over 2026-03)
+ask cm: count(t in transfers over 2026-03)
+ask ap: any(ten / lim[p] > 1 for p in accounts on 2026-03-01)
+ask lp: all(ten / lim[p] > 1 for p in accounts on 2026-03-01)
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  opening[konto] = 0.00 PLN at 2026-01-01 start "s"
+  opening[save] = 0.00 PLN at 2026-01-01 start "s"
+  amt = 100.00 PLN "s"
+  d1 = 2026-03-01 "s"
+  d2 = 2026-03-02 "s"
+  d3 = 2026-03-03 "s"
+  big = 50.00 PLN "s"
+  ten = 10 "s"
+  z = 0 "s"
+  lim[konto] = 0 "s"
+  lim[save] = 5 "s"
+=== expect
+am: true
+  unfulfilled: mb
+  cut 2026-06-30
+am2: refused: RUN-DIV division by zero
+  unfulfilled: mb
+  cut 2026-06-30
+ap: true
+  cut 2026-06-30
+cm: refused: RUN-DIV division by zero
+  unfulfilled: mb
+  cut 2026-06-30
+lm: refused: RUN-DIV division by zero
+  unfulfilled: mb
+  cut 2026-06-30
+lm2: false
+  unfulfilled: mb
+  cut 2026-06-30
+lp: refused: RUN-DIV division by zero
+  cut 2026-06-30

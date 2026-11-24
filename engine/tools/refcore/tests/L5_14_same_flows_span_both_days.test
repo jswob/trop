@@ -1,0 +1,93 @@
+# tally 2.3.1 rulings 17 B (L l.1359; G1's review, N9): a `same` group is one movement whose day is a hole
+# bounded by its sides' days (03-05, 03-07): flows over a span holding both is known (f_b 100.00), over one
+# holding the last alone the hole (f_a), over one after both 0 (f_n). Before: f_a 100.00, f_b the hole.
+=== p09_same_two.tally
+model p09
+  tally 2
+  on 2026-06-10
+  start 2026-01-01
+  end 2026-12-31
+
+source s "probe"
+unit PLN: currency minor 0.01
+place wallet: accounts PLN lives 2025-01-01..
+place w2: accounts PLN lives 2025-01-01..
+place world: outside lives 1900-01-01..
+input d1: date
+input d2: date
+input a: money PLN
+
+move in1: transfers
+  on d1
+  leg cash from world to wallet amount a
+move in2: transfers
+  on d2
+  leg cash from world to wallet amount a
+move j1: transfers
+  on d1
+  leg cash from world to w2 amount a
+move j2: transfers
+  on d2
+  leg cash from world to w2 amount a
+
+ask b4: bal(wallet, 2026-03-04)
+ask b5: bal(wallet, 2026-03-05)
+ask b6: bal(wallet, 2026-03-06)
+ask b7: bal(wallet, 2026-03-07)
+ask b31: bal(wallet, 2026-03-31)
+ask c6: bal(w2, 2026-03-06)
+ask c7: bal(w2, 2026-03-07)
+ask c31: bal(w2, 2026-03-31)
+ask c4: bal(w2, 2026-04-30)
+ask f_n: flows(wallet, 2026-03-08 .. 2026-03-31)
+ask f_a: flows(wallet, 2026-03-06 .. 2026-03-31)
+ask f_b: flows(wallet, 2026-03-05 .. 2026-03-07)
+ask f_6: flows(wallet, 2026-03-06 .. 2026-03-06)
+ask f_x: flows(w2, 2026-03)
+ask f_y: flows(w2, 2026-03-01 .. 2026-03-06)
+ask k_b: bal(wallet, 2026-03-31) as known 2026-04-01
+ask cnt: count(t in transfers over 2026-03-06 .. 2026-03-31 where t.cash.to == wallet)
+ask ex: explain bal(wallet, 2026-03-31)
+ask ex2: explain bal(w2, 2026-03-31)
+
+version v
+  cite s
+  governs always
+  known 2025-12-01
+  opening[wallet] = 0.00 PLN at 2026-01-01 start "s"
+  opening[w2] = 0.00 PLN at 2026-01-01 start "s"
+  d1 = 2026-03-05 "s"
+  d2 = 2026-03-07 "s"
+  a = 100.00 PLN "s"
+
+version later
+  cite s
+  governs always
+  known 2026-05-01
+  same in1 = in2
+  same j1 = j2
+
+version rd
+  cite s
+  governs 2026
+  known 2026-01-01
+  pad w2 from world
+  stated[w2] = 100.00 PLN at 2026-03-06 end "s"
+  stated[w2] = 250.00 PLN at 2026-04-15 end "s"
+=== expect f_a f_b f_n f_x f_y
+f_a: ?"in1 and in2 are one, but leg cash differs on 2026-03-05, 2026-03-07: 100.00 PLN (in1) and 100.00 PLN (in2)" (in1, in2)
+  cut 2026-06-10
+f_b: 100.00 PLN
+  unfulfilled: in2
+  cut 2026-06-10
+f_n: 0.00 PLN
+  cut 2026-06-10
+f_x: ?"j1 and j2 are one, but leg cash differs on 2026-03-05, 2026-03-07: 100.00 PLN (j1) and 100.00 PLN (j2)" (j1, j2)
+  pad: w2 2026-03-06 end, pads:rd:w2@2026-03-06 end of ?"j1 and j2 are one, but leg cash differs on 2026-03-05, 2026-03-07: 100.00 PLN (j1) and 100.00 PLN (j2)" (j1, j2)
+  unfulfilled: j1
+  unfulfilled: j2
+  cut 2026-06-10
+f_y: ?"j1 and j2 are one, but leg cash differs on 2026-03-05, 2026-03-07: 100.00 PLN (j1) and 100.00 PLN (j2)" (j1, j2)
+  pad: w2 2026-03-06 end, pads:rd:w2@2026-03-06 end of ?"j1 and j2 are one, but leg cash differs on 2026-03-05, 2026-03-07: 100.00 PLN (j1) and 100.00 PLN (j2)" (j1, j2)
+  unfulfilled: j1
+  cut 2026-06-10
