@@ -407,11 +407,12 @@ impl Engine {
         let (agree, two_days) = match compare_days(&sides) {
             DayCmp::Hole(h) if amounts_agree => return Ok(EndBook::Hole(h)),
             DayCmp::Agree => (amounts_agree, false),
-            // planned sides that agree on the amount and differ on the day: `same`'s two
-            // days are its bounds (L §5.14 `on d`; tally 2.3.1 R1, N245.21)
+            // instances, a plan's or a decision's, that agree on the amount and differ on the
+            // day: `same`'s two days are its bounds (L §5.14 `on d`; tally 2.3.1 R1, N245.21,
+            // rulings 14); an observed row books as written
             DayCmp::Differ(_) => (
                 false,
-                amounts_agree && touch.iter().all(|(x, _, _)| matches!(x, Member::Plan(_))),
+                amounts_agree && !touch.iter().any(|(x, _, _)| matches!(x, Member::Obs(_))),
             ),
             DayCmp::Hole(_) => (false, false),
         };
@@ -678,6 +679,76 @@ ask f_one: flows(wallet, 2026-03-01 .. 2026-03-06)
                 format!("f_one: {hole}")
             ],
             "known outside the two days, the hole between"
+        );
+    }
+
+    /// A decision on the first day, stated `same` as a plan on the second, of one amount.
+    const DECISION_FIRST: &str = r#"model decision_first
+  tally 2
+  on 2026-06-10
+  start 2026-01-01
+  end 2026-12-31
+
+source s "invented values"
+
+unit PLN: currency minor 0.01
+
+place wallet: accounts PLN lives 2025-01-01..
+
+place world: outside lives 1900-01-01..
+
+input d1: date
+
+input d2: date
+
+input a: money PLN
+
+move top: transfers
+  reads wallet
+  on d1
+  leg cash from world to wallet amount a + 0 * bal(wallet)
+
+move pay: transfers
+  on d2
+  leg cash from world to wallet amount a
+
+version v
+  cite s
+  governs always
+  known 2025-12-01
+  opening[wallet] = 0.00 PLN at 2026-01-01 start "s"
+  d1 = 2026-04-02 "s"
+  d2 = 2026-04-09 "s"
+  a = 40.00 PLN "s"
+  same top = pay
+
+ask b_between: bal(wallet, 2026-04-05)
+
+ask b_after: bal(wallet, 2026-04-30)
+"#;
+
+    #[test]
+    fn a_decision_side_of_two_days_is_bounded_too() {
+        // L §5.14 `on d`, §6.1 (tally 2.3.1, rulings 14 on G1's review B5): the two days
+        // bound every instance, a decision's too: known after both, the hole between
+        let given = vec![Given {
+            path: "decision_first.tally".to_owned(),
+            bytes: Some(DECISION_FIRST.as_bytes().to_vec()),
+        }];
+        let answer = run(Files::new(given), &Request::new(Asks::Every)).expect("an answer");
+        let values: Vec<&str> = answer
+            .lines()
+            .iter()
+            .filter(|line| line.starts_with("b_"))
+            .map(String::as_str)
+            .collect();
+        assert_eq!(
+            values,
+            [
+                "b_after: 40.00 PLN",
+                "b_between: ?\"pay and top are one, but leg cash differs on 2026-04-02, 2026-04-09: 40.00 PLN (pay) and 40.00 PLN (top)\" (pay, top)"
+            ],
+            "known after both days"
         );
     }
 }
