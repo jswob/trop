@@ -146,7 +146,7 @@ impl Loader {
                 self.written_order(a, *order, other, &mut after, &mut written)?;
             }
         }
-        if let Some(cycle) = written_cycle(&written) {
+        if let Some(cycle) = written_cycle(&written)? {
             // a cycle of written orders is LOAD-ORDER, a move before itself its smallest
             // (L §5.14.2 Cycles; tally 2.3.1 S11, N245.8)
             let message = format!("{}: written orders form a cycle", cycle.join(" before "));
@@ -314,14 +314,24 @@ impl Loader {
 /// them: from each earlier move by name, through the moves it is written before, by name; the
 /// cycle's moves in order from the one met again, that one again at its end. L §5.14.2 Cycles
 /// (tally 2.3.1 S11).
-fn written_cycle(written: &BTreeSet<(String, String)>) -> Option<Vec<String>> {
+///
+/// # Errors
+///
+/// `ENGINE-INVARIANT` where the walk's own path breaks (G3's review N9).
+fn written_cycle(written: &BTreeSet<(String, String)>) -> Result<Option<Vec<String>>, Stop> {
+    // each earlier move's later ones, by name: the pairs ordered by the earlier move, then
+    // grouped, so every list is built from its members
+    let ordered: BTreeSet<(&str, &str)> = written
+        .iter()
+        .map(|(later, earlier)| (earlier.as_str(), later.as_str()))
+        .collect();
+    let pairs: Vec<(&str, &str)> = ordered.into_iter().collect();
     let mut before: BTreeMap<&str, Vec<&str>> = BTreeMap::new();
-    // the set's order is by the later move, so each earlier one's list comes sorted
-    for (later, earlier) in written {
-        before
-            .entry(earlier.as_str())
-            .or_insert_with(Vec::new)
-            .push(later.as_str());
+    for group in pairs.chunk_by(|one, two| one.0 == two.0) {
+        let &(earlier, _) = group
+            .first()
+            .ok_or_else(|| broken("an empty group of written orders"))?;
+        before.insert(earlier, group.iter().map(|&(_, later)| later).collect());
     }
     // a move on the walk's path is `false`, one whose walk is done `true`
     let mut done: BTreeMap<&str, bool> = BTreeMap::new();
@@ -334,7 +344,9 @@ fn written_cycle(written: &BTreeSet<(String, String)>) -> Option<Vec<String>> {
         while let Some(&(node, next)) = path.last() {
             let later = before.get(node).and_then(|ls| ls.get(next)).copied();
             if let Some(top) = path.last_mut() {
-                top.1 = next.checked_add(1)?;
+                top.1 = next
+                    .checked_add(1)
+                    .ok_or_else(|| broken("a move written before more moves than there are"))?;
             }
             let Some(later) = later else {
                 done.insert(node, true);
@@ -343,14 +355,18 @@ fn written_cycle(written: &BTreeSet<(String, String)>) -> Option<Vec<String>> {
             };
             match done.get(later) {
                 Some(false) => {
-                    let from = path.iter().position(|(n, _)| *n == later)?;
+                    // a move on the path is marked `false`, so the path holds it
+                    let from = path
+                        .iter()
+                        .position(|(n, _)| *n == later)
+                        .ok_or_else(|| broken("a move on the walk's path that the path lacks"))?;
                     let mut cycle: Vec<String> = path
                         .iter()
                         .skip(from)
                         .map(|(n, _)| (*n).to_owned())
                         .collect();
                     cycle.push(later.to_owned());
-                    return Some(cycle);
+                    return Ok(Some(cycle));
                 }
                 Some(true) => {}
                 None => {
@@ -360,7 +376,7 @@ fn written_cycle(written: &BTreeSet<(String, String)>) -> Option<Vec<String>> {
             }
         }
     }
-    None
+    Ok(None)
 }
 
 /// The written orders composed: a pair `(later, earlier)` with `later` after `x` and `x`
@@ -1396,20 +1412,24 @@ mod tests {
         let three = orders(&[("spend", "save"), ("top", "spend"), ("save", "top")]);
         assert_eq!(
             written_cycle(&three),
-            Some(vec![
+            Ok(Some(vec![
                 "save".to_owned(),
                 "spend".to_owned(),
                 "top".to_owned(),
                 "save".to_owned()
-            ]),
+            ])),
             "from the first earlier move by name, along `before`"
         );
         let chain = orders(&[("spend", "save"), ("top", "spend"), ("top", "save")]);
-        assert_eq!(written_cycle(&chain), None, "composed orders with no cycle");
+        assert_eq!(
+            written_cycle(&chain),
+            Ok(None),
+            "composed orders with no cycle"
+        );
         let both = orders(&[("a", "b"), ("b", "a"), ("c", "a")]);
         assert_eq!(
             written_cycle(&both),
-            Some(vec!["a".to_owned(), "b".to_owned(), "a".to_owned()]),
+            Ok(Some(vec!["a".to_owned(), "b".to_owned(), "a".to_owned()])),
             "an order written both ways"
         );
     }
