@@ -312,8 +312,8 @@ RUN-LIMIT	L §8.4	S	*	20	S	kernel/g14/by_n
 RUN-LIMIT	L §8.4	S	a day passes 9999-12-31	13	S	kernel/g14/by_n
 RUN-LIMIT	L §8.4	S	a day comes before 0001-01-01	6	S	kernel/g14/days
 RUN-LIMIT	L §8.4	S	<a> .. <b> holds more than 1 000 000 keys	9	S	kernel/g14/day_range_end
-RUN-DIV	L §8.4	S	*	99	S	kernel/g1/text
-RUN-DIV	L §8.4	S	division by zero	99	S	kernel/g1/text
+RUN-DIV	L §8.4	S	*	100	S	kernel/g1/text
+RUN-DIV	L §8.4	S	division by zero	100	S	kernel/g1/text
 RUN-DOMAIN	L §8.4	S	*	53	S	kernel/g1/rate_duration
 RUN-DOMAIN	L §8.4	S	ln, sqrt or pow outside its domain	0	-	-
 RUN-DOMAIN	L §8.4	S	<operation> with a step <s> that is not positive	1	S	kernel/g1/step

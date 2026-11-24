@@ -5357,7 +5357,7 @@ a3: refused: RUN-RECORD observation bank[o1] fulfils pay[2026-03], which doesn't
   pinned: flag = 0
   cut 2026-06-30
 ,14:t221-gd/216-o0,7:t221-gd,3:run,31:engine/tests/m3/fixes/t221/o216,12:run o0.tally,37:o0.tally	m3/fixes/t221/o216/o0.tally
-,1:0,837:f [work = *]: refused: RUN-ORDER decisions a and b read each other on 2026-03-06
+,1:0,1160:f [work = *]: refused: RUN-ORDER decisions a and b read each other on 2026-03-06
   unfulfilled: in1
   law date 2026-06-01, cut 2026-06-10
 i1 [work = yes]:
@@ -5372,8 +5372,19 @@ i1 [work = no]:
   v:fx (source s "s", locator "s")
   reading: work = no
   law date 2026-06-01, cut 2026-06-10
-i2 [work = *]:
+i2 [work = yes]:
+  v:amt[yes] (source s "s", locator "s")
+  v:d1 (source s "s", locator "s")
   v:mo (source s "s", locator "s")
+  reading: work = yes
+  unfulfilled: in1
+  law date 2026-06-01, cut 2026-06-10
+i2 [work = no]:
+  v:amt[no] (source s "s", locator "s")
+  v:d1 (source s "s", locator "s")
+  v:mo (source s "s", locator "s")
+  reading: work = no
+  unfulfilled: in1
   law date 2026-06-01, cut 2026-06-10
 r1: b, by_helper, by_inline, i1, i2
 r2: by_helper, by_inline, i2

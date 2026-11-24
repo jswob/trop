@@ -1,0 +1,59 @@
+model f05
+  tally 2
+  on 2026-06-30
+  start 2026-01-01
+  end 2026-12-31
+
+source s "probe"
+unit PLN: currency minor 0.01
+place konto: accounts PLN lives 2026-01-01..
+place world: outside lives 1900-01-01..
+input amt[m in months]: money PLN
+input big: money PLN
+input k[m in months]: int
+input ten: int
+
+move pay[m in months]: transfers
+  on start_of(m)
+  leg cash from world to konto amount amt[m]
+
+ask am: any(t.cash.amount > big for t in transfers over 2026-01-01 .. 2026-03-31 where big / t.cash.amount > 0)
+ask lm: all(t.cash.amount < big for t in transfers over 2026-01-01 .. 2026-03-31 where big / t.cash.amount > 0)
+ask amn: any(t.cash.amount > big for t in transfers over 2026-01-01 .. 2026-03-31 where big / t.cash.amount > 0)
+ask cm: count(t in transfers over 2026-01-01 .. 2026-03-31 where big / t.cash.amount > 0)
+ask ak: any(k[m] > 0 for m in months where ten / k[m] > 0)
+ask lk: all(k[m] > 1 for m in months where ten / k[m] > 0)
+ask fk: first(m in months where ten / k[m] > 1)
+ask bal: bal(konto, 2026-03-31)
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  opening[konto] = 0.00 PLN at 2026-01-01 start "s"
+  amt[2026-01] = 0.00 PLN "s"
+  amt[2026-02] = 100.00 PLN "s"
+  amt[2026-03] = 10.00 PLN "s"
+  amt[2026-04] = 10.00 PLN "s"
+  amt[2026-05] = 10.00 PLN "s"
+  amt[2026-06] = 10.00 PLN "s"
+  amt[2026-07] = 10.00 PLN "s"
+  amt[2026-08] = 10.00 PLN "s"
+  amt[2026-09] = 10.00 PLN "s"
+  amt[2026-10] = 10.00 PLN "s"
+  amt[2026-11] = 10.00 PLN "s"
+  amt[2026-12] = 10.00 PLN "s"
+  big = 50.00 PLN "s"
+  ten = 10 "s"
+  k[2026-01] = 0 "s"
+  k[2026-02] = 1 "s"
+  k[2026-03] = 2 "s"
+  k[2026-04] = 2 "s"
+  k[2026-05] = 2 "s"
+  k[2026-06] = 2 "s"
+  k[2026-07] = 2 "s"
+  k[2026-08] = 2 "s"
+  k[2026-09] = 2 "s"
+  k[2026-10] = 2 "s"
+  k[2026-11] = 2 "s"
+  k[2026-12] = 2 "s"

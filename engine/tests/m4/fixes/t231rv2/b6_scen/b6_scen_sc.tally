@@ -1,0 +1,10 @@
+scenario sc over p
+  tally 2
+  from 2026-01-01
+
+version mar
+  cite s
+  governs 2026-03
+  known 2026-04-01
+  covers konto
+  bank[r3] = (on: 2026-03-05, kind: transfers, leg cash from save to konto amount 400.00 PLN, fulfils: topup[2026-03]) "march top-up"

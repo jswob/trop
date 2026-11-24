@@ -18,7 +18,7 @@ mod tests {
 
     /// The groups this target tests, one `#[test]` each: refcore's (`fixes-…`) and the
     /// spec's (`spec-…`).
-    const GROUPS: [&str; 40] = [
+    const GROUPS: [&str; 39] = [
         "fixes-g1",
         "fixes-g2",
         "fixes-g2fix",
@@ -45,6 +45,7 @@ mod tests {
         "fixes-t231g1",
         "fixes-t231g2",
         "fixes-t231rv1",
+        "fixes-t231rv2",
         "fixes-traced",
         "spec-g1",
         "spec-g2",
@@ -57,8 +58,6 @@ mod tests {
         "spec-p22",
         "spec-p26",
         "spec-p31",
-        "spec-p40fix",
-        "spec-p43",
     ];
 
     /// Runs every vector of `group` in `store` on the engine and holds it to the stored run.
@@ -400,6 +399,22 @@ mod tests {
         group_holds(VECTORS, "fixes-t231rv1");
     }
 
+    /// tally 2.3.1 G1's and G2's fix reviews (`tmp/spec-2.3.1/inputs/review-g1fix.md`,
+    /// `review-g2fix.md`), refcore's bytes on the third pin where rulings 17 and 19 give its
+    /// line (`m4/fixes/t231rv2/`): statement A, a member of `any`, `all`, `sum` (`f01` to
+    /// `f05`, `f14`); step 5 beside a beaten candidate (`f06` to `f08`); statement B, a `same`
+    /// group's days (`f10`, `f11`, `s2` to `s4`); statement C, a refused link on every timeline
+    /// with its read set (`b1_*`, `b3_*`, `b5_*`, `q2_*`, `q3_cmp`); statement D, step 7's
+    /// mark at load (`b4_first`, `b6_*`). Left out, refcore lagging a ruling: every side listed
+    /// (`f09` c9, `f13` c9, s3, n3), B5's decision sides (`f12` b6, b8, c8; `s5`'s seven),
+    /// `explain`'s scope (ten `ef`, `efc` asks), `f10` p8 (refcore's parts crash); no ruling
+    /// yet: `dy` of an early row's own decision, an anchor after a refused early row
+    /// (`q2_reset` fc, b04, b06).
+    #[test]
+    fn m4_fixes_t231rv2() {
+        group_holds(VECTORS, "fixes-t231rv2");
+    }
+
     /// P12, the one statement for built-ins (`tmp/m4/auto-picks.md`; G1's fix review F1,
     /// `tmp/m4/review-g1fix.md`): refcore's bytes for each cell of `m4/fixes/p12/`'s
     /// `accrue`, `periodic`, `factor`, `round`, `dcf`, `add_business`, `last_business`,
@@ -527,25 +542,5 @@ mod tests {
     #[test]
     fn m4_fixes_spec_gate() {
         group_holds(SPEC, "spec-gate");
-    }
-
-    /// The text's lines for P40's crossings (#255), written from build/m4's run at b9969e50:
-    /// `RUN-DIV` for every read of a stopping list in every order and `p40b`'s 270.00 PLN, each
-    /// ask's block checked equal to that ask run alone (P40); `c4_when` `qo` refused at load
-    /// (P43, `LOAD-READS`); `c5_wref` `ew`, `ed`, an existence read's `explain` without the
-    /// other instances' reads (P22, P30).
-    #[test]
-    fn m4_fixes_spec_p40fix() {
-        group_holds(SPEC, "spec-p40fix");
-    }
-
-    /// P43's and P44's answers (#255), written from build/m4's run at ca2f2ea2: an existence
-    /// read's `explain` lists the `where` rows it rests on, the named instance's own first (the
-    /// eleven of `fixes-p40fix`); `p40b` `e4` lists `ten`, `dz[2026-01]`, `d25` and r0406, alone
-    /// and in either order with `f`; `c6_own`'s 270.00 PLN (P30). Each multi-ask answer's
-    /// blocks checked equal to their asks run alone.
-    #[test]
-    fn m4_fixes_spec_p43() {
-        group_holds(SPEC, "spec-p43");
     }
 }

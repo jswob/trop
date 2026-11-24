@@ -11116,9 +11116,10 @@ version card_2026
   rate[q1] = 0.1
   rate[q2] = 0.2
   opening[konto] = 500.00 PLN at 2026-01-01 start
-,,1:0,498:ib:
+,,1:0,549:ib:
   card_2026:amt (source card "T's invented card")
   card_2026:d (source card "T's invented card")
+  card_2026:late (source card "T's invented card")
   card_2026:opening[konto] (source card "T's invented card")
   card_2026:rate[q1] (source card "T's invented card")
   unfulfilled: pay
@@ -83683,9 +83684,10 @@ version card_2026
   rate[q1] = 0.1
   rate[q2] = 0.2
   opening[konto] = 500.00 PLN at 2026-01-01 start
-,,1:0,498:ib:
+,,1:0,549:ib:
   card_2026:amt (source card "T's invented card")
   card_2026:d (source card "T's invented card")
+  card_2026:late (source card "T's invented card")
   card_2026:opening[konto] (source card "T's invented card")
   card_2026:rate[q1] (source card "T's invented card")
   unfulfilled: pay
@@ -84904,7 +84906,7 @@ version st1
   governs 2026-03
   known 2026-04-01
   bank[r1] = (on: 2026-03-03, kind: transfers, leg cash from konto to world amount 20.00 PLN) "line 1"
-,,1:0,424:ib:
+,,1:0,459:ib:
   bank[r1] (source bankx "bank export", locator "line 1")
   card_2026:amt (source card "card")
   card_2026:d (source card "card")
@@ -84913,6 +84915,7 @@ version st1
   unfulfilled: pay
   cut 2026-12-31
 ib0:
+  card_2026:d (source card "card")
   card_2026:d0 (source card "card")
   card_2026:opening[konto] (source card "card")
   cut 2026-12-31
@@ -84976,13 +84979,14 @@ version st1
   governs 2026-03
   known 2026-04-01
   bank[r1] = (on: 2026-03-03, kind: transfers, leg cash from konto to world amount 20.00 PLN) "line 1"
-,,1:0,476:ib:
+,,1:0,511:ib:
   bank[r1] (source bankx "bank export", locator "line 1")
   card_2026:d1 (source card "card")
   card_2026:stated[konto] (source card "card", locator "statement")
   anchor: konto 2026-02-28 end, stated 400.00 PLN, difference 0.00 PLN
   cut 2026-12-31
 ib0:
+  card_2026:d (source card "card")
   card_2026:d0 (source card "card")
   card_2026:opening[konto] (source card "card")
   cut 2026-12-31
@@ -132538,7 +132542,7 @@ version bank_feb
   stated[konto] = 400.00 PLN at 2026-02-20 start "a morning balance"
   stated[konto] = 395.00 PLN at 2026-02-20 end "an evening balance"
   stated[konto] = 390.00 PLN at 2026-02-28 end "the month's close"
-,,1:0,8949:e1: 435.00 PLN
+,,1:0,9022:e1: 435.00 PLN
   [1] head[2026-02] = 435.00 PLN
       rule base: won
         [2] bal(konto, 2026-02-01) = 475.00 PLN
@@ -132724,6 +132728,7 @@ s3: 395.00 PLN
 s4:
   bank_feb:stated[konto] 2026-02-28 end (source card "card (invented)", locator "the month's close")
   card_2026:fee (source card "card (invented)", locator "the card")
+  card_2026:rent_dom (source card "card (invented)", locator "the card")
   anchor: konto 2026-02-28 end, stated 390.00 PLN, difference -5.00 PLN
   cut 2026-03-15
 warning: WARN-UNREAD def n_pays is read by nothing
@@ -155742,9 +155747,10 @@ version bank_apr
   anchor konto
   bank[r1] = (on: 2026-04-05, kind: transfers, leg cash from konto to world amount 7.00 PLN) "april"
   stated[konto] = 400.00 PLN at 2026-04-06 end "statement"
-,,1:0,238:ib:
+,,1:0,274:ib:
   card_2026:amt (source card "card")
   card_2026:d (source card "card")
+  card_2026:d2 (source card "card")
   card_2026:go (source card "card")
   card_2026:opening[konto] (source card "card")
   card_2026:rate[q1] (source card "card")
@@ -156594,8 +156600,9 @@ version bank_apr
   anchor konto
   bank[r1] = (on: 2026-04-05, kind: transfers, leg cash from konto to world amount 7.00 PLN) "april"
   stated[konto] = 400.00 PLN at 2026-04-06 end "statement"
-,,1:0,126:ibl:
+,,1:0,162:ibl:
   card_2026:d (source card "card")
+  card_2026:d2 (source card "card")
   card_2026:opening[konto] (source card "card")
   pinned: go = false
   cut 2026-12-31
@@ -156952,9 +156959,10 @@ version bank_apr
   anchor konto
   bank[r1] = (on: 2026-04-05, kind: transfers, leg cash from konto to world amount 7.00 PLN) "april"
   stated[konto] = 400.00 PLN at 2026-04-06 end "statement"
-,,1:0,219:ik:
+,,1:0,255:ik:
   card_2026:amt (source card "card")
   card_2026:d (source card "card")
+  card_2026:d2 (source card "card")
   card_2026:go (source card "card")
   card_2026:opening[konto] (source card "card")
   card_2026:rate[q1] (source card "card")
@@ -201007,9 +201015,10 @@ version later
   governs always
   known 2026-03-01
   replace rare_d = 0
-,,1:0,108:q_fl: 12.00 PLN
+,,1:0,169:q_fl: refused: RUN-DIV division by zero
   law date 2026-03-15, cut 2026-03-15
-q_k6: 88.00 PLN
+q_k6: refused: RUN-DIV division by zero
+  open: rare
   law date 2026-03-15, cut 2026-03-15
 ,16:fixes/gate8/sec2,11:fixes-gate8,14:run sec2.tally,1383:10:sec2.tally,1363:model sec2
   tally 2
@@ -214890,9 +214899,9 @@ version st2
   covers konto
   bank[b1] = (on: 2026-03-12, kind: transfers, leg cash from konto to world amount 100.00 PLN) "b1"
   same bank[b1] = bank[a1]
-,,1:0,1410:b_k: 900.00 PLN
+,,1:0,1271:b_k: 900.00 PLN
   cut 2026-04-10
-f_k: ?"bank[a1] and bank[b1] are one, but leg cash differs on 2026-03-10, 2026-03-12: 100.00 PLN (bank[a1]) and 100.00 PLN (bank[b1])" (bank[a1], bank[b1])
+f_k: -100.00 PLN
   cut 2026-04-10
 l_k: residuals konto 2026-03
   2026-03 unexplained: model 0.00 PLN, observed ?"bank[a1] and bank[b1] are one, but leg cash differs on 2026-03-10, 2026-03-12: 100.00 PLN (bank[a1]) and 100.00 PLN (bank[b1])" (bank[a1], bank[b1]), difference ?"bank[a1] and bank[b1] are one, but leg cash differs on 2026-03-10, 2026-03-12: 100.00 PLN (bank[a1]) and 100.00 PLN (bank[b1])" (bank[a1], bank[b1])
@@ -223336,7 +223345,8 @@ version v_card
   div[2026-02] = 0 "February's when divides by zero"
   div[2026-03] = 2 "the card"
   opening[konto] = 0.00 PLN at 2026-01-01 start "the card"
-,,1:0,116:c_span: refused: RUN-DIV division by zero
+,,1:0,144:c_span: refused: RUN-DIV division by zero
+  unfulfilled: pay[2026-01]
   cut 2026-03-01
 c_before: 1
   unfulfilled: pay[2026-01]
@@ -227978,7 +227988,7 @@ ask s_min: min(bal(konto, d) from 2026-02-01 for d in 2026-02-01 .. 2026-05-15 s
 ask s_back: bal(konto, d) from 2026-03-12 for d in [2026-04-30, 2026-03-15, 2026-06-01, 2026-03-12] in richer
 
 ask s_room: room[m] for m in [2026-03, 2026-04, 2026-05] in richer
-,,1:0,12940:d_axis [pay_reading = low]: 450.00 DUK
+,,1:0,14540:d_axis [pay_reading = low]: 450.00 DUK
   reading: pay_reading = low
   unfulfilled: rent_pay[2026-01]
   unfulfilled: rent_pay[2026-02]
@@ -228177,6 +228187,8 @@ d_uncertain [pay_reading = high]: 571.88 DUK
 s_back (d = 2026-04-30) [pay_reading = low]: 387.50 DUK
   world: richer
   reading: pay_reading = low
+  before from: sweep on 2026-01-26 reads rent_off
+  before from: sweep on 2026-02-26 reads rent_off
   unfulfilled: rent_pay[2026-01]
   unfulfilled: rent_pay[2026-02]
   unfulfilled: rent_pay[2026-03]
@@ -228189,6 +228201,8 @@ s_back (d = 2026-04-30) [pay_reading = low]: 387.50 DUK
 s_back (d = 2026-04-30) [pay_reading = high]: 593.75 DUK
   world: richer
   reading: pay_reading = high
+  before from: sweep on 2026-01-26 reads rent_off
+  before from: sweep on 2026-02-26 reads rent_off
   unfulfilled: rent_pay[2026-01]
   unfulfilled: rent_pay[2026-02]
   unfulfilled: rent_pay[2026-03]
@@ -228201,6 +228215,8 @@ s_back (d = 2026-04-30) [pay_reading = high]: 593.75 DUK
 s_back (d = 2026-03-15) [pay_reading = low]: 450.00 DUK
   world: richer
   reading: pay_reading = low
+  before from: sweep on 2026-01-26 reads rent_off
+  before from: sweep on 2026-02-26 reads rent_off
   unfulfilled: rent_pay[2026-01]
   unfulfilled: rent_pay[2026-02]
   unfulfilled: rent_pay[2026-03]
@@ -228213,6 +228229,8 @@ s_back (d = 2026-03-15) [pay_reading = low]: 450.00 DUK
 s_back (d = 2026-03-15) [pay_reading = high]: 975.00 DUK
   world: richer
   reading: pay_reading = high
+  before from: sweep on 2026-01-26 reads rent_off
+  before from: sweep on 2026-02-26 reads rent_off
   unfulfilled: rent_pay[2026-01]
   unfulfilled: rent_pay[2026-02]
   unfulfilled: rent_pay[2026-03]
@@ -228225,6 +228243,8 @@ s_back (d = 2026-03-15) [pay_reading = high]: 975.00 DUK
 s_back (d = 2026-06-01) [pay_reading = low]: 1 543.75 DUK
   world: richer
   reading: pay_reading = low
+  before from: sweep on 2026-01-26 reads rent_off
+  before from: sweep on 2026-02-26 reads rent_off
   unfulfilled: rent_pay[2026-01]
   unfulfilled: rent_pay[2026-02]
   unfulfilled: rent_pay[2026-03]
@@ -228241,6 +228261,8 @@ s_back (d = 2026-06-01) [pay_reading = low]: 1 543.75 DUK
 s_back (d = 2026-06-01) [pay_reading = high]: 1 871.88 DUK
   world: richer
   reading: pay_reading = high
+  before from: sweep on 2026-01-26 reads rent_off
+  before from: sweep on 2026-02-26 reads rent_off
   unfulfilled: rent_pay[2026-01]
   unfulfilled: rent_pay[2026-02]
   unfulfilled: rent_pay[2026-03]
@@ -228255,6 +228277,8 @@ s_back (d = 2026-06-01) [pay_reading = high]: 1 871.88 DUK
 s_back (d = 2026-03-12) [pay_reading = low]: 450.00 DUK
   world: richer
   reading: pay_reading = low
+  before from: sweep on 2026-01-26 reads rent_off
+  before from: sweep on 2026-02-26 reads rent_off
   unfulfilled: rent_pay[2026-01]
   unfulfilled: rent_pay[2026-02]
   unfulfilled: rent_pay[2026-03]
@@ -228267,6 +228291,8 @@ s_back (d = 2026-03-12) [pay_reading = low]: 450.00 DUK
 s_back (d = 2026-03-12) [pay_reading = high]: 975.00 DUK
   world: richer
   reading: pay_reading = high
+  before from: sweep on 2026-01-26 reads rent_off
+  before from: sweep on 2026-02-26 reads rent_off
   unfulfilled: rent_pay[2026-01]
   unfulfilled: rent_pay[2026-02]
   unfulfilled: rent_pay[2026-03]
@@ -228279,6 +228305,8 @@ s_back (d = 2026-03-12) [pay_reading = high]: 975.00 DUK
 s_min [pay_reading = low]: 325.00 DUK
   world: richer
   reading: pay_reading = low
+  before from: sweep on 2026-01-26 reads rent_off
+  before from: sweep on 2026-02-26 reads rent_off
   unfulfilled: rent_pay[2026-01]
   unfulfilled: salary[2026-01]
   unfulfilled: sweep[2026-01]
@@ -228288,6 +228316,8 @@ s_min [pay_reading = low]: 325.00 DUK
 s_min [pay_reading = high]: 575.00 DUK
   world: richer
   reading: pay_reading = high
+  before from: sweep on 2026-01-26 reads rent_off
+  before from: sweep on 2026-02-26 reads rent_off
   unfulfilled: rent_pay[2026-01]
   unfulfilled: salary[2026-01]
   unfulfilled: sweep[2026-01]
@@ -228296,6 +228326,8 @@ s_min [pay_reading = high]: 575.00 DUK
 s_room (m = 2026-03) [pay_reading = low]: 450.00 DUK
   world: richer
   reading: pay_reading = low
+  before from: sweep on 2026-01-26 reads rent_off
+  before from: sweep on 2026-02-26 reads rent_off
   unfulfilled: rent_pay[2026-01]
   unfulfilled: rent_pay[2026-02]
   unfulfilled: salary[2026-01]
@@ -228306,6 +228338,8 @@ s_room (m = 2026-03) [pay_reading = low]: 450.00 DUK
 s_room (m = 2026-03) [pay_reading = high]: 975.00 DUK
   world: richer
   reading: pay_reading = high
+  before from: sweep on 2026-01-26 reads rent_off
+  before from: sweep on 2026-02-26 reads rent_off
   unfulfilled: rent_pay[2026-01]
   unfulfilled: rent_pay[2026-02]
   unfulfilled: salary[2026-01]
@@ -228316,6 +228350,8 @@ s_room (m = 2026-03) [pay_reading = high]: 975.00 DUK
 s_room (m = 2026-04) [pay_reading = low]: 575.00 DUK
   world: richer
   reading: pay_reading = low
+  before from: sweep on 2026-01-26 reads rent_off
+  before from: sweep on 2026-02-26 reads rent_off
   unfulfilled: rent_pay[2026-01]
   unfulfilled: rent_pay[2026-02]
   unfulfilled: rent_pay[2026-03]
@@ -228329,6 +228365,8 @@ s_room (m = 2026-04) [pay_reading = low]: 575.00 DUK
 s_room (m = 2026-04) [pay_reading = high]: 987.50 DUK
   world: richer
   reading: pay_reading = high
+  before from: sweep on 2026-01-26 reads rent_off
+  before from: sweep on 2026-02-26 reads rent_off
   unfulfilled: rent_pay[2026-01]
   unfulfilled: rent_pay[2026-02]
   unfulfilled: rent_pay[2026-03]
@@ -228342,6 +228380,8 @@ s_room (m = 2026-04) [pay_reading = high]: 987.50 DUK
 s_room (m = 2026-05) [pay_reading = low]: 587.50 DUK
   world: richer
   reading: pay_reading = low
+  before from: sweep on 2026-01-26 reads rent_off
+  before from: sweep on 2026-02-26 reads rent_off
   unfulfilled: rent_pay[2026-01]
   unfulfilled: rent_pay[2026-02]
   unfulfilled: rent_pay[2026-03]
@@ -228360,6 +228400,8 @@ s_room (m = 2026-05) [pay_reading = low]: 587.50 DUK
 s_room (m = 2026-05) [pay_reading = high]: 943.75 DUK
   world: richer
   reading: pay_reading = high
+  before from: sweep on 2026-01-26 reads rent_off
+  before from: sweep on 2026-02-26 reads rent_off
   unfulfilled: rent_pay[2026-01]
   unfulfilled: rent_pay[2026-02]
   unfulfilled: rent_pay[2026-03]
@@ -230009,7 +230051,7 @@ ask fl1: flows(konto, ..2026-03-31)
 ask fl2: flows(groc, ..2026-02-28)
 ask cv1: covered(konto, ..2026-03-31)
 ask bm: bal(konto, 2026-02-28) modelled
-,,1:0,605:f1: (refused: RUN-DIV division by zero, refused: RUN-DIV division by zero, refused: RUN-DIV division by zero, refused: RUN-DIV division by zero)
+,,1:0,663:f1: (refused: RUN-DIV division by zero, refused: RUN-DIV division by zero, refused: RUN-DIV division by zero, refused: RUN-DIV division by zero)
   unfulfilled: groc[2026-01]
   cut 2026-10-20
 c1: refused: RUN-DIV division by zero
@@ -230017,6 +230059,8 @@ c1: refused: RUN-DIV division by zero
 c2: refused: RUN-DIV division by zero
   cut 2026-10-20
 c3: refused: RUN-DIV division by zero
+  unfulfilled: groc[2026-04]
+  unfulfilled: groc[2026-05]
   cut 2026-10-20
 n1: refused: RUN-DIV division by zero
   cut 2026-10-20
@@ -230091,7 +230135,7 @@ ask fl1: flows(konto, ..2026-03-31)
 ask fl2: flows(groc, ..2026-02-28)
 ask cv1: covered(konto, ..2026-03-31)
 ask bm: bal(konto, 2026-02-28) modelled
-,,1:0,681:r2: refused: RUN-DIV division by zero
+,,1:0,739:r2: refused: RUN-DIV division by zero
 r3: refused: RUN-DIV division by zero
 f1: (refused: RUN-DIV division by zero, refused: RUN-DIV division by zero, refused: RUN-DIV division by zero, refused: RUN-DIV division by zero)
   unfulfilled: groc[2026-01]
@@ -230101,6 +230145,8 @@ c1: refused: RUN-DIV division by zero
 c2: refused: RUN-DIV division by zero
   cut 2026-10-20
 c3: refused: RUN-DIV division by zero
+  unfulfilled: groc[2026-04]
+  unfulfilled: groc[2026-05]
   cut 2026-10-20
 n1: refused: RUN-DIV division by zero
   cut 2026-10-20
@@ -230946,11 +230992,11 @@ ask h_and: (hz > 1) and false
 ask h_if: if hz > 1 then 1 else 1
 ask h_sum: sum(0 for k in ks where v[k] * hz > 1)
 ask h_or: (hz > 1) or true
-,,1:0,339:e_and: refused: RUN-DIV division by zero
+,,1:0,307:e_and: refused: RUN-DIV division by zero
   cut 2026-10-20
 e_if: refused: RUN-DIV division by zero
   cut 2026-10-20
-e_sum: refused: RUN-DIV division by zero
+e_sum: 0
   cut 2026-10-20
 e_or: refused: RUN-DIV division by zero
   cut 2026-10-20

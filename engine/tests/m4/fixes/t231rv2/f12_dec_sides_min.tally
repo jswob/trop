@@ -1,0 +1,45 @@
+model f12
+  tally 2
+  on 2026-06-10
+  start 2026-01-01
+  end 2026-12-31
+source s "probe"
+unit PLN: currency minor 0.01
+place wallet: accounts PLN lives 2025-01-01..
+place w2: accounts PLN lives 2025-01-01..
+place other: accounts PLN lives 2025-01-01..
+place world: outside lives 1900-01-01..
+input a: money PLN
+input d1: date
+input d2: date
+move in1: transfers
+  reads other
+  on d1
+  leg cash from world to wallet amount a + 0 * bal(other)
+move in2: transfers
+  reads other
+  on d2
+  leg cash from world to wallet amount a + 0 * bal(other)
+move j1: transfers
+  on d1
+  leg cash from world to w2 amount a
+move j2: transfers
+  reads other
+  on d2
+  leg cash from world to w2 amount a + 0 * bal(other)
+ask b6: bal(wallet, 2026-03-06)
+ask b8: bal(wallet, 2026-03-08)
+ask c6: bal(w2, 2026-03-06)
+ask c8: bal(w2, 2026-03-08)
+version v
+  cite s
+  governs always
+  known 2025-12-01
+  opening[wallet] = 0.00 PLN at 2026-01-01 start "s"
+  opening[w2] = 0.00 PLN at 2026-01-01 start "s"
+  opening[other] = 5.00 PLN at 2026-01-01 start "s"
+  a = 100.00 PLN "s"
+  d1 = 2026-03-05 "s"
+  d2 = 2026-03-07 "s"
+  same in1 = in2
+  same j1 = j2

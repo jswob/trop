@@ -1,0 +1,33 @@
+model f14
+  tally 2
+  on 2026-06-30
+  start 2026-01-01
+  end 2026-12-31
+source s "probe"
+unit PLN: currency minor 0.01
+place konto: accounts PLN lives 2026-01-01..
+place save: accounts PLN lives 2026-01-01..
+place zz: accounts PLN lives 2026-01-01..
+input ten: int
+input lim[p in accounts]: int
+input rk[p in accounts]: int
+ask ap: any(lim[p] > 1 for p in accounts on 2026-03-01 where ten / lim[p] > 0)
+ask lp: all(lim[p] > 1 for p in accounts on 2026-03-01 where ten / lim[p] > 0)
+ask ln: all(lim[p] > 0 for p in accounts on 2026-03-01 where ten / lim[p] > 0)
+ask fp: first(p in accounts on 2026-03-01 where ten / lim[p] > 1) ties by rk[p]
+ask fq: first(p in accounts on 2026-03-01 where lim[p] == rk[zz] or ten / lim[p] > 1) ties by rk[p]
+ask cp: count(p in accounts on 2026-03-01 where ten / lim[p] > 0)
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  opening[konto] = 0.00 PLN at 2026-01-01 start "s"
+  opening[save] = 0.00 PLN at 2026-01-01 start "s"
+  opening[zz] = 0.00 PLN at 2026-01-01 start "s"
+  ten = 10 "s"
+  lim[konto] = 0 "s"
+  lim[save] = 5 "s"
+  lim[zz] = 1 "s"
+  rk[konto] = 2 "s"
+  rk[save] = 1 "s"
+  rk[zz] = 3 "s"

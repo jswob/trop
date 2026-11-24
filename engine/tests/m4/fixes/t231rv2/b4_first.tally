@@ -1,0 +1,61 @@
+model first
+  tally 2
+  on 2026-05-20
+  start 2026-01-01
+  end 2026-06-30
+
+source s "invented values"
+unit PLN: currency minor 0.01
+index month = month 2026-01..2026-06
+place pot: accounts PLN lives 2026-01-01..
+place landlord: outside lives 1900-01-01..
+input bank: observed
+input rent_amt: money PLN
+input ok[m in month]: bool
+input d5: int
+input mm3: month
+
+move rent[m in month]: transfers
+  on day_of(m, d5)
+  at start_of(m)
+  when ok[m]
+  leg cash from pot to landlord amount rent_amt
+
+ask fm3: first(t in transfers over 2026-03 .. 2026-06) ties by t.day
+ask fm1: first(t in transfers over 2026-01 .. 2026-06) ties by t.day
+ask dm3: first(t in transfers over 2026-03 .. 2026-06) ties by t.day as known 2026-02-01
+ask dm1: first(t in transfers over 2026-01 .. 2026-06) ties by t.day as known 2026-02-01
+ask cm3: count(t in transfers over 2026-03 .. 2026-04) as known 2026-02-01
+ask cm13: count(t in transfers over 2026-01 .. 2026-03) as known 2026-02-01
+ask sm3: sum(t.cash.amount for t in transfers over 2026-03) as known 2026-01-25
+def s3: money PLN = sum(t.cash.amount for t in transfers over mm3)
+def c34: int = count(t in transfers over mm3)
+ask xm3: explain s3 as known 2026-02-01
+ask im3: inputs-of c34 as known 2026-02-01
+ask lm3: last(t in transfers over 2026-01 .. 2026-03) ties by t.day as known 2026-02-01
+ask is3: inputs-of s3
+ask xs3: explain s3
+ask is3k: inputs-of s3 as known 2026-02-01
+
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  rent_amt = 100.00 PLN "s"
+  d5 = 5 "s"
+  mm3 = 2026-03 "s"
+  ok[2026-01] = true assumed "jan is a guess" "ok jan"
+  ok[2026-02] = true "ok feb"
+  ok[2026-03] = true "ok mar"
+  ok[2026-04] = true "ok apr"
+  ok[2026-05] = true "ok may"
+  ok[2026-06] = true "ok jun"
+  opening[pot] = 9000.00 PLN at 2026-01-01 start "s"
+
+version jan
+  cite s
+  governs 2026-01
+  known 2026-01-21
+  covers pot
+  bank[a1] = (on: 2026-01-05, kind: transfers, leg cash from pot to landlord amount 100.00 PLN, fulfils: rent[2026-01]) "names jan"
