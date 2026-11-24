@@ -522,8 +522,8 @@ impl Engine {
         }
         self.trace_candidates(def, node, &applicable, &cands);
         if let Some(hole) = relevant {
-            if let Some(first) = cands.first() {
-                self.trace_state(node, label_of(def, *first), RuleState::Candidate);
+            for cand in &cands {
+                self.trace_state(node, label_of(def, *cand), RuleState::Candidate);
             }
             return Ok(Err(Value::Hole(hole)));
         }
@@ -1092,6 +1092,33 @@ version v
                 "q9: refused: RUN-CONFLICT rules a and b both win for d9 on 2026-03-01"
             ],
             "the hole where the unknown rule could change the outcome"
+        );
+    }
+
+    #[test]
+    fn explaining_a_step_5_hole_lists_every_candidate() {
+        // L §5.18 l.1616: explain prints the def's rules, each with its state; d1's hole
+        // has two candidates, a and base, and both show
+        let given = vec![Given {
+            path: "unknown_beats.tally".to_owned(),
+            bytes: Some(UNKNOWN_BEATS.as_bytes().to_vec()),
+        }];
+        let request = Request::new(Asks::Named(vec!["e1".to_owned()]));
+        let answer = run(Files::new(given), &request).expect("an answer");
+        let states: Vec<&str> = answer
+            .lines()
+            .iter()
+            .map(|line| line.trim_start())
+            .filter(|line| line.starts_with("rule "))
+            .collect();
+        assert_eq!(
+            states,
+            [
+                "rule a: candidate",
+                "rule base: candidate",
+                "rule top: unknown"
+            ],
+            "every candidate with its state"
         );
     }
 }
