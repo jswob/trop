@@ -397,7 +397,9 @@ impl Engine {
                     if i.status == Status::Uncertain {
                         coll.note(self.entry_id(entry("uncertain", &i.id))?);
                     }
-                    coll.merge(&i.coll);
+                    // what decided whether it counts, its existence and day; its amounts only
+                    // where a field read sums them (L §8.2 l.2252; tally 2.3.1 Q1.10, pick P16)
+                    coll.merge(i.exist_coll.as_ref().unwrap_or(&i.coll));
                     self.group_sides(m, i, ctx.cut, &mut coll)?;
                 }
                 Moving::Obs(o) => coll.merge(&o.coll),

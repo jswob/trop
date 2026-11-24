@@ -948,6 +948,16 @@ impl Engine {
         }
     }
 
+    /// What the innermost collector has met so far, left open: the reads a later part of the
+    /// same evaluation doesn't add to (L §8.2 One read set).
+    #[must_use]
+    pub(crate) fn met_here(&self) -> Collected {
+        match self.stack.last() {
+            Some(top) => top.clone(),
+            None => Collected::default(),
+        }
+    }
+
     /// What the outermost collector has met so far: the register of the reads made.
     #[must_use]
     pub fn collected(&self) -> Collected {

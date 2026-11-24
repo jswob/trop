@@ -513,6 +513,9 @@ impl Engine {
             self.check_booked(&inst, (booking, cut), upto)?;
         }
         inst.coll.merge(&tuple.coll);
+        if let Some(exist) = &mut inst.exist_coll {
+            exist.merge(&tuple.coll);
+        }
         if let (Some(marks), Some(mark)) = (marks, self.trace_snap()) {
             marks.push((inst.id.clone(), mark));
         }
@@ -1032,6 +1035,7 @@ impl Engine {
         inst.exists = body.exists;
         inst.legs = body.legs;
         inst.leg_reads = body.leg_reads;
+        inst.exist_coll = Some(body.exist);
         inst.attrs = body.attrs;
         inst.for_period = body.for_period;
         inst.fulfils = body.fulfils;

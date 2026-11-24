@@ -683,6 +683,8 @@ impl Engine {
             ran,
             tested: Tested::Nothing,
         };
+        // what decided its existence: its list's reads, then its body's before its amounts
+        let mut exist = run.inst.coll.clone();
         run.inst.coll.merge(&met);
         run.inst.obs = linked;
         run.inst.err = None;
@@ -701,6 +703,8 @@ impl Engine {
                 run.inst.exists = b.exists;
                 run.inst.legs = b.legs;
                 run.inst.leg_reads = b.leg_reads;
+                exist.merge(&b.exist);
+                run.inst.exist_coll = Some(exist);
                 run.inst.attrs = b.attrs;
                 run.inst.for_period = b.for_period;
                 run.inst.fulfils = b.fulfils;
