@@ -18,7 +18,7 @@ use super::types::{is_date, lit_rule, numcls, refused, uerr};
 use crate::base::{Code, Load, Reach, Refusal};
 use crate::model::{BindInfo, Graph, NameKind, Node, NodeKind, Reality, Rel, Ty};
 use crate::num::{Num, NumError};
-use crate::syntax::{Expr, Key, Lit, PRef, Pin, PinForm, Stop};
+use crate::syntax::{Ask, Expr, Key, Lit, PRef, Pin, PinForm, Stop};
 use crate::time::PeriodKind;
 use std::collections::{BTreeMap, BTreeSet};
 
@@ -597,6 +597,46 @@ pub(super) fn pin_ties(m: &Reality, scope: &Scope, pins: &[Pin]) -> Result<(), S
             ));
         }
         rest = tail;
+    }
+    Ok(())
+}
+
+/// A line's `law D` and `as known D`, as a clause or a `with` pin, are its pins of the law date
+/// and the cut: two of one on ask `ask`'s line are two pins of one cell, `LOAD-OVERLAP pins
+/// <a> and <b> of the law date overlap at no keys` (`of the cut`), its `with` pins first, then
+/// its clause (refcore's `check_ask`; tally 2.3.1 R3, N245.4). L §5.11 A pin is a row, §4.6,
+/// §8.3.
+///
+/// # Errors
+///
+/// That `LOAD-OVERLAP`, unplaced.
+pub(super) fn line_pins(ask: &Ask) -> Result<(), Stop> {
+    for law in [true, false] {
+        let mut same: Vec<String> = ask
+            .pins
+            .iter()
+            .filter_map(|pin| match &pin.form {
+                PinForm::Law(e) if law => Some(format!("law {}", text(e))),
+                PinForm::Known(e) if !law => Some(format!("known {}", text(e))),
+                PinForm::Law(_)
+                | PinForm::Known(_)
+                | PinForm::Wording(..)
+                | PinForm::Scenario(_)
+                | PinForm::Set { .. } => None,
+            })
+            .collect();
+        let (clause, word, cell) = if law {
+            (&ask.law, "law", "the law date")
+        } else {
+            (&ask.known, "as known", "the cut")
+        };
+        same.extend(clause.iter().map(|e| format!("{word} {}", text(e))));
+        if let [first, second, ..] = same.as_slice() {
+            return Err(refused(
+                Load::Overlap,
+                format!("pins {first} and {second} of {cell} overlap at no keys"),
+            ));
+        }
     }
     Ok(())
 }
