@@ -76,12 +76,14 @@ impl Engine {
         ctx: Ctx,
     ) -> Result<Result<Vec<KeyVal>, Hole>, Stop> {
         // the tuple argmin, argmax, first or last returns stands in a key position of the
-        // same indexes, its keys one per position (L §5.11's aggregate paragraph; tally 2.3.1
-        // S6, Q1.12)
+        // same indexes, its keys one per position; one that is a hole makes the read that
+        // hole, as a hole key does (L §5.11's aggregate paragraph, §8.1; tally 2.3.1 S6,
+        // Q1.12, G3's review B1)
         let given = match given.as_slice() {
             [Given::Value(Value::Tuple(items))] if items.len() == binds.len() => {
                 items.iter().cloned().map(Given::Value).collect()
             }
+            [Given::Value(Value::Hole(h))] if binds.len() > 1 => return Ok(Err(h.clone())),
             _ => given,
         };
         if given.len() != binds.len() {

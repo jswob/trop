@@ -587,6 +587,19 @@ version ver
     }
 
     #[test]
+    fn a_returned_tuple_that_is_a_hole_keys_the_read_as_that_hole() {
+        // L §8.1 (G3's review B1): the tuple's hole is the read's, the other asks stand
+        let text = TUPLE.replace("v[k1, j2] = 7.00 PLN", "v[k1, j2] = ?\"which v?\"");
+        let lines = heads(&text);
+        assert_eq!(
+            lines.get(3).map(String::as_str),
+            Some("t4: ?\"which v?\" (v[k1, j2])"),
+            "t4 is the argmin's hole"
+        );
+        assert_eq!(lines.len(), 5, "every ask answers");
+    }
+
+    #[test]
     fn a_tuple_of_other_indexes_is_still_refused() {
         // only keys of the same indexes, in their order: (key ks, key js) against (js, ks)
         let text = TUPLE.replace(
