@@ -1,0 +1,48 @@
+# tally 2.3.1 R6, P40 overturned (E §4.1 step 2, L §8.4): one tuple's refused `where` refuses that movement,
+# not the move's list: f 10.00, b 970.00, c 3, as the one-key text where1 gives. Before: all three RUN-DIV.
+=== where2.tally
+model where1
+  tally 2
+  on 2026-01-01
+  start 2026-01-01
+  end 2026-05-31
+
+source s "probe"
+unit PLN: currency minor 0.01
+index month = month 2026-01..2026-05
+place konto: accounts PLN lives 2026-01-01..
+place shop: outside lives 1900-01-01..
+input dz[m in month]: int
+input ten: int
+input amt: money PLN
+input d25: int
+index kinds = [a]
+
+move spend[m in month where ten / dz[m] > 0, k in kinds]: transfers
+  on day_of(m, d25)
+  leg cash from konto to shop amount amt
+
+ask f: flows(spend, 2026-02)
+ask b: bal(konto, 2026-03-31)
+ask c: count(t in transfers over 2026-01 .. 2026-03)
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  opening[konto] = 1 000.00 PLN at 2026-01-01 start "s"
+  ten = 10 "s"
+  amt = 10.00 PLN "s"
+  d25 = 25 "s"
+  dz[2026-01] = 1 "s"
+  dz[2026-02] = 1 "s"
+  dz[2026-03] = 1 "s"
+  dz[2026-04] = 1 "s"
+  dz[2026-05] = 0 "s"
+=== expect
+b: 970.00 PLN
+  cut 2026-01-01
+c: 3
+  cut 2026-01-01
+f: 10.00 PLN
+  cut 2026-01-01

@@ -1,0 +1,70 @@
+# tally 2.3.1 R6, P40 overturned (#252's k_stop3 without the division): the refused tuple's day (05-25) is read
+# and outside April, so f 270.00 and l4 30.00. Before: f RUN-CYCLE, l4 ENGINE-INVARIANT (a booked plan amount
+# changed between two equal cuts).
+=== k_stop3_nodiv.tally
+model k_stop3
+  tally 2
+  on 2026-04-20
+  start 2026-01-01
+  end 2026-05-31
+
+source s "probe"
+unit PLN: currency minor 0.01
+index month = month 2026-01..2026-05
+place konto: accounts PLN lives 2026-01-01..
+place pot: accounts PLN lives 2026-01-01..
+place shop: outside lives 1900-01-01..
+input d5: int
+input d20: int
+input amt: money PLN
+place card: accounts PLN lives 2026-01-01..
+index kinds = [a]
+input bank: observed
+input ten: int
+input dz[m in month]: int
+input base: money PLN
+input d25: int
+
+move spend[m in month where ten / dz[m] > 0, k in kinds]: transfers
+  on day_of(m, d25)
+  leg cash from konto to shop amount max(0, base - loose[m])
+
+input guess: money PLN
+
+def loose[m in month]: money PLN at start_of(m)
+  rule guessed = guess
+  rule seen beats guessed = sum(o.cash.amount for o in bank over m where o.fulfils == none) when covered(card, m)
+
+ask f: flows(spend, 2026-04 .. 2026-04)
+
+ask l4: loose[2026-04]
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  d5 = 5 "s"
+  d20 = 20 "s"
+  amt = 10.00 PLN "s"
+  ten = 10 "s"
+  guess = 100.00 PLN "s"
+  base = 300.00 PLN "s"
+  d25 = 25 "s"
+  dz[2026-01] = 1 "s"
+  dz[2026-02] = 1 "s"
+  dz[2026-03] = 1 "s"
+  dz[2026-04] = 1 "s"
+  dz[2026-05] = 1 "s"
+
+version apr
+  cite s
+  governs 2026-04
+  known 2026-04-10
+  covers card
+  bank[r0404] = (on: 2026-04-04, kind: transfers, leg cash from konto to shop amount 250.00 PLN, fulfils: spend[2026-01, a]) "names jan"
+  bank[r0406] = (on: 2026-04-06, kind: transfers, leg cash from card to shop amount 30.00 PLN) "loose"
+=== expect
+f: 270.00 PLN
+  cut 2026-04-20
+l4: 30.00 PLN
+  cut 2026-04-20

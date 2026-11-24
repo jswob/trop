@@ -1,0 +1,71 @@
+# tally 2.3.1 R6 (C-1): the same text with a `none` day: the day ends the read whatever came before, so no
+# instance (b5 960.00, f5 0.00, n 4); a field read of it is RUN-NONE `spend[2026-05] doesn't exist: a field
+# read of it` (e5; L §8.4). Before: e5 RUN-RECORD `spend[2026-05] doesn't exist`.
+=== w2_none.tally
+model w
+  tally 2
+  on 2026-01-01
+  start 2026-01-01
+  end 2026-05-31
+
+source s "probe"
+unit PLN: currency minor 0.01
+index month = month 2026-01..2026-05
+place konto: accounts PLN lives 2026-01-01..
+place shop: outside lives 1900-01-01..
+input dz[m in month]: int
+input ten: int
+input amt: money PLN
+input dd[m in month]: date
+input okw[m in month]: bool
+
+move spend[m in month where ten / dz[m] > 0]: transfers
+  on dd[m]
+  when okw[m]
+  leg cash from konto to shop amount amt
+
+ask f2: flows(spend, 2026-02)
+ask f5: flows(spend, 2026-05)
+ask b3: bal(konto, 2026-03-31)
+ask b5: bal(konto, 2026-05-31)
+ask c: count(t in transfers over 2026-01 .. 2026-03)
+ask n: count(t in transfers over 2026-01 .. 2026-05)
+ask e5: spend[2026-05].day
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  opening[konto] = 1 000.00 PLN at 2026-01-01 start "s"
+  ten = 10 "s"
+  amt = 10.00 PLN "s"
+  dz[2026-01] = 1 "s"
+  dz[2026-02] = 1 "s"
+  dz[2026-03] = 1 "s"
+  dz[2026-04] = 1 "s"
+  dz[2026-05] = 0 "s"
+  dd[2026-01] = 2026-01-25 "s"
+  dd[2026-02] = 2026-02-25 "s"
+  dd[2026-03] = 2026-03-25 "s"
+  dd[2026-04] = 2026-04-25 "s"
+  okw[2026-01] = true "s"
+  okw[2026-02] = true "s"
+  okw[2026-03] = true "s"
+  okw[2026-04] = true "s"
+  dd[2026-05] = none "s"
+  okw[2026-05] = true "s"
+=== expect
+b3: 970.00 PLN
+  cut 2026-01-01
+b5: 960.00 PLN
+  cut 2026-01-01
+c: 3
+  cut 2026-01-01
+e5: refused: RUN-NONE spend[2026-05] doesn't exist: a field read of it
+  cut 2026-01-01
+f2: 10.00 PLN
+  cut 2026-01-01
+f5: 0.00 PLN
+  cut 2026-01-01
+n: 4
+  cut 2026-01-01

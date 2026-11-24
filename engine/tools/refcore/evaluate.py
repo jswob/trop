@@ -1603,7 +1603,10 @@ class Engine:
                 # a walk started inside this cell's evaluation needs it (mreads.m_guarded_walk): from here on, what
                 # the attempt caches is taken back if it is abandoned
                 self.outer_hit()
-            raise refuse('RUN-CYCLE', '%s reads itself through a computed key' % self.origin(info, keys))
+            e = refuse('RUN-CYCLE', '%s reads itself through a computed key' % self.origin(info, keys))
+            # the cell the cycle closes at: an existence cell it runs through names its move (moves.m_link_tuple)
+            e.cycle_key = ck
+            raise e
         self.active.add(ck)
         tn = None
         if self.tracing:

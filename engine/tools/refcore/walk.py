@@ -2156,6 +2156,20 @@ class Walk:
             return run
         if run.exists is False:
             run.status = 'none'
+            if run.obs:
+                # a row fulfils a decision instance its walk point finds missing: the link is refused there, and so
+                # is what rests on it (L §5.19, §8.4; tally 2.3.1 R6, C-9)
+                for o in run.obs:
+                    e = refuse('RUN-RECORD', 'observation %s fulfils %s, which doesn\'t exist or doesn\'t touch its '
+                                             'places' % (o.id, run.id))
+                    if o.err is None:
+                        o.err = e
+                    eng.run_cache.setdefault(('badlinks', eng.wkey(self.tctx)), {}).setdefault(run.id, e)
+                    for lg in o.legs:
+                        self.leg_bad(o, lg, e, key)
+                run.obs = []
+                self.same_release(run, key)
+                return run
             self.book_own_obs(run, key)
             self.same_release(run, key)
             return run

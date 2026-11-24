@@ -2,6 +2,9 @@
 # types the reading in its place's unit. sw[2026-03] doesn't exist (konto's last reading before March is 100.00 PLN),
 # so bank[o1]'s link is refused, and konto's reading on 2026-03-10 ends that refusal: q_konto 70.00 PLN, the gap
 # refused. 2.1.8's first refcore stopped REFCORE-NOT-YET (an untyped side of the comparison).
+# Re-stored at tally 2.3.1 R6 (C-13.6; L §8.4): what rests on that refused link is refused, q_obs (observed(...)
+# reads the link) and q_sw (flows over March, where the missing instance's day falls); before, q_obs RUN-NONE and
+# q_sw 0.00 PLN.
 === m.tally
 model nb3
   tally 2
@@ -68,11 +71,9 @@ q_last: 70.00 PLN
   held: stated[konto] = 70.00 PLN (rd), read for 2026-03-31
   cut 2026-06-30
 q_led: refused: RUN-RECORD observation bank[o1] fulfils sw[2026-03], which doesn't exist or doesn't touch its places
-q_obs: refused: RUN-NONE observed(sw[2026-03]) is none here: a field read of it
+q_obs: refused: RUN-RECORD observation bank[o1] fulfils sw[2026-03], which doesn't exist or doesn't touch its places
   held: stated[konto] = 100.00 PLN (rd0), read for 2026-03-01
   cut 2026-06-30
-q_sw: 0.00 PLN
+q_sw: refused: RUN-RECORD observation bank[o1] fulfils sw[2026-03], which doesn't exist or doesn't touch its places
   held: stated[konto] = 100.00 PLN (rd0), read for 2026-02-01
-  held: stated[konto] = 100.00 PLN (rd0), read for 2026-03-01
-  held: stated[konto] = 70.00 PLN (rd), read for 2026-04-01
   cut 2026-06-30

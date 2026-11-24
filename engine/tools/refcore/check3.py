@@ -248,6 +248,9 @@ def m_movement_field(self, n, t, sc):
         return T.DATE
     if name == 'fulfils':
         n._r = ('mvfield', 'fulfils', name)
+        # a row's link to a decision reads that decision's existence, a running read (E §3.1 step 7; tally 2.3.1 R6,
+        # C-9): marked in check_moves_graph, where the rows are known
+        self.__dict__.setdefault('fulfils_items', set()).add(sc.item)
         return T.key('events')
     # L §5.7 A kind test narrows (tally 2.1, R-17): "There v's legs and attributes of K are readable"
     obj = n.obj
@@ -1421,6 +1424,19 @@ def m_check_moves_graph(self):
     m = self.m
     E = self.edges
     memo = {}
+    # step 7's existence mark: the decisions a row fulfils (E §3.1 step 7; tally 2.3.1 R6, C-9);
+    # a plan that reads a row's fulfils reaches them, a decision's reads are judged as before
+    named = set()
+    for inf in m.inputs.values():
+        for o in getattr(inf, 'obs', ()) if getattr(inf, 'observed', False) else ():
+            f = o.fulfils
+            if isinstance(f, tuple) and f and f[0] != 'adj' and f[1] in m.moves:
+                mi = m.moves[f[1]]
+                if mi.decision:
+                    named.add(f[1])
+    for item in getattr(self, 'fulfils_items', ()):
+        for qid in named:
+            self.marks.setdefault(item, set()).add(('exist', ('move', qid)))
 
     def reached(item):
         if item in memo:
@@ -1470,6 +1486,7 @@ def m_check_moves_graph(self):
                 raise LoadError('LOAD-READS', '%s reaches a running read or projection of %s without reads %s' % (
                     qid, _tname(tgt), _tname(tgt)), loc)
             continue
+        rs = set(x for x in rs if x[0] != 'exist')
         on_rs = reached(('moveon', qid))
         if on_rs:
             w, tgt = sorted(on_rs, key=repr)[0]
@@ -1522,7 +1539,8 @@ def m_check_moves_graph(self):
     # walk-bound defs: "A def that reaches a mark and that a decision reaches is walk-bound: its cells carry the walk
     # point (§3.2); in an ask, or a def no movement reaches, a plain bal(x, d) is the balance on day d at the ask's
     # cut" (E §3.1 step 7, round 18 C3-8; L §5.14.1). A plan that reaches a mark is LOAD-READS (above).
-    m.walk_bound = set(d for d in m.defs if reached(('def', d)) and ('def', d) in from_decisions)
+    m.walk_bound = set(d for d in m.defs if any(x[0] != 'exist' for x in reached(('def', d))) and
+                       ('def', d) in from_decisions)
     m.walk_bound_fills = set(f for f in m.fills if reached(('fill', f)) and ('fill', f) in from_decisions)
     # the movements a projection leaves out: those that depend on its holder (E §3.1 step 7, L §5.14.1)
     inv = {}

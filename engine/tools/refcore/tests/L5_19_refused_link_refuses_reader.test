@@ -1,0 +1,59 @@
+# tally 2.3.1 R6, C-13.6 (L §5.19, §8.4): rent[2026-01] doesn't exist (`when` false) and bank[a1] fulfils it, so
+# the link is refused, and what rests on it: a (January's flows) and c. Before: a 0.00 PLN.
+=== l_false.tally
+model first
+  tally 2
+  on 2026-05-20
+  start 2026-01-01
+  end 2026-06-30
+
+source s "invented values"
+unit PLN: currency minor 0.01
+index month = month 2026-01..2026-06
+place pot: accounts PLN lives 2026-01-01..
+place landlord: outside lives 1900-01-01..
+input bank: observed
+input rent_amt: money PLN
+input ok[m in month]: bool
+input d5: int
+
+move rent[m in month]: transfers
+  on day_of(m, d5)
+  at start_of(m)
+  when ok[m]
+  leg cash from pot to landlord amount rent_amt
+
+ask a: flows(rent, 2026-01)
+ask b: flows(rent, 2026-03)
+ask c: bal(pot, 2026-03-31)
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  rent_amt = 100.00 PLN "s"
+  d5 = 5 "s"
+  ok[2026-01] = false "ok jan"
+  ok[2026-02] = true "ok feb"
+  ok[2026-03] = true "ok mar"
+  ok[2026-04] = true "ok apr"
+  ok[2026-05] = true "ok may"
+  ok[2026-06] = true "ok jun"
+  opening[pot] = 9000.00 PLN at 2026-01-01 start "s"
+
+version jan
+  cite s
+  governs 2026-01
+  known 2026-01-21
+  covers pot
+  bank[a1] = (on: 2026-01-05, kind: transfers, leg cash from pot to landlord amount 100.00 PLN, fulfils: rent[2026-01]) "names jan"
+=== expect
+a: refused: RUN-RECORD observation bank[a1] fulfils rent[2026-01], which doesn't exist or doesn't touch its places
+  cut 2026-05-20
+b: 100.00 PLN
+  unfulfilled: rent[2026-03]
+  cut 2026-05-20
+c: refused: RUN-RECORD observation bank[a1] fulfils rent[2026-01], which doesn't exist or doesn't touch its places
+  unfulfilled: rent[2026-02]
+  unfulfilled: rent[2026-03]
+  cut 2026-05-20

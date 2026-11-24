@@ -310,7 +310,8 @@ def m_mv_field(self, n, env, ctx):
         raise refuse('LOAD-FIELD', '%s is not a field of %s' % (n.name, fmt(v)))
     src = self.mv_record(v, ctx)
     if src is None:
-        raise refuse('RUN-RECORD', '%s doesn\'t exist' % v.id)
+        # a field read of an instance that doesn't exist is refused (L §5.14 existence, §8.4; tally 2.3.1 R6, C-2)
+        raise refuse('RUN-NONE', '%s doesn\'t exist: a field read of it' % v.id)
     what = n._r[1]
     sh = None
     name = n.name
@@ -369,6 +370,9 @@ def m_mv_field(self, n, env, ctx):
             # per fact (tally 2.2.1 P36, Q3): the leg's amount and its day, each its own hole where the rows differ
             sh = (self.same_rows_hole(src, name, ctx, 'amount'), self.same_rows_hole(src, name, ctx, 'day'))
     if what == 'day':
+        if isinstance(src, Inst) and (src.exists is False or getattr(src, 'status', None) == 'none'):
+            # `.day` included (L §5.14 existence; tally 2.3.1 R6, gate review 8)
+            raise refuse('RUN-NONE', '%s doesn\'t exist: a field read of it' % v.id)
         return src.day
     if what == 'fulfils':
         f = src.fulfils
@@ -384,6 +388,13 @@ def m_mv_field(self, n, env, ctx):
             return NONE
         if isinstance(f, tuple):
             mi = self.m.moves[f[1]]
+            if not mi.decision:
+                # the link reads that instance's existence alone, never the move's list or its amounts (L §5.14
+                # existence, §5.19; tally 2.3.1 R6: P22, P30)
+                env = self.link_tuple(mi, list(f[2]), ctx)
+                if env is None:
+                    return NONE
+                return Mv('%s[%s]' % (f[1], ', '.join(key_text(k) for k in f[2])) if f[2] else f[1])
             t = self.find_inst(mi, list(f[2]), ctx)
             return t.mv() if t is not None else NONE
         return f
@@ -1932,6 +1943,11 @@ def m_flows_move(self, n, sp, fk, env, ctx):
             if limit is not None and run.point is not None and run.point >= limit:
                 continue
             insts.append(run)
+    elif keys and len(keys) == len(mi.binds):
+        # one instance: its own cell, so a tuple that reads another of its move is no cycle (L §5.14 existence;
+        # tally 2.3.1 R6, C-13.10)
+        one = self.tuple_inst(mi, keys, ctx)
+        insts = [one] if one is not None else []
     else:
         insts = self.move_instances(mi, ctx)
     total = None
@@ -1950,8 +1966,25 @@ def m_flows_move(self, n, sp, fk, env, ctx):
             if sp.contains(i.day) and (fk is None or (i.forp is not None and vkey(i.forp) == vkey(fk))):
                 holes.append(Hole([('after the run\'s end', i.id)]))
             continue
-        st = i.status if mi.decision else self.status(i, ctx)
+        if mi.decision:
+            st = i.status
+        else:
+            # judging its status reads its link; that read is this reader's only where the instance's day can fall in
+            # the span: one out of it by its day rests on no link here (L §8.2, §5.19; tally 2.3.1 R2, item 6)
+            c_st = self.push()
+            try:
+                st = self.status(i, ctx)
+            finally:
+                self.stack.pop()
+            if not (isinstance(i.day, datetime.date) and not sp.contains(i.day)):
+                self.cur.merge(c_st)
         if st in ('none', 'uncertain'):
+            if st == 'none' and not (isinstance(i.day, datetime.date) and not sp.contains(i.day)):
+                # an observation fulfils it, so the link is refused: what rests on it is refused (L §8.4; tally 2.3.1
+                # R6, C-13.6)
+                bad = self.run_cache.get(('badlinks', self.wkey(ctx)), {}).get(i.id)
+                if bad is not None:
+                    raise bad
             if st == 'none' and isinstance(i.day, datetime.date) and sp.contains(i.day) and \
                     getattr(i, 'coll', None) is not None and self.cur is not None:
                 # an instance in the span whose when is false is read to be left out: its reads are the line's, as a
@@ -1969,6 +2002,10 @@ def m_flows_move(self, n, sp, fk, env, ctx):
                 holes.append(sh)
                 continue
         if isinstance(d, Hole):
+            if i.err is not None:
+                # a refused movement whose day is a hole reaches every span as a hole day does, refused (L §8.4 "a
+                # refused day as a hole one"; §8: a refusal outranks a hole; tally 2.3.1 R6, w3)
+                raise i.err
             holes.append(d)
             continue
         if not sp.contains(d):
@@ -2068,7 +2105,8 @@ def m_flows_move(self, n, sp, fk, env, ctx):
             seen_units.add(u)
     # settlements dated in the span, and HOLE-CHANGED (E §5 steps 5-6): only this move's adjustments are measured
     # unless it has some, whose settlements need the whole pass (E §4.1)
-    own = self.adjust_move(mi, ctx) if not mi.decision else []
+    own = self.adjust_move(mi, ctx, one=insts[0] if insts and keys and len(keys) == len(mi.binds) else None) \
+        if not mi.decision else []
     if own:
         self.settle(own, ctx)
         for a in own:
@@ -2436,13 +2474,17 @@ def m_c_observed(self, n, env, ctx):
     v = self.e_moveref(a, env, ctx)
     if isinstance(v, Hole):
         return v
+    mi = m.moves[a._r[1]]
     obs = self.obs_links_for(v.id, ctx)
+    if mi.decision and v.id in self.run_cache.get(('deflinks', self.wkey(self.tctx(ctx))), ()):
+        # a decision's link its running `when` leaves to its walk point is judged there (L §5.19, E §4.2 step 3;
+        # tally 2.3.1 R6, C-9)
+        self.main_walk(ctx)
     bad = self.run_cache.get(('badlinks', self.wkey(ctx)), {}).get(v.id)
     if bad is not None:
         raise bad
     if not obs:
         return NONE
-    mi = m.moves[a._r[1]]
     legs = []
     # rows stated same are one movement, counted once (L §5.19: "counted once by observed(m[k])"); where they
     # disagree, the leg's amount is the disagreement's hole, HOLE-SAME
