@@ -2210,4 +2210,71 @@ version v
             );
         }
     }
+
+    /// A two-key move whose first key's `where` is refused in February (DAY is unused).
+    const PREFIX: &str = r#"model prefix
+  tally 2
+  on 2026-01-01
+  start 2026-01-01
+  end 2026-03-31
+
+source s "probe"
+
+unit PLN: currency minor 0.01
+
+index month = month 2026-01..2026-03
+
+index kinds = [a]
+
+place konto: accounts PLN lives 2026-01-01..
+
+place shop: outside lives 1900-01-01..
+
+input dz[m in month]: int
+
+input ten: int
+
+input amt: money PLN
+
+input d25: int
+
+input fm: month
+
+move spend[m in month where ten / dz[m] > 0, k in kinds]: transfers
+  on day_of(m, d25)
+  leg cash from konto to shop amount amt
+
+ask dy: spend[fm, a].day
+
+ask am: spend[fm, a].cash.amount
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  ten = 10 "s"
+  amt = 10.00 PLN "s"
+  d25 = 25 "s"
+  fm = 2026-02 "s"
+  dz[2026-01] = 1 "s"
+  dz[2026-02] = 0 "s"
+  dz[2026-03] = 1 "s"
+"#;
+
+    #[test]
+    fn a_field_read_at_the_full_keys_of_a_tuple_refused_before_them_is_its_refusal() {
+        // L §5.14 An instance's existence is a cell (l.1362; tally 2.3.1 R6, G2's review B2):
+        // the tuple refused before its later key stands for every instance its keys begin, so
+        // a field read at the full keys is its refusal, not a missing instance
+        for ask in ["dy", "am"] {
+            assert_eq!(
+                lines_of(PREFIX, "", ask),
+                [
+                    format!("{ask}: refused: RUN-DIV division by zero"),
+                    "  cut 2026-01-01".to_owned()
+                ],
+                "{ask}"
+            );
+        }
+    }
 }

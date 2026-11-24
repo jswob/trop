@@ -127,7 +127,9 @@ impl Engine {
     }
 
     /// A movement instance named by move `id` and the keys written: the instance the cut sees
-    /// at those keys, else a movement known by its id alone; a hole key makes it that hole
+    /// at those keys, or the refused one of a tuple refused before its later keys, which stands
+    /// for every instance its keys begin (L §5.14 An instance's existence is a cell, l.1362;
+    /// tally 2.3.1 R6), else a movement known by its id alone; a hole key makes it that hole
     /// (refcore's `e_moveref`, `find_inst`). L §2.5, §5.14.
     fn move_ref(
         &mut self,
@@ -148,6 +150,12 @@ impl Engine {
         };
         let insts = self.move_instances(m, mv, ctx.cut)?;
         if let Some(inst) = insts.iter().find(|i| i.keys == made) {
+            return Ok(Value::Mv(Box::new(inst_ref(inst))));
+        }
+        if let Some(inst) = insts
+            .iter()
+            .find(|i| i.err.is_some() && i.keys.len() < made.len() && made.starts_with(&i.keys))
+        {
             return Ok(Value::Mv(Box::new(inst_ref(inst))));
         }
         let id = if made.is_empty() {
