@@ -2648,6 +2648,13 @@ def m_c_observed(self, n, env, ctx):
         run = w.decs.get(v.id) if w is not None else None
         if run is not None and getattr(run, 'exist_coll', None) is not None:
             self.cur.merge(run.exist_coll)
+    if mi.decision and mi.decl.when is not None and ctx.walk is None:
+        # an instance whose existence is refused (its `when` in a RUN-ORDER cycle at its point, Walk.refused_run) is
+        # refused with every read of it, `observed` too (R6, B5; x/dl_chk5 ob); a decision with no `when` exists
+        # whatever its run, and `observed` reads its rows
+        run = self.mv_record(v, ctx)
+        if getattr(run, 'status', None) == 'refused' and getattr(run, 'err', None) is not None:
+            raise run.err
     bad = self.run_cache.get(('badlinks', self.wkey(ctx)), {}).get(v.id)
     if bad is not None:
         raise bad
