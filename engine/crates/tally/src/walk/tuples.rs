@@ -393,6 +393,7 @@ impl Engine {
         keys: &[KeyVal],
         cut: Day,
     ) -> Result<LinkVerdict, Stop> {
+        self.cycle_at = None;
         self.link_tuple_read(m, mv, keys, cut)
             .map_err(|stop| self.through_existence(mv, stop))
     }
@@ -539,21 +540,21 @@ impl Engine {
         keys: &[KeyVal],
         cut: Day,
     ) -> Result<Option<MvRef>, Stop> {
+        self.cycle_at = None;
         self.linked_read(m, mv, keys, cut)
             .map_err(|stop| self.through_existence(mv, stop))
     }
 
     /// A cycle met reading move `mv`'s existence that returns to a cell being computed before
     /// the read began runs through that existence: `RUN-CYCLE <mv> reads its own instances`;
-    /// any other stop as it is (refcore's `link_tuple`, its `outer`). L §5.14 An instance's
-    /// existence is a cell, §8.4 (tally 2.3.1 R6, P32).
-    fn through_existence(&self, mv: &MoveInfo, stop: Stop) -> Stop {
+    /// any other stop as it is (refcore's `link_tuple`, its `outer`). The note of the cell a
+    /// cycle returned to is taken here, so no later read meets it (L §5.14 An instance's
+    /// existence is a cell, §8.4; tally 2.3.1 R6, P32; G2's rest review N8).
+    fn through_existence(&mut self, mv: &MoveInfo, stop: Stop) -> Stop {
+        let at = self.cycle_at.take();
         if let Stop::Refused(r) = &stop
             && r.code() == Code::Run(Run::Cycle)
-            && self
-                .cycle_at
-                .as_ref()
-                .is_some_and(|c| self.active.contains(c))
+            && at.as_ref().is_some_and(|c| self.active.contains(c))
         {
             return refuse(Run::Cycle, format!("{} reads its own instances", mv.id));
         }

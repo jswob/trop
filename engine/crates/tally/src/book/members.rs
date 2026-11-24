@@ -903,6 +903,9 @@ impl Engine {
             && (i.exists == Exists::No || i.status == Status::None)
             && !self.made_to_exist(m, i, ctx)?
         {
+            // the refusal rests on the existence cell, so it lists what decided it, as every
+            // other reader of the cell does (L §8.2 l.2252; tally 2.3.1 statement E, N3)
+            self.absorb(i.exist_coll.as_ref().unwrap_or(&i.coll));
             return Err(not_there(src.id()));
         }
         match (&src, name) {
@@ -1235,8 +1238,8 @@ impl Engine {
     /// The refusal of a read of observation `o`'s `fulfils` inside a decision before the point
     /// where the link of the instance it names is judged: `RUN-ORDER`, the reader and that
     /// decision reading each other ([`Engine::link_awaited`]); none outside a decision, or
-    /// where the link is judged already (L §5.19 Links, §5.14.2 Cycles; tally 2.3.1 rulings
-    /// 16 Q5).
+    /// where the link is judged already (L §5.19 Links, §5.14.2 Cycles; E §4.2 step 3; tally
+    /// 2.3.1 rulings 16 Q5, pick P17).
     ///
     /// # Errors
     ///

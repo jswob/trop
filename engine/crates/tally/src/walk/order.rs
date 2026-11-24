@@ -729,7 +729,8 @@ impl Engine {
     /// `RUN-ORDER` for a decision run at point `at` that reads `o.fulfils` of a row linked to
     /// decision instance `tid` of move `mid`, whose link is judged at its own point and which
     /// hasn't run yet: the link's verdict waits on a decision after the reader, so the two
-    /// read each other (L §5.14.2 Cycles, §5.19 Links; tally 2.3.1 C-9, rulings 16 Q5).
+    /// read each other, whatever the later decision's `when` reads (L §5.14.2 Cycles, §5.19
+    /// Links; E §4.2 step 3; tally 2.3.1 C-9, rulings 16 Q5, pick P17).
     ///
     /// # Errors
     ///

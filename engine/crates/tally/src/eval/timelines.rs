@@ -280,8 +280,9 @@ impl Engine {
     /// Whether refusal `r`, met by decision instance `tid`'s run under cut `cut`, is the one
     /// an earlier answer of the ask gave a row of its own because its point found it none,
     /// on the timeline in force: the row refuses from its day only because the instance
-    /// doesn't exist, so the instance is none still, and a field read of it `RUN-NONE` (R6;
-    /// tally 2.3.1 rulings 16 Q2, the lead's P15).
+    /// doesn't exist, so the instance is none still, and a field read of it `RUN-NONE` (L §5.14
+    /// An instance's existence is a cell, §8.4; E §4.2 step 3; tally 2.3.1 R6, rulings 16 Q2,
+    /// the lead's P15).
     ///
     /// # Errors
     ///
