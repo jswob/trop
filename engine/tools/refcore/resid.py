@@ -213,6 +213,14 @@ def m_residuals(self, place, span, by, ctx, unit=None):
                 raise i.err
             model.append(i)
     w = self.main_walk(ctx)
+    for mi in self.m.moves.values():
+        if not mi.decision:
+            continue
+        for i in self.decision_instances(mi, ctx):
+            if i.err is not None and day_lo(i.day) is None and i.id in ful_at:
+                # a refused instance a row at x fulfils, its day refused too: the refusal refuses the ledger whole
+                # (L §8.4; tally 2.3.1 P33, statement F (a))
+                raise i.err
     for iid in sorted(w.decs):
         run = w.decs[iid]
         dd = day_lo(run.day)
@@ -334,6 +342,10 @@ def m_residuals(self, place, span, by, ctx, unit=None):
     for i in model:
         dd = ful_last[i.id] if isinstance(i.day, Hole) else day_lo(i.day)
         mdl = self_flow(i.legs, place, unit)
+        if isinstance(getattr(i, 'exists', None), Hole) and (isinstance(mdl, Hole) or mdl != 0):
+            # its existence a hole: the model there is that hole, its difference too (L §5.14; tally 2.3.1 statement
+            # F (a), P36 R4)
+            mdl = Hole(i.exists.qs)
         os = by_target.get(i.id, [])
         seen.update(o.id for o in os)
         if not os:

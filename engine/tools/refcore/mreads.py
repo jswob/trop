@@ -376,6 +376,10 @@ def m_mv_field(self, n, env, ctx):
         else:
             # per fact (tally 2.2.1 P36, Q3): the leg's amount and its day, each its own hole where the rows differ
             sh = (self.same_rows_hole(src, name, ctx, 'amount'), self.same_rows_hole(src, name, ctx, 'day'))
+    if what == 'day' and isinstance(src, Inst) and isinstance(src.exists, Hole):
+        # an existence that is a hole: a field read of the instance is that hole (L §5.14; tally 2.3.1 statement F
+        # (a), N5)
+        return Hole(src.exists.qs)
     if what == 'day':
         if isinstance(src, Inst) and (src.exists is False or getattr(src, 'status', None) == 'none'):
             # `.day` included (L §5.14 existence; tally 2.3.1 R6, gate review 8); an instance a later version made
@@ -1689,6 +1693,16 @@ def m_flows_place(self, place, sp, env, ctx, fk=None):
         if fk is None or e.mv is None:
             return False
         fp = mv_for(e.mv)
+        t = getattr(e.mv, 'target', None) if getattr(e.mv, 'status', None) == 'observed' else None
+        if fp is None and t is not None and getattr(t, 'decision', False):
+            # a decision tuple's `for` is evaluated with its body, at its run: the row is for that period (L §5.14
+            # `for k`; tally 2.3.1 statement F (c), P36 R3)
+            ww = ctx.walk if ctx.walk is not None else self.main_walk(ctx)
+            run = None
+            while ww is not None and run is None:
+                run = ww.decs.get(t.id)
+                ww = ww.base
+            fp = getattr(run, 'forp', None)
         if isinstance(fp, Hole):
             # a movement for a hole period: whether it counts is that hole (L §8.1; tally 2.3.1 P32 B5)
             holes.append(fp)
@@ -1778,7 +1792,11 @@ def m_flows_post_e(self, w, place, sp, last, env, ctx, fk, totals, holes):
     a hole movement, HOLE-POSTRUN, since its amount reads a walk that doesn't hold its day (L §8.1)."""
     from .evaluate import HoleSignal
     for i in w.post_e:
-        if fk is not None and (mv_for(i) is None or vkey(mv_for(i)) != vkey(fk)):
+        fp = mv_for(i) if fk is not None else None
+        # a hole period reaches a `, for k` read after the run's end too: whether it counts is that hole (L §8.1;
+        # tally 2.3.1 statement F (c), gap 1)
+        fh = fp if isinstance(fp, Hole) else None
+        if fk is not None and fh is None and (fp is None or vkey(fp) != vkey(fk)):
             continue
         if i.decision:
             if not sp.contains(i.day):
@@ -1792,7 +1810,7 @@ def m_flows_post_e(self, w, place, sp, last, env, ctx, fk, totals, holes):
             except (TallyError, HoleSignal):
                 ps = {None}
             if place in ps or None in ps:
-                holes.append(Hole([('after the run\'s end', i.id)]))
+                holes.append(fh if fh is not None else Hole([('after the run\'s end', i.id)]))
             continue
         for lg in i.legs or ():
             lo, hi = day_lo(lg.day), day_hi(lg.day)
@@ -1805,6 +1823,9 @@ def m_flows_post_e(self, w, place, sp, last, env, ctx, fk, totals, holes):
                 raise i.err
             if i.coll is not None:
                 self.cur.merge(i.coll)
+            if fh is not None:
+                holes.append(fh)
+                continue
             if isinstance(i.exists, Hole):
                 holes.append(i.exists)
                 continue
@@ -2062,6 +2083,10 @@ def m_flows_move(self, n, sp, fk, env, ctx):
                     # counted as the hole it is
                     i._rawhole = True
                     insts.append(i)
+                elif i.err is not None and day_lo(i.day) is None and i.exists is not False:
+                    # a refused day may fall in any span: read below, its rows standing in where the cut applies one,
+                    # else its refusal (L §8.4; tally 2.3.1 statement F, P36 R2)
+                    insts.append(i)
                 continue
             if limit is not None and run.point is not None and run.point >= limit:
                 continue
@@ -2084,7 +2109,10 @@ def m_flows_move(self, n, sp, fk, env, ctx):
     named = {}
     for tid, obs_ in self.link_targets(ctx).items():
         f0 = obs_[0].fulfils
-        if f0[1] == mi.id and (not keys or tuple(vkey(k) for k in f0[2][:len(keys)]) == tuple(keys)):
+        # only a row the cut applies stands in (dated before K: L §4.5, E §4.1 step 3), as for `bal` (tally 2.3.1
+        # statement F (b), P36 R1)
+        obs_ = [o for o in obs_ if not (isinstance(o.day, datetime.date) and o.day >= ctx.cut)]
+        if obs_ and f0[1] == mi.id and (not keys or tuple(vkey(k) for k in f0[2][:len(keys)]) == tuple(keys)):
             named[tid] = obs_
     by_rows = set(named) - set(i.id for i in insts)
     for i in insts:
@@ -2104,7 +2132,12 @@ def m_flows_move(self, n, sp, fk, env, ctx):
             if sp.contains(i.day) and (fk is None or (i.forp is not None and vkey(i.forp) == vkey(fk))):
                 holes.append(Hole([('after the run\'s end', i.id)]))
             continue
-        if mi.decision:
+        if mi.decision and i.id not in named and i.err is not None and day_lo(i.day) is None and \
+                not hasattr(i, 'point'):
+            # a refused-day tuple, never run, that no row at this cut stands in for: its own state at this cut
+            # (tally 2.3.1 P36 R2)
+            st = self.status(i, ctx)
+        elif mi.decision:
             st = i.status
         else:
             # judging its status reads its link; that read is this reader's only where the instance's day can fall in

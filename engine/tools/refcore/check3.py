@@ -236,7 +236,8 @@ def m_movement_field(self, n, t, sc):
     elif base.k == 'name' and sc.item is not None and sc.item[0] == 'def' and base.id in sc.keyvars:
         # a def that reads a field of its movement key: keyed by an `o.fulfils`, that read is through the fulfils
         # (E §3.1 step 5, "through whoever names or binds the key"; tally 2.3.1 P32 B1, m2_keyed)
-        self.__dict__.setdefault('keyfield_defs', set()).add(sc.item[1])
+        # by the key's position: only the key bound to `o.fulfils` reaches (tally 2.3.1 statement F (d), gap 2)
+        self.__dict__.setdefault('keyfield_defs', set()).add((sc.item[1], sc.keyvars.index(base.id)))
     for ld in legs:
         if ld.name == name:
             n._r = ('mvfield', 'leg', name)
@@ -1452,9 +1453,18 @@ def m_check_moves_graph(self):
                         o.sid, tid, lack[0]), o.loc)
             if isinstance(f, tuple) and f and f[0] != 'adj' and f[1] in m.moves and m.moves[f[1]].decision:
                 named.setdefault(inf.id, set()).add(f[1])
-    kf = getattr(self, 'keyfield_defs', set())
+    kf = set(getattr(self, 'keyfield_defs', set()))
+    passes = getattr(self, 'key_passes', set())
+    grew = True
+    while grew:
+        # a key passed on to a def that reads a field of it reads that field (statement F (d))
+        grew = False
+        for src, dst in passes:
+            if dst in kf and src not in kf:
+                kf.add(src)
+                grew = True
     for item in set(getattr(self, 'fulfils_items', ())) | set(
-            it for it, did in getattr(self, 'fulfils_keyed', ()) if did in kf):
+            it for it, did, pos in getattr(self, 'fulfils_keyed', ()) if (did, pos) in kf):
         # a decision's legs, day and attributes are running reads (E §3.1 step 7): a field read through the
         # `fulfils` of a row of any version that names a decision reaches them
         bound = [t[1] for t, rels in E.get(item, {}).items() if t[0] == 'input' and 'bind' in rels]
@@ -1510,7 +1520,8 @@ def m_check_moves_graph(self):
                 raise LoadError('LOAD-READS', '%s reaches a running read or projection of %s without reads %s' % (
                     qid, _tname(tgt), _tname(tgt)), loc)
             continue
-        rs = set(x for x in rs if x[0] != 'exist')
+        # a field read through `o.fulfils` is a read of the named move, for the mark and for `reads` alike (E §3.1
+        # step 7; tally 2.3.1 statement F (d), N3): kept, so `reads topup` covers it and is satisfied by it
         on_rs = reached(('moveon', qid))
         if on_rs:
             w, tgt = sorted(on_rs, key=repr)[0]
