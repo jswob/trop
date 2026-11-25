@@ -262,7 +262,8 @@ mod tests {
             // each under both options of the axis the pay reads; but for tally 2.2.1's 206.1
             // in `d_back`'s first two, `d_many` and `d_uncertain`: a sweep in a projection from
             // after the month's first day reads `room`'s projection from that day, which starts
-            // from the main walk there and counts the salary once (E §4.3 step 1)
+            // from the main walk there and counts the salary once (E §4.3 step 1); `held:`
+            // once per row and keys, its reads in order (tally 2.3.1 R4, L §8.2)
             for line in [
                 "d_min [pay_reading = low]: 350.00 DUK",
                 "d_min [pay_reading = high]: 575.00 DUK",
@@ -273,7 +274,7 @@ mod tests {
                 "d_axis [pay_reading = low]: 325.00 DUK",
                 "d_uncertain [pay_reading = low]: 281.25 DUK",
                 "d_room (m = 2026-07) [pay_reading = high]: 910.94 DUK",
-                "  held: rent = 950.00 DUK (later), read for 2026-07-01",
+                "  held: rent = 950.00 DUK (later), read for 2026-05-01, 2026-06-01, 2026-07-01",
             ] {
                 assert!(
                     lines.iter().any(|l| l == line),
