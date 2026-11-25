@@ -1582,7 +1582,12 @@ def same_obs_differ(a, others, leg=None, m=None, fact=None):
                 # every side's day, merged as a list (tally 2.3.1 N245.3: L §8.1, a hole carries every question)
                 ds = sorted(set(h.day if isinstance(h.day, datetime.date) else o.day for o, h in mem
                                 if isinstance(h.day, datetime.date) or isinstance(o.day, datetime.date)))
-                d = ', '.join(str(day_text(x)) for x in ds) if ds else day_text(a.day)
+                if ds:
+                    d = ', '.join(str(day_text(x)) for x in ds)
+                else:
+                    # no side's day known: the day prints as its hole prints (L §8.1; G5's builder, d5)
+                    from .values import fmt_hole
+                    d = fmt_hole(a.day) if isinstance(a.day, Hole) else day_text(a.day)
             # L §8.1 HOLE-SAME, the rows in the order of their ids, each of a larger class named (tally 2.1.8 S6)
             q = '%s are one, but %s differs on %s: %s' % (
                 and_list(shown(o.id) for o, h in mem), what, d,

@@ -1,0 +1,24 @@
+# tally 2.3.1 P42 B1 (L §8.4's RUN-NONE row): min(xn, xh) with xn none and xh a hole names the read and the
+# built-in, `xn is none here: min` (a refusal outranks a hole, §8). Before: `a value is none here: min`.
+=== b1_min.tally
+model b1
+  tally 2
+  on 2026-06-30
+  start 2026-01-01
+  end 2026-12-31
+
+source s "probe"
+input xn: num
+input xh: num
+
+ask a: min(xn, xh)
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  xn = none "s"
+  xh = ?"xh" "s"
+=== expect a
+a: refused: RUN-NONE xn is none here: min
+  cut 2026-06-30

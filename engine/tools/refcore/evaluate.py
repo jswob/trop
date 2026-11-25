@@ -4215,13 +4215,14 @@ class Engine:
 
     def c_age(self, n, env, ctx):
         b, d = self.args(n, env, ctx)
+        for a, v in zip(n.args, (b, d)):
+            # the read and the built-in's name, a hole beside it too (L §8.4; tally 2.3.1 P42 B1, note 8)
+            self.no_none(v, n.name, a, env)
         h = self.hole_args([b, d])
         if h:
             return h
-        for a, v in zip(n.args, (b, d)):
-            self.no_none(v, n.name, a, env)
-        b = self.as_date_or_iv(b, 'age')
-        d = self.as_date_or_iv(d, 'age')
+        b = self.as_date_or_iv(b, n.name)
+        d = self.as_date_or_iv(d, n.name)
         fn = age if n.name == 'age' else age_months
 
         def f(x, y):
@@ -4271,12 +4272,13 @@ class Engine:
     def c_min(self, n, env, ctx):
         snap = self.trace_snap()
         vals = self.args(n, env, ctx)
+        for a, v in zip(n.args, vals):
+            # the read and the built-in's name (L §8.4's RUN-NONE row; tally 2.3.1 R4, P31), a hole beside it too
+            # (a refusal outranks a hole, §8; P42 B1)
+            self.no_none(v, n.name, a, env)
         h = self.hole_args(vals, strict=n.name)
         if h:
             return h
-        for a, v in zip(n.args, vals):
-            # the read and the built-in's name (L §8.4's RUN-NONE row; tally 2.3.1 R4, P31)
-            self.no_none(v, n.name, a, env)
         vals = [coerce_flex(v, a._t, vals, n) for v, a in zip(vals, n.args)]
         res = self.agg_minmax(n.name, vals, None)
         if snap is not None:
