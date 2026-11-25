@@ -16,6 +16,11 @@ counts its failing vectors ("2 of 9 vectors of g6 differ from refcore:") and tha
 of them, each at the start of its line ("g6/when: …"), are named on such lines. Any other
 red blocks as before: another step, a test that isn't logged, a vector that isn't, or a
 log it can't read. Which group a logged id is for is the group review's to check.
+
+In every role, a turn that ends (the hook lets the stop through) appends one line to the
+file `TALLY_TURN_LOG` names, which `engine/tools/launch` sets: `<UTC time> <session id>
+<role> turn-end`, for the coordinator's Monitor (the Orca study, 2026-11-25: Orca's
+`tui-idle` misread our sessions). A line that can't be written never holds a turn.
 """
 
 import datetime
@@ -154,10 +159,33 @@ def log(line):
         f.write(f"\n- {stamp} {line}\n")
 
 
+def mark_turn(payload, role):
+    """One line in the turn log `launch` names, when a turn ends; never fails."""
+    path = os.environ.get("TALLY_TURN_LOG")
+    if not path:
+        return
+    try:
+        sid = json.loads(payload).get("session_id") or "unknown"
+    except (ValueError, AttributeError):
+        sid = "unknown"
+    stamp = datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+    try:
+        with open(path, "a", encoding="utf-8") as f:
+            f.write(f"{stamp} {sid} {role} turn-end\n")
+    except OSError:
+        pass
+
+
 def main():
-    if (os.environ.get("TALLY_ROLE") or "unset") != "build":
-        return 0
-    sys.stdin.read()
+    role = os.environ.get("TALLY_ROLE") or "unset"
+    payload = sys.stdin.read()
+    code = decide() if role == "build" else 0
+    if code == 0:
+        mark_turn(payload, role)
+    return code
+
+
+def decide():
     run = subprocess.run([os.path.join(TOOLS, "check"), "quick"], capture_output=True, text=True, cwd=ENGINE, check=False)
     if run.returncode == 0:
         save({})

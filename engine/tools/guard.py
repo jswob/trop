@@ -51,6 +51,9 @@ ENGINE = os.path.dirname(TOOLS)
 ROOT = os.path.dirname(ENGINE)
 HOME = os.path.realpath(os.path.expanduser("~"))
 ROLES = ("build", "rules", "tests", "spec", "lead", "unset")
+# the role sessions: they start no session and open no Orca terminal, by name or by path,
+# and name no TALLY_ROLE (R-79, R-81; the Orca study, 2026-11-25, its §4)
+SESSION_ROLES = ("build", "tests", "spec", "rules")
 # the roles that write like app work: anything but the spec, the oracle, the tests and
 # the rule files, and all of tmp/ (the lead, issue #18)
 APP_WRITERS = ("unset", "lead")
@@ -1558,8 +1561,12 @@ def check_segment(argv, cwd, role, depth, state):
         tool = lead_tool(name, args)
         if tool:
             raise Refused(f"engine guard (role {role}): refused `{tool}`: only the lead role (TALLY_ROLE=lead) runs it (R-132, issue #18).")
-    if role == "build" and (name == "claude" or "claude-code" in " ".join(words)):
-        raise Refused(f"engine guard (role build): refused a nested claude run (R-81). {REPORT}")
+    if role in SESSION_ROLES and (name == "claude" or "claude-code" in " ".join(words)):
+        raise Refused(f"engine guard (role {role}): refused a nested claude run: only a coordinator starts "
+                      f"sessions, through engine/tools/launch (R-81, the playbook's D6). {REPORT}")
+    if role in SESSION_ROLES and name == "orca":
+        raise Refused(f"engine guard (role {role}): refused an orca command: a role session opens no terminal, "
+                      f"sends no message and starts no session (R-81, the Orca study, 2026-11-25). {REPORT}")
     if name in SHELLS:
         if "-c" in args:
             k = args.index("-c")
@@ -1664,12 +1671,12 @@ def check_segment(argv, cwd, role, depth, state):
 def check_command(command, cwd, role, depth=0):
     if depth > 8:
         raise Refused(f"engine guard (role {role}): refused a command nested too deeply to check. {REPORT}")
-    if role == "build":
-        folded = command.casefold()
-        if "disableallhooks" in folded:
-            raise Refused(f"engine guard (role build): refused a command naming disableAllHooks (R-81). {REPORT}")
-        if "tally_role" in folded:
-            raise Refused(f"engine guard (role build): refused a command naming TALLY_ROLE (R-79). {REPORT}")
+    folded = command.casefold()
+    if role == "build" and "disableallhooks" in folded:
+        raise Refused(f"engine guard (role build): refused a command naming disableAllHooks (R-81). {REPORT}")
+    if role in SESSION_ROLES and "tally_role" in folded:
+        raise Refused(f"engine guard (role {role}): refused a command naming TALLY_ROLE: the role is set by "
+                      f"whoever launches, never by the session (R-79). {REPORT}")
     messages = re.search(r"\bgit\b", command) and re.search(r"\b(commit|merge|tag|notes|commit-tree)\b", command)
     # a pull request's or an issue's text too (the retro after M0): `gh pr create --body …`
     messages = messages or re.search(r"\bgh\b.*\b(pr|issue)\b.*\b(create|edit|comment|review)\b", command, re.S)
