@@ -388,6 +388,11 @@ def m_mv_field(self, n, env, ctx):
         return src.day
     if what == 'fulfils':
         f = src.fulfils
+        if f is None and isinstance(src, ObsMv):
+            # rows stated same are one movement, its fulfils stated on either row (L §5.19, §6.1 "read from both
+            # sides together"; tally 2.3.1 P32 N1: s1_same's n2)
+            f = next((x.fulfils for x in self.same_others(src, ctx) if getattr(x, 'fulfils', None) is not None),
+                     None)
         if f is None:
             return NONE
         if isinstance(f, tuple) and f[0] == 'adj':
