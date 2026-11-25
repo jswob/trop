@@ -97,6 +97,98 @@ fn amount_text(m: &Reality, lg: &LegVal) -> Result<String, Stop> {
     }
 }
 
+/// What a leg of one `same` side meets on another side at a place.
+enum Partner {
+    /// The other side has no leg at the place.
+    NotHere,
+    /// Its partner, by position among the other side's legs.
+    Leg(usize),
+    /// The other side has legs at the place, none left for this one.
+    None,
+}
+
+/// The partner of the leg named `name` among `theirs` at place `p` in unit `unit`: the leg
+/// of its name there, else the one in its order among the legs whose names find no
+/// partner on either side (L §6.1 What `same` does, l.1807; tally 2.3.1 rulings 25, P42).
+fn partner_at(
+    (mine, theirs): (&[LegVal], &[LegVal]),
+    name: &str,
+    at: (&str, Option<&str>),
+) -> Result<Partner, Stop> {
+    let here = names_at(theirs, at);
+    if here.is_empty() {
+        return Ok(Partner::NotHere);
+    }
+    if let Some((li, _)) = here.iter().find(|(_, n)| n == name) {
+        return Ok(Partner::Leg(*li));
+    }
+    let mine_here = names_at(mine, at);
+    let mut my_free = Vec::new();
+    for (_, n) in &mine_here {
+        if !here.iter().any(|(_, t)| t == n) {
+            my_free.push(n.as_str());
+        }
+    }
+    let mut their_free = Vec::new();
+    for (li, t) in &here {
+        if !mine_here.iter().any(|(_, n)| n == t) {
+            their_free.push(*li);
+        }
+    }
+    let k = my_free
+        .iter()
+        .position(|n| *n == name)
+        .ok_or_else(|| invariant("a leg with no end at its own place"))?;
+    Ok(their_free
+        .get(k)
+        .map_or(Partner::None, |li| Partner::Leg(*li)))
+}
+
+/// The legs among `legs` at place `p` in unit `unit`, each its position and its name, in
+/// their order (refcore's `consol`, its `at_p`). L §6.1 What `same` does.
+fn names_at(legs: &[LegVal], at: (&str, Option<&str>)) -> Vec<(usize, String)> {
+    let mut out = Vec::new();
+    for li in at_place(legs, at) {
+        if let Some(g) = legs.get(li) {
+            out.push((li, g.name.clone()));
+        }
+    }
+    out
+}
+
+/// The `HOLE-SAME` of leg `lg` that finds no partner on the sides `unpaired`: every side
+/// named once in id order, the paired legs' amounts and `none` for a side with no such leg,
+/// on the sides' days (L §8.1 `HOLE-SAME`; tally 2.3.1 rulings 25, P42).
+fn unpaired_hole(
+    m: &Reality,
+    (lg, touch): (&LegVal, &[(&Member, &LegVal, usize)]),
+    unpaired: &[&Member],
+) -> Result<Hole, Stop> {
+    let mut sides: Vec<(&str, String, Option<Day>)> = Vec::new();
+    for (x, g, _) in touch {
+        sides.push((x.id(), amount_text(m, g)?, g.day.day().or_else(|| x.day())));
+    }
+    for x in unpaired {
+        sides.push((x.id(), "none".to_owned(), x.day()));
+    }
+    sides.sort_by_cached_key(|(x, _, _)| m.id_order(x));
+    let ids: Vec<String> = sides.iter().map(|(x, _, _)| (*x).to_owned()).collect();
+    let days: BTreeSet<Day> = sides.iter().filter_map(|(_, _, d)| *d).collect();
+    let days: Vec<String> = days.into_iter().map(Day::text).collect();
+    let parts: Vec<String> = sides
+        .iter()
+        .map(|(x, figure, _)| format!("{figure} ({x})"))
+        .collect();
+    let text = format!(
+        "{} are one, but leg {} differs on {}: {}",
+        and_list(&ids),
+        lg.name,
+        days.join(", "),
+        and_list(&parts)
+    );
+    Ok(Hole::asked(&text, &ids.join(", ")))
+}
+
 /// The positions of the legs among `legs` in unit `unit` with an end at place `p`, in their
 /// order (refcore's `consol`, its `at_p`). L §6.1 What `same` does; tally 2.3.1 N245.18.
 fn at_place(legs: &[LegVal], (p, unit): (&str, Option<&str>)) -> Vec<usize> {
@@ -405,36 +497,28 @@ impl Engine {
     ) -> Result<EndBook, Stop> {
         let unit = lg.unit.as_deref();
         let mut touch: Vec<(&Member, &LegVal, usize)> = vec![(mover, lg, side)];
-        // the mover's leg's place among its legs at `p`, by its name, one a movement's legs
-        // never share (`LOAD-LEG`, `leg l twice`): the other side's leg there in that place
-        // is paired with it
-        let k = at_place(mover.legs(), (p, unit))
-            .into_iter()
-            .filter_map(|li| mover.legs().get(li))
-            .position(|g| g.name == lg.name)
-            .ok_or_else(|| invariant("a leg with no end at its own place"))?;
+        let mut unpaired: Vec<&Member> = Vec::new();
         for o in others {
             if matches!(o, Member::Plan(i) if i.status == Status::Modelled) {
                 // a plan instance modelled past is never booked (L §5.19 Coverage)
                 continue;
             }
-            // each leg is compared with the other side's of its name, where it states one: two
-            // movements that agree in full leave no hole (L §6.1; N6, P36 on #241); where their
-            // names differ, each leg at `p` with the other's there by order, so each row is
-            // named once, one question per leg (tally 2.3.1 N245.18)
-            let named: Vec<usize> = (0..o.legs().len())
-                .zip(o.legs())
-                .filter(|(_, g)| g.name == lg.name)
-                .map(|(li, _)| li)
-                .collect();
-            let legs = if named.is_empty() {
-                at_place(o.legs(), (p, unit))
-                    .into_iter()
-                    .skip(k)
-                    .take(1)
-                    .collect()
-            } else {
-                named
+            // the legs at `p` pair by name first, then by their order among the unpaired: two
+            // movements that agree in full leave no hole, each row is named once, one
+            // question per leg (L §6.1 l.1807; N6, P36 on #241; tally 2.3.1 N245.18,
+            // rulings 25)
+            let legs = match partner_at((mover.legs(), o.legs()), &lg.name, (p, unit))? {
+                Partner::NotHere => continue,
+                Partner::Leg(li) => vec![li],
+                // a leg left with no partner where the other side books `p` is a
+                // disagreement, never a silent pick (rulings 25)
+                Partner::None => {
+                    let here = at_place(o.legs(), (p, unit));
+                    if !self.touching(m, id, o, &here, (p, unit))?.is_empty() {
+                        unpaired.push(o);
+                    }
+                    continue;
+                }
             };
             for (li, sj) in self.touching(m, id, o, &legs, (p, unit))? {
                 let g = o
@@ -443,6 +527,9 @@ impl Engine {
                     .ok_or_else(|| invariant("a leg the member lacks"))?;
                 touch.push((o, g, sj));
             }
+        }
+        if !unpaired.is_empty() {
+            return Ok(EndBook::Hole(unpaired_hole(m, (lg, &touch), &unpaired)?));
         }
         let mut movers: Vec<&str> = touch.iter().map(|(x, _, _)| x.id()).collect();
         movers.dedup();
@@ -1110,6 +1197,81 @@ version q2
                     .to_owned()
             ],
             "the read's question as the booking's"
+        );
+    }
+
+    /// Two rows stated `same`, card's legs named partly as bank's, in another order, equal
+    /// amounts and places (the review's probe `same_names`).
+    const NAMES_PARTLY: &str = r#"model same_names
+  tally 2
+  on 2026-05-20
+  start 2026-01-01
+  end 2026-03-31
+
+source s "probe"
+unit PLN: currency minor 0.01
+kind paid: event certain
+  leg cash: PLN
+  leg fee: PLN
+kind cpaid: event certain
+  leg charge: PLN
+  leg cash: PLN
+kind tpaid: event certain
+  leg pay: PLN
+place konto: accounts PLN lives 2026-01-01..
+place karta: accounts PLN lives 2026-01-01..
+place bankfee: outside lives 1900-01-01..
+input bank: observed
+input card: observed
+input third: observed
+
+ask b: bal(konto, 2026-03-31)
+ask fe: flows(konto, 2026-01)
+ask ob: bank[a1].fee.amount
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  opening[konto] = 1 000.00 PLN at 2026-01-01 start "s"
+  opening[karta] = 1 000.00 PLN at 2026-01-01 start "s"
+
+version q1
+  cite s
+  governs 2026-01-01..2026-03-31
+  known 2026-04-01
+  covers konto, karta
+  bank[a1] = (on: 2026-01-07, kind: paid, leg cash from konto to karta amount 100.00 PLN, leg fee from konto to bankfee amount 2.00 PLN) "bank"
+  card[b1] = (on: 2026-01-07, kind: cpaid, leg charge from konto to bankfee amount 2.00 PLN, leg cash from konto to karta amount 100.00 PLN) "card"
+  same card[b1] = bank[a1]
+"#;
+
+    #[test]
+    fn legs_pair_by_name_then_order_and_a_leg_left_alone_is_a_hole() {
+        // L §6.1 l.1807, §8.1 (tally 2.3.1 rulings 25, P42): cash with cash by name, fee with
+        // charge by order, all agreeing, so no question; card with one leg leaves bank's fee
+        // with no partner, a disagreement, never a silent pick; a field read of a row's own
+        // leg stays that row's
+        assert_eq!(
+            lines_of("same_names.tally", NAMES_PARTLY, &["b", "fe", "ob"]),
+            ["b: 898.00 PLN", "fe: -102.00 PLN", "ob: 2.00 PLN"],
+            "names pair first"
+        );
+        let one_leg = NAMES_PARTLY.replace(
+            "kind: cpaid, leg charge from konto to bankfee amount 2.00 PLN, leg cash from konto \
+             to karta amount 100.00 PLN",
+            "kind: tpaid, leg pay from konto to karta amount 100.00 PLN",
+        );
+        let hole = "?\"bank[a1] and card[b1] are one, but leg fee differs on 2026-01-07: 2.00 PLN \
+                    (bank[a1]) and none (card[b1])\" (bank[a1], card[b1])";
+        assert_eq!(
+            lines_of("same_fewer.tally", &one_leg, &["b", "fe", "ob"]),
+            [
+                format!("b: {hole}"),
+                format!("fe: {hole}"),
+                "ob: 2.00 PLN".to_owned()
+            ],
+            "the leg left alone"
         );
     }
 }

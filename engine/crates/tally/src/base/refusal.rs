@@ -164,7 +164,7 @@ impl Refusal {
             return self;
         }
         Refusal {
-            message: self.message.replace('\u{b7}', "."),
+            message: dotted(&self.message),
             ..self
         }
     }
@@ -187,9 +187,44 @@ impl Refusal {
     }
 }
 
+/// A joint model's line as it prints: each member's prefix, joined inside by `·`, printed with
+/// its dot (`a.x`), outside the line's quoted texts only, so a `·` a text writes prints as
+/// written (refcore's `replace(SEP, '.')`, which names never hold in a text). L §6.1, §2.4
+/// (tally 2.3.1 Q2.34).
+#[must_use]
+pub(crate) fn dotted(line: &str) -> String {
+    let mut out = String::with_capacity(line.len());
+    let (mut quoted, mut escaped) = (false, false);
+    for c in line.chars() {
+        if escaped {
+            escaped = false;
+        } else if c == '\\' && quoted {
+            escaped = true;
+        } else if c == '"' {
+            quoted = !quoted;
+        } else if c == '\u{b7}' && !quoted {
+            out.push('.');
+            continue;
+        }
+        out.push(c);
+    }
+    out
+}
+
 #[cfg(test)]
 mod tests {
-    use super::{Code, Load, Place, Refusal};
+    use super::{Code, Load, Place, Refusal, dotted};
+
+    #[test]
+    fn a_written_middle_dot_prints_as_written() {
+        // L §6.1, §2.4 (tally 2.3.1 Q2.34): a member's prefix prints with its dot, a `·`
+        // inside a quoted text as written, an escaped quote kept inside it
+        assert_eq!(
+            dotted("a\u{b7}q_dot: ?\"the fee \u{b7} as \\\"it\\\" \u{b7}\" (a\u{b7}fee)"),
+            "a.q_dot: ?\"the fee \u{b7} as \\\"it\\\" \u{b7}\" (a.fee)",
+            "outside the quotes only"
+        );
+    }
 
     #[test]
     fn a_refusal_prints_as_refcore_does() {

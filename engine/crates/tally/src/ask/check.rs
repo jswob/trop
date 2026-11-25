@@ -163,8 +163,8 @@ fn sides_text(
     }
     // each side as the comparison took it: a key literal the other side's key, a four-digit
     // literal beside a year that year (refcore's sides, evaluated as load resolved them);
-    // each printed in its type, a declared item's `%` kept, and the difference plain (L §2.4
-    // Values; tally 2.3.1 R4, N256.7)
+    // each printed in its type, a declared item's `%` kept, and the difference too, `%` kept
+    // by `-` where both sides have it (L §2.4 Values l.342; tally 2.3.1 R4, N256.7, P42)
     let (a, b) = resolved_sides(m, (left, a), (right, b))?;
     let text = format!(
         "differs: {lt} = {}, {rt} = {}{}",
@@ -211,7 +211,10 @@ fn difference(m: &Reality, (a, b): (&Value, &Value), ask: &str) -> Result<String
         None
     };
     match keyed.unwrap_or_else(|| arith(m, Op::Sub, a, b)) {
-        Ok(d) => Ok(format!(", difference {}", plain(m, &d)?)),
+        Ok(d) => Ok(format!(
+            ", difference {}",
+            d.typed_text(m).map_err(num_stop)?
+        )),
         Err(Stop::Refused(r)) if !matches!(r.code(), Code::Load(_)) => {
             Ok(format!(", difference refused: {}", r.text()))
         }
@@ -221,9 +224,8 @@ fn difference(m: &Reality, (a, b): (&Value, &Value), ask: &str) -> Result<String
 
 /// A side as a check prints it in place of a decided comparison: a refusal as `refused: …`, a
 /// key outside its index as its `RUN-KEY`, under `partial` a hole in its linear form (tally
-/// 2.1.8 R15), any other
-/// value as L §5.18 prints it (refcore's `fmt_value` with no static type and the line's
-/// `partial`).
+/// 2.1.8 R15), any other value as L §5.18 prints it, in its type (L §2.4 l.342; refcore's
+/// `fmt_value` and the line's `partial`).
 fn side_text(m: &Reality, item: &Item) -> Result<String, Stop> {
     if let Item::Value(Value::Hole(h)) = item
         && let Some(text) = partial_text(m, h)?
@@ -236,13 +238,10 @@ fn side_text(m: &Reality, item: &Item) -> Result<String, Stop> {
             "refused: {} {text} is outside {index}",
             Code::Run(Run::Key).as_str()
         )),
-        Item::Value(v) => plain(m, v),
+        // in its type beside a hole or a refused side too (L §2.4 l.342; tally 2.3.1 N256.7,
+        // P42 note 1)
+        Item::Value(v) => v.typed_text(m).map_err(num_stop),
     }
-}
-
-/// A value as refcore's `fmt` prints it.
-fn plain(m: &Reality, v: &Value) -> Result<String, Stop> {
-    v.text(m).map_err(num_stop)
 }
 
 /// The law date a side is read at: its own `as if {law D}`'s D where it states one, else the
@@ -442,6 +441,59 @@ version v
             heads(&text),
             ["refused: LOAD-KEY 2026-08 is not a key of qs (points.tally:24)"],
             "as the bare literal"
+        );
+    }
+
+    /// Declared `num %` sides beside a decided, a hole and a refused side.
+    const PCT_SIDES: &str = r#"model chk
+  tally 2
+  on 2026-06-30
+  start 2026-01-01
+  end 2026-12-31
+
+source s "invented"
+input p: num %
+input q: num %
+input ph: num %
+input xn: num %
+
+ask c1: check p == q
+ask c2: check p == ph
+ask c3: check xn + p == p
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  p = 10 % "s"
+  q = 30 % "s"
+  ph = ?"which?" "s"
+  xn = none "s"
+"#;
+
+    #[test]
+    fn a_declared_percent_side_prints_in_its_type_beside_a_hole_too() {
+        // L §2.4 l.342, §5.18 (tally 2.3.1 N256.7, P42 note 1): each side in its type,
+        // whatever the other side is, and the difference of two `%` sides with `%`
+        let given = vec![Given {
+            path: "chk.tally".to_owned(),
+            bytes: Some(PCT_SIDES.as_bytes().to_vec()),
+        }];
+        let answer = run(Files::new(given), &Request::new(Asks::Every)).expect("an answer");
+        let lines: Vec<&str> = answer
+            .lines()
+            .iter()
+            .filter(|l| !l.starts_with(' '))
+            .map(String::as_str)
+            .collect();
+        assert_eq!(
+            lines,
+            [
+                "c1: differs: p = 10 %, q = 30 %, difference -20 %",
+                "c2: p = 10 %, ph = ?\"which?\" (ph)",
+                "c3: xn + p = refused: RUN-NONE xn is none here: arithmetic, p = 10 %",
+            ],
+            "every side in its type"
         );
     }
 }

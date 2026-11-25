@@ -175,6 +175,23 @@ impl Engine {
         Ok(out)
     }
 
+    /// The arguments of a call of a date or number built-in, evaluated in order, the first
+    /// `none` among them refused by its read and the built-in's name, ahead of any hole:
+    /// a refusal outranks a hole (L §8.4 `RUN-NONE`'s row, E §8; tally 2.3.1 N256.8, P42).
+    pub(super) fn args_named(
+        &mut self,
+        m: &Reality,
+        call: &Call,
+        env: &Env,
+        ctx: Ctx,
+    ) -> Result<Vec<Value>, Stop> {
+        let vals = self.args(m, call, env, ctx)?;
+        for (i, v) in vals.iter().enumerate() {
+            named_none(m, call, (i, v), env)?;
+        }
+        Ok(vals)
+    }
+
     /// `round(x, u, mode)`: the multiple of u the mode chooses, money when u is a whole
     /// number of minor units of x's currency, an int for `round(x, 1, m)` of a plain number
     /// (refcore's `c_round` and check.py's `c_round` for the result's type); a step written as
@@ -215,19 +232,13 @@ impl Engine {
         let snap = self.trace_snap();
         let vals = self.args(m, call, env, ctx)?;
         let holes: Vec<Option<&crate::hole::Hole>> = vals.iter().map(Value::as_hole).collect();
-        let none_at = vals.iter().position(|v| *v == Value::None);
-        if holes.iter().any(Option::is_some) {
-            // a refusal outranks a hole: a none beside a hole is refused unnamed (refcore's
-            // `hole_args` with its `strict`)
-            if none_at.is_some() {
-                let text = format!("a value is none here: {}", call.name);
-                return Err(refuse(Run::None, text));
-            }
-            return hole_of(&holes);
-        }
-        if let Some(i) = none_at {
-            // the read and the built-in's name (L §8.4 `RUN-NONE`'s row; tally 2.3.1 R4, P31)
+        // a refusal outranks a hole, and a none beside a hole names its read and the
+        // built-in too (L §8.4 `RUN-NONE`'s row; tally 2.3.1 R4, P31, P42 B1)
+        if let Some(i) = vals.iter().position(|v| *v == Value::None) {
             return Err(none_arg(m, call, i, env, &call.name));
+        }
+        if holes.iter().any(Option::is_some) {
+            return hole_of(&holes);
         }
         if vals.is_empty() {
             return Err(arity());
@@ -258,16 +269,10 @@ impl Engine {
     /// L §3.3, §7.1, §7.3.
     fn pow(&mut self, m: &Reality, call: &Call, env: &Env, ctx: Ctx) -> Result<Value, Stop> {
         let [x, k] = self
-            .args(m, call, env, ctx)?
+            .args_named(m, call, env, ctx)?
             .try_into()
             .map_err(|_| arity())?;
-        let some_hole = x.as_hole().is_some() || k.as_hole().is_some();
-        for v in [&x, &k] {
-            if *v == Value::None {
-                return Err(refuse(Run::None, "a value is none here: pow".to_owned()));
-            }
-        }
-        if some_hole {
+        if x.as_hole().is_some() || k.as_hole().is_some() {
             return hole_of(&[x.as_hole(), k.as_hole()]);
         }
         // off the list: a ranged date is the hole (L §4.4)
@@ -1020,6 +1025,9 @@ input cal: calendar
 input xn: num
 input x1: num
 input tn[k in ks]: num
+input xh: num
+input mz: month
+input kk: key ks
 
 ask c_if: if ok[b] then d0 else d1
 ask c_and: ok[a] and ok[b]
@@ -1039,6 +1047,14 @@ ask c_age: age_months(d0, dn)
 ask c_sum: sum(tn[k] for k in ks)
 ask c_agm: max(tn[k] for k in ks)
 ask c_lt: xn < x1
+ask c_mh: min(xn, xh)
+ask c_st: start_of(mz)
+ask c_am: add_months(d0, kn)
+ask c_pw: pow(xn, x1)
+ask c_wd: weekday(dn)
+ask c_ib: is_business(dn, cal)
+ask c_win: window(d0, dn)
+ask c_key: tn[kk]
 
 version v
   cite s
@@ -1062,6 +1078,9 @@ version v
   x1 = 1 "s"
   tn[a] = 1 "s"
   tn[b] = none "s"
+  xh = ?"xh" "s"
+  mz = none "s"
+  kk = none "s"
 "#;
 
     #[test]
@@ -1089,22 +1108,30 @@ version v
                 "c_acc (k = b): refused: RUN-NONE r[b] is none here: accrue",
                 "c_age: refused: RUN-NONE dn is none here: age_months",
                 "c_agm: refused: RUN-NONE tn[b] is none here: max",
+                "c_am: refused: RUN-NONE kn is none here: add_months",
                 "c_and: refused: RUN-NONE ok[b] is none here: a condition",
                 "c_bus: refused: RUN-NONE kn is none here: add_business",
                 "c_dcf: refused: RUN-NONE dn is none here: dcf",
+                "c_ib: refused: RUN-NONE dn is none here: is_business",
                 "c_if: refused: RUN-NONE ok[b] is none here: a condition",
                 "c_in: refused: RUN-NONE st[b] is none here: a membership test",
+                "c_key: refused: RUN-NONE kk is none here: a key",
                 "c_lst: refused: RUN-NONE kn is none here: last_business",
                 "c_lt: refused: RUN-NONE xn is none here: ordering",
                 "c_max: refused: RUN-NONE xn is none here: max",
+                "c_mh: refused: RUN-NONE xn is none here: min",
                 "c_min: refused: RUN-NONE xn is none here: min",
                 "c_not: refused: RUN-NONE ok[b] is none here: a condition",
                 "c_or: refused: RUN-NONE ok[b] is none here: a condition",
                 "c_per: refused: RUN-NONE r[b] is none here: periodic",
+                "c_pw: refused: RUN-NONE xn is none here: pow",
                 "c_rnd: refused: RUN-NONE md is none here: round",
+                "c_st: refused: RUN-NONE mz is none here: start_of",
                 "c_sum: refused: RUN-NONE tn[b] is none here: sum",
+                "c_wd: refused: RUN-NONE dn is none here: weekday",
+                "c_win: refused: RUN-NONE dn is none here: window",
             ],
-            "refcore's bytes"
+            "refcore's bytes, and L §8.4's for the rows refcore lags on (P42)"
         );
     }
 }

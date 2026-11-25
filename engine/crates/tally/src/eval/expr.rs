@@ -324,6 +324,11 @@ impl Engine {
                 if let Some(lit) = year_literal(e, &v)? {
                     return Ok(Given::Literal(lit));
                 }
+                // a key that is none names its read (L §8.4 `RUN-NONE`'s row; tally 2.3.1
+                // P42, the review's note 6)
+                if v == Value::None {
+                    return Err(super::bindings::none_here(m, e, env, "a key"));
+                }
                 Ok(Given::Value(v))
             }
         }
@@ -424,7 +429,7 @@ impl Engine {
 
     /// `if c then a else b` with hole condition `cond_hole`: both branches evaluated, the
     /// `if` a hole unless they are equal (refcore's `e_if`). L §5.11 Logic, §8.1.
-    fn choice_unknown(
+    pub(super) fn choice_unknown(
         &mut self,
         m: &Reality,
         (cond_hole, yes, no): (&Hole, &Expr, &Expr),

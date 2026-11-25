@@ -607,7 +607,7 @@ impl Engine {
         ctx: Ctx,
     ) -> Result<Value, Stop> {
         let [a, b] = self
-            .args(m, call, env, ctx)?
+            .args_named(m, call, env, ctx)?
             .try_into()
             .map_err(|_| invariant("a built-in called with the wrong number of arguments"))?;
         if a.as_hole().is_some() || b.as_hole().is_some() {

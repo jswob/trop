@@ -9625,3 +9625,234 @@ The 47 by cause:
 - the last `check quick` follows this entry's commit.
 
 **Next:** T's re-run of the 47 on pin 7, then G5's review.
+
+## 2026-11-25 tally 2.3.1 G3, the last fix: statement G (issue #259)
+
+The builder's turn on statement G (`inputs/rulings.md` item 24, pick P37): the fix review's BF1 and BF2 (`inputs/review-g3fix.md`) and its note 2. The range is 48d6aa2d..ab3b9173. Before each commit I swept every probe text of G3's two reviews (`review/g3/{min,p}`, `review/g3fix/*/`, 521 texts) against refcore at the branch's pin, copied to `tmp/spec-2.3.1/g3/g/ref/`, and against the base. Every moved line is G's. I left links, the printer and pins 6 and 7's forms alone.
+
+**Commits** (none pushed):
+- d9f33cd2 `fix(load): a pin is read by its target's row reader` (BF1, BF2)
+- ab3b9173 `fix(load): a year reached through an if's arms in a rule is a date` (note 2)
+
+**The one path.** `set_pin` now has one path, `pin_value`. It replaces `pin_key`, `pin_literal`'s use there, `row_refusal` and the literal half of `typed_pin`:
+- A pin whose every leaf, through brackets, a sign and both arms of an `if`, is a figure (or a date, month or quarter with no sign over it) is read by `eval::convert`, load's own row reader. This is `eval::pin_row`. Each literal is read at the target's type and index in the text's order, and each `if`'s condition is typed as `conditional` types it.
+- The run (`row_pinned`) takes the arm the conditions pick and reads it by the same reader. A hole condition reads both arms, as `e_if` does.
+- Any other value is typed and assigned as before.
+- Left out of the row path, as refcore's `pin_row` leaves them: a record, a distribution, an undeclared type, and a unit keyed by `$v`, whose row needs its keys' units.
+- `pin_literal` stays only for sample pins and `exact.rs`.
+- A fraction pinned is now read as its row (P22 N3). Refcore at the pin agrees: `1/2` on money is `LOAD-PRECISION 1/2 terminates; write it as a decimal`. Our own `tests/load_cases.rs` pin-fraction case moved to that line.
+- A date literal pinned in a rule is now read as its row, with no date rule, as in refcore's `pin_row`. No probe moved by it.
+
+**Each probe's line now** (`g3/g/out/g2/`):
+- **Off-grid, LOAD-KEY:**
+  - `b4c/b4_h5`: `LOAD-KEY 2026-08 is not a key of qs (b4_h5.tally:31)`, refcore's (was `h5: 3`).
+  - `b4c/b4_h4`: `LOAD-KEY 2026-08 is not a key of qs (…:31)` (was `h4: 3`); refcore still says RUN-KEY, the writer's to mend.
+  - `min/key_pin_paren`: `LOAD-KEY 2028 is not a key of ys (…:11)`, refcore's (was `k6: 2 028`).
+  - `n1b/n1_k3`: `LOAD-KEY -10 is not a key of tens (…:31)`, refcore's.
+  - `n1b/n1_k6` and `k7` are refcore's too.
+  - `b4c/b4_h7` (`yk = (if b then 2028 else 2029)`): `LOAD-KEY 2028 is not a key of ys`. Refcore prints `the pin of yk is year4, not a key of ys`. It is G's clause, but not among the writer's three, so it is for the writer.
+- **Wrong type, the row's words:**
+  - `min/n1_paren_int`: `LOAD-UNIT 2.5 is not an int (…:10)`;
+  - `min/n1_signed_int`: `LOAD-UNIT -2.5 is not an int`;
+  - `min/n1_year_pin`: `LOAD-KEY 2028 is not a key of ys (…:11)`;
+  - `n1/n1_p16`: `LOAD-UNIT a rate states its period: 5 (…:25)`;
+  - `n1/n1_p2` and `p3` are the same.
+  - All are refcore's bytes.
+- **On-grid, loads:**
+  - `b4c/b4_h8`: `h8: 29`, `pinned: yk = 2029` (was `RUN-KEY 2 029 is outside ys`).
+  - `b4/b4_f27`: `f27: 3`, `pinned: qk = 2026-07`, unchanged.
+  - Refcore refuses both, and the writer mends them.
+- **In a rule, LOAD-LITERAL:** `rule/r4`, `r7`, `r10`: `LOAD-LITERAL a date in a rule; make it a version (…:29)`, refcore's (were `z1: false`). `r8` already was. A year reached through brackets or arms beside a year key takes the date rule at the comparison's scope, as the bare one does through its year entry.
+- **Fractions:** `g3/p/r3f_f1`, `f2`, `f4` (`ratio = 1/3`) answer `1/3 (0.333333333333333)`, refcore's (were `LOAD-PARSE … only in rows`).
+- **Still different from refcore:** 19 texts (37 at the base):
+  - G's forms where refcore lags: `b4_h4`, `h7`, `h8`, `f27`, `b4c/b4__all`.
+  - The rest predate this turn: refcore's internal `tupitem` (`b1_a19`, `b1__all`, `b1__rev`, `b2_c10`, `b2__all`, `tup_t10`), N2 (`r3p_p16`), N4 (`mn_a4`), N5 (`mn_a12`, `b3_d23`), note 4 (`b4_f34`), N9's `(file:line)` (`r5e_e18`, `r5g_g5`) and #261 (`q26`).
+
+**`check commit`'s red ids** (`tmp/spec-2.3.1/g3/g/red-G.txt`, from `tests.log`; counted as G5's last entry counts, the two CLI usage ids left out): 186.
+- The last entry's 191, less 5 now green, all G's: `m4/fixes/g2fix/p5_b4`, `p7_yk_out`, `r3_y4_dk`, `r3_y4_mk` and `m1/fixes/g13/r_s_model_with_r_s_k20`. T's stores held the row's words (`2040 is not a key of ys`, `3.00 USD and money PLN have different units`), which the engine now prints.
+- None new. The red tests are T's stored answers alone: 41 of 1601 targets, all in `tally-runner`. The 3 new unit tests and our own `load_cases` pass.
+
+**Size** (`git diff --shortstat 48d6aa2d HEAD -- engine/crates`): 7 files, +358 −122.
+
+| Commit | Lines (in, out) |
+|---|---|
+| d9f33cd2 | +333 −122 (tests 110) |
+| ab3b9173 | +25 −0 (tests 20) |
+
+- **Kernel files touched:** none. The changes are in `load/pins.rs`, `load/compare.rs`, `eval/convert.rs`, `eval/pins.rs`, `eval/expr.rs` (`choice_unknown` shared) and `lib.rs`.
+- **Unit tests** (3 new):
+  - `eval/pins.rs` `a_pin_is_refused_as_its_row_through_brackets_signs_and_arms` (8 pins) and `an_on_grid_arm_pinned_is_its_key`;
+  - `load/compare.rs` `a_year_reached_through_brackets_or_arms_in_a_rule_is_a_date`.
+- **Fences:** no edit to a fence or its twin.
+- **Exceptions:** +0. `exceptions --check`: 6; report-only hits 8.
+- **Mutants:** none proved. Sites for T:
+  - `pin_row`'s `dated && !signed` and its type exclusions;
+  - `row_pin`'s `negative` flip;
+  - `pin_condition`'s agreeing arms;
+  - `period_literal`'s year rule.
+- **STOP-REPORTs:** none new.
+- **For the writer** (refcore at the branch's pin, beside its three lines of G): `b4_h7`'s off-grid arm, which G makes `LOAD-KEY 2028 is not a key of ys`.
+- **check quick:** green, 11 steps.
+- **check commit:** red at tests, stopped after 10 of 24 steps (113 s), red only on T's stored answers: the 186 ids above.
+
+## 2026-11-25 tally 2.3.1 G5, the review's fixes: the last fix (issue #259)
+
+The review of G5's two turns found 2 blocking issues and left four of R4's rows half built. The lead ruled them (pick P42, rulings 25). Refcore prints the same wrong lines on every one of these forms, so the bytes below follow L §8.4, L §2.4 l.342 and rulings 25, not refcore. Five items are built and one is handed off.
+
+**Commits:**
+
+| Commit | Items | Lines (in, out) |
+|---|---|---|
+| 31bfbbfd `fix(eval): RUN-NONE names the read beside a hole, in dates and keys` | 1 (B1), 4 (note 2, N256.8), 6 (note 6) | +60 −26 |
+| e30d8200 `fix(ask): a check's % side prints in its type beside a hole too` | 3 (note 1, N256.7) | +64 −12 |
+| cea88537 `fix(book): same legs pair by name, then order; one left alone is a hole` | 2 (B2, note 5, rulings 25) | +187 −25 |
+
+Items 1, 4 and 6 share one commit, against the brief's one commit an item: they share one unit test (`NONE_WORDS`) and one helper.
+
+**Each item's probe line now** (the review's `p/` texts, the release binary at cea88537's code):
+- **1, B1:** `b1_min` `a: refused: RUN-NONE xn is none here: min`. `max(pn, ph)` gives `pn is none here: max`, `q_arith2`'s form.
+- **2, B2 and note 5:**
+  - `same_fewer` `b` and `fl`: `?"bank[a1] and card[b1] are one, but leg fee differs on 2026-01-07: 2.00 PLN (bank[a1]) and none (card[b1])" (bank[a1], card[b1])`, not 898.00;
+  - `same_names`: `b: 898.00 PLN`, `fe: -102.00 PLN`, `ob: 2.00 PLN`, no question (cash pairs with cash, fee with charge);
+  - `same_plan` `b`: `?"p1 and p2 are one, but leg fee differs on 2026-03-05: 2.00 PLN (p1) and none (p2)" (p1, p2)`;
+  - sm18's two questions on konto and one on karta are unchanged (its unit test).
+- **3, note 1:**
+  - `b3_chk`: `c1: differs: p = 10 %, q = 30 %, difference -20 %` and `c2: p = 10 %, ph = ?"which?" (ph)`;
+  - `check2` `c2`: `xn + p = refused: RUN-NONE xn is none here: arithmetic, p = 10 %`; `c5`: `difference -10 %`.
+  - The comment that cited l.342 for a plain difference is mended.
+- **4, note 2:** `nonesw`: `s01 mn is none here: start_of`, `s05 kn … add_months`, `s07 dn … overlap_days`, `s10 xn … pow`, `s11 mn … day_of`, `s22 dn … window`. The same holds for `year_of`, `days_between`, `add_days`, `add_years`, `weekday` and `is_business`, all through `args_named`, ahead of a hole (E §8: a per-value refusal outranks a hole).
+- **6, note 6:** `t[kk]` with `kk` none gives `kk is none here: a key` (`given_key`; unit test `c_key`).
+- **5, note 3, not built (hand-off):**
+  - `pctyear` still prints `a1: 0.05 1/year` and `a2: 0 1/year`.
+  - The cause is at load: `num %/year` is declared `Ty::Num(1/year, Plain)`. Only a bare `%` gets `Shown::Percent` (`load/decls.rs` `is_percent`), so no printer can tell it from `num 1/year`.
+  - The fix is a type change:
+    - `is_percent` takes `%` among other terms;
+    - `expr.rs:1373`'s coercion (×1/100, unit one) keeps the unit;
+    - `ty.rs:217` prints `num %/year`;
+    - `typed_text` prints `%` in place of the unit's `1`.
+  - `pins.rs:749`, `calls.rs:978` and `arith.rs:249` match `Shown::Percent` at any unit and need a look.
+  - I left it out: it is past this turn's budget, and it is a note, not a blocking item.
+
+**For the lead and the writer (judged, not given):**
+- Rulings 25 gives no figure for the side with no partner leg. The engine prints `none` there (`… and none (card[b1])`): Tally's word for no value.
+- Its days are each side's: the paired legs' days and the unpaired row's own day.
+- The writer can mend refcore to the same bytes, or the lead can rule another word.
+
+**B2's code** (`book/same_booking.rs`):
+- `partner_at` pairs at the place: the leg of the same name there, else the k-th of the other side's legs whose names find no partner on either side, k being the mover's leg's place among its own.
+- `NotHere` (the other side has no leg at the place) books as before.
+- A missing partner is a disagreement only where the other side books the place (`touching`).
+- `unpaired_hole` names every side once, in id order.
+- The `ENGINE-INVARIANT` moved into `partner_at` and is still unreachable (the review traced all four callers).
+- The read path (`sides_differ`, by name over all legs) is unchanged: a row's own leg read stays that row's.
+
+**`check commit`'s red ids** (`tmp/spec-2.3.1/g5/red-H.txt`, 187, from `tests-H.log`, counted as before, the two CLI usage ids left out), against G3's last entry's 186 (`g3/g/red-G.txt`):
+- **None gone.**
+- **One new:** `fixes/p12/is_business/h_cal__n_d`. T's stored answer is refcore's `a value is none here: is_business`; the engine gives `d_n is none here: is_business` (N256.8, item 4).
+- **The 186:** unchanged, among them `q_arith2`, `q_abs`, `q_min` and `q_sum` from G5's earlier 47, now in the forms above.
+- **The red tests:** 42 of 1603, all in `tally-runner` (T's). My unit tests pass:
+  - `NONE_WORDS`, with 8 new asks;
+  - `a_declared_percent_side_prints_in_its_type_beside_a_hole_too`;
+  - `legs_pair_by_name_then_order_and_a_leg_left_alone_is_a_hole`.
+
+**For T:** the stored answers of these rows re-run once the writer has mended refcore to P42 (W13).
+
+**Size** (`git diff --shortstat fdcebe97 HEAD -- engine/crates`): 7 files, +311 −63.
+
+**Fences:** no fence module or twin edited.
+
+**STOP-REPORTs:** none. The `none` figure above is a judgement, flagged for the lead, not a stop.
+
+**Exceptions:** delta 0. `exceptions --check`: 6, report-only 8.
+
+**Mutants:** none proved. Sites for T:
+- `partner_at`'s name match, `my_free` and `their_free`, and `get(k)`;
+- `same_end`'s `touching(...).is_empty()` guard on an unpaired side;
+- `args_named`'s loop;
+- `extreme`'s `none` ahead of a hole;
+- `given_key`'s none.
+
+**Usage:** about 1.52 % of the week by `engine/tools/usage tmp/spec-2.3.1/g5-ids.txt` before this entry, about 0.23 points this turn.
+
+**Checks:**
+- `check commit: red at tests, stopped after 10 of 24 steps (118s)`, red only on T's stored answers: the 187 ids above (42 of 1603 test targets, all T's);
+- `check quick: green, 11 steps (57s)` at cea88537's tree;
+- `check step release-binary: green, 1 step (106s)`;
+- the last `check quick` follows this entry's commit.
+
+**Next:** the lead's probes of this fix (P39). Item 5 (`num %/year`) waits for the lead: a builder turn, or #260.
+
+## 2026-11-25 tally 2.3.1 G5, the round's last engine commits (issue #259)
+
+T's fifth re-run, on the eighth pin, is in the build (de4030b0). This turn takes T's last red ids that the engine owns. It is the round's last engine commit (R-77: it follows T's logged-red commit 8b2a4816).
+
+**Commits:**
+
+| Commit | Item | Lines (in, out) |
+|---|---|---|
+| b75de583 `fix(ask): a joint line keeps a written · inside its quoted texts` | 2, `q_dot` (Q2.34) | +39 −3 |
+| 59cce863 `fix(ask): a command with no path or no ask id is a usage error` | 3, S12's two CLI rows | +35 −17 |
+
+**Each item's line now:**
+
+1. **`fixes/g5/p6_unc`: not changed, a STOP-REPORT below.**
+   - The engine's `c1`, `count(x in promises over 2026-02) with uncertain`, lists `held: repay_dom = 1 (v), read for 2026-02-01`. Refcore at pin 8 also lists `held: owed[2026-02] = 500.00 PLN (v), read for 2026-02`.
+   - This is not the `held:` merge (`merged_held` merges what it is given). The engine never reads `owed[2026-02]` for a count.
+   - The id has been red all round: it is among G2's 144, my 191 and 187, and G3's 186.
+2. **`items/g5/q_dot`: green.** `a.q_dot: ?"the fee · as the bank states it" (fee)`.
+   - The cause: a joint model's lines turned every `·` into `.` (`api.rs` `joint_lines`, `Refusal::shown`). `·` is the members' internal separator, so a `·` the text writes went too.
+   - Now `base::dotted` turns it into `.` outside the line's quoted texts only. Names never hold a `·`, and every written text prints in quotes.
+3. **`fixture/base/no-path` and `run/ask-empty`: green.**
+   - `check` with no path, and `run … --ask` with no ask id, are usage errors: exit 2 with the usage text (O §2, "a missing operand").
+   - `reprint` and `run` with no path likewise.
+4. **Statement G's five** (`g13 k20` and the four `g2fix` rows): none is red at this tree. They are green on G3's last fix.
+
+**Unit tests:**
+- `base/refusal.rs` `a_written_middle_dot_prints_as_written`;
+- `tally-cli` `anything_else_is_a_usage_error`, with five missing-operand cases.
+
+**`check commit`'s red ids** (`tmp/spec-2.3.1/g5/red-J.txt`, 10), by holder:
+- **M5b (T holds), 6:** `fixes/t231rv2/f10_two_day_parts/` `b4`, `b6`, `b8`, `e8`, `k8`, `p6` (not implemented).
+- **#261 (T holds), 1:** `later/inputs_of_balance`, the listing-only line `card_2026:late` against the engine's `card_2026:opening[konto]`.
+  - `held.tsv` holds it under the target `m1_fixes`, but the vector runs in `m1_checks_g11`. For T: the hold's target.
+- **P42's forms, the writer's W13, 2:** refcore at pin 8 still prints the unnamed form, and the engine prints L §8.4's form:
+  - `fixes/g1/a12_nonehole/q_arith2`: `pn is none here: max`, against refcore's `a value is none here: max`;
+  - `fixes/p12/is_business/h_cal__n_d`: `d_n is none here: is_business`.
+- **The STOP-REPORT below, 1:** `fixes/g5/p6_unc`.
+- **None else.** The red tests are 6 runner targets, all T's.
+
+**The round's engine size** (`git diff --shortstat 25a5a63d..HEAD -- engine/crates`): 67 files, +6 681 −1 198.
+
+**Exceptions:**
+- Over the round: delta 0. `engine/EXCEPTIONS.lock` is unchanged since 25a5a63d; `exceptions --check` gives 6, report-only 8.
+- This turn: 0.
+
+**Fences:** none edited. **Mutants:** none run this round (P39). Sites for T:
+- `dotted`'s quote and escape states;
+- `parse`'s `paths.is_empty()`;
+- `run_line`'s `after_ask && asks.is_empty()`.
+
+**Usage:** about 1.75 % of the week by `engine/tools/usage tmp/spec-2.3.1/g5-ids.txt` before this entry, about 0.2 points this turn.
+
+**Checks:**
+- `check commit: red at tests, stopped after 10 of 24 steps (107s)`, red only on the 10 ids above;
+- `check quick: green` at 59cce863's tree;
+- the last `check quick` follows this entry's commit.
+
+**Next:** the round's close. The lead rules this STOP-REPORT, and T holds or re-stores `p6_unc` and the two P42 rows.
+
+## STOP-REPORT 2026-11-25: `fixes/g5/p6_unc`, an uncertain instance's amount that a count doesn't sum
+
+- **Smallest input:** `fixes/g5/p6_unc` (`tests/m2/vectors.refcore`). `move repay[m in months]: promises` (an `event uncertain` kind) `on day_of(m, repay_dom)`, `leg cash … amount owed[m]`, with `owed = 500.00 PLN` and `repay_dom = 1` from `version v`, `governs 2026..`. The ask is `c1: count(x in promises over 2026-02) with uncertain`, at cut 2026-01-01.
+- **The engine:** `c1: 1`, `uncertain: repay[2026-02]`, `held: repay_dom = 1 (v), read for 2026-02-01`.
+- **The test (refcore at pin 8):** the same, plus `held: owed[2026-02] = 500.00 PLN (v), read for 2026-02`.
+- **What I think is wrong: the test (refcore).**
+  - L §8.2 One read set (l.2251) says a read over movements holds, for each movement, "what decided whether it counts and how much: its existence …, the amounts it sums".
+  - A `count` sums no amount, and `repay`'s existence doesn't read `owed`. So `owed[2026-02]` is no read of `c1`.
+  - The engine's `member_reads` builds this as decided at tally 2.3.1 Q1.10, pick P16: "its amounts only where a field read sums them".
+  - With a field read that sums (`… where x.cash.amount > 0 PLN`, or `c4`'s `sum`), both interpreters print the `owed` line alike.
+  - The brief names R4's `held:` merge. The merge isn't involved: the engine never reads the row.
+- **What I tried:** the probe above, with and without the amount read; the `held:` merge code; the spec's row.
+- **What I did not do:** change the code. Listing the uncertain instance's full reads would contradict l.2251 and P16 for every count.
+
+**STOP-REPORTs open:** this one.

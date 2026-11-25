@@ -290,6 +290,11 @@ impl Checker {
             if let Some(y) = self.year4.get_mut(entry) {
                 y.keyed = true;
             }
+        } else if shared == Some(PeriodKind::Year) {
+            // a year reached through brackets or an `if`'s arms is a date as the bare one is,
+            // under the date figure's literal rule: in a rule, `LOAD-LITERAL` (L §2.5 Keys,
+            // §7.1; tally 2.3.1 statement G, refcore's `reach_leaves` with each leaf's rule)
+            lit_rule(scope, Figure::Date, "", None)?;
         }
         for lit in lits {
             super::keyed::resolve_lit(m, scope, &lit_expr(lit), &Domain::Index(ix.clone()))?;
@@ -716,6 +721,26 @@ version ver
                 heads(&text).first().map(String::as_str),
                 Some(refusal),
                 "{ask}"
+            );
+        }
+    }
+
+    #[test]
+    fn a_year_reached_through_brackets_or_arms_in_a_rule_is_a_date() {
+        // L §2.5 Keys, §7.1 (statement G): beside a year key it is a date, so a rule refuses it
+        for rule in [
+            "def z: bool = yk == (2029)",
+            "def z: bool = yk == (if b then 2029 else 2026)",
+            "def z: bool = (if b then 2029 else 2026) == yk",
+        ] {
+            let text = PERIODS.replace(
+                "ask n3: vv[if b then 2026-07 else 2026-10]",
+                &format!("{rule}\nask n3: z"),
+            );
+            assert_eq!(
+                heads(&text).first().map(String::as_str),
+                Some("refused: LOAD-LITERAL a date in a rule; make it a version (tuple.tally:17)"),
+                "{rule}"
             );
         }
     }
