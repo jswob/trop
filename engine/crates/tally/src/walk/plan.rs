@@ -1853,6 +1853,47 @@ version jan
     }
 
     #[test]
+    fn flows_for_a_period_over_a_movement_whose_period_is_a_hole_is_that_hole() {
+        // L §5.14 l.1363, §8.1 (tally 2.3.1 part 1's review B5): a row is for its named tuple's
+        // period and an instance for its own; one that is a hole makes `, for k` that hole, on
+        // the row's path (January's row) and on the instance's (February's plan)
+        let text = |hole: &str| {
+            let rows: String = ["01", "02", "03", "04", "05", "06"]
+                .iter()
+                .map(|mm| {
+                    if *mm == hole {
+                        format!("\n  per[2026-{mm}] = ?\"which period?\" \"s\"")
+                    } else {
+                        format!("\n  per[2026-{mm}] = 2026-{mm} \"s\"")
+                    }
+                })
+                .collect();
+            FIRST
+                .replace("OK", "true \"ok jan\"")
+                .replace("  when ok[m]", "  when ok[m]\n  for per[m]")
+                .replace(
+                    "input d5: int",
+                    "input d5: int\n\ninput per[m in month]: month",
+                )
+                .replace("  d5 = 5 \"s\"", &format!("  d5 = 5 \"s\"{rows}"))
+                .replace(
+                    "ask c:",
+                    "ask ff: flows(pot, 2026-01-01..2026-03-31, for 2026-03)\n\nask c:",
+                )
+        };
+        for (hole, path) in [("01", "the row"), ("02", "the plan")] {
+            let t = text(hole);
+            let files = [("first.tally", t.as_str())];
+            let line = answer(&files, "ff").first().cloned().expect("a line");
+            assert_eq!(
+                line,
+                format!("ff: ?\"which period?\" (per[2026-{hole}])"),
+                "{path}"
+            );
+        }
+    }
+
+    #[test]
     fn a_binding_over_the_kind_carries_no_link_read_of_an_instance_outside_its_span() {
         // L §8.2 l.2252 (tally 2.3.1 R2, item 6; G2's review B4): January's modelled instance
         // and its row lie outside March's span, so March's sum over the kind lists none of
