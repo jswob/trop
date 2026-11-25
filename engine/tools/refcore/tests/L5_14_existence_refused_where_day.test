@@ -1,0 +1,72 @@
+# tally 2.3.1 R6 (L §5.14 An instance's existence). w1 to w5 share one text: spend[2026-05]'s key has a
+# `where` that divides by zero; its day or `when` varies. Day 05-25, `when` true: a refused existence is that
+# tuple's refused movement, its day still read; the others exist by their own cells: f2 10.00, b3 970.00, c 3
+# (the refused one is out of those spans); f5, b5, n refused. Unchanged: a guard of the order.
+=== w1_day.tally
+model w
+  tally 2
+  on 2026-01-01
+  start 2026-01-01
+  end 2026-05-31
+
+source s "probe"
+unit PLN: currency minor 0.01
+index month = month 2026-01..2026-05
+place konto: accounts PLN lives 2026-01-01..
+place shop: outside lives 1900-01-01..
+input dz[m in month]: int
+input ten: int
+input amt: money PLN
+input dd[m in month]: date
+input okw[m in month]: bool
+
+move spend[m in month where ten / dz[m] > 0]: transfers
+  on dd[m]
+  when okw[m]
+  leg cash from konto to shop amount amt
+
+ask f2: flows(spend, 2026-02)
+ask f5: flows(spend, 2026-05)
+ask b3: bal(konto, 2026-03-31)
+ask b5: bal(konto, 2026-05-31)
+ask c: count(t in transfers over 2026-01 .. 2026-03)
+ask n: count(t in transfers over 2026-01 .. 2026-05)
+ask e5: spend[2026-05].day
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  opening[konto] = 1 000.00 PLN at 2026-01-01 start "s"
+  ten = 10 "s"
+  amt = 10.00 PLN "s"
+  dz[2026-01] = 1 "s"
+  dz[2026-02] = 1 "s"
+  dz[2026-03] = 1 "s"
+  dz[2026-04] = 1 "s"
+  dz[2026-05] = 0 "s"
+  dd[2026-01] = 2026-01-25 "s"
+  dd[2026-02] = 2026-02-25 "s"
+  dd[2026-03] = 2026-03-25 "s"
+  dd[2026-04] = 2026-04-25 "s"
+  okw[2026-01] = true "s"
+  okw[2026-02] = true "s"
+  okw[2026-03] = true "s"
+  okw[2026-04] = true "s"
+  dd[2026-05] = 2026-05-25 "s"
+  okw[2026-05] = true "s"
+=== expect
+b3: 970.00 PLN
+  cut 2026-01-01
+b5: refused: RUN-DIV division by zero
+  cut 2026-01-01
+c: 3
+  cut 2026-01-01
+e5: refused: RUN-DIV division by zero
+  cut 2026-01-01
+f2: 10.00 PLN
+  cut 2026-01-01
+f5: refused: RUN-DIV division by zero
+  cut 2026-01-01
+n: refused: RUN-DIV division by zero
+  cut 2026-01-01

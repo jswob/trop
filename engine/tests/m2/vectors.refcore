@@ -3462,7 +3462,7 @@ version mbank_2026_09
   bank[r20260926a] = (on: 2026-09-26, kind: spending, leg cash from konto to niewyjasnione amount 120.00 PLN, cat: other) "RESTAURACJA"
   bank[r20260929a] = (on: 2026-09-29, kind: spending, leg cash from konto to niewyjasnione amount 401.09 PLN, cat: groceries) "BIEDRONKA KRAKOW"
   stated[konto] = 41386.27 at 2026-09-30 end "saldo końcowe"
-,,1:0,12271:pit37 (p = me, y = 2026): 0.00 PLN
+,,1:0,6959:pit37 (p = me, y = 2026): 0.00 PLN
   law date 2027-06-15, cut 2027-06-15
 pit37 (p = me, y = 2027): 0.00 PLN
   held: residence[me, 2027-07] = pl (people_2026), read for 2027-07
@@ -3494,42 +3494,12 @@ pit37 (p = wife, y = 2026): -2.00 PLN
 pit37 (p = wife, y = 2027): -2.00 PLN
   assumed: indeks płac +4% rocznie, założenie prototypu (wage_growth)
   missing record counted by wage_fc_2026
-  held: ee_rate[disability] = 0.015 (sus_2026), read for 2027-07-01
-  held: ee_rate[disability] = 0.015 (sus_2026), read for 2027-08-01
-  held: ee_rate[disability] = 0.015 (sus_2026), read for 2027-09-01
-  held: ee_rate[disability] = 0.015 (sus_2026), read for 2027-10-01
-  held: ee_rate[disability] = 0.015 (sus_2026), read for 2027-11-01
-  held: ee_rate[disability] = 0.015 (sus_2026), read for 2027-12-01
-  held: ee_rate[pension] = 0.0976 (sus_2026), read for 2027-07-01
-  held: ee_rate[pension] = 0.0976 (sus_2026), read for 2027-08-01
-  held: ee_rate[pension] = 0.0976 (sus_2026), read for 2027-09-01
-  held: ee_rate[pension] = 0.0976 (sus_2026), read for 2027-10-01
-  held: ee_rate[pension] = 0.0976 (sus_2026), read for 2027-11-01
-  held: ee_rate[pension] = 0.0976 (sus_2026), read for 2027-12-01
-  held: ee_rate[sickness] = 0.0245 (sus_2026), read for 2027-07-01
-  held: ee_rate[sickness] = 0.0245 (sus_2026), read for 2027-08-01
-  held: ee_rate[sickness] = 0.0245 (sus_2026), read for 2027-09-01
-  held: ee_rate[sickness] = 0.0245 (sus_2026), read for 2027-10-01
-  held: ee_rate[sickness] = 0.0245 (sus_2026), read for 2027-11-01
-  held: ee_rate[sickness] = 0.0245 (sus_2026), read for 2027-12-01
-  held: kup_month = 250.00 PLN (pit_2022), read for 2027-07-01
-  held: kup_month = 250.00 PLN (pit_2022), read for 2027-08-01
-  held: kup_month = 250.00 PLN (pit_2022), read for 2027-09-01
-  held: kup_month = 250.00 PLN (pit_2022), read for 2027-10-01
-  held: kup_month = 250.00 PLN (pit_2022), read for 2027-11-01
-  held: kup_month = 250.00 PLN (pit_2022), read for 2027-12-01
-  held: pit_reduction_month = 300.00 PLN (pit_2022), read for 2027-07-01
-  held: pit_reduction_month = 300.00 PLN (pit_2022), read for 2027-08-01
-  held: pit_reduction_month = 300.00 PLN (pit_2022), read for 2027-09-01
-  held: pit_reduction_month = 300.00 PLN (pit_2022), read for 2027-10-01
-  held: pit_reduction_month = 300.00 PLN (pit_2022), read for 2027-11-01
-  held: pit_reduction_month = 300.00 PLN (pit_2022), read for 2027-12-01
-  held: pit_scale row [0, 120 000] (pit_2022), read for 2027-07-01
-  held: pit_scale row [0, 120 000] (pit_2022), read for 2027-08-01
-  held: pit_scale row [0, 120 000] (pit_2022), read for 2027-09-01
-  held: pit_scale row [0, 120 000] (pit_2022), read for 2027-10-01
-  held: pit_scale row [0, 120 000] (pit_2022), read for 2027-11-01
-  held: pit_scale row [0, 120 000] (pit_2022), read for 2027-12-01
+  held: ee_rate[disability] = 0.015 (sus_2026), read for 2027-07-01, 2027-08-01, 2027-09-01, 2027-10-01, 2027-11-01, 2027-12-01
+  held: ee_rate[pension] = 0.0976 (sus_2026), read for 2027-07-01, 2027-08-01, 2027-09-01, 2027-10-01, 2027-11-01, 2027-12-01
+  held: ee_rate[sickness] = 0.0245 (sus_2026), read for 2027-07-01, 2027-08-01, 2027-09-01, 2027-10-01, 2027-11-01, 2027-12-01
+  held: kup_month = 250.00 PLN (pit_2022), read for 2027-07-01, 2027-08-01, 2027-09-01, 2027-10-01, 2027-11-01, 2027-12-01
+  held: pit_reduction_month = 300.00 PLN (pit_2022), read for 2027-07-01, 2027-08-01, 2027-09-01, 2027-10-01, 2027-11-01, 2027-12-01
+  held: pit_scale row [0, 120 000] (pit_2022), read for 2027-07-01, 2027-08-01, 2027-09-01, 2027-10-01, 2027-11-01, 2027-12-01
   held: residence[wife, 2027-07] = pl (people_2026), read for 2027-07
   held: residence[wife, 2027-08] = pl (people_2026), read for 2027-08
   held: residence[wife, 2027-09] = pl (people_2026), read for 2027-09
@@ -3546,78 +3516,12 @@ pit37 (p = wife, y = 2027): -2.00 PLN
 pit37 (p = wife, y = 2028): -2.00 PLN
   assumed: indeks płac +4% rocznie, założenie prototypu (wage_growth)
   missing record counted by wage_fc_2026
-  held: ee_rate[disability] = 0.015 (sus_2026), read for 2028-01-01
-  held: ee_rate[disability] = 0.015 (sus_2026), read for 2028-02-01
-  held: ee_rate[disability] = 0.015 (sus_2026), read for 2028-03-01
-  held: ee_rate[disability] = 0.015 (sus_2026), read for 2028-04-01
-  held: ee_rate[disability] = 0.015 (sus_2026), read for 2028-05-01
-  held: ee_rate[disability] = 0.015 (sus_2026), read for 2028-06-01
-  held: ee_rate[disability] = 0.015 (sus_2026), read for 2028-07-01
-  held: ee_rate[disability] = 0.015 (sus_2026), read for 2028-08-01
-  held: ee_rate[disability] = 0.015 (sus_2026), read for 2028-09-01
-  held: ee_rate[disability] = 0.015 (sus_2026), read for 2028-10-01
-  held: ee_rate[disability] = 0.015 (sus_2026), read for 2028-11-01
-  held: ee_rate[disability] = 0.015 (sus_2026), read for 2028-12-01
-  held: ee_rate[pension] = 0.0976 (sus_2026), read for 2028-01-01
-  held: ee_rate[pension] = 0.0976 (sus_2026), read for 2028-02-01
-  held: ee_rate[pension] = 0.0976 (sus_2026), read for 2028-03-01
-  held: ee_rate[pension] = 0.0976 (sus_2026), read for 2028-04-01
-  held: ee_rate[pension] = 0.0976 (sus_2026), read for 2028-05-01
-  held: ee_rate[pension] = 0.0976 (sus_2026), read for 2028-06-01
-  held: ee_rate[pension] = 0.0976 (sus_2026), read for 2028-07-01
-  held: ee_rate[pension] = 0.0976 (sus_2026), read for 2028-08-01
-  held: ee_rate[pension] = 0.0976 (sus_2026), read for 2028-09-01
-  held: ee_rate[pension] = 0.0976 (sus_2026), read for 2028-10-01
-  held: ee_rate[pension] = 0.0976 (sus_2026), read for 2028-11-01
-  held: ee_rate[pension] = 0.0976 (sus_2026), read for 2028-12-01
-  held: ee_rate[sickness] = 0.0245 (sus_2026), read for 2028-01-01
-  held: ee_rate[sickness] = 0.0245 (sus_2026), read for 2028-02-01
-  held: ee_rate[sickness] = 0.0245 (sus_2026), read for 2028-03-01
-  held: ee_rate[sickness] = 0.0245 (sus_2026), read for 2028-04-01
-  held: ee_rate[sickness] = 0.0245 (sus_2026), read for 2028-05-01
-  held: ee_rate[sickness] = 0.0245 (sus_2026), read for 2028-06-01
-  held: ee_rate[sickness] = 0.0245 (sus_2026), read for 2028-07-01
-  held: ee_rate[sickness] = 0.0245 (sus_2026), read for 2028-08-01
-  held: ee_rate[sickness] = 0.0245 (sus_2026), read for 2028-09-01
-  held: ee_rate[sickness] = 0.0245 (sus_2026), read for 2028-10-01
-  held: ee_rate[sickness] = 0.0245 (sus_2026), read for 2028-11-01
-  held: ee_rate[sickness] = 0.0245 (sus_2026), read for 2028-12-01
-  held: kup_month = 250.00 PLN (pit_2022), read for 2028-01-01
-  held: kup_month = 250.00 PLN (pit_2022), read for 2028-02-01
-  held: kup_month = 250.00 PLN (pit_2022), read for 2028-03-01
-  held: kup_month = 250.00 PLN (pit_2022), read for 2028-04-01
-  held: kup_month = 250.00 PLN (pit_2022), read for 2028-05-01
-  held: kup_month = 250.00 PLN (pit_2022), read for 2028-06-01
-  held: kup_month = 250.00 PLN (pit_2022), read for 2028-07-01
-  held: kup_month = 250.00 PLN (pit_2022), read for 2028-08-01
-  held: kup_month = 250.00 PLN (pit_2022), read for 2028-09-01
-  held: kup_month = 250.00 PLN (pit_2022), read for 2028-10-01
-  held: kup_month = 250.00 PLN (pit_2022), read for 2028-11-01
-  held: kup_month = 250.00 PLN (pit_2022), read for 2028-12-01
-  held: pit_reduction_month = 300.00 PLN (pit_2022), read for 2028-01-01
-  held: pit_reduction_month = 300.00 PLN (pit_2022), read for 2028-02-01
-  held: pit_reduction_month = 300.00 PLN (pit_2022), read for 2028-03-01
-  held: pit_reduction_month = 300.00 PLN (pit_2022), read for 2028-04-01
-  held: pit_reduction_month = 300.00 PLN (pit_2022), read for 2028-05-01
-  held: pit_reduction_month = 300.00 PLN (pit_2022), read for 2028-06-01
-  held: pit_reduction_month = 300.00 PLN (pit_2022), read for 2028-07-01
-  held: pit_reduction_month = 300.00 PLN (pit_2022), read for 2028-08-01
-  held: pit_reduction_month = 300.00 PLN (pit_2022), read for 2028-09-01
-  held: pit_reduction_month = 300.00 PLN (pit_2022), read for 2028-10-01
-  held: pit_reduction_month = 300.00 PLN (pit_2022), read for 2028-11-01
-  held: pit_reduction_month = 300.00 PLN (pit_2022), read for 2028-12-01
-  held: pit_scale row [0, 120 000] (pit_2022), read for 2028-01-01
-  held: pit_scale row [0, 120 000] (pit_2022), read for 2028-02-01
-  held: pit_scale row [0, 120 000] (pit_2022), read for 2028-03-01
-  held: pit_scale row [0, 120 000] (pit_2022), read for 2028-04-01
-  held: pit_scale row [0, 120 000] (pit_2022), read for 2028-05-01
-  held: pit_scale row [0, 120 000] (pit_2022), read for 2028-06-01
-  held: pit_scale row [0, 120 000] (pit_2022), read for 2028-07-01
-  held: pit_scale row [0, 120 000] (pit_2022), read for 2028-08-01
-  held: pit_scale row [0, 120 000] (pit_2022), read for 2028-09-01
-  held: pit_scale row [0, 120 000] (pit_2022), read for 2028-10-01
-  held: pit_scale row [0, 120 000] (pit_2022), read for 2028-11-01
-  held: pit_scale row [0, 120 000] (pit_2022), read for 2028-12-01
+  held: ee_rate[disability] = 0.015 (sus_2026), read for 2028-01-01, 2028-02-01, 2028-03-01, 2028-04-01, 2028-05-01, 2028-06-01, 2028-07-01, 2028-08-01, 2028-09-01, 2028-10-01, 2028-11-01, 2028-12-01
+  held: ee_rate[pension] = 0.0976 (sus_2026), read for 2028-01-01, 2028-02-01, 2028-03-01, 2028-04-01, 2028-05-01, 2028-06-01, 2028-07-01, 2028-08-01, 2028-09-01, 2028-10-01, 2028-11-01, 2028-12-01
+  held: ee_rate[sickness] = 0.0245 (sus_2026), read for 2028-01-01, 2028-02-01, 2028-03-01, 2028-04-01, 2028-05-01, 2028-06-01, 2028-07-01, 2028-08-01, 2028-09-01, 2028-10-01, 2028-11-01, 2028-12-01
+  held: kup_month = 250.00 PLN (pit_2022), read for 2028-01-01, 2028-02-01, 2028-03-01, 2028-04-01, 2028-05-01, 2028-06-01, 2028-07-01, 2028-08-01, 2028-09-01, 2028-10-01, 2028-11-01, 2028-12-01
+  held: pit_reduction_month = 300.00 PLN (pit_2022), read for 2028-01-01, 2028-02-01, 2028-03-01, 2028-04-01, 2028-05-01, 2028-06-01, 2028-07-01, 2028-08-01, 2028-09-01, 2028-10-01, 2028-11-01, 2028-12-01
+  held: pit_scale row [0, 120 000] (pit_2022), read for 2028-01-01, 2028-02-01, 2028-03-01, 2028-04-01, 2028-05-01, 2028-06-01, 2028-07-01, 2028-08-01, 2028-09-01, 2028-10-01, 2028-11-01, 2028-12-01
   held: relief_limit = 112 000.00 PLN (pit_2022), read for 2028-01-01
   held: relief_month = 92.67 PLN (pit_2022), read for 2028-01-01
   held: residence[wife, 2028-01] = pl (people_2026), read for 2028-01
@@ -7089,7 +6993,7 @@ version mbank_2026_09
   bank[r20260926a] = (on: 2026-09-26, kind: spending, leg cash from konto to niewyjasnione amount 120.00 PLN, cat: other) "RESTAURACJA"
   bank[r20260929a] = (on: 2026-09-29, kind: spending, leg cash from konto to niewyjasnione amount 401.09 PLN, cat: groceries) "BIEDRONKA KRAKOW"
   stated[konto] = 41386.27 at 2026-09-30 end "saldo końcowe"
-,,1:0,12271:pit37 (p = me, y = 2026): 0.00 PLN
+,,1:0,6959:pit37 (p = me, y = 2026): 0.00 PLN
   law date 2027-06-15, cut 2027-06-15
 pit37 (p = me, y = 2027): 0.00 PLN
   held: residence[me, 2027-07] = pl (people_2026), read for 2027-07
@@ -7121,42 +7025,12 @@ pit37 (p = wife, y = 2026): -2.00 PLN
 pit37 (p = wife, y = 2027): -2.00 PLN
   assumed: indeks płac +4% rocznie, założenie prototypu (wage_growth)
   missing record counted by wage_fc_2026
-  held: ee_rate[disability] = 0.015 (sus_2026), read for 2027-07-01
-  held: ee_rate[disability] = 0.015 (sus_2026), read for 2027-08-01
-  held: ee_rate[disability] = 0.015 (sus_2026), read for 2027-09-01
-  held: ee_rate[disability] = 0.015 (sus_2026), read for 2027-10-01
-  held: ee_rate[disability] = 0.015 (sus_2026), read for 2027-11-01
-  held: ee_rate[disability] = 0.015 (sus_2026), read for 2027-12-01
-  held: ee_rate[pension] = 0.0976 (sus_2026), read for 2027-07-01
-  held: ee_rate[pension] = 0.0976 (sus_2026), read for 2027-08-01
-  held: ee_rate[pension] = 0.0976 (sus_2026), read for 2027-09-01
-  held: ee_rate[pension] = 0.0976 (sus_2026), read for 2027-10-01
-  held: ee_rate[pension] = 0.0976 (sus_2026), read for 2027-11-01
-  held: ee_rate[pension] = 0.0976 (sus_2026), read for 2027-12-01
-  held: ee_rate[sickness] = 0.0245 (sus_2026), read for 2027-07-01
-  held: ee_rate[sickness] = 0.0245 (sus_2026), read for 2027-08-01
-  held: ee_rate[sickness] = 0.0245 (sus_2026), read for 2027-09-01
-  held: ee_rate[sickness] = 0.0245 (sus_2026), read for 2027-10-01
-  held: ee_rate[sickness] = 0.0245 (sus_2026), read for 2027-11-01
-  held: ee_rate[sickness] = 0.0245 (sus_2026), read for 2027-12-01
-  held: kup_month = 250.00 PLN (pit_2022), read for 2027-07-01
-  held: kup_month = 250.00 PLN (pit_2022), read for 2027-08-01
-  held: kup_month = 250.00 PLN (pit_2022), read for 2027-09-01
-  held: kup_month = 250.00 PLN (pit_2022), read for 2027-10-01
-  held: kup_month = 250.00 PLN (pit_2022), read for 2027-11-01
-  held: kup_month = 250.00 PLN (pit_2022), read for 2027-12-01
-  held: pit_reduction_month = 300.00 PLN (pit_2022), read for 2027-07-01
-  held: pit_reduction_month = 300.00 PLN (pit_2022), read for 2027-08-01
-  held: pit_reduction_month = 300.00 PLN (pit_2022), read for 2027-09-01
-  held: pit_reduction_month = 300.00 PLN (pit_2022), read for 2027-10-01
-  held: pit_reduction_month = 300.00 PLN (pit_2022), read for 2027-11-01
-  held: pit_reduction_month = 300.00 PLN (pit_2022), read for 2027-12-01
-  held: pit_scale row [0, 120 000] (pit_2022), read for 2027-07-01
-  held: pit_scale row [0, 120 000] (pit_2022), read for 2027-08-01
-  held: pit_scale row [0, 120 000] (pit_2022), read for 2027-09-01
-  held: pit_scale row [0, 120 000] (pit_2022), read for 2027-10-01
-  held: pit_scale row [0, 120 000] (pit_2022), read for 2027-11-01
-  held: pit_scale row [0, 120 000] (pit_2022), read for 2027-12-01
+  held: ee_rate[disability] = 0.015 (sus_2026), read for 2027-07-01, 2027-08-01, 2027-09-01, 2027-10-01, 2027-11-01, 2027-12-01
+  held: ee_rate[pension] = 0.0976 (sus_2026), read for 2027-07-01, 2027-08-01, 2027-09-01, 2027-10-01, 2027-11-01, 2027-12-01
+  held: ee_rate[sickness] = 0.0245 (sus_2026), read for 2027-07-01, 2027-08-01, 2027-09-01, 2027-10-01, 2027-11-01, 2027-12-01
+  held: kup_month = 250.00 PLN (pit_2022), read for 2027-07-01, 2027-08-01, 2027-09-01, 2027-10-01, 2027-11-01, 2027-12-01
+  held: pit_reduction_month = 300.00 PLN (pit_2022), read for 2027-07-01, 2027-08-01, 2027-09-01, 2027-10-01, 2027-11-01, 2027-12-01
+  held: pit_scale row [0, 120 000] (pit_2022), read for 2027-07-01, 2027-08-01, 2027-09-01, 2027-10-01, 2027-11-01, 2027-12-01
   held: residence[wife, 2027-07] = pl (people_2026), read for 2027-07
   held: residence[wife, 2027-08] = pl (people_2026), read for 2027-08
   held: residence[wife, 2027-09] = pl (people_2026), read for 2027-09
@@ -7173,78 +7047,12 @@ pit37 (p = wife, y = 2027): -2.00 PLN
 pit37 (p = wife, y = 2028): -2.00 PLN
   assumed: indeks płac +4% rocznie, założenie prototypu (wage_growth)
   missing record counted by wage_fc_2026
-  held: ee_rate[disability] = 0.015 (sus_2026), read for 2028-01-01
-  held: ee_rate[disability] = 0.015 (sus_2026), read for 2028-02-01
-  held: ee_rate[disability] = 0.015 (sus_2026), read for 2028-03-01
-  held: ee_rate[disability] = 0.015 (sus_2026), read for 2028-04-01
-  held: ee_rate[disability] = 0.015 (sus_2026), read for 2028-05-01
-  held: ee_rate[disability] = 0.015 (sus_2026), read for 2028-06-01
-  held: ee_rate[disability] = 0.015 (sus_2026), read for 2028-07-01
-  held: ee_rate[disability] = 0.015 (sus_2026), read for 2028-08-01
-  held: ee_rate[disability] = 0.015 (sus_2026), read for 2028-09-01
-  held: ee_rate[disability] = 0.015 (sus_2026), read for 2028-10-01
-  held: ee_rate[disability] = 0.015 (sus_2026), read for 2028-11-01
-  held: ee_rate[disability] = 0.015 (sus_2026), read for 2028-12-01
-  held: ee_rate[pension] = 0.0976 (sus_2026), read for 2028-01-01
-  held: ee_rate[pension] = 0.0976 (sus_2026), read for 2028-02-01
-  held: ee_rate[pension] = 0.0976 (sus_2026), read for 2028-03-01
-  held: ee_rate[pension] = 0.0976 (sus_2026), read for 2028-04-01
-  held: ee_rate[pension] = 0.0976 (sus_2026), read for 2028-05-01
-  held: ee_rate[pension] = 0.0976 (sus_2026), read for 2028-06-01
-  held: ee_rate[pension] = 0.0976 (sus_2026), read for 2028-07-01
-  held: ee_rate[pension] = 0.0976 (sus_2026), read for 2028-08-01
-  held: ee_rate[pension] = 0.0976 (sus_2026), read for 2028-09-01
-  held: ee_rate[pension] = 0.0976 (sus_2026), read for 2028-10-01
-  held: ee_rate[pension] = 0.0976 (sus_2026), read for 2028-11-01
-  held: ee_rate[pension] = 0.0976 (sus_2026), read for 2028-12-01
-  held: ee_rate[sickness] = 0.0245 (sus_2026), read for 2028-01-01
-  held: ee_rate[sickness] = 0.0245 (sus_2026), read for 2028-02-01
-  held: ee_rate[sickness] = 0.0245 (sus_2026), read for 2028-03-01
-  held: ee_rate[sickness] = 0.0245 (sus_2026), read for 2028-04-01
-  held: ee_rate[sickness] = 0.0245 (sus_2026), read for 2028-05-01
-  held: ee_rate[sickness] = 0.0245 (sus_2026), read for 2028-06-01
-  held: ee_rate[sickness] = 0.0245 (sus_2026), read for 2028-07-01
-  held: ee_rate[sickness] = 0.0245 (sus_2026), read for 2028-08-01
-  held: ee_rate[sickness] = 0.0245 (sus_2026), read for 2028-09-01
-  held: ee_rate[sickness] = 0.0245 (sus_2026), read for 2028-10-01
-  held: ee_rate[sickness] = 0.0245 (sus_2026), read for 2028-11-01
-  held: ee_rate[sickness] = 0.0245 (sus_2026), read for 2028-12-01
-  held: kup_month = 250.00 PLN (pit_2022), read for 2028-01-01
-  held: kup_month = 250.00 PLN (pit_2022), read for 2028-02-01
-  held: kup_month = 250.00 PLN (pit_2022), read for 2028-03-01
-  held: kup_month = 250.00 PLN (pit_2022), read for 2028-04-01
-  held: kup_month = 250.00 PLN (pit_2022), read for 2028-05-01
-  held: kup_month = 250.00 PLN (pit_2022), read for 2028-06-01
-  held: kup_month = 250.00 PLN (pit_2022), read for 2028-07-01
-  held: kup_month = 250.00 PLN (pit_2022), read for 2028-08-01
-  held: kup_month = 250.00 PLN (pit_2022), read for 2028-09-01
-  held: kup_month = 250.00 PLN (pit_2022), read for 2028-10-01
-  held: kup_month = 250.00 PLN (pit_2022), read for 2028-11-01
-  held: kup_month = 250.00 PLN (pit_2022), read for 2028-12-01
-  held: pit_reduction_month = 300.00 PLN (pit_2022), read for 2028-01-01
-  held: pit_reduction_month = 300.00 PLN (pit_2022), read for 2028-02-01
-  held: pit_reduction_month = 300.00 PLN (pit_2022), read for 2028-03-01
-  held: pit_reduction_month = 300.00 PLN (pit_2022), read for 2028-04-01
-  held: pit_reduction_month = 300.00 PLN (pit_2022), read for 2028-05-01
-  held: pit_reduction_month = 300.00 PLN (pit_2022), read for 2028-06-01
-  held: pit_reduction_month = 300.00 PLN (pit_2022), read for 2028-07-01
-  held: pit_reduction_month = 300.00 PLN (pit_2022), read for 2028-08-01
-  held: pit_reduction_month = 300.00 PLN (pit_2022), read for 2028-09-01
-  held: pit_reduction_month = 300.00 PLN (pit_2022), read for 2028-10-01
-  held: pit_reduction_month = 300.00 PLN (pit_2022), read for 2028-11-01
-  held: pit_reduction_month = 300.00 PLN (pit_2022), read for 2028-12-01
-  held: pit_scale row [0, 120 000] (pit_2022), read for 2028-01-01
-  held: pit_scale row [0, 120 000] (pit_2022), read for 2028-02-01
-  held: pit_scale row [0, 120 000] (pit_2022), read for 2028-03-01
-  held: pit_scale row [0, 120 000] (pit_2022), read for 2028-04-01
-  held: pit_scale row [0, 120 000] (pit_2022), read for 2028-05-01
-  held: pit_scale row [0, 120 000] (pit_2022), read for 2028-06-01
-  held: pit_scale row [0, 120 000] (pit_2022), read for 2028-07-01
-  held: pit_scale row [0, 120 000] (pit_2022), read for 2028-08-01
-  held: pit_scale row [0, 120 000] (pit_2022), read for 2028-09-01
-  held: pit_scale row [0, 120 000] (pit_2022), read for 2028-10-01
-  held: pit_scale row [0, 120 000] (pit_2022), read for 2028-11-01
-  held: pit_scale row [0, 120 000] (pit_2022), read for 2028-12-01
+  held: ee_rate[disability] = 0.015 (sus_2026), read for 2028-01-01, 2028-02-01, 2028-03-01, 2028-04-01, 2028-05-01, 2028-06-01, 2028-07-01, 2028-08-01, 2028-09-01, 2028-10-01, 2028-11-01, 2028-12-01
+  held: ee_rate[pension] = 0.0976 (sus_2026), read for 2028-01-01, 2028-02-01, 2028-03-01, 2028-04-01, 2028-05-01, 2028-06-01, 2028-07-01, 2028-08-01, 2028-09-01, 2028-10-01, 2028-11-01, 2028-12-01
+  held: ee_rate[sickness] = 0.0245 (sus_2026), read for 2028-01-01, 2028-02-01, 2028-03-01, 2028-04-01, 2028-05-01, 2028-06-01, 2028-07-01, 2028-08-01, 2028-09-01, 2028-10-01, 2028-11-01, 2028-12-01
+  held: kup_month = 250.00 PLN (pit_2022), read for 2028-01-01, 2028-02-01, 2028-03-01, 2028-04-01, 2028-05-01, 2028-06-01, 2028-07-01, 2028-08-01, 2028-09-01, 2028-10-01, 2028-11-01, 2028-12-01
+  held: pit_reduction_month = 300.00 PLN (pit_2022), read for 2028-01-01, 2028-02-01, 2028-03-01, 2028-04-01, 2028-05-01, 2028-06-01, 2028-07-01, 2028-08-01, 2028-09-01, 2028-10-01, 2028-11-01, 2028-12-01
+  held: pit_scale row [0, 120 000] (pit_2022), read for 2028-01-01, 2028-02-01, 2028-03-01, 2028-04-01, 2028-05-01, 2028-06-01, 2028-07-01, 2028-08-01, 2028-09-01, 2028-10-01, 2028-11-01, 2028-12-01
   held: relief_limit = 112 000.00 PLN (pit_2022), read for 2028-01-01
   held: relief_month = 92.67 PLN (pit_2022), read for 2028-01-01
   held: residence[wife, 2028-01] = pl (people_2026), read for 2028-01
@@ -9102,7 +8910,7 @@ version dz2022_1265_y
   note "art. 18 ust. 1: the new art. 27 ust. 1 scale applies to income from 1 January 2022"
   replace pit_scale: (-inf, 120000] = 0.12 * x - 3600 "art. 1 pkt 13, art. 27 ust. 1: do 120 000 zł, 12% minus kwota zmniejszająca podatek 3600 zł"
   replace pit_scale: (120000, inf) = 10800 + 0.32 * (x - band_lo(pit_scale, x)) "art. 1 pkt 13, art. 27 ust. 1: ponad 120 000 zł, 10 800 zł + 32% nadwyżki ponad 120 000 zł"
-,,1:0,98727:ask_annual_now (j = q2, s = sp1, b = individual): false
+,,1:0,95157:ask_annual_now (j = q2, s = sp1, b = individual): false
   law date 2026-10-18, cut 2026-10-18
 ask_annual_now (j = q2, s = sp1, b = joint): false
   law date 2026-10-18, cut 2026-10-18
@@ -9863,90 +9671,20 @@ ask_s1 (c = s1b, m = 2022-12) [mc_round = gr_half_up]: (494.59 PLN, ?"The simula
 ask_s1_total (c = s1a) [mc_round = *]: (?"The simulation doesn't say whether the employee filed the PIT-2 statement of art. 32 ust. 3." (pit2_filed[s1a]) ?"The simulation's costs and social insurance contributions are not stated; it says only that it takes the basic flat-rate costs into account." (month_income[s1a]), ?"The simulation doesn't say whether the employee filed the PIT-2 statement of art. 32 ust. 3." (pit2_filed[s1a]) ?"The simulation's costs and social insurance contributions are not stated; it says only that it takes the basic flat-rate costs into account." (month_income[s1a]), ?"The 2021 law behind the MF simulation's '2021 rules' columns is not among the case's sources." (adv_2021[s1a, 2022-01], adv_2021[s1a, 2022-02], adv_2021[s1a, 2022-03], adv_2021[s1a, 2022-04], adv_2021[s1a, 2022-05], adv_2021[s1a, 2022-06], adv_2021[s1a, 2022-07], adv_2021[s1a, 2022-08], adv_2021[s1a, 2022-09], adv_2021[s1a, 2022-10], adv_2021[s1a, 2022-11], adv_2021[s1a, 2022-12]))
   assumed: no example mentions a request under art. 32 ust. 2b (waiver[s1a])
   pinned: mon_relief[c, m] = 0 for c in [s1a, s1b], m in mo
-  held: adv_rate = 0.17 (dz2019_1835), read for 2022-05-01
-  held: adv_rate = 0.17 (dz2019_1835), read for 2022-06-01
-  held: adv_rate = 0.17 (dz2019_1835), read for 2022-07-01
-  held: adv_rate = 0.17 (dz2019_1835), read for 2022-08-01
-  held: adv_rate = 0.17 (dz2019_1835), read for 2022-09-01
-  held: adv_rate = 0.17 (dz2019_1835), read for 2022-10-01
-  held: adv_rate = 0.17 (dz2019_1835), read for 2022-11-01
-  held: adv_rate = 0.17 (dz2019_1835), read for 2022-12-01
-  held: formula_div = 0.17 (dz2021_2105), read for 2022-05-01
-  held: formula_div = 0.17 (dz2021_2105), read for 2022-06-01
-  held: formula_div = 0.17 (dz2021_2105), read for 2022-07-01
-  held: formula_div = 0.17 (dz2021_2105), read for 2022-08-01
-  held: formula_div = 0.17 (dz2021_2105), read for 2022-09-01
-  held: formula_div = 0.17 (dz2021_2105), read for 2022-10-01
-  held: formula_div = 0.17 (dz2021_2105), read for 2022-11-01
-  held: formula_div = 0.17 (dz2021_2105), read for 2022-12-01
-  held: mon_band row [5 701, 8 549] (dz2021_2105), read for 2022-05-01
-  held: mon_band row [5 701, 8 549] (dz2021_2105), read for 2022-06-01
-  held: mon_band row [5 701, 8 549] (dz2021_2105), read for 2022-07-01
-  held: mon_band row [5 701, 8 549] (dz2021_2105), read for 2022-08-01
-  held: mon_band row [5 701, 8 549] (dz2021_2105), read for 2022-09-01
-  held: mon_band row [5 701, 8 549] (dz2021_2105), read for 2022-10-01
-  held: mon_band row [5 701, 8 549] (dz2021_2105), read for 2022-11-01
-  held: mon_band row [5 701, 8 549] (dz2021_2105), read for 2022-12-01
-  held: mon_c1 = 380.50 PLN (dz2021_2105), read for 2022-05-01
-  held: mon_c1 = 380.50 PLN (dz2021_2105), read for 2022-06-01
-  held: mon_c1 = 380.50 PLN (dz2021_2105), read for 2022-07-01
-  held: mon_c1 = 380.50 PLN (dz2021_2105), read for 2022-08-01
-  held: mon_c1 = 380.50 PLN (dz2021_2105), read for 2022-09-01
-  held: mon_c1 = 380.50 PLN (dz2021_2105), read for 2022-10-01
-  held: mon_c1 = 380.50 PLN (dz2021_2105), read for 2022-11-01
-  held: mon_c1 = 380.50 PLN (dz2021_2105), read for 2022-12-01
-  held: mon_r1 = 0.0668 (dz2021_2105), read for 2022-05-01
-  held: mon_r1 = 0.0668 (dz2021_2105), read for 2022-06-01
-  held: mon_r1 = 0.0668 (dz2021_2105), read for 2022-07-01
-  held: mon_r1 = 0.0668 (dz2021_2105), read for 2022-08-01
-  held: mon_r1 = 0.0668 (dz2021_2105), read for 2022-09-01
-  held: mon_r1 = 0.0668 (dz2021_2105), read for 2022-10-01
-  held: mon_r1 = 0.0668 (dz2021_2105), read for 2022-11-01
-  held: mon_r1 = 0.0668 (dz2021_2105), read for 2022-12-01
+  held: adv_rate = 0.17 (dz2019_1835), read for 2022-05-01, 2022-06-01, 2022-07-01, 2022-08-01, 2022-09-01, 2022-10-01, 2022-11-01, 2022-12-01
+  held: formula_div = 0.17 (dz2021_2105), read for 2022-05-01, 2022-06-01, 2022-07-01, 2022-08-01, 2022-09-01, 2022-10-01, 2022-11-01, 2022-12-01
+  held: mon_band row [5 701, 8 549] (dz2021_2105), read for 2022-05-01, 2022-06-01, 2022-07-01, 2022-08-01, 2022-09-01, 2022-10-01, 2022-11-01, 2022-12-01
+  held: mon_c1 = 380.50 PLN (dz2021_2105), read for 2022-05-01, 2022-06-01, 2022-07-01, 2022-08-01, 2022-09-01, 2022-10-01, 2022-11-01, 2022-12-01
+  held: mon_r1 = 0.0668 (dz2021_2105), read for 2022-05-01, 2022-06-01, 2022-07-01, 2022-08-01, 2022-09-01, 2022-10-01, 2022-11-01, 2022-12-01
   law date 2022-04-06, cut 2022-04-06
 ask_s1_total (c = s1b) [mc_round = *]: (?"The simulation doesn't say whether the employee filed the PIT-2 statement of art. 32 ust. 3." (pit2_filed[s1b]) ?"The simulation's costs and social insurance contributions are not stated; it says only that it takes the basic flat-rate costs into account." (month_income[s1b]), ?"The simulation doesn't say whether the employee filed the PIT-2 statement of art. 32 ust. 3." (pit2_filed[s1b]) ?"The simulation's costs and social insurance contributions are not stated; it says only that it takes the basic flat-rate costs into account." (month_income[s1b]), ?"The 2021 law behind the MF simulation's '2021 rules' columns is not among the case's sources." (adv_2021[s1b, 2022-01], adv_2021[s1b, 2022-02], adv_2021[s1b, 2022-03], adv_2021[s1b, 2022-04], adv_2021[s1b, 2022-05], adv_2021[s1b, 2022-06], adv_2021[s1b, 2022-07], adv_2021[s1b, 2022-08], adv_2021[s1b, 2022-09], adv_2021[s1b, 2022-10], adv_2021[s1b, 2022-11], adv_2021[s1b, 2022-12]))
   assumed: no example mentions a request under art. 32 ust. 2b (waiver[s1b])
   pinned: mon_relief[c, m] = 0 for c in [s1a, s1b], m in mo
-  held: adv_rate = 0.17 (dz2019_1835), read for 2022-05-01
-  held: adv_rate = 0.17 (dz2019_1835), read for 2022-06-01
-  held: adv_rate = 0.17 (dz2019_1835), read for 2022-07-01
-  held: adv_rate = 0.17 (dz2019_1835), read for 2022-08-01
-  held: adv_rate = 0.17 (dz2019_1835), read for 2022-09-01
-  held: adv_rate = 0.17 (dz2019_1835), read for 2022-10-01
-  held: adv_rate = 0.17 (dz2019_1835), read for 2022-11-01
-  held: adv_rate = 0.17 (dz2019_1835), read for 2022-12-01
-  held: formula_div = 0.17 (dz2021_2105), read for 2022-05-01
-  held: formula_div = 0.17 (dz2021_2105), read for 2022-06-01
-  held: formula_div = 0.17 (dz2021_2105), read for 2022-07-01
-  held: formula_div = 0.17 (dz2021_2105), read for 2022-08-01
-  held: formula_div = 0.17 (dz2021_2105), read for 2022-09-01
-  held: formula_div = 0.17 (dz2021_2105), read for 2022-10-01
-  held: formula_div = 0.17 (dz2021_2105), read for 2022-11-01
-  held: formula_div = 0.17 (dz2021_2105), read for 2022-12-01
-  held: mon_band row (8 549, 11 141] (dz2021_2105), read for 2022-05-01
-  held: mon_band row (8 549, 11 141] (dz2021_2105), read for 2022-06-01
-  held: mon_band row (8 549, 11 141] (dz2021_2105), read for 2022-07-01
-  held: mon_band row (8 549, 11 141] (dz2021_2105), read for 2022-08-01
-  held: mon_band row (8 549, 11 141] (dz2021_2105), read for 2022-09-01
-  held: mon_band row (8 549, 11 141] (dz2021_2105), read for 2022-10-01
-  held: mon_band row (8 549, 11 141] (dz2021_2105), read for 2022-11-01
-  held: mon_band row (8 549, 11 141] (dz2021_2105), read for 2022-12-01
-  held: mon_c2 = 819.08 PLN (dz2021_2105), read for 2022-05-01
-  held: mon_c2 = 819.08 PLN (dz2021_2105), read for 2022-06-01
-  held: mon_c2 = 819.08 PLN (dz2021_2105), read for 2022-07-01
-  held: mon_c2 = 819.08 PLN (dz2021_2105), read for 2022-08-01
-  held: mon_c2 = 819.08 PLN (dz2021_2105), read for 2022-09-01
-  held: mon_c2 = 819.08 PLN (dz2021_2105), read for 2022-10-01
-  held: mon_c2 = 819.08 PLN (dz2021_2105), read for 2022-11-01
-  held: mon_c2 = 819.08 PLN (dz2021_2105), read for 2022-12-01
-  held: mon_r2 = -0.0735 (dz2021_2105), read for 2022-05-01
-  held: mon_r2 = -0.0735 (dz2021_2105), read for 2022-06-01
-  held: mon_r2 = -0.0735 (dz2021_2105), read for 2022-07-01
-  held: mon_r2 = -0.0735 (dz2021_2105), read for 2022-08-01
-  held: mon_r2 = -0.0735 (dz2021_2105), read for 2022-09-01
-  held: mon_r2 = -0.0735 (dz2021_2105), read for 2022-10-01
-  held: mon_r2 = -0.0735 (dz2021_2105), read for 2022-11-01
-  held: mon_r2 = -0.0735 (dz2021_2105), read for 2022-12-01
+  held: adv_rate = 0.17 (dz2019_1835), read for 2022-05-01, 2022-06-01, 2022-07-01, 2022-08-01, 2022-09-01, 2022-10-01, 2022-11-01, 2022-12-01
+  held: formula_div = 0.17 (dz2021_2105), read for 2022-05-01, 2022-06-01, 2022-07-01, 2022-08-01, 2022-09-01, 2022-10-01, 2022-11-01, 2022-12-01
+  held: mon_band row (8 549, 11 141] (dz2021_2105), read for 2022-05-01, 2022-06-01, 2022-07-01, 2022-08-01, 2022-09-01, 2022-10-01, 2022-11-01, 2022-12-01
+  held: mon_c2 = 819.08 PLN (dz2021_2105), read for 2022-05-01, 2022-06-01, 2022-07-01, 2022-08-01, 2022-09-01, 2022-10-01, 2022-11-01, 2022-12-01
+  held: mon_r2 = -0.0735 (dz2021_2105), read for 2022-05-01, 2022-06-01, 2022-07-01, 2022-08-01, 2022-09-01, 2022-10-01, 2022-11-01, 2022-12-01
   law date 2022-04-06, cut 2022-04-06
 ask_s2 (j = s2a): (72 000.00 PLN, 24360/17 (1 432.94117647059) PLN, ?"The simulation's costs and social insurance contributions are not stated; it says only that it takes the basic flat-rate costs into account." (emp_income[s2a, sp1]), ?"The simulation's costs and social insurance contributions are not stated; it says only that it takes the basic flat-rate costs into account." (emp_income[s2a, sp1]), ?"The 2021 law behind the MF tables' '2021 rules' figures is not among the case's sources." (tax_2021_ind[s2a, sp1]))
   assumed: the guide lists every revenue a spouse had; one it doesn't list as business revenue is none (biz_net[s2a, sp1])
@@ -40519,7 +40257,7 @@ version bank_2026_10
   bank[r20261016a] = (on: 2026-10-16, kind: bank_line, leg cash from konto to sklepy amount 147.89 PLN, cat: codzienne) "ledger.json row 1941"
   bank[r20261016b] = (on: 2026-10-16, kind: bank_line, leg cash from konto to sklepy amount 166.44 PLN, cat: codzienne) "ledger.json row 1942"
   stated[konto] = 11685.67 at 2026-10-16 end "the opening plus every row to the day"
-,,1:0,28395:pin_invest (m = 2026-11): 7 887.29 PLN
+,,1:0,20663:pin_invest (m = 2026-11): 7 887.29 PLN
   anchor: konto 2026-10-16 end, stated 11 685.67 PLN, difference 0.00 PLN
   open: biz_costs[2026-10]
   open: biz_fee[2026-09]
@@ -40569,11 +40307,9 @@ pin_invest (m = 2027-01): 7 478.94 PLN
   left out: my_pay, 1 instances, first 2028-07-07
   left out: pit_return, 2 instances, first 2029-04-30
   left out: wife_pay, 1 instances, first 2028-07-10
-  held: ike_limit = 28 260.00 PLN (ike_limits), read for 2026-11-01
-  held: ike_limit = 28 260.00 PLN (ike_limits), read for 2026-12-01
+  held: ike_limit = 28 260.00 PLN (ike_limits), read for 2026-11-01, 2026-12-01
   held: inflation = 0.03 (prototype_assumptions), read for 2027-01-01
-  held: proj_wage = 9 420.00 PLN (projected_wage), read for 2026-11-01
-  held: proj_wage = 9 420.00 PLN (projected_wage), read for 2026-12-01
+  held: proj_wage = 9 420.00 PLN (projected_wage), read for 2026-11-01, 2026-12-01
   cut 2026-10-17
 pin_to_ike (m = 2026-11): 0.00 PLN
   anchor: konto 2026-10-16 end, stated 11 685.67 PLN, difference 0.00 PLN
@@ -40606,8 +40342,7 @@ pin_to_ike (m = 2026-12): 0.00 PLN
   left out: my_pay, 1 instances, first 2028-07-07
   left out: pit_return, 2 instances, first 2029-04-30
   left out: wife_pay, 1 instances, first 2028-07-10
-  held: ike_limit = 28 260.00 PLN (ike_limits), read for 2026-11-01
-  held: ike_limit = 28 260.00 PLN (ike_limits), read for 2026-12-01
+  held: ike_limit = 28 260.00 PLN (ike_limits), read for 2026-11-01, 2026-12-01
   held: inflation = 0.03 (prototype_assumptions), read for 2027-01-01
   held: proj_wage = 9 420.00 PLN (projected_wage), read for 2026-11-01
   cut 2026-10-17
@@ -40627,12 +40362,9 @@ pin_to_ike (m = 2027-01): 7 478.94 PLN
   left out: my_pay, 1 instances, first 2028-07-07
   left out: pit_return, 2 instances, first 2029-04-30
   left out: wife_pay, 1 instances, first 2028-07-10
-  held: ike_limit = 28 260.00 PLN (ike_limits), read for 2026-11-01
-  held: ike_limit = 28 260.00 PLN (ike_limits), read for 2026-12-01
-  held: ike_limit = 28 260.00 PLN (ike_limits), read for 2027-01-01
+  held: ike_limit = 28 260.00 PLN (ike_limits), read for 2026-11-01, 2026-12-01, 2027-01-01
   held: inflation = 0.03 (prototype_assumptions), read for 2027-01-01
-  held: proj_wage = 9 420.00 PLN (projected_wage), read for 2026-11-01
-  held: proj_wage = 9 420.00 PLN (projected_wage), read for 2026-12-01
+  held: proj_wage = 9 420.00 PLN (projected_wage), read for 2026-11-01, 2026-12-01
   cut 2026-10-17
 pin_to_rest: 7 312.73 PLN
   anchor: konto 2026-10-16 end, stated 11 685.67 PLN, difference 0.00 PLN
@@ -40661,35 +40393,9 @@ pin_to_rest: 7 312.73 PLN
   left out: my_pay, 1 instances, first 2028-07-07
   left out: pit_return, 2 instances, first 2029-04-30
   left out: wife_pay, 1 instances, first 2028-07-10
-  held: ike_limit = 28 260.00 PLN (ike_limits), read for 2026-11-01
-  held: ike_limit = 28 260.00 PLN (ike_limits), read for 2026-12-01
-  held: ike_limit = 28 260.00 PLN (ike_limits), read for 2027-01-01
-  held: ike_limit = 28 260.00 PLN (ike_limits), read for 2027-02-01
-  held: ike_limit = 28 260.00 PLN (ike_limits), read for 2027-03-01
-  held: ike_limit = 28 260.00 PLN (ike_limits), read for 2027-04-01
-  held: ike_limit = 28 260.00 PLN (ike_limits), read for 2027-05-01
-  held: ike_limit = 28 260.00 PLN (ike_limits), read for 2027-06-01
-  held: ike_limit = 28 260.00 PLN (ike_limits), read for 2027-07-01
-  held: ike_limit = 28 260.00 PLN (ike_limits), read for 2027-08-01
-  held: ike_limit = 28 260.00 PLN (ike_limits), read for 2027-09-01
-  held: ike_limit = 28 260.00 PLN (ike_limits), read for 2027-10-01
-  held: ike_limit = 28 260.00 PLN (ike_limits), read for 2027-11-01
-  held: ike_limit = 28 260.00 PLN (ike_limits), read for 2027-12-01
-  held: inflation = 0.03 (prototype_assumptions), read for 2027-01-01
-  held: inflation = 0.03 (prototype_assumptions), read for 2028-01-01
-  held: proj_wage = 9 420.00 PLN (projected_wage), read for 2026-11-01
-  held: proj_wage = 9 420.00 PLN (projected_wage), read for 2026-12-01
-  held: proj_wage = 9 420.00 PLN (projected_wage), read for 2027-01-01
-  held: proj_wage = 9 420.00 PLN (projected_wage), read for 2027-02-01
-  held: proj_wage = 9 420.00 PLN (projected_wage), read for 2027-03-01
-  held: proj_wage = 9 420.00 PLN (projected_wage), read for 2027-04-01
-  held: proj_wage = 9 420.00 PLN (projected_wage), read for 2027-05-01
-  held: proj_wage = 9 420.00 PLN (projected_wage), read for 2027-06-01
-  held: proj_wage = 9 420.00 PLN (projected_wage), read for 2027-07-01
-  held: proj_wage = 9 420.00 PLN (projected_wage), read for 2027-08-01
-  held: proj_wage = 9 420.00 PLN (projected_wage), read for 2027-09-01
-  held: proj_wage = 9 420.00 PLN (projected_wage), read for 2027-10-01
-  held: proj_wage = 9 420.00 PLN (projected_wage), read for 2027-11-01
+  held: ike_limit = 28 260.00 PLN (ike_limits), read for 2026-11-01, 2026-12-01, 2027-01-01, 2027-02-01, 2027-03-01, 2027-04-01, 2027-05-01, 2027-06-01, 2027-07-01, 2027-08-01, 2027-09-01, 2027-10-01, 2027-11-01, 2027-12-01
+  held: inflation = 0.03 (prototype_assumptions), read for 2027-01-01, 2028-01-01
+  held: proj_wage = 9 420.00 PLN (projected_wage), read for 2026-11-01, 2026-12-01, 2027-01-01, 2027-02-01, 2027-03-01, 2027-04-01, 2027-05-01, 2027-06-01, 2027-07-01, 2027-08-01, 2027-09-01, 2027-10-01, 2027-11-01
   held: wage_growth = 0.04 (prototype_assumptions), read for 2027-01-01
   cut 2026-10-17
 pin_konto (d = 2026-11-01): 2 261.80 PLN
@@ -40727,22 +40433,9 @@ pin_konto (d = 2027-06-30): 5 743.50 PLN
   left out: my_pay, 1 instances, first 2028-07-07
   left out: pit_return, 2 instances, first 2029-04-30
   left out: wife_pay, 1 instances, first 2028-07-10
-  held: ike_limit = 28 260.00 PLN (ike_limits), read for 2026-11-01
-  held: ike_limit = 28 260.00 PLN (ike_limits), read for 2026-12-01
-  held: ike_limit = 28 260.00 PLN (ike_limits), read for 2027-01-01
-  held: ike_limit = 28 260.00 PLN (ike_limits), read for 2027-02-01
-  held: ike_limit = 28 260.00 PLN (ike_limits), read for 2027-03-01
-  held: ike_limit = 28 260.00 PLN (ike_limits), read for 2027-04-01
-  held: ike_limit = 28 260.00 PLN (ike_limits), read for 2027-05-01
-  held: ike_limit = 28 260.00 PLN (ike_limits), read for 2027-06-01
+  held: ike_limit = 28 260.00 PLN (ike_limits), read for 2026-11-01, 2026-12-01, 2027-01-01, 2027-02-01, 2027-03-01, 2027-04-01, 2027-05-01, 2027-06-01
   held: inflation = 0.03 (prototype_assumptions), read for 2027-01-01
-  held: proj_wage = 9 420.00 PLN (projected_wage), read for 2026-11-01
-  held: proj_wage = 9 420.00 PLN (projected_wage), read for 2026-12-01
-  held: proj_wage = 9 420.00 PLN (projected_wage), read for 2027-01-01
-  held: proj_wage = 9 420.00 PLN (projected_wage), read for 2027-02-01
-  held: proj_wage = 9 420.00 PLN (projected_wage), read for 2027-03-01
-  held: proj_wage = 9 420.00 PLN (projected_wage), read for 2027-04-01
-  held: proj_wage = 9 420.00 PLN (projected_wage), read for 2027-05-01
+  held: proj_wage = 9 420.00 PLN (projected_wage), read for 2026-11-01, 2026-12-01, 2027-01-01, 2027-02-01, 2027-03-01, 2027-04-01, 2027-05-01
   held: wage_growth = 0.04 (prototype_assumptions), read for 2027-01-01
   cut 2026-10-17
 pin_net_worth (d = 2026-11-01): 223 463.93 PLN
@@ -40850,22 +40543,9 @@ pin_net_worth (d = 2027-06-30): 298 016.28 PLN
   left out: my_pay, 1 instances, first 2028-07-07
   left out: pit_return, 2 instances, first 2029-04-30
   left out: wife_pay, 1 instances, first 2028-07-10
-  held: ike_limit = 28 260.00 PLN (ike_limits), read for 2026-11-01
-  held: ike_limit = 28 260.00 PLN (ike_limits), read for 2026-12-01
-  held: ike_limit = 28 260.00 PLN (ike_limits), read for 2027-01-01
-  held: ike_limit = 28 260.00 PLN (ike_limits), read for 2027-02-01
-  held: ike_limit = 28 260.00 PLN (ike_limits), read for 2027-03-01
-  held: ike_limit = 28 260.00 PLN (ike_limits), read for 2027-04-01
-  held: ike_limit = 28 260.00 PLN (ike_limits), read for 2027-05-01
-  held: ike_limit = 28 260.00 PLN (ike_limits), read for 2027-06-01
+  held: ike_limit = 28 260.00 PLN (ike_limits), read for 2026-11-01, 2026-12-01, 2027-01-01, 2027-02-01, 2027-03-01, 2027-04-01, 2027-05-01, 2027-06-01
   held: inflation = 0.03 (prototype_assumptions), read for 2027-01-01
-  held: proj_wage = 9 420.00 PLN (projected_wage), read for 2026-11-01
-  held: proj_wage = 9 420.00 PLN (projected_wage), read for 2026-12-01
-  held: proj_wage = 9 420.00 PLN (projected_wage), read for 2027-01-01
-  held: proj_wage = 9 420.00 PLN (projected_wage), read for 2027-02-01
-  held: proj_wage = 9 420.00 PLN (projected_wage), read for 2027-03-01
-  held: proj_wage = 9 420.00 PLN (projected_wage), read for 2027-04-01
-  held: proj_wage = 9 420.00 PLN (projected_wage), read for 2027-05-01
+  held: proj_wage = 9 420.00 PLN (projected_wage), read for 2026-11-01, 2026-12-01, 2027-01-01, 2027-02-01, 2027-03-01, 2027-04-01, 2027-05-01
   held: wage_growth = 0.04 (prototype_assumptions), read for 2027-01-01
   cut 2026-10-17
 pin_net_worth_2027: 354 008.39 PLN
@@ -40930,35 +40610,9 @@ pin_net_worth_2027: 354 008.39 PLN
   left out: my_pay, 1 instances, first 2028-07-07
   left out: pit_return, 2 instances, first 2029-04-30
   left out: wife_pay, 1 instances, first 2028-07-10
-  held: ike_limit = 28 260.00 PLN (ike_limits), read for 2026-11-01
-  held: ike_limit = 28 260.00 PLN (ike_limits), read for 2026-12-01
-  held: ike_limit = 28 260.00 PLN (ike_limits), read for 2027-01-01
-  held: ike_limit = 28 260.00 PLN (ike_limits), read for 2027-02-01
-  held: ike_limit = 28 260.00 PLN (ike_limits), read for 2027-03-01
-  held: ike_limit = 28 260.00 PLN (ike_limits), read for 2027-04-01
-  held: ike_limit = 28 260.00 PLN (ike_limits), read for 2027-05-01
-  held: ike_limit = 28 260.00 PLN (ike_limits), read for 2027-06-01
-  held: ike_limit = 28 260.00 PLN (ike_limits), read for 2027-07-01
-  held: ike_limit = 28 260.00 PLN (ike_limits), read for 2027-08-01
-  held: ike_limit = 28 260.00 PLN (ike_limits), read for 2027-09-01
-  held: ike_limit = 28 260.00 PLN (ike_limits), read for 2027-10-01
-  held: ike_limit = 28 260.00 PLN (ike_limits), read for 2027-11-01
-  held: ike_limit = 28 260.00 PLN (ike_limits), read for 2027-12-01
-  held: inflation = 0.03 (prototype_assumptions), read for 2027-01-01
-  held: inflation = 0.03 (prototype_assumptions), read for 2028-01-01
-  held: proj_wage = 9 420.00 PLN (projected_wage), read for 2026-11-01
-  held: proj_wage = 9 420.00 PLN (projected_wage), read for 2026-12-01
-  held: proj_wage = 9 420.00 PLN (projected_wage), read for 2027-01-01
-  held: proj_wage = 9 420.00 PLN (projected_wage), read for 2027-02-01
-  held: proj_wage = 9 420.00 PLN (projected_wage), read for 2027-03-01
-  held: proj_wage = 9 420.00 PLN (projected_wage), read for 2027-04-01
-  held: proj_wage = 9 420.00 PLN (projected_wage), read for 2027-05-01
-  held: proj_wage = 9 420.00 PLN (projected_wage), read for 2027-06-01
-  held: proj_wage = 9 420.00 PLN (projected_wage), read for 2027-07-01
-  held: proj_wage = 9 420.00 PLN (projected_wage), read for 2027-08-01
-  held: proj_wage = 9 420.00 PLN (projected_wage), read for 2027-09-01
-  held: proj_wage = 9 420.00 PLN (projected_wage), read for 2027-10-01
-  held: proj_wage = 9 420.00 PLN (projected_wage), read for 2027-11-01
+  held: ike_limit = 28 260.00 PLN (ike_limits), read for 2026-11-01, 2026-12-01, 2027-01-01, 2027-02-01, 2027-03-01, 2027-04-01, 2027-05-01, 2027-06-01, 2027-07-01, 2027-08-01, 2027-09-01, 2027-10-01, 2027-11-01, 2027-12-01
+  held: inflation = 0.03 (prototype_assumptions), read for 2027-01-01, 2028-01-01
+  held: proj_wage = 9 420.00 PLN (projected_wage), read for 2026-11-01, 2026-12-01, 2027-01-01, 2027-02-01, 2027-03-01, 2027-04-01, 2027-05-01, 2027-06-01, 2027-07-01, 2027-08-01, 2027-09-01, 2027-10-01, 2027-11-01
   held: wage_growth = 0.04 (prototype_assumptions), read for 2027-01-01
   cut 2026-10-17
 pin_oki_tax: 202.00 PLN
@@ -40988,73 +40642,23 @@ pin_oki_tax: 202.00 PLN
   left out: my_pay, 1 instances, first 2028-07-07
   left out: pit_return, 2 instances, first 2029-04-30
   left out: wife_pay, 1 instances, first 2028-07-10
-  held: ike_limit = 28 260.00 PLN (ike_limits), read for 2026-11-01
-  held: ike_limit = 28 260.00 PLN (ike_limits), read for 2026-12-01
-  held: ike_limit = 28 260.00 PLN (ike_limits), read for 2027-01-01
-  held: ike_limit = 28 260.00 PLN (ike_limits), read for 2027-02-01
-  held: ike_limit = 28 260.00 PLN (ike_limits), read for 2027-03-01
-  held: ike_limit = 28 260.00 PLN (ike_limits), read for 2027-04-01
-  held: ike_limit = 28 260.00 PLN (ike_limits), read for 2027-05-01
-  held: ike_limit = 28 260.00 PLN (ike_limits), read for 2027-06-01
-  held: ike_limit = 28 260.00 PLN (ike_limits), read for 2027-07-01
-  held: ike_limit = 28 260.00 PLN (ike_limits), read for 2027-08-01
-  held: ike_limit = 28 260.00 PLN (ike_limits), read for 2027-09-01
-  held: ike_limit = 28 260.00 PLN (ike_limits), read for 2027-10-01
-  held: ike_limit = 28 260.00 PLN (ike_limits), read for 2027-11-01
-  held: ike_limit = 28 260.00 PLN (ike_limits), read for 2027-12-01
-  held: inflation = 0.03 (prototype_assumptions), read for 2027-01-01
-  held: inflation = 0.03 (prototype_assumptions), read for 2028-01-01
-  held: proj_wage = 9 420.00 PLN (projected_wage), read for 2026-11-01
-  held: proj_wage = 9 420.00 PLN (projected_wage), read for 2026-12-01
-  held: proj_wage = 9 420.00 PLN (projected_wage), read for 2027-01-01
-  held: proj_wage = 9 420.00 PLN (projected_wage), read for 2027-02-01
-  held: proj_wage = 9 420.00 PLN (projected_wage), read for 2027-03-01
-  held: proj_wage = 9 420.00 PLN (projected_wage), read for 2027-04-01
-  held: proj_wage = 9 420.00 PLN (projected_wage), read for 2027-05-01
-  held: proj_wage = 9 420.00 PLN (projected_wage), read for 2027-06-01
-  held: proj_wage = 9 420.00 PLN (projected_wage), read for 2027-07-01
-  held: proj_wage = 9 420.00 PLN (projected_wage), read for 2027-08-01
-  held: proj_wage = 9 420.00 PLN (projected_wage), read for 2027-09-01
-  held: proj_wage = 9 420.00 PLN (projected_wage), read for 2027-10-01
-  held: proj_wage = 9 420.00 PLN (projected_wage), read for 2027-11-01
+  held: ike_limit = 28 260.00 PLN (ike_limits), read for 2026-11-01, 2026-12-01, 2027-01-01, 2027-02-01, 2027-03-01, 2027-04-01, 2027-05-01, 2027-06-01, 2027-07-01, 2027-08-01, 2027-09-01, 2027-10-01, 2027-11-01, 2027-12-01
+  held: inflation = 0.03 (prototype_assumptions), read for 2027-01-01, 2028-01-01
+  held: proj_wage = 9 420.00 PLN (projected_wage), read for 2026-11-01, 2026-12-01, 2027-01-01, 2027-02-01, 2027-03-01, 2027-04-01, 2027-05-01, 2027-06-01, 2027-07-01, 2027-08-01, 2027-09-01, 2027-10-01, 2027-11-01
   held: wage_growth = 0.04 (prototype_assumptions), read for 2027-01-01
   cut 2026-10-17
 pin_pit (j = my_job, y = 2026): -5.00 PLN
-  held: proj_wage = 9 420.00 PLN (projected_wage), read for 2026-11-01
-  held: proj_wage = 9 420.00 PLN (projected_wage), read for 2026-12-01
+  held: proj_wage = 9 420.00 PLN (projected_wage), read for 2026-11-01, 2026-12-01
   cut 2026-10-17
 pin_pit (j = my_job, y = 2027): 3.00 PLN
-  held: proj_wage = 9 420.00 PLN (projected_wage), read for 2027-01-01
-  held: proj_wage = 9 420.00 PLN (projected_wage), read for 2027-02-01
-  held: proj_wage = 9 420.00 PLN (projected_wage), read for 2027-03-01
-  held: proj_wage = 9 420.00 PLN (projected_wage), read for 2027-04-01
-  held: proj_wage = 9 420.00 PLN (projected_wage), read for 2027-05-01
-  held: proj_wage = 9 420.00 PLN (projected_wage), read for 2027-06-01
-  held: proj_wage = 9 420.00 PLN (projected_wage), read for 2027-07-01
-  held: proj_wage = 9 420.00 PLN (projected_wage), read for 2027-08-01
-  held: proj_wage = 9 420.00 PLN (projected_wage), read for 2027-09-01
-  held: proj_wage = 9 420.00 PLN (projected_wage), read for 2027-10-01
-  held: proj_wage = 9 420.00 PLN (projected_wage), read for 2027-11-01
-  held: proj_wage = 9 420.00 PLN (projected_wage), read for 2027-12-01
+  held: proj_wage = 9 420.00 PLN (projected_wage), read for 2027-01-01, 2027-02-01, 2027-03-01, 2027-04-01, 2027-05-01, 2027-06-01, 2027-07-01, 2027-08-01, 2027-09-01, 2027-10-01, 2027-11-01, 2027-12-01
   held: wage_growth = 0.04 (prototype_assumptions), read for 2027-01-01
   cut 2026-10-17
 pin_pit (j = wife_job, y = 2026): -2.00 PLN
-  held: proj_wage = 9 420.00 PLN (projected_wage), read for 2026-11-01
-  held: proj_wage = 9 420.00 PLN (projected_wage), read for 2026-12-01
+  held: proj_wage = 9 420.00 PLN (projected_wage), read for 2026-11-01, 2026-12-01
   cut 2026-10-17
 pin_pit (j = wife_job, y = 2027): -2.00 PLN
-  held: proj_wage = 9 420.00 PLN (projected_wage), read for 2027-01-01
-  held: proj_wage = 9 420.00 PLN (projected_wage), read for 2027-02-01
-  held: proj_wage = 9 420.00 PLN (projected_wage), read for 2027-03-01
-  held: proj_wage = 9 420.00 PLN (projected_wage), read for 2027-04-01
-  held: proj_wage = 9 420.00 PLN (projected_wage), read for 2027-05-01
-  held: proj_wage = 9 420.00 PLN (projected_wage), read for 2027-06-01
-  held: proj_wage = 9 420.00 PLN (projected_wage), read for 2027-07-01
-  held: proj_wage = 9 420.00 PLN (projected_wage), read for 2027-08-01
-  held: proj_wage = 9 420.00 PLN (projected_wage), read for 2027-09-01
-  held: proj_wage = 9 420.00 PLN (projected_wage), read for 2027-10-01
-  held: proj_wage = 9 420.00 PLN (projected_wage), read for 2027-11-01
-  held: proj_wage = 9 420.00 PLN (projected_wage), read for 2027-12-01
+  held: proj_wage = 9 420.00 PLN (projected_wage), read for 2027-01-01, 2027-02-01, 2027-03-01, 2027-04-01, 2027-05-01, 2027-06-01, 2027-07-01, 2027-08-01, 2027-09-01, 2027-10-01, 2027-11-01, 2027-12-01
   held: wage_growth = 0.04 (prototype_assumptions), read for 2027-01-01
   cut 2026-10-17
 warning: WARN-NEGATIVE konto is below zero from 2024-02-01
@@ -44043,7 +43647,7 @@ version bank_2026_10
   bank[r20261016a] = (on: 2026-10-16, kind: bank_line, leg cash from konto to sklepy amount 147.89 PLN, cat: codzienne) "ledger.json row 1941"
   bank[r20261016b] = (on: 2026-10-16, kind: bank_line, leg cash from konto to sklepy amount 166.44 PLN, cat: codzienne) "ledger.json row 1942"
   stated[konto] = 11685.67 at 2026-10-16 end "the opening plus every row to the day"
-,,1:0,14907:pin_net_worth (d = 2026-11-01): 223 463.93 PLN
+,,1:0,10465:pin_net_worth (d = 2026-11-01): 223 463.93 PLN
   anchor: konto 2026-10-16 end, stated 11 685.67 PLN, difference 0.00 PLN
   unfulfilled: buy_ike[2024-01]
   unfulfilled: buy_ike[2024-04]
@@ -44148,22 +43752,9 @@ pin_net_worth (d = 2027-06-30): 298 270.74 PLN
   left out: my_pay, 1 instances, first 2028-07-07
   left out: pit_return, 2 instances, first 2029-04-30
   left out: wife_pay, 1 instances, first 2028-07-10
-  held: ike_limit = 28 260.00 PLN (ike_limits), read for 2026-11-01
-  held: ike_limit = 28 260.00 PLN (ike_limits), read for 2026-12-01
-  held: ike_limit = 28 260.00 PLN (ike_limits), read for 2027-01-01
-  held: ike_limit = 28 260.00 PLN (ike_limits), read for 2027-02-01
-  held: ike_limit = 28 260.00 PLN (ike_limits), read for 2027-03-01
-  held: ike_limit = 28 260.00 PLN (ike_limits), read for 2027-04-01
-  held: ike_limit = 28 260.00 PLN (ike_limits), read for 2027-05-01
-  held: ike_limit = 28 260.00 PLN (ike_limits), read for 2027-06-01
+  held: ike_limit = 28 260.00 PLN (ike_limits), read for 2026-11-01, 2026-12-01, 2027-01-01, 2027-02-01, 2027-03-01, 2027-04-01, 2027-05-01, 2027-06-01
   held: inflation = 0.03 (prototype_assumptions), read for 2027-01-01
-  held: proj_wage = 9 420.00 PLN (projected_wage), read for 2026-11-01
-  held: proj_wage = 9 420.00 PLN (projected_wage), read for 2026-12-01
-  held: proj_wage = 9 420.00 PLN (projected_wage), read for 2027-01-01
-  held: proj_wage = 9 420.00 PLN (projected_wage), read for 2027-02-01
-  held: proj_wage = 9 420.00 PLN (projected_wage), read for 2027-03-01
-  held: proj_wage = 9 420.00 PLN (projected_wage), read for 2027-04-01
-  held: proj_wage = 9 420.00 PLN (projected_wage), read for 2027-05-01
+  held: proj_wage = 9 420.00 PLN (projected_wage), read for 2026-11-01, 2026-12-01, 2027-01-01, 2027-02-01, 2027-03-01, 2027-04-01, 2027-05-01
   held: wage_growth = 0.04 (prototype_assumptions), read for 2027-01-01
   cut 2026-10-17
 pin_net_worth_2027: 354 270.37 PLN
@@ -44228,35 +43819,9 @@ pin_net_worth_2027: 354 270.37 PLN
   left out: my_pay, 1 instances, first 2028-07-07
   left out: pit_return, 2 instances, first 2029-04-30
   left out: wife_pay, 1 instances, first 2028-07-10
-  held: ike_limit = 28 260.00 PLN (ike_limits), read for 2026-11-01
-  held: ike_limit = 28 260.00 PLN (ike_limits), read for 2026-12-01
-  held: ike_limit = 28 260.00 PLN (ike_limits), read for 2027-01-01
-  held: ike_limit = 28 260.00 PLN (ike_limits), read for 2027-02-01
-  held: ike_limit = 28 260.00 PLN (ike_limits), read for 2027-03-01
-  held: ike_limit = 28 260.00 PLN (ike_limits), read for 2027-04-01
-  held: ike_limit = 28 260.00 PLN (ike_limits), read for 2027-05-01
-  held: ike_limit = 28 260.00 PLN (ike_limits), read for 2027-06-01
-  held: ike_limit = 28 260.00 PLN (ike_limits), read for 2027-07-01
-  held: ike_limit = 28 260.00 PLN (ike_limits), read for 2027-08-01
-  held: ike_limit = 28 260.00 PLN (ike_limits), read for 2027-09-01
-  held: ike_limit = 28 260.00 PLN (ike_limits), read for 2027-10-01
-  held: ike_limit = 28 260.00 PLN (ike_limits), read for 2027-11-01
-  held: ike_limit = 28 260.00 PLN (ike_limits), read for 2027-12-01
-  held: inflation = 0.03 (prototype_assumptions), read for 2027-01-01
-  held: inflation = 0.03 (prototype_assumptions), read for 2028-01-01
-  held: proj_wage = 9 420.00 PLN (projected_wage), read for 2026-11-01
-  held: proj_wage = 9 420.00 PLN (projected_wage), read for 2026-12-01
-  held: proj_wage = 9 420.00 PLN (projected_wage), read for 2027-01-01
-  held: proj_wage = 9 420.00 PLN (projected_wage), read for 2027-02-01
-  held: proj_wage = 9 420.00 PLN (projected_wage), read for 2027-03-01
-  held: proj_wage = 9 420.00 PLN (projected_wage), read for 2027-04-01
-  held: proj_wage = 9 420.00 PLN (projected_wage), read for 2027-05-01
-  held: proj_wage = 9 420.00 PLN (projected_wage), read for 2027-06-01
-  held: proj_wage = 9 420.00 PLN (projected_wage), read for 2027-07-01
-  held: proj_wage = 9 420.00 PLN (projected_wage), read for 2027-08-01
-  held: proj_wage = 9 420.00 PLN (projected_wage), read for 2027-09-01
-  held: proj_wage = 9 420.00 PLN (projected_wage), read for 2027-10-01
-  held: proj_wage = 9 420.00 PLN (projected_wage), read for 2027-11-01
+  held: ike_limit = 28 260.00 PLN (ike_limits), read for 2026-11-01, 2026-12-01, 2027-01-01, 2027-02-01, 2027-03-01, 2027-04-01, 2027-05-01, 2027-06-01, 2027-07-01, 2027-08-01, 2027-09-01, 2027-10-01, 2027-11-01, 2027-12-01
+  held: inflation = 0.03 (prototype_assumptions), read for 2027-01-01, 2028-01-01
+  held: proj_wage = 9 420.00 PLN (projected_wage), read for 2026-11-01, 2026-12-01, 2027-01-01, 2027-02-01, 2027-03-01, 2027-04-01, 2027-05-01, 2027-06-01, 2027-07-01, 2027-08-01, 2027-09-01, 2027-10-01, 2027-11-01
   held: wage_growth = 0.04 (prototype_assumptions), read for 2027-01-01
   cut 2026-10-17
 pin_oki_tax: 204.00 PLN
@@ -44286,54 +43851,16 @@ pin_oki_tax: 204.00 PLN
   left out: my_pay, 1 instances, first 2028-07-07
   left out: pit_return, 2 instances, first 2029-04-30
   left out: wife_pay, 1 instances, first 2028-07-10
-  held: ike_limit = 28 260.00 PLN (ike_limits), read for 2026-11-01
-  held: ike_limit = 28 260.00 PLN (ike_limits), read for 2026-12-01
-  held: ike_limit = 28 260.00 PLN (ike_limits), read for 2027-01-01
-  held: ike_limit = 28 260.00 PLN (ike_limits), read for 2027-02-01
-  held: ike_limit = 28 260.00 PLN (ike_limits), read for 2027-03-01
-  held: ike_limit = 28 260.00 PLN (ike_limits), read for 2027-04-01
-  held: ike_limit = 28 260.00 PLN (ike_limits), read for 2027-05-01
-  held: ike_limit = 28 260.00 PLN (ike_limits), read for 2027-06-01
-  held: ike_limit = 28 260.00 PLN (ike_limits), read for 2027-07-01
-  held: ike_limit = 28 260.00 PLN (ike_limits), read for 2027-08-01
-  held: ike_limit = 28 260.00 PLN (ike_limits), read for 2027-09-01
-  held: ike_limit = 28 260.00 PLN (ike_limits), read for 2027-10-01
-  held: ike_limit = 28 260.00 PLN (ike_limits), read for 2027-11-01
-  held: ike_limit = 28 260.00 PLN (ike_limits), read for 2027-12-01
-  held: inflation = 0.03 (prototype_assumptions), read for 2027-01-01
-  held: inflation = 0.03 (prototype_assumptions), read for 2028-01-01
-  held: proj_wage = 9 420.00 PLN (projected_wage), read for 2026-11-01
-  held: proj_wage = 9 420.00 PLN (projected_wage), read for 2026-12-01
-  held: proj_wage = 9 420.00 PLN (projected_wage), read for 2027-01-01
-  held: proj_wage = 9 420.00 PLN (projected_wage), read for 2027-02-01
-  held: proj_wage = 9 420.00 PLN (projected_wage), read for 2027-03-01
-  held: proj_wage = 9 420.00 PLN (projected_wage), read for 2027-04-01
-  held: proj_wage = 9 420.00 PLN (projected_wage), read for 2027-05-01
-  held: proj_wage = 9 420.00 PLN (projected_wage), read for 2027-06-01
-  held: proj_wage = 9 420.00 PLN (projected_wage), read for 2027-07-01
-  held: proj_wage = 9 420.00 PLN (projected_wage), read for 2027-08-01
-  held: proj_wage = 9 420.00 PLN (projected_wage), read for 2027-09-01
-  held: proj_wage = 9 420.00 PLN (projected_wage), read for 2027-10-01
-  held: proj_wage = 9 420.00 PLN (projected_wage), read for 2027-11-01
+  held: ike_limit = 28 260.00 PLN (ike_limits), read for 2026-11-01, 2026-12-01, 2027-01-01, 2027-02-01, 2027-03-01, 2027-04-01, 2027-05-01, 2027-06-01, 2027-07-01, 2027-08-01, 2027-09-01, 2027-10-01, 2027-11-01, 2027-12-01
+  held: inflation = 0.03 (prototype_assumptions), read for 2027-01-01, 2028-01-01
+  held: proj_wage = 9 420.00 PLN (projected_wage), read for 2026-11-01, 2026-12-01, 2027-01-01, 2027-02-01, 2027-03-01, 2027-04-01, 2027-05-01, 2027-06-01, 2027-07-01, 2027-08-01, 2027-09-01, 2027-10-01, 2027-11-01
   held: wage_growth = 0.04 (prototype_assumptions), read for 2027-01-01
   cut 2026-10-17
 pin_pit (j = my_job, y = 2026): -259.00 PLN
-  held: proj_wage = 9 420.00 PLN (projected_wage), read for 2026-11-01
-  held: proj_wage = 9 420.00 PLN (projected_wage), read for 2026-12-01
+  held: proj_wage = 9 420.00 PLN (projected_wage), read for 2026-11-01, 2026-12-01
   cut 2026-10-17
 pin_pit (j = my_job, y = 2027): -1 245.00 PLN
-  held: proj_wage = 9 420.00 PLN (projected_wage), read for 2027-01-01
-  held: proj_wage = 9 420.00 PLN (projected_wage), read for 2027-02-01
-  held: proj_wage = 9 420.00 PLN (projected_wage), read for 2027-03-01
-  held: proj_wage = 9 420.00 PLN (projected_wage), read for 2027-04-01
-  held: proj_wage = 9 420.00 PLN (projected_wage), read for 2027-05-01
-  held: proj_wage = 9 420.00 PLN (projected_wage), read for 2027-06-01
-  held: proj_wage = 9 420.00 PLN (projected_wage), read for 2027-07-01
-  held: proj_wage = 9 420.00 PLN (projected_wage), read for 2027-08-01
-  held: proj_wage = 9 420.00 PLN (projected_wage), read for 2027-09-01
-  held: proj_wage = 9 420.00 PLN (projected_wage), read for 2027-10-01
-  held: proj_wage = 9 420.00 PLN (projected_wage), read for 2027-11-01
-  held: proj_wage = 9 420.00 PLN (projected_wage), read for 2027-12-01
+  held: proj_wage = 9 420.00 PLN (projected_wage), read for 2027-01-01, 2027-02-01, 2027-03-01, 2027-04-01, 2027-05-01, 2027-06-01, 2027-07-01, 2027-08-01, 2027-09-01, 2027-10-01, 2027-11-01, 2027-12-01
   held: wage_growth = 0.04 (prototype_assumptions), read for 2027-01-01
   cut 2026-10-17
 pin_pit (j = wife_job, y = 2026): 0.00 PLN
@@ -47294,7 +46821,7 @@ version bank_2026_10
   bank[r20261016a] = (on: 2026-10-16, kind: bank_line, leg cash from konto to sklepy amount 147.89 PLN, cat: codzienne) "ledger.json row 1941"
   bank[r20261016b] = (on: 2026-10-16, kind: bank_line, leg cash from konto to sklepy amount 166.44 PLN, cat: codzienne) "ledger.json row 1942"
   stated[konto] = 11685.67 at 2026-10-16 end "the opening plus every row to the day"
-,,1:0,11230:pin_oki_tax_2030: (1 682.00 PLN, 0.0071)
+,,1:0,5146:pin_oki_tax_2030: (1 682.00 PLN, 0.0071)
   anchor: konto 2026-10-16 end, stated 11 685.67 PLN, difference 0.00 PLN
   open: biz_costs[2026-10]
   open: biz_fee[2026-09]
@@ -47357,117 +46884,11 @@ version bank_2026_10
   left out: my_pay, 1 instances, first 2031-02-07
   left out: pit_return, 4 instances, first 2031-04-30
   left out: wife_pay, 1 instances, first 2031-02-10
-  held: ike_limit = 28 260.00 PLN (ike_limits), read for 2026-11-01
-  held: ike_limit = 28 260.00 PLN (ike_limits), read for 2026-12-01
-  held: ike_limit = 28 260.00 PLN (ike_limits), read for 2027-01-01
-  held: ike_limit = 28 260.00 PLN (ike_limits), read for 2027-02-01
-  held: ike_limit = 28 260.00 PLN (ike_limits), read for 2027-03-01
-  held: ike_limit = 28 260.00 PLN (ike_limits), read for 2027-04-01
-  held: ike_limit = 28 260.00 PLN (ike_limits), read for 2027-05-01
-  held: ike_limit = 28 260.00 PLN (ike_limits), read for 2027-06-01
-  held: ike_limit = 28 260.00 PLN (ike_limits), read for 2027-07-01
-  held: ike_limit = 28 260.00 PLN (ike_limits), read for 2027-08-01
-  held: ike_limit = 28 260.00 PLN (ike_limits), read for 2027-09-01
-  held: ike_limit = 28 260.00 PLN (ike_limits), read for 2027-10-01
-  held: ike_limit = 28 260.00 PLN (ike_limits), read for 2027-11-01
-  held: ike_limit = 28 260.00 PLN (ike_limits), read for 2027-12-01
-  held: ike_limit = 28 260.00 PLN (ike_limits), read for 2028-01-01
-  held: ike_limit = 28 260.00 PLN (ike_limits), read for 2028-02-01
-  held: ike_limit = 28 260.00 PLN (ike_limits), read for 2028-03-01
-  held: ike_limit = 28 260.00 PLN (ike_limits), read for 2028-04-01
-  held: ike_limit = 28 260.00 PLN (ike_limits), read for 2028-05-01
-  held: ike_limit = 28 260.00 PLN (ike_limits), read for 2028-06-01
-  held: ike_limit = 28 260.00 PLN (ike_limits), read for 2028-07-01
-  held: ike_limit = 28 260.00 PLN (ike_limits), read for 2028-08-01
-  held: ike_limit = 28 260.00 PLN (ike_limits), read for 2028-09-01
-  held: ike_limit = 28 260.00 PLN (ike_limits), read for 2028-10-01
-  held: ike_limit = 28 260.00 PLN (ike_limits), read for 2028-11-01
-  held: ike_limit = 28 260.00 PLN (ike_limits), read for 2028-12-01
-  held: ike_limit = 28 260.00 PLN (ike_limits), read for 2029-01-01
-  held: ike_limit = 28 260.00 PLN (ike_limits), read for 2029-02-01
-  held: ike_limit = 28 260.00 PLN (ike_limits), read for 2029-03-01
-  held: ike_limit = 28 260.00 PLN (ike_limits), read for 2029-04-01
-  held: ike_limit = 28 260.00 PLN (ike_limits), read for 2029-05-01
-  held: ike_limit = 28 260.00 PLN (ike_limits), read for 2029-06-01
-  held: ike_limit = 28 260.00 PLN (ike_limits), read for 2029-07-01
-  held: ike_limit = 28 260.00 PLN (ike_limits), read for 2029-08-01
-  held: ike_limit = 28 260.00 PLN (ike_limits), read for 2029-09-01
-  held: ike_limit = 28 260.00 PLN (ike_limits), read for 2029-10-01
-  held: ike_limit = 28 260.00 PLN (ike_limits), read for 2029-11-01
-  held: ike_limit = 28 260.00 PLN (ike_limits), read for 2029-12-01
-  held: ike_limit = 28 260.00 PLN (ike_limits), read for 2030-01-01
-  held: ike_limit = 28 260.00 PLN (ike_limits), read for 2030-02-01
-  held: ike_limit = 28 260.00 PLN (ike_limits), read for 2030-03-01
-  held: ike_limit = 28 260.00 PLN (ike_limits), read for 2030-04-01
-  held: ike_limit = 28 260.00 PLN (ike_limits), read for 2030-05-01
-  held: ike_limit = 28 260.00 PLN (ike_limits), read for 2030-06-01
-  held: ike_limit = 28 260.00 PLN (ike_limits), read for 2030-07-01
-  held: ike_limit = 28 260.00 PLN (ike_limits), read for 2030-08-01
-  held: ike_limit = 28 260.00 PLN (ike_limits), read for 2030-09-01
-  held: ike_limit = 28 260.00 PLN (ike_limits), read for 2030-10-01
-  held: ike_limit = 28 260.00 PLN (ike_limits), read for 2030-11-01
-  held: ike_limit = 28 260.00 PLN (ike_limits), read for 2030-12-01
-  held: inflation = 0.03 (prototype_assumptions), read for 2027-01-01
-  held: inflation = 0.03 (prototype_assumptions), read for 2028-01-01
-  held: inflation = 0.03 (prototype_assumptions), read for 2029-01-01
-  held: inflation = 0.03 (prototype_assumptions), read for 2030-01-01
-  held: inflation = 0.03 (prototype_assumptions), read for 2031-01-01
-  held: nbp_ref = 0.0375 (nbp_2026_03), read for 2027-10-31
-  held: nbp_ref = 0.0375 (nbp_2026_03), read for 2028-10-31
-  held: nbp_ref = 0.0375 (nbp_2026_03), read for 2029-10-31
-  held: proj_wage = 9 420.00 PLN (projected_wage), read for 2026-11-01
-  held: proj_wage = 9 420.00 PLN (projected_wage), read for 2026-12-01
-  held: proj_wage = 9 420.00 PLN (projected_wage), read for 2027-01-01
-  held: proj_wage = 9 420.00 PLN (projected_wage), read for 2027-02-01
-  held: proj_wage = 9 420.00 PLN (projected_wage), read for 2027-03-01
-  held: proj_wage = 9 420.00 PLN (projected_wage), read for 2027-04-01
-  held: proj_wage = 9 420.00 PLN (projected_wage), read for 2027-05-01
-  held: proj_wage = 9 420.00 PLN (projected_wage), read for 2027-06-01
-  held: proj_wage = 9 420.00 PLN (projected_wage), read for 2027-07-01
-  held: proj_wage = 9 420.00 PLN (projected_wage), read for 2027-08-01
-  held: proj_wage = 9 420.00 PLN (projected_wage), read for 2027-09-01
-  held: proj_wage = 9 420.00 PLN (projected_wage), read for 2027-10-01
-  held: proj_wage = 9 420.00 PLN (projected_wage), read for 2027-11-01
-  held: proj_wage = 9 420.00 PLN (projected_wage), read for 2027-12-01
-  held: proj_wage = 9 420.00 PLN (projected_wage), read for 2028-01-01
-  held: proj_wage = 9 420.00 PLN (projected_wage), read for 2028-02-01
-  held: proj_wage = 9 420.00 PLN (projected_wage), read for 2028-03-01
-  held: proj_wage = 9 420.00 PLN (projected_wage), read for 2028-04-01
-  held: proj_wage = 9 420.00 PLN (projected_wage), read for 2028-05-01
-  held: proj_wage = 9 420.00 PLN (projected_wage), read for 2028-06-01
-  held: proj_wage = 9 420.00 PLN (projected_wage), read for 2028-07-01
-  held: proj_wage = 9 420.00 PLN (projected_wage), read for 2028-08-01
-  held: proj_wage = 9 420.00 PLN (projected_wage), read for 2028-09-01
-  held: proj_wage = 9 420.00 PLN (projected_wage), read for 2028-10-01
-  held: proj_wage = 9 420.00 PLN (projected_wage), read for 2028-11-01
-  held: proj_wage = 9 420.00 PLN (projected_wage), read for 2028-12-01
-  held: proj_wage = 9 420.00 PLN (projected_wage), read for 2029-01-01
-  held: proj_wage = 9 420.00 PLN (projected_wage), read for 2029-02-01
-  held: proj_wage = 9 420.00 PLN (projected_wage), read for 2029-03-01
-  held: proj_wage = 9 420.00 PLN (projected_wage), read for 2029-04-01
-  held: proj_wage = 9 420.00 PLN (projected_wage), read for 2029-05-01
-  held: proj_wage = 9 420.00 PLN (projected_wage), read for 2029-06-01
-  held: proj_wage = 9 420.00 PLN (projected_wage), read for 2029-07-01
-  held: proj_wage = 9 420.00 PLN (projected_wage), read for 2029-08-01
-  held: proj_wage = 9 420.00 PLN (projected_wage), read for 2029-09-01
-  held: proj_wage = 9 420.00 PLN (projected_wage), read for 2029-10-01
-  held: proj_wage = 9 420.00 PLN (projected_wage), read for 2029-11-01
-  held: proj_wage = 9 420.00 PLN (projected_wage), read for 2029-12-01
-  held: proj_wage = 9 420.00 PLN (projected_wage), read for 2030-01-01
-  held: proj_wage = 9 420.00 PLN (projected_wage), read for 2030-02-01
-  held: proj_wage = 9 420.00 PLN (projected_wage), read for 2030-03-01
-  held: proj_wage = 9 420.00 PLN (projected_wage), read for 2030-04-01
-  held: proj_wage = 9 420.00 PLN (projected_wage), read for 2030-05-01
-  held: proj_wage = 9 420.00 PLN (projected_wage), read for 2030-06-01
-  held: proj_wage = 9 420.00 PLN (projected_wage), read for 2030-07-01
-  held: proj_wage = 9 420.00 PLN (projected_wage), read for 2030-08-01
-  held: proj_wage = 9 420.00 PLN (projected_wage), read for 2030-09-01
-  held: proj_wage = 9 420.00 PLN (projected_wage), read for 2030-10-01
-  held: proj_wage = 9 420.00 PLN (projected_wage), read for 2030-11-01
-  held: wage_growth = 0.04 (prototype_assumptions), read for 2027-01-01
-  held: wage_growth = 0.04 (prototype_assumptions), read for 2028-01-01
-  held: wage_growth = 0.04 (prototype_assumptions), read for 2029-01-01
-  held: wage_growth = 0.04 (prototype_assumptions), read for 2030-01-01
+  held: ike_limit = 28 260.00 PLN (ike_limits), read for 2026-11-01, 2026-12-01, 2027-01-01, 2027-02-01, 2027-03-01, 2027-04-01, 2027-05-01, 2027-06-01, 2027-07-01, 2027-08-01, 2027-09-01, 2027-10-01, 2027-11-01, 2027-12-01, 2028-01-01, 2028-02-01, 2028-03-01, 2028-04-01, 2028-05-01, 2028-06-01, 2028-07-01, 2028-08-01, 2028-09-01, 2028-10-01, 2028-11-01, 2028-12-01, 2029-01-01, 2029-02-01, 2029-03-01, 2029-04-01, 2029-05-01, 2029-06-01, 2029-07-01, 2029-08-01, 2029-09-01, 2029-10-01, 2029-11-01, 2029-12-01, 2030-01-01, 2030-02-01, 2030-03-01, 2030-04-01, 2030-05-01, 2030-06-01, 2030-07-01, 2030-08-01, 2030-09-01, 2030-10-01, 2030-11-01, 2030-12-01
+  held: inflation = 0.03 (prototype_assumptions), read for 2027-01-01, 2028-01-01, 2029-01-01, 2030-01-01, 2031-01-01
+  held: nbp_ref = 0.0375 (nbp_2026_03), read for 2027-10-31, 2028-10-31, 2029-10-31
+  held: proj_wage = 9 420.00 PLN (projected_wage), read for 2026-11-01, 2026-12-01, 2027-01-01, 2027-02-01, 2027-03-01, 2027-04-01, 2027-05-01, 2027-06-01, 2027-07-01, 2027-08-01, 2027-09-01, 2027-10-01, 2027-11-01, 2027-12-01, 2028-01-01, 2028-02-01, 2028-03-01, 2028-04-01, 2028-05-01, 2028-06-01, 2028-07-01, 2028-08-01, 2028-09-01, 2028-10-01, 2028-11-01, 2028-12-01, 2029-01-01, 2029-02-01, 2029-03-01, 2029-04-01, 2029-05-01, 2029-06-01, 2029-07-01, 2029-08-01, 2029-09-01, 2029-10-01, 2029-11-01, 2029-12-01, 2030-01-01, 2030-02-01, 2030-03-01, 2030-04-01, 2030-05-01, 2030-06-01, 2030-07-01, 2030-08-01, 2030-09-01, 2030-10-01, 2030-11-01
+  held: wage_growth = 0.04 (prototype_assumptions), read for 2027-01-01, 2028-01-01, 2029-01-01, 2030-01-01
   cut 2026-10-17
 warning: WARN-NEGATIVE konto is below zero from 2024-02-01
 warning: WARN-NEGATIVE konto is below zero from 2024-03-05
@@ -50434,7 +49855,7 @@ version bank_2026_10
   bank[r20261016a] = (on: 2026-10-16, kind: bank_line, leg cash from konto to sklepy amount 147.89 PLN, cat: codzienne) "ledger.json row 1941"
   bank[r20261016b] = (on: 2026-10-16, kind: bank_line, leg cash from konto to sklepy amount 166.44 PLN, cat: codzienne) "ledger.json row 1942"
   stated[konto] = 11685.67 at 2026-10-16 end "the opening plus every row to the day"
-,,1:0,11230:pin_oki_tax_2030: (1 729.00 PLN, 0.0071)
+,,1:0,5146:pin_oki_tax_2030: (1 729.00 PLN, 0.0071)
   anchor: konto 2026-10-16 end, stated 11 685.67 PLN, difference 0.00 PLN
   open: biz_costs[2026-10]
   open: biz_fee[2026-09]
@@ -50497,117 +49918,11 @@ version bank_2026_10
   left out: my_pay, 1 instances, first 2031-02-07
   left out: pit_return, 4 instances, first 2031-04-30
   left out: wife_pay, 1 instances, first 2031-02-10
-  held: ike_limit = 28 260.00 PLN (ike_limits), read for 2026-11-01
-  held: ike_limit = 28 260.00 PLN (ike_limits), read for 2026-12-01
-  held: ike_limit = 28 260.00 PLN (ike_limits), read for 2027-01-01
-  held: ike_limit = 28 260.00 PLN (ike_limits), read for 2027-02-01
-  held: ike_limit = 28 260.00 PLN (ike_limits), read for 2027-03-01
-  held: ike_limit = 28 260.00 PLN (ike_limits), read for 2027-04-01
-  held: ike_limit = 28 260.00 PLN (ike_limits), read for 2027-05-01
-  held: ike_limit = 28 260.00 PLN (ike_limits), read for 2027-06-01
-  held: ike_limit = 28 260.00 PLN (ike_limits), read for 2027-07-01
-  held: ike_limit = 28 260.00 PLN (ike_limits), read for 2027-08-01
-  held: ike_limit = 28 260.00 PLN (ike_limits), read for 2027-09-01
-  held: ike_limit = 28 260.00 PLN (ike_limits), read for 2027-10-01
-  held: ike_limit = 28 260.00 PLN (ike_limits), read for 2027-11-01
-  held: ike_limit = 28 260.00 PLN (ike_limits), read for 2027-12-01
-  held: ike_limit = 28 260.00 PLN (ike_limits), read for 2028-01-01
-  held: ike_limit = 28 260.00 PLN (ike_limits), read for 2028-02-01
-  held: ike_limit = 28 260.00 PLN (ike_limits), read for 2028-03-01
-  held: ike_limit = 28 260.00 PLN (ike_limits), read for 2028-04-01
-  held: ike_limit = 28 260.00 PLN (ike_limits), read for 2028-05-01
-  held: ike_limit = 28 260.00 PLN (ike_limits), read for 2028-06-01
-  held: ike_limit = 28 260.00 PLN (ike_limits), read for 2028-07-01
-  held: ike_limit = 28 260.00 PLN (ike_limits), read for 2028-08-01
-  held: ike_limit = 28 260.00 PLN (ike_limits), read for 2028-09-01
-  held: ike_limit = 28 260.00 PLN (ike_limits), read for 2028-10-01
-  held: ike_limit = 28 260.00 PLN (ike_limits), read for 2028-11-01
-  held: ike_limit = 28 260.00 PLN (ike_limits), read for 2028-12-01
-  held: ike_limit = 28 260.00 PLN (ike_limits), read for 2029-01-01
-  held: ike_limit = 28 260.00 PLN (ike_limits), read for 2029-02-01
-  held: ike_limit = 28 260.00 PLN (ike_limits), read for 2029-03-01
-  held: ike_limit = 28 260.00 PLN (ike_limits), read for 2029-04-01
-  held: ike_limit = 28 260.00 PLN (ike_limits), read for 2029-05-01
-  held: ike_limit = 28 260.00 PLN (ike_limits), read for 2029-06-01
-  held: ike_limit = 28 260.00 PLN (ike_limits), read for 2029-07-01
-  held: ike_limit = 28 260.00 PLN (ike_limits), read for 2029-08-01
-  held: ike_limit = 28 260.00 PLN (ike_limits), read for 2029-09-01
-  held: ike_limit = 28 260.00 PLN (ike_limits), read for 2029-10-01
-  held: ike_limit = 28 260.00 PLN (ike_limits), read for 2029-11-01
-  held: ike_limit = 28 260.00 PLN (ike_limits), read for 2029-12-01
-  held: ike_limit = 28 260.00 PLN (ike_limits), read for 2030-01-01
-  held: ike_limit = 28 260.00 PLN (ike_limits), read for 2030-02-01
-  held: ike_limit = 28 260.00 PLN (ike_limits), read for 2030-03-01
-  held: ike_limit = 28 260.00 PLN (ike_limits), read for 2030-04-01
-  held: ike_limit = 28 260.00 PLN (ike_limits), read for 2030-05-01
-  held: ike_limit = 28 260.00 PLN (ike_limits), read for 2030-06-01
-  held: ike_limit = 28 260.00 PLN (ike_limits), read for 2030-07-01
-  held: ike_limit = 28 260.00 PLN (ike_limits), read for 2030-08-01
-  held: ike_limit = 28 260.00 PLN (ike_limits), read for 2030-09-01
-  held: ike_limit = 28 260.00 PLN (ike_limits), read for 2030-10-01
-  held: ike_limit = 28 260.00 PLN (ike_limits), read for 2030-11-01
-  held: ike_limit = 28 260.00 PLN (ike_limits), read for 2030-12-01
-  held: inflation = 0.03 (prototype_assumptions), read for 2027-01-01
-  held: inflation = 0.03 (prototype_assumptions), read for 2028-01-01
-  held: inflation = 0.03 (prototype_assumptions), read for 2029-01-01
-  held: inflation = 0.03 (prototype_assumptions), read for 2030-01-01
-  held: inflation = 0.03 (prototype_assumptions), read for 2031-01-01
-  held: nbp_ref = 0.0375 (nbp_2026_03), read for 2027-10-31
-  held: nbp_ref = 0.0375 (nbp_2026_03), read for 2028-10-31
-  held: nbp_ref = 0.0375 (nbp_2026_03), read for 2029-10-31
-  held: proj_wage = 9 420.00 PLN (projected_wage), read for 2026-11-01
-  held: proj_wage = 9 420.00 PLN (projected_wage), read for 2026-12-01
-  held: proj_wage = 9 420.00 PLN (projected_wage), read for 2027-01-01
-  held: proj_wage = 9 420.00 PLN (projected_wage), read for 2027-02-01
-  held: proj_wage = 9 420.00 PLN (projected_wage), read for 2027-03-01
-  held: proj_wage = 9 420.00 PLN (projected_wage), read for 2027-04-01
-  held: proj_wage = 9 420.00 PLN (projected_wage), read for 2027-05-01
-  held: proj_wage = 9 420.00 PLN (projected_wage), read for 2027-06-01
-  held: proj_wage = 9 420.00 PLN (projected_wage), read for 2027-07-01
-  held: proj_wage = 9 420.00 PLN (projected_wage), read for 2027-08-01
-  held: proj_wage = 9 420.00 PLN (projected_wage), read for 2027-09-01
-  held: proj_wage = 9 420.00 PLN (projected_wage), read for 2027-10-01
-  held: proj_wage = 9 420.00 PLN (projected_wage), read for 2027-11-01
-  held: proj_wage = 9 420.00 PLN (projected_wage), read for 2027-12-01
-  held: proj_wage = 9 420.00 PLN (projected_wage), read for 2028-01-01
-  held: proj_wage = 9 420.00 PLN (projected_wage), read for 2028-02-01
-  held: proj_wage = 9 420.00 PLN (projected_wage), read for 2028-03-01
-  held: proj_wage = 9 420.00 PLN (projected_wage), read for 2028-04-01
-  held: proj_wage = 9 420.00 PLN (projected_wage), read for 2028-05-01
-  held: proj_wage = 9 420.00 PLN (projected_wage), read for 2028-06-01
-  held: proj_wage = 9 420.00 PLN (projected_wage), read for 2028-07-01
-  held: proj_wage = 9 420.00 PLN (projected_wage), read for 2028-08-01
-  held: proj_wage = 9 420.00 PLN (projected_wage), read for 2028-09-01
-  held: proj_wage = 9 420.00 PLN (projected_wage), read for 2028-10-01
-  held: proj_wage = 9 420.00 PLN (projected_wage), read for 2028-11-01
-  held: proj_wage = 9 420.00 PLN (projected_wage), read for 2028-12-01
-  held: proj_wage = 9 420.00 PLN (projected_wage), read for 2029-01-01
-  held: proj_wage = 9 420.00 PLN (projected_wage), read for 2029-02-01
-  held: proj_wage = 9 420.00 PLN (projected_wage), read for 2029-03-01
-  held: proj_wage = 9 420.00 PLN (projected_wage), read for 2029-04-01
-  held: proj_wage = 9 420.00 PLN (projected_wage), read for 2029-05-01
-  held: proj_wage = 9 420.00 PLN (projected_wage), read for 2029-06-01
-  held: proj_wage = 9 420.00 PLN (projected_wage), read for 2029-07-01
-  held: proj_wage = 9 420.00 PLN (projected_wage), read for 2029-08-01
-  held: proj_wage = 9 420.00 PLN (projected_wage), read for 2029-09-01
-  held: proj_wage = 9 420.00 PLN (projected_wage), read for 2029-10-01
-  held: proj_wage = 9 420.00 PLN (projected_wage), read for 2029-11-01
-  held: proj_wage = 9 420.00 PLN (projected_wage), read for 2029-12-01
-  held: proj_wage = 9 420.00 PLN (projected_wage), read for 2030-01-01
-  held: proj_wage = 9 420.00 PLN (projected_wage), read for 2030-02-01
-  held: proj_wage = 9 420.00 PLN (projected_wage), read for 2030-03-01
-  held: proj_wage = 9 420.00 PLN (projected_wage), read for 2030-04-01
-  held: proj_wage = 9 420.00 PLN (projected_wage), read for 2030-05-01
-  held: proj_wage = 9 420.00 PLN (projected_wage), read for 2030-06-01
-  held: proj_wage = 9 420.00 PLN (projected_wage), read for 2030-07-01
-  held: proj_wage = 9 420.00 PLN (projected_wage), read for 2030-08-01
-  held: proj_wage = 9 420.00 PLN (projected_wage), read for 2030-09-01
-  held: proj_wage = 9 420.00 PLN (projected_wage), read for 2030-10-01
-  held: proj_wage = 9 420.00 PLN (projected_wage), read for 2030-11-01
-  held: wage_growth = 0.04 (prototype_assumptions), read for 2027-01-01
-  held: wage_growth = 0.04 (prototype_assumptions), read for 2028-01-01
-  held: wage_growth = 0.04 (prototype_assumptions), read for 2029-01-01
-  held: wage_growth = 0.04 (prototype_assumptions), read for 2030-01-01
+  held: ike_limit = 28 260.00 PLN (ike_limits), read for 2026-11-01, 2026-12-01, 2027-01-01, 2027-02-01, 2027-03-01, 2027-04-01, 2027-05-01, 2027-06-01, 2027-07-01, 2027-08-01, 2027-09-01, 2027-10-01, 2027-11-01, 2027-12-01, 2028-01-01, 2028-02-01, 2028-03-01, 2028-04-01, 2028-05-01, 2028-06-01, 2028-07-01, 2028-08-01, 2028-09-01, 2028-10-01, 2028-11-01, 2028-12-01, 2029-01-01, 2029-02-01, 2029-03-01, 2029-04-01, 2029-05-01, 2029-06-01, 2029-07-01, 2029-08-01, 2029-09-01, 2029-10-01, 2029-11-01, 2029-12-01, 2030-01-01, 2030-02-01, 2030-03-01, 2030-04-01, 2030-05-01, 2030-06-01, 2030-07-01, 2030-08-01, 2030-09-01, 2030-10-01, 2030-11-01, 2030-12-01
+  held: inflation = 0.03 (prototype_assumptions), read for 2027-01-01, 2028-01-01, 2029-01-01, 2030-01-01, 2031-01-01
+  held: nbp_ref = 0.0375 (nbp_2026_03), read for 2027-10-31, 2028-10-31, 2029-10-31
+  held: proj_wage = 9 420.00 PLN (projected_wage), read for 2026-11-01, 2026-12-01, 2027-01-01, 2027-02-01, 2027-03-01, 2027-04-01, 2027-05-01, 2027-06-01, 2027-07-01, 2027-08-01, 2027-09-01, 2027-10-01, 2027-11-01, 2027-12-01, 2028-01-01, 2028-02-01, 2028-03-01, 2028-04-01, 2028-05-01, 2028-06-01, 2028-07-01, 2028-08-01, 2028-09-01, 2028-10-01, 2028-11-01, 2028-12-01, 2029-01-01, 2029-02-01, 2029-03-01, 2029-04-01, 2029-05-01, 2029-06-01, 2029-07-01, 2029-08-01, 2029-09-01, 2029-10-01, 2029-11-01, 2029-12-01, 2030-01-01, 2030-02-01, 2030-03-01, 2030-04-01, 2030-05-01, 2030-06-01, 2030-07-01, 2030-08-01, 2030-09-01, 2030-10-01, 2030-11-01
+  held: wage_growth = 0.04 (prototype_assumptions), read for 2027-01-01, 2028-01-01, 2029-01-01, 2030-01-01
   cut 2026-10-17
 warning: WARN-NEGATIVE konto is below zero from 2024-02-01
 warning: WARN-NEGATIVE konto is below zero from 2024-03-05
@@ -50785,18 +50100,18 @@ ask fw: flows(wage, 2026-05-01 .. 2026-05-31)
 ask fw3: flows(wage, 2026-03-01 .. 2026-05-31)
 ask bk: bal(konto, 2026-05-31)
 ask ew: explain bal(konto, 2026-05-31)
-,,1:0,2956:fw: ?"bank[c1] and bank[r1] are one, but the amount of cash differs on 2026-05-15: 400.00 PLN (bank[c1]) and 500.00 PLN (bank[r1])" (bank[c1], bank[r1])
-  adjustment: wage[2026-03] by 500.00 PLN on 2026-05-01 (version raise_2026), remaining ?"bank[c1] and bank[r1] are one, but the amount of cash differs on 2026-05-15: 400.00 PLN (bank[c1]) and 500.00 PLN (bank[r1])" (bank[c1], bank[r1])
+,,1:0,2896:fw: ?"bank[c1] and bank[r1] are one, but leg cash differs on 2026-05-15: 400.00 PLN (bank[c1]) and 500.00 PLN (bank[r1])" (bank[c1], bank[r1])
+  adjustment: wage[2026-03] by 500.00 PLN on 2026-05-01 (version raise_2026), remaining ?"bank[c1] and bank[r1] are one, but leg cash differs on 2026-05-15: 400.00 PLN (bank[c1]) and 500.00 PLN (bank[r1])" (bank[c1], bank[r1])
   unfulfilled: wage[2026-05]
   cut 2026-10-20
-fw3: ?"bank[c1] and bank[r1] are one, but the amount of cash differs on 2026-05-15: 400.00 PLN (bank[c1]) and 500.00 PLN (bank[r1])" (bank[c1], bank[r1])
-  adjustment: wage[2026-03] by 500.00 PLN on 2026-05-01 (version raise_2026), remaining ?"bank[c1] and bank[r1] are one, but the amount of cash differs on 2026-05-15: 400.00 PLN (bank[c1]) and 500.00 PLN (bank[r1])" (bank[c1], bank[r1])
+fw3: ?"bank[c1] and bank[r1] are one, but leg cash differs on 2026-05-15: 400.00 PLN (bank[c1]) and 500.00 PLN (bank[r1])" (bank[c1], bank[r1])
+  adjustment: wage[2026-03] by 500.00 PLN on 2026-05-01 (version raise_2026), remaining ?"bank[c1] and bank[r1] are one, but leg cash differs on 2026-05-15: 400.00 PLN (bank[c1]) and 500.00 PLN (bank[r1])" (bank[c1], bank[r1])
   unfulfilled: wage[2026-03]
   unfulfilled: wage[2026-04]
   unfulfilled: wage[2026-05]
   cut 2026-10-20
 bk: ?"bank[c1] and bank[r1] are one, but leg cash differs on 2026-05-15: 400.00 PLN (bank[c1]) and 500.00 PLN (bank[r1])" (bank[c1], bank[r1])
-  adjustment: wage[2026-03] by 500.00 PLN on 2026-05-01 (version raise_2026), remaining ?"bank[c1] and bank[r1] are one, but the amount of cash differs on 2026-05-15: 400.00 PLN (bank[c1]) and 500.00 PLN (bank[r1])" (bank[c1], bank[r1])
+  adjustment: wage[2026-03] by 500.00 PLN on 2026-05-01 (version raise_2026), remaining ?"bank[c1] and bank[r1] are one, but leg cash differs on 2026-05-15: 400.00 PLN (bank[c1]) and 500.00 PLN (bank[r1])" (bank[c1], bank[r1])
   unfulfilled: wage[2026-01]
   unfulfilled: wage[2026-02]
   unfulfilled: wage[2026-03]
@@ -50819,7 +50134,7 @@ ew: ?"bank[c1] and bank[r1] are one, but leg cash differs on 2026-05-15: 400.00 
   2026-05-15:
     bank[c1].cash (observed): hole: ?"bank[c1] and bank[r1] are one, but leg cash differs on 2026-05-15: 400.00 PLN (bank[c1]) and 500.00 PLN (bank[r1])" (bank[c1], bank[r1])
     bank[r1].cash (observed): hole: ?"bank[c1] and bank[r1] are one, but leg cash differs on 2026-05-15: 400.00 PLN (bank[c1]) and 500.00 PLN (bank[r1])" (bank[c1], bank[r1])
-  adjustment: wage[2026-03] by 500.00 PLN on 2026-05-01 (version raise_2026), remaining ?"bank[c1] and bank[r1] are one, but the amount of cash differs on 2026-05-15: 400.00 PLN (bank[c1]) and 500.00 PLN (bank[r1])" (bank[c1], bank[r1])
+  adjustment: wage[2026-03] by 500.00 PLN on 2026-05-01 (version raise_2026), remaining ?"bank[c1] and bank[r1] are one, but leg cash differs on 2026-05-15: 400.00 PLN (bank[c1]) and 500.00 PLN (bank[r1])" (bank[c1], bank[r1])
   unfulfilled: wage[2026-01]
   unfulfilled: wage[2026-02]
   unfulfilled: wage[2026-03]
@@ -104384,7 +103699,7 @@ ask n: count(a in adjustments over 2026)
 ask f: flows(pay, 2026-01-01 .. 2026-05-31)
 ask e2: explain bal(konto, 2026-02-28)
 ask e5: explain pay[2026-02].cash.amount
-,,1:0,2359:a2: 150.00 PLN
+,,1:0,2328:a2: 150.00 PLN
   cut 2026-06-30
 a3: ?"How much was March's pay?" (amt[2026-03])
   cut 2026-06-30
@@ -104441,8 +103756,7 @@ k3: ?"How much was February's pay?" (amt[2026-02]) ?"How much was March's pay?" 
   unfulfilled: pay[2026-03]
   held: amt[2026-04] = 100.00 PLN (v1), read for 2026-04
   held: amt[2026-05] = 100.00 PLN (v1), read for 2026-05
-  held: dom = 10 (v1), read for 2026-04-01
-  held: dom = 10 (v1), read for 2026-05-01
+  held: dom = 10 (v1), read for 2026-04-01, 2026-05-01
   cut 2026-03-15
 n: 0
   cut 2026-06-30
@@ -105334,7 +104648,8 @@ version st
 ask after: bal(konto, 2026-01-31), bal(konto, 2026-03-10), bal(konto, 2026-03-31)
 ask md: bal(konto, 2026-03-31) modelled, bal(k9, 2026-03-31) modelled
 ask c_day: count(t in transfers over 2026-02), count(t in transfers over 2026-03-11 .. 2026-03-31)
-,,1:0,95:c_day: (refused: RUN-DIV division by zero, refused: RUN-DIV division by zero)
+,,1:0,123:c_day: (refused: RUN-DIV division by zero, refused: RUN-DIV division by zero)
+  unfulfilled: k9m[2026-02]
   cut 2026-10-20
 ,22:r11/ledger_refused_day,9:fixes-r11,40:run m.tally --ask r_jan r_feb r_may r_k9,1839:7:m.tally,1823:model hh
   tally 2
@@ -106005,17 +105320,15 @@ ask from_before: bal(konto, 2026-03-31) from 2026-02-15
 ask sum_ref: sum(t.cash.amount for t in transfers over 2026-02)
 ask first_ok: first(t in transfers over 2026-02-01 ..) ties by t.day
 ask fl_after: flows(konto, 2026-03-11..2026-03-31), flows(konto, 2026-02)
-,,1:0,518:sum_ref: refused: RUN-DIV division by zero
+,,1:0,445:sum_ref: refused: RUN-DIV division by zero
   unfulfilled: groc[2026-02]
   unfulfilled: hm[2026-02]
   unfulfilled: mv[2026-02]
   cut 2026-10-20
 first_ok: mv[2026-02]
   unfulfilled: mv[2026-02]
-  held: d3 = 3 (plan_2026), read for 2026-11-01
-  held: d3 = 3 (plan_2026), read for 2026-12-01
-  held: dom = 5 (plan_2026), read for 2026-11-01
-  held: dom = 5 (plan_2026), read for 2026-12-01
+  held: d3 = 3 (plan_2026), read for 2026-11-01, 2026-12-01
+  held: dom = 5 (plan_2026), read for 2026-11-01, 2026-12-01
   cut 2026-10-20
 warning: WARN-NEGATIVE k3 is below zero from 2026-04-03
 warning: WARN-NEGATIVE konto is below zero from 2026-04-05
@@ -108715,9 +108028,9 @@ version join_b
 ask fp: flows(tip, 2026-03)
 ask f3: flows(save, 2026-03)
 ask b3: bal(sav, 2026-03-31), bal(konto, 2026-03-31)
-,,1:0,1013:fp: ?"bank[q1] and bank[q2] are one, but the amount of cash differs on 2026-03-20: 35.00 PLN (bank[q1]) and 30.00 PLN (bank[q2])" (bank[q1], bank[q2])
+,,1:0,993:fp: ?"bank[q1] and bank[q2] are one, but leg cash differs on 2026-03-20: 35.00 PLN (bank[q1]) and 30.00 PLN (bank[q2])" (bank[q1], bank[q2])
   cut 2026-06-10
-f3: ?"bank[r1], bank[r2] and bank[r3] are one, but the amount of cash differs on 2026-03-15: 950.00 PLN (bank[r1]), 950.00 PLN (bank[r2]) and 940.00 PLN (bank[r3])" (bank[r1], bank[r2], bank[r3])
+f3: ?"bank[r1], bank[r2] and bank[r3] are one, but leg cash differs on 2026-03-15: 950.00 PLN (bank[r1]), 950.00 PLN (bank[r2]) and 940.00 PLN (bank[r3])" (bank[r1], bank[r2], bank[r3])
   cut 2026-06-10
 b3: (?"bank[r2] and bank[r3] are one, but leg cash differs on 2026-03-15: 950.00 PLN (bank[r2]) and 940.00 PLN (bank[r3])" (bank[r2], bank[r3]), 100.00 PLN)
   cut 2026-06-10
@@ -109648,7 +108961,7 @@ ask t2_s8: bal(pot, 2026-04-30) with wa = 2026-04-09, wb = 2026-04-10
 ask t2_s9: bal(pot, 2026-04-30) with wa = 2026-04-10, wb = 2026-04-07
 
 ask t2_s10: bal(pot, 2026-04-30) with wa = 2026-04-10, wb = 2026-04-11
-,,1:0,2132:e1: ?"date within window(2026-03-05, 2026-03-10) not precise enough for the day of empty" (wd)
+,,1:0,2177:e1: ?"date within window(2026-03-05, 2026-03-10) not precise enough for the day of empty" (wd)
   unknown day: wd
   cut 2026-01-01
 e2_s1: 100.00 PLN
@@ -109657,7 +108970,8 @@ e2_s1: 100.00 PLN
 e2_s2: refused: RUN-LIFESPAN empty.cash moves into or out of tmp outside its lifespan
   pinned: wd = 2026-03-08
   cut 2026-01-01
-e3: refused: RUN-LIFESPAN tmp ends on 2026-03-07 holding 100.00 PLN
+e3: ?"date within window(2026-03-05, 2026-03-10) not precise enough for the day of empty" (wd)
+  unknown day: wd
   cut 2026-01-01
 e4_s1: 0.00 PLN
   pinned: wd = 2026-03-05
@@ -110349,7 +109663,7 @@ ask a: bal(konto, 2026-04-30) from 2026-02-15 with uncertain partial
 ask b: bal(konto, 2026-04-30) with uncertain partial
 ask c: bal(konto, 2026-04-30) from 2026-02-15 with uncertain
 ask d: bal(konto, 2026-04-30) from 2026-02-15 partial
-,,1:0,2053:a: 2 030.00 PLN + 1 × ?"gift in march" (gift[2026-03])
+,,1:0,1773:a: 2 030.00 PLN + 1 × ?"gift in march" (gift[2026-03])
   uncertain: repay[2026-03]
   uncertain: repay[2026-04]
   held: gift[2026-02] = 10.00 PLN (v), read for 2026-02
@@ -110357,9 +109671,7 @@ ask d: bal(konto, 2026-04-30) from 2026-02-15 partial
   held: gift[2026-04] = 10.00 PLN (v), read for 2026-04
   held: owed[2026-03] = 500.00 PLN (v), read for 2026-03
   held: owed[2026-04] = 500.00 PLN (v), read for 2026-04
-  held: repay_dom = 1 (v), read for 2026-02-01
-  held: repay_dom = 1 (v), read for 2026-03-01
-  held: repay_dom = 1 (v), read for 2026-04-01
+  held: repay_dom = 1 (v), read for 2026-02-01, 2026-03-01, 2026-04-01
   cut 2026-01-01
 b: 3 030.00 PLN + 1 × ?"gift in march" (gift[2026-03])
   uncertain: repay[2026-01]
@@ -110372,25 +109684,19 @@ b: 3 030.00 PLN + 1 × ?"gift in march" (gift[2026-03])
   held: owed[2026-02] = 500.00 PLN (v), read for 2026-02
   held: owed[2026-03] = 500.00 PLN (v), read for 2026-03
   held: owed[2026-04] = 500.00 PLN (v), read for 2026-04
-  held: repay_dom = 1 (v), read for 2026-02-01
-  held: repay_dom = 1 (v), read for 2026-03-01
-  held: repay_dom = 1 (v), read for 2026-04-01
+  held: repay_dom = 1 (v), read for 2026-02-01, 2026-03-01, 2026-04-01
   cut 2026-01-01
 c: ?"gift in march" (gift[2026-03])
   held: gift[2026-02] = 10.00 PLN (v), read for 2026-02
   held: gift[2026-03] = ?"gift in march" (gift[2026-03]) (v), read for 2026-03
   held: gift[2026-04] = 10.00 PLN (v), read for 2026-04
-  held: repay_dom = 1 (v), read for 2026-02-01
-  held: repay_dom = 1 (v), read for 2026-03-01
-  held: repay_dom = 1 (v), read for 2026-04-01
+  held: repay_dom = 1 (v), read for 2026-02-01, 2026-03-01, 2026-04-01
   cut 2026-01-01
 d: 1 030.00 PLN + 1 × ?"gift in march" (gift[2026-03])
   held: gift[2026-02] = 10.00 PLN (v), read for 2026-02
   held: gift[2026-03] = ?"gift in march" (gift[2026-03]) (v), read for 2026-03
   held: gift[2026-04] = 10.00 PLN (v), read for 2026-04
-  held: repay_dom = 1 (v), read for 2026-02-01
-  held: repay_dom = 1 (v), read for 2026-03-01
-  held: repay_dom = 1 (v), read for 2026-04-01
+  held: repay_dom = 1 (v), read for 2026-02-01, 2026-03-01, 2026-04-01
   cut 2026-01-01
 ,29:fixes/rv/g3_b7_quantile_level,8:fixes-rv,12:run t7.tally,583:8:t7.tally,567:model hh
   tally 2
@@ -110924,19 +110230,22 @@ version rd
   known 2026-04-03
   anchor konto
   stated[konto] = 70.00 PLN at 2026-03-10 end "saldo"
-,,1:0,794:q_konto: 70.00 PLN
-  anchor: konto 2026-03-10 end, stated 70.00 PLN, difference refused: RUN-RECORD observation bank[o1] fulfils sw[2026-03], which doesn't exist or doesn't touch its places
+,,1:0,806:q_konto: 70.00 PLN
+  anchor: konto 2026-03-10 end, stated 70.00 PLN, difference -20.00 PLN
   cut 2026-06-30
 q_last: 70.00 PLN
   held: stated[konto] = 70.00 PLN (rd), read for 2026-03-31
   cut 2026-06-30
-q_led: refused: RUN-RECORD observation bank[o1] fulfils sw[2026-03], which doesn't exist or doesn't touch its places
-q_obs: refused: RUN-NONE observed(sw[2026-03]) is none here: a field read of it
-  held: stated[konto] = 100.00 PLN (rd0), read for 2026-03-01
+q_led: residuals konto 2026-03
+  2026-03 balance: model 90.00 PLN, observed 70.00 PLN, difference -20.00 PLN
+    balance konto 2026-03-10 end (anchored): booked 90.00 PLN, stated 70.00 PLN, gap -20.00 PLN
+  2026-03 move sw: model 0.00 PLN, observed -10.00 PLN, difference -10.00 PLN
+    matched sw[2026-03] on 2026-03-10: model 0.00 PLN, observed -10.00 PLN, difference -10.00 PLN, timing +0 days
   cut 2026-06-30
-q_sw: 0.00 PLN
+q_obs: 10.00 PLN
+  cut 2026-06-30
+q_sw: 10.00 PLN
   held: stated[konto] = 100.00 PLN (rd0), read for 2026-02-01
-  held: stated[konto] = 100.00 PLN (rd0), read for 2026-03-01
   held: stated[konto] = 70.00 PLN (rd), read for 2026-04-01
   cut 2026-06-30
 ,16:fixes/g4/nb3_atT,13:fixes-records,17:run nb3_atT.tally,1375:13:nb3_atT.tally,1352:model nb3
@@ -110996,7 +110305,7 @@ version rd
   known 2026-04-03
   anchor konto
   stated[konto] = 70.00 PLN at 2026-03-10 end "saldo"
-,,1:0,1292:q_konto: 60.00 PLN
+,,1:0,1180:q_konto: 60.00 PLN
   anchor: konto 2026-03-10 end, stated 70.00 PLN, difference 0.00 PLN
   unfulfilled: sw[2026-04]
   held: stated[konto] = 70.00 PLN (rd), read for 2026-04-01
@@ -111011,7 +110320,6 @@ q_led: residuals konto 2026-03
     matched sw[2026-03] on 2026-03-10: model -10.00 PLN, observed -10.00 PLN, difference 0.00 PLN, timing +0 days
   cut 2026-06-30
 q_obs: 10.00 PLN
-  held: stated[konto] = 100.00 PLN (rd0), read for 2026-03-01
   cut 2026-06-30
 q_sw: 40.00 PLN
   anchor: konto 2026-01-01 end, stated 100.00 PLN, difference 0.00 PLN
@@ -111019,8 +110327,7 @@ q_sw: 40.00 PLN
   unfulfilled: sw[2026-01]
   unfulfilled: sw[2026-02]
   unfulfilled: sw[2026-04]
-  held: stated[konto] = 100.00 PLN (rd0), read for 2026-02-01
-  held: stated[konto] = 100.00 PLN (rd0), read for 2026-03-01
+  held: stated[konto] = 100.00 PLN (rd0), read for 2026-02-01, 2026-03-01
   held: stated[konto] = 70.00 PLN (rd), read for 2026-04-01
   cut 2026-06-30
 warning: WARN-NEGATIVE konto is below zero from 2026-11-10
@@ -111086,7 +110393,7 @@ version sm
   cite s
   known 2026-01-02
   same pay[9] = pay[10]
-,,1:0,997:l (x = pay[1]): 500.00 PLN
+,,1:0,1043:l (x = pay[1]): 500.00 PLN
   unfulfilled: pay[1]
   cut 2026-04-10
 l (x = pay[2]): 500.00 PLN
@@ -111111,6 +110418,7 @@ l (x = pay[8]): 500.00 PLN
   unfulfilled: pay[8]
   cut 2026-04-10
 l (x = pay[9]): 500.00 PLN
+  unfulfilled: pay[10]
   unfulfilled: pay[9]
   cut 2026-04-10
 l (x = pay[11]): 500.00 PLN
@@ -111120,6 +110428,7 @@ l (x = pay[12]): 500.00 PLN
   unfulfilled: pay[12]
   cut 2026-04-10
 n: 11
+  unfulfilled: pay[10]
   unfulfilled: pay[11]
   unfulfilled: pay[12]
   unfulfilled: pay[1]
@@ -111166,7 +110475,7 @@ version sm
   cite s
   known 2026-01-02
   same pay[10] = pay[9]
-,,1:0,997:l (x = pay[1]): 500.00 PLN
+,,1:0,1043:l (x = pay[1]): 500.00 PLN
   unfulfilled: pay[1]
   cut 2026-04-10
 l (x = pay[2]): 500.00 PLN
@@ -111191,6 +110500,7 @@ l (x = pay[8]): 500.00 PLN
   unfulfilled: pay[8]
   cut 2026-04-10
 l (x = pay[9]): 500.00 PLN
+  unfulfilled: pay[10]
   unfulfilled: pay[9]
   cut 2026-04-10
 l (x = pay[11]): 500.00 PLN
@@ -111200,6 +110510,7 @@ l (x = pay[12]): 500.00 PLN
   unfulfilled: pay[12]
   cut 2026-04-10
 n: 11
+  unfulfilled: pay[10]
   unfulfilled: pay[11]
   unfulfilled: pay[12]
   unfulfilled: pay[1]
@@ -111246,13 +110557,15 @@ version sm
   cite s
   known 2026-01-02
   same pay[aa] = pay[zz]
-,,1:0,204:l (x = pay[zz]): 500.00 PLN
+,,1:0,250:l (x = pay[zz]): 500.00 PLN
+  unfulfilled: pay[aa]
   unfulfilled: pay[zz]
   cut 2026-04-10
 l (x = pay[mm]): 500.00 PLN
   unfulfilled: pay[mm]
   cut 2026-04-10
 n: 2
+  unfulfilled: pay[aa]
   unfulfilled: pay[mm]
   unfulfilled: pay[zz]
   cut 2026-04-10

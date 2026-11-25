@@ -21,6 +21,7 @@ from .evaluate import (Engine, Ctx, Coll, TraceNode, HoleSignal, OutKey, ListKey
 from .model import key_text, set_world
 from .values import (CURRENCIES, fmt_typed, Num, Hole, Iv, Special, Thing, Key, Lst, Text, NONE, vkey, fmt, fmt_hole, fmt_q)
 from .check import _txt
+from . import ty as T
 from .eval2 import QOut
 
 
@@ -68,6 +69,51 @@ def merge_pin_days(pins):
     return rest
 
 
+_HELD = re.compile(r'^(held: .*), read for (\S+)$')
+
+
+def _held_point(s):
+    """A `read for` day or period as (kind, ordinal), consecutive ones ordinals apart by 1; None for another form."""
+    m = re.match(r'^(\d{4})-(\d{2})-(\d{2})$', s)
+    if m:
+        return ('day', datetime.date.fromisoformat(s).toordinal())
+    m = re.match(r'^(\d{4})-(\d{2})$', s)
+    if m:
+        return ('month', int(m.group(1)) * 12 + int(m.group(2)))
+    m = re.match(r'^(\d{4})-Q([1-4])$', s)
+    if m:
+        return ('quarter', int(m.group(1)) * 4 + int(m.group(2)))
+    m = re.match(r'^(\d{4})$', s)
+    if m:
+        return ('year', int(s))
+    return None
+
+
+def merge_held(lines):
+    """L §8.2 `held:` (tally 2.3.1 R4, #245, #253 item 5): "It prints once per row and keys read, the periods it was
+    read for merged into maximal runs": the lines of one row at one keys (alike up to `, read for`) are one, their
+    days or periods in order, consecutive ones a run `a .. b`. Keys are never merged."""
+    groups = {}
+    rest = set()
+    for t in lines:
+        mt = _HELD.match(t)
+        pt = _held_point(mt.group(2)) if mt is not None else None
+        if pt is None:
+            rest.add(t)
+            continue
+        groups.setdefault(mt.group(1), {})[pt] = mt.group(2)
+    for head, pts in groups.items():
+        runs = []
+        for pt in sorted(pts):
+            if runs and runs[-1][1][0] == pt[0] and runs[-1][1][1] + 1 == pt[1]:
+                runs[-1][1] = pt
+            else:
+                runs.append([pt, pt])
+        rest.add('%s, read for %s' % (head, ', '.join(
+            pts[a] if a == b else '%s .. %s' % (pts[a], pts[b]) for a, b in runs)))
+    return rest
+
+
 def is_load(err):
     return isinstance(err, TallyError) and err.code.startswith('LOAD-')
 
@@ -88,6 +134,14 @@ def req_clock(m, a):
             n = n.e
         return n if n is not None and n.k == 'date' else None
     lits = []
+    # a literal cut after on is REQ-CLOCK in every form, an `as if {known D}` in the line's body too (L §5.11 A pin
+    # is a row, E §11; tally 2.3.1 R3, N245.9), the body's first, in the line's order
+    from .node import walk
+    for x in walk(a):
+        if getattr(x, 'k', None) == 'asif':
+            for p in x.pins or ():
+                if getattr(p, 'kind', None) == 'known' and lit(p.value) is not None:
+                    lits.append(('known', lit(p.value)))
     if a.known is not None and lit(a.known) is not None:
         lits.append(('as known', lit(a.known)))
     for p in a.pins:
@@ -145,7 +199,10 @@ class Result:
         self.trace = trace
 
     def key(self):
-        return tuple(rkey(v) for v in self.vals)
+        # options give the line's result together only where their pinned: sets are one too (L §5.5, §8.2; tally
+        # 2.3.1 S8, Q2.7)
+        pins = tuple(sorted(repr(e) for e in (getattr(self.coll, 'reg', None) or ()) if e[0] == 'pinned'))
+        return tuple(rkey(v) for v in self.vals) + (pins,)
 
     def carry_vals(self):
         return list(self.vals) + ([self.trace] if self.trace is not None else [])
@@ -1130,9 +1187,14 @@ class Asker:
         lv = self.one(eng, l, env, ctx)
         rv = self.one(eng, r, env, ctx)
         lt, rt = _txt(l), _txt(r)
+
+        def side(v, e):
+            # each side in its type beside a hole or a refused side too (L §2.4 Values; tally 2.3.1 R4, N256.7, P44)
+            if isinstance(v, (TallyError, Hole)):
+                return fmt_value(v, ctx.partial)
+            return fmt_typed(v, getattr(e, '_t', None))
         if isinstance(lv, (TallyError, Hole)) or isinstance(rv, (TallyError, Hole)):
-            return CheckOut('%s = %s, %s = %s' % (lt, fmt_value(lv, ctx.partial), rt, fmt_value(rv, ctx.partial)),
-                            'open', (lv, rv))
+            return CheckOut('%s = %s, %s = %s' % (lt, side(lv, l), rt, side(rv, r)), 'open', (lv, rv))
         try:
             same = eng.compare('==', lv, rv, None, ctx)
         except TallyError as err:
@@ -1148,26 +1210,46 @@ class Asker:
             from .evaluate import arith
             try:
                 d = arith('-', lv, rv, l._t, l._t, r._t)
-                diff = ', difference %s' % fmt(d)
+                # `%` kept by `-` where both sides have it (L §2.4 Values; tally 2.3.1 N256.7, P44)
+                pct = T.is_pct(getattr(l, '_t', None)) and T.is_pct(getattr(r, '_t', None))
+                diff = ', difference %s' % (fmt_typed(d, l._t) if pct else fmt(d))
             except TallyError as err:
                 if is_load(err):
                     raise LoadAtRun(err)
                 diff = ', difference refused: %s %s' % (err.code, err.msg)
         else:
-            # L §5.18 (round 12): "and, where e - f is defined (§3.2, §4.2), the difference e − f": of two keys of one
-            # ordered index an int (L §4.2); of anything else (dates, periods off an index, text, codes) none
-            ltt, rtt = getattr(l, '_t', None), getattr(r, '_t', None)
-            if ltt is not None and rtt is not None and ltt.k == 'key' and rtt.k == 'key' and ltt.ix == rtt.ix \
-                    and ltt.ix in eng.m.indexes:
-                fake = type('N', (), {})()
-                fake.l = l
-                try:
-                    diff = ', difference %s' % fmt(eng.key_diff(fake, lv, rv))
-                except TallyError as err:
-                    if is_load(err):
-                        raise LoadAtRun(err)
-                    diff = ', difference refused: %s %s' % (err.code, err.msg)
-        return CheckOut('differs: %s = %s, %s = %s%s' % (lt, fmt(lv), rt, fmt(rv), diff), 'differs')
+            diff = self.point_diff(eng, l, r, lv, rv)
+        # each side in its type: a declared item in its declared type, an expression in its value's unit (L §2.4
+        # Values; tally 2.3.1 R4, N256.7)
+        return CheckOut('differs: %s = %s, %s = %s%s' % (lt, fmt_typed(lv, getattr(l, '_t', None)), rt,
+                                                         fmt_typed(rv, getattr(r, '_t', None)), diff), 'differs')
+
+    def point_diff(self, eng, l, r, lv, rv):
+        """L §5.18: "and, where e - f is defined (§3.2, §4.2), the difference e − f". Keys and periods are points
+        (L §4.2, tally 2.3.1 R5): two keys of one ordered index differ by its steps, two period values of one type,
+        keys of two indexes or a key and a period value as period values (Q2.8, N255.2). none, never, things, an open
+        index's keys (Q2.13), dates and anything else have none (`days_between` is a dates' difference)."""
+        from .values import NEVER
+        from .dates import Period
+        if any(v is NONE or v is NEVER for v in (lv, rv)):
+            return ''
+        ltt, rtt = getattr(l, '_t', None), getattr(r, '_t', None)
+
+        def ix_of(t):
+            return eng.m.indexes.get(t.ix) if t is not None and t.k == 'key' else None
+        li, ri = ix_of(ltt), ix_of(rtt)
+        fake = type('N', (), {})()
+        fake.l, fake.op, fake._datearith = l, '-', 'pdiff'
+        try:
+            if li is not None and li is ri and li.form != 'open':
+                return ', difference %s' % fmt(eng.key_diff(fake, lv, rv))
+            if isinstance(lv, Period) and isinstance(rv, Period) and lv.kind == rv.kind and lv.kind != 'day':
+                return ', difference %s' % fmt(eng.date_arith(fake, lv, rv))
+        except TallyError as err:
+            if is_load(err):
+                raise LoadAtRun(err)
+            return ', difference refused: %s %s' % (err.code, err.msg)
+        return ''
 
     # -- axes (L §5.5) --------------------------------------------------------------------------
     def group(self, a, axes, combos, results):
@@ -1242,7 +1324,8 @@ class Asker:
             for sid in sorted(rs.rows):
                 out.append('  %s' % rs.texts[sid])
         elif a.form == 'explain':
-            out.append('%s: %s' % (head, fmt_value(vals[0], ctx.partial)))
+            # its head in the item's declared type, as a plain ask's (L §2.4 Values; tally 2.3.1 R4, Q2.16)
+            out.append('%s: %s' % (head, fmt_value(vals[0], ctx.partial, self.etype(a, 0))))
             if a.path is not None:
                 # a path value: "the seed and path number, the samples it reached in canonical order" (E §10; the
                 # samples are the register's sample: lines)
@@ -1281,6 +1364,9 @@ class Asker:
             return getattr(a.exprs[i], '_t', None)
         if a.form == 'solve':
             return getattr(a.solve, '_t', None)
+        if a.form == 'explain' and getattr(a, 'ref', None) is not None:
+            # its head in the item's type, as a plain ask's (L §2.4 Values; tally 2.3.1 R4, Q2.16)
+            return getattr(a.ref, '_t', None)
         return None
 
     def register(self, coll, reading, ctx, samples=False, laws=None, unknown=()):
@@ -1341,7 +1427,7 @@ class Asker:
             out.extend(sorted(ent.get(kind, ())))
         for place, (d0, mids) in sorted(ent.get('_labels', {}).items()):
             out.append('WARN-LABELS labels dropped at %s from %s: %s' % (place, d0, ', '.join(sorted(mids))))
-        out.extend(sorted(ent.get('held', ())))
+        out.extend(sorted(merge_held(ent.get('held', ()))))
         if laws is not None:
             # a check whose sides are read at different law dates lists each (L §8.2, §5.18)
             out.append('law date %s (left), %s (right), cut %s' % (laws[0] or 'none', laws[1] or 'none', ctx.cut))
@@ -1971,7 +2057,7 @@ class Asker:
         self._seen[ident] = self._no
         no = self._no
         if tn.kind == 'row':
-            out.append('%s[%d] row %s = %s' % (ind, no, tn.label, fmt_value(tn.value)))
+            out.append('%s[%d] row %s = %s' % (ind, no, tn.label, fmt_value(tn.value, t=getattr(tn, '_t', None))))
             for l in tn.lines:
                 out.append('%s    %s' % (ind, l))
             return

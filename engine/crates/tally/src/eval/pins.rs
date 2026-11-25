@@ -24,7 +24,7 @@ use crate::model::{
     currency_id, money_num, num_money,
 };
 use crate::num::Num;
-use crate::syntax::{Expr, Key, Lit, PRef, Pin, PinForm, Stop};
+use crate::syntax::{Expr, Key, Lit, PRef, Pin, PinForm, Stop, Value as Written};
 use crate::time::Day;
 
 impl Engine {
@@ -462,9 +462,17 @@ impl Engine {
             factor = percent_factor(ty.as_ref())?;
         }
         self.push();
-        let v = self.ev(m, written, env, ctx);
+        let read = match ty.as_ref() {
+            // a pin is a row: read by the row reader load read it by (tally 2.3.1 statement G)
+            Some(row_ty) if super::convert::pin_row(written, row_ty) => {
+                self.row_pinned(m, (id, written), (row_ty, &factor), env, ctx)
+            }
+            Some(_) | None => self
+                .ev(m, written, env, ctx)
+                .and_then(|v| pin_typed(m, written, v, (ty.as_ref(), &factor))),
+        };
         let met = self.pop_alone();
-        let value = pin_typed(m, written, v?, (ty.as_ref(), &factor))?;
+        let value = read?;
         let value = at_pin_keys(value, binds, &keys)?;
         if !plain_literal(m, written) {
             self.absorb(&met);
@@ -496,6 +504,85 @@ impl Engine {
             layer: 0,
             tied: None,
         }))
+    }
+
+    /// A pin's value read as its target's row at run: through brackets and signs, the arm its
+    /// `if`s' conditions take, read by the row reader load read it by at the target's type
+    /// `ty`, whose unit brings `factor`; a hole condition reads both arms, the hole unless they
+    /// agree (refcore's `pin_row`, `e_if`; tally 2.3.1 statement G). L §5.11 A pin is a row,
+    /// §5.11 Logic, §8.1.
+    fn row_pinned(
+        &mut self,
+        m: &Reality,
+        (id, written): (&str, &Expr),
+        (ty, factor): (&Ty, &Num),
+        env: &Env,
+        ctx: Ctx,
+    ) -> Result<Value, Stop> {
+        let mut node = written;
+        let mut negative = false;
+        loop {
+            if let Expr::Paren(inner) = node {
+                node = inner;
+            } else if let Expr::Neg(inner) = node {
+                negative = !negative;
+                node = inner;
+            } else if let Expr::If(parts, kept) = node {
+                let [cond, yes, no] = parts.as_ref();
+                match self.pin_condition(m, (cond, yes, no), kept, env, ctx)? {
+                    Ok(true) => node = yes,
+                    Ok(false) => node = no,
+                    Err(hole) => return Ok(hole),
+                }
+            } else if let Expr::Lit(lit) = node {
+                let row = if negative {
+                    super::convert::negated_literal(lit)?
+                } else {
+                    lit.clone()
+                };
+                let of = super::convert::ConvertFor {
+                    factor: factor.clone(),
+                    keys: Vec::new(),
+                };
+                return match super::convert::convert_read(m, &Written::Lit(row), ty, id, &of)? {
+                    super::convert::Converted::Value(v) => Ok(v),
+                    super::convert::Converted::Hole(_) => {
+                        Err(invariant("a pin's literal read as a stated hole"))
+                    }
+                };
+            } else {
+                return Err(invariant("a pin read as a row reached no literal"));
+            }
+        }
+    }
+
+    /// The arm a pin's `if` takes, `true` for its `then`: its condition `cond` read; a hole
+    /// condition reads both arms, `yes` and `no`, and takes `then` where they agree, the `if`
+    /// a hole otherwise (refcore's `e_if`). L §5.11 Logic, §8.1, §8.4.
+    fn pin_condition(
+        &mut self,
+        m: &Reality,
+        (cond, yes, no): (&Expr, &Expr, &Expr),
+        kept: &crate::syntax::LoadType,
+        env: &Env,
+        ctx: Ctx,
+    ) -> Result<Result<bool, Value>, Stop> {
+        let test = self.ev(m, cond, env, ctx)?;
+        if let Value::Bool(holds) = test {
+            return Ok(Ok(holds));
+        }
+        if test == Value::None {
+            // a condition, named by its read (L §8.4 `RUN-NONE`'s row)
+            return Err(super::bindings::none_here(m, cond, env, "a condition"));
+        }
+        let Value::Hole(hole) = test else {
+            return Err(super::state::not_typed());
+        };
+        let both = self.choice_unknown(m, (&hole, yes, no), kept, env, ctx)?;
+        if matches!(both, Value::Hole(_)) {
+            return Ok(Err(both));
+        }
+        Ok(Ok(true))
     }
 
     /// A pin's keys, every one written, as given in order; the first that is a hole makes
@@ -578,6 +665,8 @@ fn plain_literal(m: &Reality, e: &Expr) -> bool {
 /// - A bare figure (through brackets and a minus) on money or an int is that money or int;
 ///   on a `num` it is the figure times the `%` its unit holds: `5` on `num %` is 5 %, on
 ///   `num %/year` 0.05 1/year, as a row's figure is.
+/// - A figure with its unit on a `num` of that unit is that figure shown as the type shows it
+///   (`50 %` on a plain `num` is 0.5; tally 2.3.1 R3).
 /// - A four-digit figure on a `year` is that year.
 /// - A key literal (a name, a four-digit year, a period) on a `key` is the key of that index,
 ///   kind or axis.
@@ -591,7 +680,18 @@ fn written_typed(
         return pinned_key(m, written, v, ty);
     };
     if !super::band::bare_figure(written) {
-        return Ok(None);
+        // a figure with its unit on a `num` of that unit is the row's figure, shown as the
+        // type shows it: `with ratio = 50 %` on a plain `num` is 0.5, as the row `ratio = 50 %`
+        // is (L §5.11 A pin is a row; tally 2.3.1 R3, N256.6)
+        let Ty::Num(unit, shown) = ty else {
+            return Ok(None);
+        };
+        return Ok((unit_figure(written) && n.unit() == *unit).then(|| {
+            Value::Number(Number {
+                q: n.q.clone(),
+                class: Class::Num(unit.clone(), *shown),
+            })
+        }));
     }
     if let Ty::Num(unit, shown) = ty {
         return Ok(Some(Value::Number(Number {
@@ -632,6 +732,16 @@ fn pinned_key(m: &Reality, written: &Expr, v: &Value, ty: &Ty) -> Result<Option<
     };
     let key = super::keys::literal_key(m, &lit, &domain)?;
     Ok(key.map(|k| Value::of_key(&k)))
+}
+
+/// Whether a pin's value is a figure with its unit, through brackets and a minus (`50 %`,
+/// `-(5 %/year)`), as a row writes one. L §3.2 Inline figures, §5.11 A pin is a row.
+fn unit_figure(e: &Expr) -> bool {
+    let mut at = e;
+    while let Expr::Paren(x) | Expr::Neg(x) = at {
+        at = x;
+    }
+    matches!(at, Expr::Lit(Lit::Num(n)) if n.unit.is_some())
 }
 
 /// The factor a `num %` type's `%` brings, 1/100; 1 for any other type. L §3.2.
@@ -709,5 +819,274 @@ fn pin_typed(
             Ok(Value::Number(Number::plain(q, unit)))
         }
         (_, v) => Ok(v),
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use crate::api::{Asks, Files, Given, Request, run};
+
+    /// A line's law date and cut, pinned (the writer's `lawpin`, tally 2.3.1 R3).
+    const LAWPIN: &str = r#"model lawpin
+  tally 2
+  on 2026-06-30
+  start 2026-01-01
+  end 2026-12-31
+
+source s "probe"
+unit PLN: currency minor 0.01
+input rate: money PLN
+input ratio: num
+
+def cost: money PLN at reader
+  rule one = rate
+
+ASKS
+
+version v
+  cite s
+  governs 2026-01-01..2026-06-30
+  known 2026-01-01
+  rate = 10.00 PLN "s"
+  ratio = 1 "s"
+
+version v2
+  cite s
+  governs 2026-07-01..
+  known 2026-01-01
+  rate = 20.00 PLN "s"
+"#;
+
+    /// Every ask of `LAWPIN` with `asks` in place of its asks, its lines.
+    fn ran(asks: &str) -> Vec<String> {
+        let text = LAWPIN.replace("ASKS", asks);
+        let given = vec![Given {
+            path: "lawpin.tally".to_owned(),
+            bytes: Some(text.into_bytes()),
+        }];
+        run(Files::new(given), &Request::new(Asks::Every))
+            .expect("an answer")
+            .lines()
+            .to_vec()
+    }
+
+    #[test]
+    fn two_pins_of_the_law_date_on_a_line_overlap() {
+        // L §5.11 A pin is a row: a clause and a `with law` pin are two pins of one cell
+        let clause = ran("ask q4: cost with law 2026-02-01 law 2026-09-01");
+        assert_eq!(
+            clause,
+            [
+                "refused: LOAD-OVERLAP pins law 2026-02-01 and law 2026-09-01 of the law date \
+                 overlap at no keys (lawpin.tally:15)"
+            ],
+            "the with pin first, then the clause"
+        );
+        let two = ran("ask q5: cost with law 2026-09-01, law 2026-02-01");
+        assert_eq!(
+            two.first().map(String::as_str),
+            Some(
+                "refused: LOAD-OVERLAP pins law 2026-09-01 and law 2026-02-01 of the law date \
+                 overlap at no keys (lawpin.tally:15)"
+            ),
+            "two with pins"
+        );
+        let cut = ran("ask q7: cost with known 2026-03-01 as known 2026-05-01");
+        assert_eq!(
+            cut.first().map(String::as_str),
+            Some(
+                "refused: LOAD-OVERLAP pins known 2026-03-01 and as known 2026-05-01 of the cut \
+                 overlap at no keys (lawpin.tally:15)"
+            ),
+            "the cut's two pins"
+        );
+    }
+
+    #[test]
+    fn two_pins_of_one_cell_in_an_as_if_overlap() {
+        // L §5.11 "two pins of one cell" (G3's review N6, the lead's ruling): as the line's
+        for (ask, refusal) in [
+            (
+                "ask a10: cost as if {law 2026-02-01, law 2026-09-01}",
+                "refused: LOAD-OVERLAP pins law 2026-02-01 and law 2026-09-01 of the law date \
+                 overlap at no keys (lawpin.tally:15)",
+            ),
+            (
+                "ask a11: cost as if {known 2026-02-01, known 2026-03-01} law 2026-09-01",
+                "refused: LOAD-OVERLAP pins known 2026-02-01 and known 2026-03-01 of the cut \
+                 overlap at no keys (lawpin.tally:15)",
+            ),
+        ] {
+            assert_eq!(ran(ask).first().map(String::as_str), Some(refusal), "{ask}");
+        }
+    }
+
+    #[test]
+    fn a_law_pin_and_a_cut_pin_on_one_line_stand() {
+        // one pin of each cell, and an `as if {law D}` inside an expression is that as if's
+        let lines = ran("ask t2: cost as if {law 2026-02-01} law 2026-09-01 as known 2026-05-01");
+        assert_eq!(
+            lines,
+            [
+                "t2: 10.00 PLN",
+                "  pinned: law 2026-02-01",
+                "  law date 2026-09-01, cut 2026-05-01",
+                "warning: WARN-UNREAD input ratio is read by nothing",
+            ],
+            "no overlap"
+        );
+    }
+
+    #[test]
+    fn a_literal_cut_after_on_in_the_line_is_req_clock() {
+        // E §11: an `as if {known D}` in the line's body, first, before the clause
+        let lines = ran("ask q8: cost as if {known 2026-03-01} law 2026-03-01\n\
+             ask q10: (cost as if {known 2026-09-01}) + cost law 2026-03-01 as known 2026-08-01");
+        assert_eq!(
+            lines,
+            ["refused: REQ-CLOCK known 2026-09-01 is after the model's on 2026-06-30"],
+            "the run's one result"
+        );
+    }
+
+    #[test]
+    fn a_figure_with_its_unit_pinned_is_the_row() {
+        // L §5.11 A pin is a row: `50 %` on a plain num is 0.5, as the row is (N256.6)
+        let lines = ran("ask r1: ratio + ratio with ratio = 50 % law 2026-03-01");
+        assert_eq!(
+            lines.get(..2),
+            Some(["r1: 1".to_owned(), "  pinned: ratio = 0.5".to_owned()].as_slice()),
+            "the declared type's figure"
+        );
+    }
+
+    #[test]
+    fn a_literal_pin_of_the_wrong_type_is_refused_as_its_row() {
+        // L §5.11 A pin is a row (G3's review N1): the row reader's words, not the pin's
+        for (ask, refusal) in [
+            (
+                "ask m2: ratio with ratio = 5.00 PLN",
+                "refused: LOAD-UNIT 5.00 PLN and num have different units (lawpin.tally:15)",
+            ),
+            (
+                "ask m4: ratio with ratio = (5 %/year)",
+                "refused: LOAD-UNIT 5 1/year and num have different units (lawpin.tally:15)",
+            ),
+            (
+                "ask m3: ratio with ratio = 2026-01-01",
+                "refused: LOAD-UNIT a value of the wrong type: a date for num (lawpin.tally:15)",
+            ),
+        ] {
+            assert_eq!(ran(ask).first().map(String::as_str), Some(refusal), "{ask}");
+        }
+    }
+
+    /// Keys of grids by 3 and of a stepped range, an int, a rate and a read over each grid
+    /// (the fix review's `b4c` and `n1b` texts, tally 2.3.1 statement G).
+    const PINROW: &str = r#"model pinrow
+  tally 2
+  on 2026-10-25
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+index qs = month 2026-01..2026-12 by 3
+index ys = year 2020..2030 by 3
+index tens = 10..50 by 10
+input qk: key qs
+input yk: key ys
+input tk: key tens
+input n: int
+input rr: rate
+input b: bool
+input vv[q in qs]: int
+input vy[y in ys]: int
+
+ASK
+
+version ver
+  cite s
+  governs always
+  known 2026-01-01
+  qk = 2026-04 "s"
+  yk = 2026 "s"
+  tk = 20 "s"
+  n = 3 "s"
+  rr = 5 %/year "s"
+  b = true "s"
+  vv[2026-04] = 2 "s"
+  vv[2026-10] = 3 "s"
+  vy[2026] = 26 "s"
+  vy[2029] = 29 "s"
+"#;
+
+    /// `PINROW` with `ask` in place of its ask, its lines.
+    fn row_ran(ask: &str) -> Vec<String> {
+        let given = vec![Given {
+            path: "pinrow.tally".to_owned(),
+            bytes: Some(PINROW.replace("ASK", ask).into_bytes()),
+        }];
+        run(Files::new(given), &Request::new(Asks::Every))
+            .expect("an answer")
+            .lines()
+            .to_vec()
+    }
+
+    #[test]
+    fn a_pin_is_refused_as_its_row_through_brackets_signs_and_arms() {
+        // L §5.11 A pin is a row, §2.5 Keys (statement G): the row's words, the value as the
+        // row prints it, an off-grid literal anywhere in it LOAD-KEY
+        for (ask, refusal) in [
+            ("ask a: n with n = (2.5)", "LOAD-UNIT 2.5 is not an int"),
+            ("ask a: n with n = -(2.5)", "LOAD-UNIT -2.5 is not an int"),
+            (
+                "ask a: yk with yk = 2028",
+                "LOAD-KEY 2028 is not a key of ys",
+            ),
+            (
+                "ask a: yk with yk = (2028)",
+                "LOAD-KEY 2028 is not a key of ys",
+            ),
+            (
+                "ask a: rr with rr = 5",
+                "LOAD-UNIT a rate states its period: 5",
+            ),
+            (
+                "ask a: tk with tk = -(10)",
+                "LOAD-KEY -10 is not a key of tens",
+            ),
+            (
+                "ask a: vv[qk] with qk = (2026-08)",
+                "LOAD-KEY 2026-08 is not a key of qs",
+            ),
+            (
+                "ask a: vv[qk] with qk = (if b then 2026-08 else 2026-10)",
+                "LOAD-KEY 2026-08 is not a key of qs",
+            ),
+        ] {
+            let line = format!("refused: {refusal} (pinrow.tally:20)");
+            assert_eq!(
+                row_ran(ask).first().map(String::as_str),
+                Some(line.as_str()),
+                "{ask}"
+            );
+        }
+    }
+
+    #[test]
+    fn an_on_grid_arm_pinned_is_its_key() {
+        // L §2.5 Keys, §5.11 (statement G): the arm the condition takes, read as its row
+        let lines = row_ran("ask a: vy[yk] with yk = (if b then 2029 else 2026)");
+        assert_eq!(
+            lines.get(..2),
+            Some(["a: 29".to_owned(), "  pinned: yk = 2029".to_owned()].as_slice()),
+            "a key of ys, not the int 2 029"
+        );
+        let month = row_ran("ask a: vv[qk] with qk = (if b then 2026-10 else 2026-07)");
+        assert_eq!(
+            month.first().map(String::as_str),
+            Some("a: 3"),
+            "a month arm"
+        );
     }
 }

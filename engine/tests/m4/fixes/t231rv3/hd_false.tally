@@ -1,0 +1,51 @@
+model hd
+  tally 2
+  on 2026-05-20
+  start 2026-01-01
+  end 2026-05-31
+
+source s "invented values"
+unit PLN: currency minor 0.01
+index month = month 2026-01..2026-03
+place pot: accounts PLN lives 2026-01-01..
+place landlord: outside lives 1900-01-01..
+input bank: observed
+input amt: money PLN
+input ten: int
+input dz[m in month]: int
+input dd[m in month]: int
+input ok[m in month]: bool
+
+move rent[m in month where ten / dz[m] > 0]: transfers
+  on day_of(m, dd[m])
+  when ok[m]
+  leg cash from pot to landlord amount amt
+
+ask ob: observed(rent[2026-02]).cash.amount
+ask e: rent[2026-02] == none
+ask d: rent[2026-02].day
+ask f: flows(rent, 2026-03)
+ask n: count(r in bank over 2026-02 where r.fulfils == none)
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  amt = 100.00 PLN "s"
+  ten = 10 "s"
+  opening[pot] = 9000.00 PLN at 2026-01-01 start "s"
+  dz[2026-01] = 1 "z"
+  dz[2026-02] = 0 "z"
+  dz[2026-03] = 1 "z"
+  dd[2026-01] = 5 "d"
+  dd[2026-02] = ?"feb day" "d"
+  dd[2026-03] = 5 "d"
+  ok[2026-01] = true "o"
+  ok[2026-02] = false "o"
+  ok[2026-03] = true "o"
+
+version rows
+  cite s
+  governs 2026-02
+  known 2026-03-01
+  bank[r2] = (on: 2026-02-05, kind: transfers, leg cash from pot to landlord amount 100.00 PLN, fulfils: rent[2026-02]) "r2"

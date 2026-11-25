@@ -1,0 +1,24 @@
+model win2
+  tally 2
+  on 2026-04-20
+  start 2026-01-01
+  end 2026-12-31
+
+source s "probe"
+input w1: date
+input w2: date
+input d: date
+
+ask c1: w1 < w2
+ask c2: w1 == w2
+ask c3: w1 < d
+ask c4: d < w2
+ask c5: w1 < w1
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  w1 = window(2026-05-01, 2026-05-10) "s"
+  w2 = window(2026-05-05, 2026-05-20) "s"
+  d = 2026-05-07 "s"

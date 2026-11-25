@@ -1,0 +1,55 @@
+# tally 2.3.1 R1, #248 face (a) (L §5.10, §8; E §4.2 step 5 "Each check is made only where the balance is
+# known"): the sign rule isn't checked against a hole balance, and what reads past it is computed without it.
+# Unchanged: a guard of the clause (the cut of L §5.10's own sentence).
+=== hd_sign_q.tally
+model hd_sign_q
+  tally 2
+  on 2026-01-01
+  start 2026-01-01
+  end 2026-12-31
+
+source s "probe"
+unit PLN: currency minor 0.01
+place owed: claims PLN lives 2026-01-01..
+place other: accounts PLN lives 2026-01-01..
+place world: outside lives 1900-01-01..
+input pd: date
+input out_day: date
+input pay: money PLN
+input out: money PLN
+
+move pay_in: transfers
+  on pd
+  leg cash from world to owed amount pay
+
+move pay_out: transfers
+  on out_day
+  leg cash from owed to other amount out
+
+ask o_apr5: bal(other, 2026-04-05)
+ask o_flows: flows(other, 2026-04)
+ask owed5: bal(owed, 2026-04-05)
+ask p1: bal(other, 2026-04-05) with pd = 2026-04-01
+ask p3: bal(other, 2026-04-05) with pd = 2026-04-03
+
+version v
+  cite s
+  governs always
+  known 2025-12-01
+  opening[owed] = 50.00 PLN at 2026-01-01 start "s"
+  opening[other] = 500.00 PLN at 2026-01-01 start "s"
+  pd = ?"which day is the pay?" "s"
+  out_day = 2026-04-02 "s"
+  pay = 100.00 PLN "s"
+  out = 80.00 PLN "s"
+=== expect
+o_apr5: 580.00 PLN
+  cut 2026-01-01
+o_flows: 80.00 PLN
+  cut 2026-01-01
+owed5: ?"which day is the pay?" (pd)
+  cut 2026-01-01
+p1: 580.00 PLN
+  cut 2026-01-01
+p3: refused: RUN-PLACE owed is -30.00 PLN after the day's observations and plans of 2026-04-02
+  cut 2026-01-01

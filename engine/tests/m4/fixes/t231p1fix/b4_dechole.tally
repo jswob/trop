@@ -1,0 +1,92 @@
+model d2
+  tally 2
+  on 2026-04-20
+  start 2026-01-01
+  end 2026-03-31
+
+source s "probe"
+unit PLN: currency minor 0.01
+axis rd
+  r1 "high"
+  r2 "low"
+index month = month 2026-01..2026-03
+place konto: accounts PLN lives 2026-01-01..
+place save: accounts PLN lives 2026-01-01..
+place jar: accounts PLN lives 2026-01-01..
+place jar2: accounts PLN lives 2026-01-01..
+input bank: observed
+input lim: money PLN
+input lim2: money PLN
+input amt: money PLN
+input keep: money PLN
+input d5: int
+input dt[m in month]: int
+input on_m[m in month]: bool
+
+def lm: money PLN
+  rule hi = lim when rd == r1
+  rule lo = lim2 when rd == r2
+
+move skim[m in month]: transfers
+  reads konto
+  before mid
+  on day_of(m, d5)
+  when bal(konto) > keep
+  leg cash from konto to jar amount bal(konto) - keep
+
+move mid[m in month]: transfers
+  reads konto
+  before topup
+  on day_of(m, d5)
+  when bal(konto) > 0.00 PLN
+  leg cash from konto to jar2 amount bal(konto)
+
+move topup[m in month]: transfers
+  reads konto
+  on day_of(m, dt[m])
+  when bal(konto) < lm
+  leg cash from save to konto amount amt
+
+ask sk: flows(skim, 2026-02) with rd = r1
+ask md: flows(mid, 2026-02) with rd = r1
+ask f: flows(topup, 2026-02) with rd = r1
+ask b: bal(konto, 2026-02-28) with rd = r1
+ask j2: bal(jar2, 2026-02-28) with rd = r1
+ask f2: flows(topup, 2026-02) with rd = r2
+ask b2: bal(konto, 2026-02-28) with rd = r2
+ask fp: flows(topup, 2026-02) with rd = r1, lim = 10.00 PLN
+ask bp: bal(konto, 2026-02-28) with rd = r1, lim = 10.00 PLN
+ask j2p: bal(jar2, 2026-02-28) with rd = r1, lim = 10.00 PLN
+ask fk: flows(topup, 2026-02) with rd = r1 as known 2026-02-10
+ask bk: bal(konto, 2026-02-28) with rd = r1 as known 2026-02-10
+ask n: count(o in bank over 2026-02 where o.fulfils == topup[2026-02])
+ask e: topup[2026-02] == none with rd = r1
+ask ob: observed(topup[2026-02]).cash.amount
+ask rs: residuals konto 2026-02 with rd = r1
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  opening[konto] = 300.00 PLN at 2026-01-01 start "s"
+  opening[save] = 5 000.00 PLN at 2026-01-01 start "s"
+  opening[jar] = 0.00 PLN at 2026-01-01 start "s"
+  opening[jar2] = 0.00 PLN at 2026-01-01 start "s"
+  lim = 500.00 PLN "s"
+  lim2 = 1.00 PLN "s"
+  amt = 400.00 PLN "s"
+  keep = 100.00 PLN "s"
+  d5 = 5 "s"
+  dt[2026-01] = 5 "s"
+  dt[2026-02] = ?"feb top-up day?" "s"
+  dt[2026-03] = 5 "s"
+  on_m[2026-01] = true "s"
+  on_m[2026-02] = true "s"
+  on_m[2026-03] = true "s"
+
+version feb
+  cite s
+  governs 2026-02
+  known 2026-03-01
+  covers save
+  bank[r1] = (on: 2026-02-05, kind: transfers, leg cash from save to konto amount 400.00 PLN, fulfils: topup[2026-02]) "same day"

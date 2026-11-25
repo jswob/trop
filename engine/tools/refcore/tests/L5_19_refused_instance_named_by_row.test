@@ -1,0 +1,86 @@
+# tally 2.3.1 rulings 22, P32 B2 (L §5.19: by the name alone; §8.4 l.2355 a refused movement reaches as a hole
+# one): rent[2026-01]'s existence is refused (ten / 0) and bank[a1] names it: c, fp, fr, kt and fi answer from
+# the row, as x3_hole_when does; only the field read (dy) and rent[2026-01] == none (e) stay refused. Before:
+# every reader RUN-DIV.
+=== x1_refused.tally
+model x1
+  tally 2
+  on 2026-05-20
+  start 2026-01-01
+  end 2026-03-31
+
+source s "probe"
+unit PLN: currency minor 0.01
+index month = month 2026-01..2026-02
+place pot: accounts PLN lives 2026-01-01..
+place landlord: outside lives 1900-01-01..
+input bank: observed
+input amt: money PLN
+input d5: int
+input ten: int
+input dz[m in month]: int
+
+move rent[m in month]: transfers
+  on day_of(m, d5)
+  when ten / dz[m] > 0
+  leg cash from pot to landlord amount amt
+
+ask c: bal(pot, 2026-03-31)
+ask fr: flows(rent, 2026-01-01..2026-03-31)
+ask fj: flows(rent, 2026-01)
+ask fp: flows(pot, 2026-01)
+ask ob: observed(rent[2026-01]).cash.amount
+ask n: count(o in bank over 2026-01 where o.fulfils == rent[2026-01])
+ask nn: count(o in bank over 2026-01 where o.fulfils == none)
+ask dy: sum(days_between(o.fulfils.day, o.day) for o in bank over 2026-01 where o.fulfils != none)
+ask fi: first(t in transfers over 2026-01-01..2026-03-31) ties by t.day
+ask st: sum(t.cash.amount for t in transfers over 2026-01)
+ask kt: count(t in transfers over 2026-01-01..2026-03-31)
+ask e: rent[2026-01] == none
+ask rs: residuals pot 2026-01-01..2026-03-31
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  amt = 100.00 PLN "s"
+  d5 = 5 "s"
+  ten = 10 "s"
+  dz[2026-01] = 0 "refused"
+  dz[2026-02] = 1 "s"
+  opening[pot] = 1000.00 PLN at 2026-01-01 start "s"
+
+version q1
+  cite s
+  governs 2026-01-01..2026-03-31
+  known 2026-04-01
+  bank[a1] = (on: 2026-01-07, kind: transfers, leg cash from pot to landlord amount 110.00 PLN, fulfils: rent[2026-01]) "jan"
+=== expect
+c: 790.00 PLN
+  unfulfilled: rent[2026-02]
+  cut 2026-05-20
+dy: refused: RUN-DIV division by zero
+  cut 2026-05-20
+e: refused: RUN-DIV division by zero
+  cut 2026-05-20
+fi: bank[a1]
+  cut 2026-05-20
+fj: 110.00 PLN
+  cut 2026-05-20
+fp: -110.00 PLN
+  cut 2026-05-20
+fr: 210.00 PLN
+  unfulfilled: rent[2026-02]
+  cut 2026-05-20
+kt: 2
+  unfulfilled: rent[2026-02]
+  cut 2026-05-20
+n: 1
+  cut 2026-05-20
+nn: 0
+  cut 2026-05-20
+ob: 110.00 PLN
+  cut 2026-05-20
+rs: refused: RUN-DIV division by zero
+st: 110.00 PLN
+  cut 2026-05-20

@@ -1,0 +1,33 @@
+model life
+  tally 2
+  on 2026-06-30
+  start 2026-01-01
+  end 2026-12-31
+
+source s "probe"
+unit PLN: currency minor 0.01
+place konto: accounts PLN lives 2026-01-01..
+place spare: accounts PLN lives 2026-01-01..2026-06-30
+place world: outside lives 1900-01-01..
+input out_amt: money PLN
+input out_day: date
+
+move empty: transfers
+  on out_day
+  leg cash from spare to konto amount out_amt
+
+ask s_may: bal(spare, 2026-05-31)
+ask s_end: bal(spare, 2026-06-30)
+ask k_end: bal(konto, 2026-06-30)
+ask k_jul: bal(konto, 2026-07-31)
+ask s_p100: bal(spare, 2026-06-30) with out_amt = 100.00 PLN
+ask s_p60: bal(spare, 2026-06-30) with out_amt = 60.00 PLN
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  opening[spare] = 100.00 PLN at 2026-01-01 start "s"
+  opening[konto] = 0.00 PLN at 2026-01-01 start "s"
+  out_amt = ?"how much was moved out?" "s"
+  out_day = 2026-03-10 "s"

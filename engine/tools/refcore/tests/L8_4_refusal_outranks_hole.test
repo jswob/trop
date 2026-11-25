@@ -45,5 +45,5 @@ q: refused: RUN-PARAM normal parameter s = -5 is invalid
   cut 2026-10-18
 q2: refused: RUN-PARAM normal parameter s = -5 is invalid
   cut 2026-10-18
-q3: (refused: RUN-NONE nn is none here: arithmetic, refused: RUN-NONE nn is none here: arithmetic, refused: RUN-NONE a value is none here: max, refused: RUN-DOMAIN sqrt(-1) outside its domain, refused: RUN-NONE nn is none here: an ordering, ?"what is mu?" (mu[k2]))
+q3: (refused: RUN-NONE nn is none here: arithmetic, refused: RUN-NONE nn is none here: arithmetic, refused: RUN-NONE nn is none here: max, refused: RUN-DOMAIN sqrt(-1) outside its domain, refused: RUN-NONE nn is none here: ordering, ?"what is mu?" (mu[k2]))
   cut 2026-10-18

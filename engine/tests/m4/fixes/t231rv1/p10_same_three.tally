@@ -1,0 +1,58 @@
+model p10
+  tally 2
+  on 2026-06-10
+  start 2026-01-01
+  end 2026-12-31
+
+source s "probe"
+unit PLN: currency minor 0.01
+place wa: accounts PLN lives 2025-01-01..
+place wb: accounts PLN lives 2025-01-01..
+place world: outside lives 1900-01-01..
+input d1: date
+input d2: date
+input d3: date
+input a: money PLN
+
+move x1: transfers
+  on d1
+  leg cash from world to wa amount a
+move x2: transfers
+  on d2
+  leg cash from world to wa amount a
+move x3: transfers
+  on d3
+  leg cash from world to wa amount a
+move y1: transfers
+  on d3
+  leg cash from wb to world amount a
+move y2: transfers
+  on d1
+  leg cash from wb to world amount a
+
+ask a6: bal(wa, 2026-03-06)
+ask a8: bal(wa, 2026-03-08)
+ask a9: bal(wa, 2026-03-09)
+ask fa: flows(wa, 2026-03-06 .. 2026-03-09)
+ask fb: flows(wa, 2026-03-05 .. 2026-03-09)
+ask b4: bal(wb, 2026-03-04)
+ask b6: bal(wb, 2026-03-06)
+ask b9: bal(wb, 2026-03-09)
+ask fy: flows(wb, 2026-03)
+ask ny: count(t in transfers over 2026-03 where t.cash.from == wb)
+ask sy: sum(t.cash.amount for t in transfers over 2026-03 where t.cash.from == wb)
+ask ex: explain bal(wb, 2026-03-09)
+
+version v
+  cite s
+  governs always
+  known 2025-12-01
+  opening[wa] = 0.00 PLN at 2026-01-01 start "s"
+  opening[wb] = 500.00 PLN at 2026-01-01 start "s"
+  d1 = 2026-03-05 "s"
+  d2 = 2026-03-07 "s"
+  d3 = 2026-03-09 "s"
+  a = 100.00 PLN "s"
+  same x1 = x2
+  same x2 = x3
+  same y1 = y2

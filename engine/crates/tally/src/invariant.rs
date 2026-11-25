@@ -418,9 +418,15 @@ fn day_odds(
         day,
         mv: moved.mv.clone(),
         ours: mine,
+        // a two-day `same` pair's ends are its HOLE-SAME hole, open between its days (L §6.1)
         flagged: matches!(
             moved.change,
-            Change::Hole(_) | Change::Perm(_) | Change::Bad(_) | Change::PermBad(_)
+            Change::Hole(_)
+                | Change::Perm(_)
+                | Change::Bad(_)
+                | Change::PermBad(_)
+                | Change::Open(_)
+                | Change::Close(_)
         ),
     };
     for moved in ours.into_iter().flatten() {
@@ -609,6 +615,102 @@ ask bank_end: bal(bank, 2025-03-31)
         assert!(
             !engine.signatures.contains_key(&projected),
             "a projection's walk is a read"
+        );
+    }
+
+    /// A `same` pair on two days whose amounts differ in the base and agree in scenario
+    /// `up`, which changes the second amount from after the first day.
+    const TWO_DAYS: &str = r#"model two_days
+  tally 2
+  on 2026-06-10
+  start 2026-01-01
+  end 2026-12-31
+
+source s "invented values"
+
+unit PLN: currency minor 0.01
+
+place wallet: accounts PLN lives 2025-01-01..
+
+place world: outside lives 1900-01-01..
+
+input d1: date
+
+input d2: date
+
+input a1: money PLN
+
+input a2: money PLN
+
+move in1: transfers
+  on d1
+  at d1
+  leg cash from world to wallet amount a1
+
+move in2: transfers
+  on d2
+  at d2
+  leg cash from world to wallet amount a2
+
+ask q_after: bal(wallet, 2026-06-30) in up
+ask q_between: bal(wallet, 2026-03-31) in up
+
+version v
+  cite s
+  governs always
+  known 2025-12-01
+  opening[wallet] = 0.00 PLN at 2026-01-01 start "s"
+  d1 = 2026-03-05 "s"
+  d2 = 2026-05-07 "s"
+  a1 = 100.00 PLN "s"
+  a2 = 130.00 PLN "s"
+  same in1 = in2
+"#;
+
+    const UP: &str = r#"scenario up over two_days
+  tally 2
+  from 2026-04-01
+
+version w
+  cite s
+  governs 2026-04..
+  known 2026-04-01
+  replace a2 = 100.00 PLN "what if"
+"#;
+
+    #[test]
+    fn a_scenario_that_makes_a_same_pair_two_days_answers() {
+        // E §9 invariant 3: the base books the pair's differing amounts as a hole on the
+        // first day, the scenario the two-day pair's open hole (L §6.1): both are the pair's
+        // hole, so neither is an invariant break
+        use crate::api::{Asks, Files, Given, Request, run};
+        let given = vec![
+            Given {
+                path: "two_days.tally".to_owned(),
+                bytes: Some(TWO_DAYS.as_bytes().to_vec()),
+            },
+            Given {
+                path: "up.tally".to_owned(),
+                bytes: Some(UP.as_bytes().to_vec()),
+            },
+        ];
+        let answer = run(Files::new(given), &Request::new(Asks::Every)).expect("an answer");
+        let values: Vec<&str> = answer
+            .lines()
+            .iter()
+            .filter(|line| line.starts_with('q'))
+            .map(String::as_str)
+            .collect();
+        assert_eq!(
+            values.first().copied(),
+            Some("q_after: 100.00 PLN"),
+            "known after both days"
+        );
+        assert!(
+            values
+                .get(1)
+                .is_some_and(|v| v.starts_with("q_between: ?\"in1 and in2 are one")),
+            "the pair's hole between its days: {values:?}"
         );
     }
 }

@@ -25,20 +25,20 @@ How a caller uses the engine: its three operations, how each thing a caller does
 
 Each operation is a command of the engine's binary and a call of its library (`engine/tests/INTERFACE.md` §1 to §4). None adds a code: each prints only those of `LANGUAGE.md` §8 and `ENGINE.md` §11.
 
-**For all three.** A path is a file, or a directory: every `*.tally` file under it. A joint model's members are found from its `use` lines, relative to its file, each checked against its pin (`LANGUAGE.md` §6.1). Files are taken in full-path order by code point (`ENGINE.md` §3.1 step 1). Everything prints to standard output. `run` and `reprint` exit 0 for an answer, 1 for a refusal (the first line starts `refused: `), 2 for a usage error (no command, or an option, a word that starts with `--`, that the command doesn't take); `check`'s exit is its own (§2.3).
+**For all three.** A path is a file, or a directory: every `*.tally` file under it. A joint model's members are found from its `use` lines, relative to its file, each checked against its pin (`LANGUAGE.md` §6.1). Files are taken once, in full-path order by code point (`ENGINE.md` §3.1 step 1). Everything prints to standard output. `run` and `reprint` exit 0 for an answer, 1 for a refusal (the first line starts `refused: `), 2 for a usage error (no command, a missing operand, or an option, a word that starts with `--`, that the command doesn't take); `check`'s exit is its own (§2.3).
 
 ### 2.1 `run`
 
 `tally run <path>… [--ask <id>…] [--pin=bytes]`
 
 - **Inputs.** The reality's files; after `--ask`, the ids of the asks to answer, a joint model's member's as `a.q`; with no `--ask`, every ask of the reality (of a joint model, its own). `--pin=bytes` makes a `use` pin the sha256 of the member's file bytes, not of its canonical text.
-- **Result** (worked in §7). Each ask's result in `LANGUAGE.md` §5.18's form, in `--ask`'s order, or with none by id, full path, then line: `<id>: …`, or `<id> (k = …): …` per binding tuple, with values, holes and their questions, per-value refusals, and the register indented under it (§8.1, §8.4, §8.2). The warnings print last, `warning: CODE message`, sorted by code, then text (§8.5). Holes and per-value refusals are answers: exit 0. A reality with no ask prints nothing.
+- **Result** (worked in §7). Each ask's result in `LANGUAGE.md` §5.18's form, in `--ask`'s order, or with none by id, full path, then line: `<id>: …`, or `<id> (k = …): …` per binding tuple, with values, holes and their questions, per-value refusals, and the register indented under it (§8.1, §8.4, §8.2). The warnings print last, `warning: CODE message`, sorted by code, then text (§8.5). Holes and per-value refusals are answers: exit 0. A reality with no ask prints load's output.
 - **Refuses**, each as the one line, exit 1:
   - a reality that doesn't load: `refused: LOAD-… <message> (<path>:<line>)`, the first in full-path order (`LANGUAGE.md` §8.3); a member's as `refused: member <a>: …`;
-  - after load: `REQ-ASK no ask <q>`, the first unknown id in request order; `REQ-CLOCK`, a cut an ask states after `on`; `REQ-PATHS`, more than 100 000 paths for one ask (`ENGINE.md` §11).
+  - after load: `REQ-ASK no ask <q>`, the first unknown id in request order; `REQ-CLOCK`; `REQ-PATHS` (`ENGINE.md` §11).
 
   `ENGINE-INVARIANT`, an engine fault, refuses the whole result (`ENGINE.md` §9): report it.
-- **A scenario file that doesn't load** refuses that scenario and those over it, with its message; the base answers, exit 0 (`LANGUAGE.md` §6.4). Its line `scenario <s>: refused: CODE message` prints once, before every result, in §2.3's order, whatever is asked; each ask in its world prints `<q>: refused: CODE message`; the file's own asks print nothing, even when named.
+- **A scenario file that doesn't load** refuses that scenario and those over it, with its message; the base answers, exit 0 (`LANGUAGE.md` §6.4). Its line `scenario <s>: refused: CODE message` prints once, before every result, in §2.3's order, a joint model's own before its members' in `use` order, whatever is asked; each ask in its world prints `<q>: refused: CODE message`; the file's own asks print nothing, even when named.
 - **An ask refused alone:** one that names a scenario whose file isn't given prints its line, `<q>: refused: LOAD-SCENARIO …` (`LANGUAGE.md` §8.3), and the rest answers, exit 0.
 
 ### 2.2 `reprint`
@@ -169,7 +169,7 @@ Each recipe is a few lines of Tally text or one command. Every example runs on t
   ```
 - **IMP-2, duplicates, corrections, card holds.** The key is the bank's row id, so a row already written isn't written again. A correction restates the key in a later version that also `covers` the place (`LOAD-COVERS` otherwise): `replace bank[r1] = (…)`; a row that never happened, or a hold that never booked, `replace bank[r2] = none`; a hold that books restates the hold's key.
 - **IMP-3, a statement's closing balance.** The `stated` reading. Every balance read after it prints `anchor: konto 2026-10-31 end, stated 7 900.00 PLN, difference 20.00 PLN`; `residuals` prints the same gap.
-- **IMP-4, match bank rows to planned movements.** The caller reads `residuals` (`expected but missing wage[2026-10, acme]`, `unexplained bank[r1]`) and the register's `open:` lines, and writes `fulfils` on the row: in the statement, or later by a `replace` of the row (IMP-2). The engine checks each link at the ask's cut (`RUN-RECORD`) and proposes none.
+- **IMP-4, match bank rows to planned movements.** The caller reads `residuals` (`unexplained bank[r1]`) and the register's `open:` lines, and writes `fulfils` on the row: in the statement or a later `replace` (IMP-2). The engine checks each link in `residuals` and proposes none; a run with no `residuals` ask is silent on a dead link.
 
 ### 3.6 Law
 

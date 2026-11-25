@@ -26,7 +26,8 @@ use super::srows::check_srow_reads;
 use super::steps::{Loader, refuse};
 use crate::base::{Code, Load, Refusal, Warn};
 use crate::model::{
-    Domain, GapRole, Graph, Mark, MoveInfo, Node, NodeKind, Reality, Rel, Shift, Target, Ty,
+    Domain, Fulfils, GapRole, Graph, Mark, MoveInfo, Node, NodeKind, Reality, Rel, Shift, Target,
+    Ty,
 };
 use crate::syntax::{AskBody, Field, Lit, Order, Section, Stop, Value as Written};
 use std::collections::{BTreeMap, BTreeSet};
@@ -80,6 +81,7 @@ impl Loader {
         let unread_items = unread(&self.m, &walked.graph);
         self.m.warnings.extend(unread_items);
         let decided = from_decisions(&self.m, &walked.graph);
+        walked.graph.marked = marked_decisions(&self.m, &walked.graph);
         running_reads(&self.m, &walked.graph, &decided, &files)?;
         let mut graph = core::mem::take(&mut walked.graph);
         graph.from_decisions = decided;
@@ -143,6 +145,15 @@ impl Loader {
             for (order, other) in &mv.decl.order {
                 self.written_order(a, *order, other, &mut after, &mut written)?;
             }
+        }
+        if let Some(cycle) = written_cycle(&written)? {
+            // a cycle of written orders is LOAD-ORDER, a move before itself its smallest
+            // (L §5.14.2 Cycles; tally 2.3.1 S11, N245.8)
+            let message = format!("{}: written orders form a cycle", cycle.join(" before "));
+            let first = cycle
+                .first()
+                .ok_or_else(|| broken("a cycle of written orders with no move"))?;
+            return Err(self.at_move(first, Load::Order, message));
         }
         self.composed_orders(&mut after, &mut written)?;
         let groups = match order_cycles(&self.m.graph, &after, &decisions) {
@@ -297,6 +308,75 @@ impl Loader {
             None => Stop::Refused(Refusal::new(Code::Load(code), message)),
         }
     }
+}
+
+/// The first cycle the written orders `(later, earlier)` form, as refcore's `m_strata` walks
+/// them: from each earlier move by name, through the moves it is written before, by name; the
+/// cycle's moves in order from the one met again, that one again at its end. L §5.14.2 Cycles
+/// (tally 2.3.1 S11).
+///
+/// # Errors
+///
+/// `ENGINE-INVARIANT` where the walk's own path breaks (G3's review N9).
+fn written_cycle(written: &BTreeSet<(String, String)>) -> Result<Option<Vec<String>>, Stop> {
+    // each earlier move's later ones, by name: the pairs ordered by the earlier move, then
+    // grouped, so every list is built from its members
+    let ordered: BTreeSet<(&str, &str)> = written
+        .iter()
+        .map(|(later, earlier)| (earlier.as_str(), later.as_str()))
+        .collect();
+    let pairs: Vec<(&str, &str)> = ordered.into_iter().collect();
+    let mut before: BTreeMap<&str, Vec<&str>> = BTreeMap::new();
+    for group in pairs.chunk_by(|one, two| one.0 == two.0) {
+        let &(earlier, _) = group
+            .first()
+            .ok_or_else(|| broken("an empty group of written orders"))?;
+        before.insert(earlier, group.iter().map(|&(_, later)| later).collect());
+    }
+    // a move on the walk's path is `false`, one whose walk is done `true`
+    let mut done: BTreeMap<&str, bool> = BTreeMap::new();
+    for start in before.keys() {
+        if done.contains_key(start) {
+            continue;
+        }
+        done.insert(start, false);
+        let mut path: Vec<(&str, usize)> = vec![(start, 0)];
+        while let Some(&(node, next)) = path.last() {
+            let later = before.get(node).and_then(|ls| ls.get(next)).copied();
+            if let Some(top) = path.last_mut() {
+                top.1 = next
+                    .checked_add(1)
+                    .ok_or_else(|| broken("a move written before more moves than there are"))?;
+            }
+            let Some(later) = later else {
+                done.insert(node, true);
+                path.pop();
+                continue;
+            };
+            match done.get(later) {
+                Some(false) => {
+                    // a move on the path is marked `false`, so the path holds it
+                    let from = path
+                        .iter()
+                        .position(|(n, _)| *n == later)
+                        .ok_or_else(|| broken("a move on the walk's path that the path lacks"))?;
+                    let mut cycle: Vec<String> = path
+                        .iter()
+                        .skip(from)
+                        .map(|(n, _)| (*n).to_owned())
+                        .collect();
+                    cycle.push(later.to_owned());
+                    return Ok(Some(cycle));
+                }
+                Some(true) => {}
+                None => {
+                    done.insert(later, false);
+                    path.push((later, 0));
+                }
+            }
+        }
+    }
+    Ok(None)
 }
 
 /// The written orders composed: a pair `(later, earlier)` with `later` after `x` and `x`
@@ -664,8 +744,18 @@ fn move_reads(m: &Reality, graph: &Graph, id: &str, mv: &MoveInfo) -> Option<Str
         let name = target_name(target);
         format!("{id} reaches a running read or projection of {name} without reads {name}")
     };
+    // a field read through a row's `fulfils` is a read of the moves its rows name, for the
+    // mark and for `reads` alike (tally 2.3.1 rulings 23 (d))
+    let linked: Vec<Target> = linked_moves(m, graph, id)
+        .into_iter()
+        .map(Target::Move)
+        .collect();
+    let marked = |target: &Target| matches!(target, Target::Move(d) if graph.marked.contains(d));
     if !mv.decision {
-        return reached.first().map(|(_, target)| without(target));
+        if let Some((_, target)) = reached.first() {
+            return Some(without(target));
+        }
+        return linked.iter().find(|t| marked(t)).map(without);
     }
     if let Some((_, target)) = reached_marks(graph, &Node::new(NodeKind::MoveOn, id)).first() {
         return Some(format!(
@@ -679,19 +769,160 @@ fn move_reads(m: &Reality, graph: &Graph, id: &str, mv: &MoveInfo) -> Option<Str
     {
         return Some(without(target));
     }
+    if let Some(target) = linked
+        .iter()
+        .find(|t| marked(t) && !covers(m, &mv.read_targets, t))
+    {
+        return Some(without(target));
+    }
     if reached.iter().any(|(_, target)| *target == Target::Unknown) {
         return None;
     }
     for declared in &mv.read_targets {
         let read = reached
             .iter()
-            .any(|(_, target)| covers_one(m, declared, target));
+            .map(|(_, target)| target)
+            .chain(&linked)
+            .any(|target| covers_one(m, declared, target));
         if !read {
             let name = target_name(declared);
             return Some(format!("{id} declares reads {name} and never reads it"));
         }
     }
     None
+}
+
+/// The moves whose instances move `id` reaches through a field read of a
+/// row's `fulfils`: the plan, its day and the defs they read read a field through `.fulfils`
+/// of rows of an observed input, by their id or bound, over every version's rows, and one of
+/// those rows names an instance of a marked decision. That read is a field read of the
+/// instance, whose existence reads a running read (E §3.1 step 7, a decision's existence a
+/// mark; L §5.19 Links; tally 2.3.1 rulings 19 D, rulings 22 (6)). The moves those rows
+/// name, by id: each is read, for the mark and for `reads` alike (rulings 23 (d)).
+fn linked_moves(m: &Reality, graph: &Graph, id: &str) -> BTreeSet<String> {
+    let rows = rows_read(graph, id);
+    let mut named = BTreeSet::new();
+    for (input, which) in &rows {
+        let Some(info) = m.inputs.get(input).filter(|info| info.observed) else {
+            continue;
+        };
+        for row in &info.observations {
+            let read = which.as_ref().is_none_or(|by_id| by_id.contains(&row.key));
+            if let (true, Some(Fulfils::Instance(d, _))) = (read, &row.fulfils) {
+                named.insert(d.clone());
+            }
+        }
+    }
+    named
+}
+
+/// The rows of each observed input plan `id`, its day and the defs they read read, where the
+/// item reading them reads a field through `.fulfils`: those an item names by their id,
+/// `bank[r2]`, where it reads the input no other way, else every row (`None`) (E §3.1 step
+/// 7; tally 2.3.1 rulings 19 D: the mark is row-precise; rulings 22 (6): for that read only).
+fn rows_read(graph: &Graph, id: &str) -> BTreeMap<String, Option<BTreeSet<String>>> {
+    let readers = fulfils_readers(graph);
+    let mut rows: BTreeMap<String, Option<BTreeSet<String>>> = BTreeMap::new();
+    let mut seen = BTreeSet::new();
+    let mut stack = vec![
+        Node::new(NodeKind::Move, id),
+        Node::new(NodeKind::MoveOn, id),
+    ];
+    while let Some(next) = stack.pop() {
+        if !seen.insert(next.clone()) {
+            continue;
+        }
+        for (target, rels) in graph.reads(&next).into_iter().flatten() {
+            if target.kind != NodeKind::Input {
+                if carries_marks(target) {
+                    stack.push(target.clone());
+                }
+                continue;
+            }
+            if !readers.contains(&next) {
+                continue;
+            }
+            let only_by_id = rels.iter().all(|rel| *rel == Rel::Any);
+            let by_id = graph
+                .named_rows
+                .get(&next)
+                .and_then(|by_input| by_input.get(&target.id))
+                .filter(|_| only_by_id);
+            let held = rows
+                .entry(target.id.clone())
+                .or_insert_with(|| Some(BTreeSet::new()));
+            match (held.as_mut(), by_id) {
+                (Some(old), Some(new)) => old.extend(new.iter().cloned()),
+                (Some(_), None) => *held = None,
+                (None, _) => {}
+            }
+        }
+    }
+    rows
+}
+
+/// The items that read a field through `.fulfils`: written so, or reading at a key `.fulfils`
+/// gives an item keyed by a kind that reads a field of its key, itself or through the items it
+/// passes its key to (E §3.1 steps 5 and 7; tally 2.3.1 rulings 22 (6), part 1's review B1).
+fn fulfils_readers(graph: &Graph) -> BTreeSet<Node> {
+    // by key position: a def over two transfers that reads a field of one only reaches
+    // through that one (rulings 23 (d))
+    let mut fields = graph.key_fields.clone();
+    loop {
+        let more: Vec<(Node, usize)> = graph
+            .key_passes
+            .iter()
+            .filter(|(own, to)| !fields.contains(*own) && !to.is_disjoint(&fields))
+            .map(|(own, _)| own.clone())
+            .collect();
+        if more.is_empty() {
+            break;
+        }
+        fields.extend(more);
+    }
+    let mut readers = graph.fulfils_fields.clone();
+    let keyed = graph.fulfils_keyed.iter();
+    readers.extend(
+        keyed
+            .filter(|(_, to)| !to.is_disjoint(&fields))
+            .map(|(item, _)| item.clone()),
+    );
+    readers
+}
+
+/// The decisions whose existence, their keys' `where`s and their `when`, reads a running
+/// read or a projection by E §3.1 step 7's whole list, itself or through the defs it reads:
+/// a balance at any day, `flows` of a place or a decision, a projection, a decision's legs,
+/// day or attributes; one with no such read is not marked (tally 2.3.1 rulings 19 D).
+fn marked_decisions(m: &Reality, graph: &Graph) -> BTreeSet<String> {
+    let mut out = BTreeSet::new();
+    for (id, mv) in m.moves.entries() {
+        let Some((marks, reads)) = graph.existence.get(id).filter(|_| mv.decision) else {
+            continue;
+        };
+        let reached = reads
+            .iter()
+            .filter(|node| carries_marks(node))
+            .flat_map(|node| reached_marks(graph, node));
+        if marks
+            .iter()
+            .cloned()
+            .chain(reached)
+            .any(|(mark, _)| running_mark(mark))
+        {
+            out.insert(id.clone());
+        }
+    }
+    out
+}
+
+/// Whether a mark is one of E §3.1 step 7's running reads: every one but a leg's amount read
+/// of a party or batch.
+fn running_mark(mark: Mark) -> bool {
+    match mark {
+        Mark::BalNow | Mark::Bal | Mark::Proj | Mark::Flows | Mark::Legs => true,
+        Mark::LegOf => false,
+    }
 }
 
 /// Whether a node is a def or a band.
@@ -1186,7 +1417,7 @@ fn level_of(
 
 #[cfg(test)]
 mod tests {
-    use super::{first_cycle, merge};
+    use super::{first_cycle, merge, written_cycle};
     use crate::model::{Node, NodeKind};
     use std::collections::{BTreeMap, BTreeSet};
 
@@ -1212,6 +1443,42 @@ mod tests {
         assert_eq!(cycle, ["b", "c", "b"], "a is on the path, not in the cycle");
         graph.remove(&def("c"));
         assert!(first_cycle(&graph).is_none(), "no cycle left");
+    }
+
+    /// Written orders as (later, earlier) pairs.
+    fn orders(pairs: &[(&str, &str)]) -> BTreeSet<(String, String)> {
+        pairs
+            .iter()
+            .map(|(later, earlier)| ((*later).to_owned(), (*earlier).to_owned()))
+            .collect()
+    }
+
+    #[test]
+    fn written_orders_that_compose_into_a_cycle_are_found() {
+        // L §5.14.2 (tally 2.3.1 S11): save before spend, spend before top, top before save
+        let three = orders(&[("spend", "save"), ("top", "spend"), ("save", "top")]);
+        assert_eq!(
+            written_cycle(&three),
+            Ok(Some(vec![
+                "save".to_owned(),
+                "spend".to_owned(),
+                "top".to_owned(),
+                "save".to_owned()
+            ])),
+            "from the first earlier move by name, along `before`"
+        );
+        let chain = orders(&[("spend", "save"), ("top", "spend"), ("top", "save")]);
+        assert_eq!(
+            written_cycle(&chain),
+            Ok(None),
+            "composed orders with no cycle"
+        );
+        let both = orders(&[("a", "b"), ("b", "a"), ("c", "a")]);
+        assert_eq!(
+            written_cycle(&both),
+            Ok(Some(vec!["a".to_owned(), "b".to_owned(), "a".to_owned()])),
+            "an order written both ways"
+        );
     }
 
     #[test]

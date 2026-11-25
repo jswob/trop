@@ -14,6 +14,7 @@
 //! the built-in and each unknown day.
 
 use super::arith::whole_of;
+use super::builtin::named_none;
 use super::expr::hole_of;
 use super::state::{Ctx, Engine, Env, invariant, num_stop, refuse, refuse_load};
 use super::state::{a_day, not_typed, past_days};
@@ -66,7 +67,7 @@ impl Engine {
         ctx: Ctx,
     ) -> Result<Value, Stop> {
         let [v] = self
-            .args(m, call, env, ctx)?
+            .args_named(m, call, env, ctx)?
             .try_into()
             .map_err(|_| arity())?;
         if let Value::Hole(_) = v {
@@ -105,7 +106,7 @@ impl Engine {
         ctx: Ctx,
     ) -> Result<Value, Stop> {
         let [a, b] = self
-            .args(m, call, env, ctx)?
+            .args_named(m, call, env, ctx)?
             .try_into()
             .map_err(|_| arity())?;
         if a.as_hole().is_some() || b.as_hole().is_some() {
@@ -152,13 +153,18 @@ impl Engine {
         ctx: Ctx,
     ) -> Result<Value, Stop> {
         let [a, b] = self
-            .args(m, call, env, ctx)?
+            .args_named(m, call, env, ctx)?
             .try_into()
             .map_err(|_| arity())?;
         if a.as_hole().is_some() || b.as_hole().is_some() {
             return hole_of(&[a.as_hole(), b.as_hole()]);
         }
         let name = call.name.as_str();
+        if matches!(name, "age" | "age_months") {
+            // the read and the built-in's name (L §8.4 `RUN-NONE`'s row; tally 2.3.1 R4, P31)
+            named_none(m, call, (0, &a), env)?;
+            named_none(m, call, (1, &b), env)?;
+        }
         let first = date_or_window(a, name)?;
         if matches!(name, "add_days" | "add_months" | "add_years") {
             return moved_by(m, name, first, &b);
@@ -185,7 +191,7 @@ impl Engine {
         ctx: Ctx,
     ) -> Result<Value, Stop> {
         let [a, b, k] = self
-            .args(m, call, env, ctx)?
+            .args_named(m, call, env, ctx)?
             .try_into()
             .map_err(|_| arity())?;
         if let Some(h) = crate::hole::spread(&[a.as_hole(), b.as_hole(), k.as_hole()]) {
@@ -211,7 +217,7 @@ impl Engine {
         ctx: Ctx,
     ) -> Result<Value, Stop> {
         let [d] = self
-            .args(m, call, env, ctx)?
+            .args_named(m, call, env, ctx)?
             .try_into()
             .map_err(|_| arity())?;
         if let Value::Hole(_) = d {
@@ -240,8 +246,10 @@ impl Engine {
             .try_into()
             .map_err(|_| arity())?;
         // refusals outrank holes (L §8; pick P12): each argument in written order, a known
-        // one's own check run (`none` among them), a hole or a window's waiting
-        for day in [&a, &b] {
+        // one's own check run (`none` among them, a day named as written and by the built-in,
+        // R4), a hole or a window's waiting; the day count's `none` is its code's refusal
+        for (i, day) in [&a, &b].into_iter().enumerate() {
+            named_none(m, call, (i, day), env)?;
             let day = single(day);
             if day.as_hole().is_none() && !matches!(*day, Value::Window(_)) {
                 dcf_day(m, &day)?;

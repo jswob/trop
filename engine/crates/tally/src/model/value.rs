@@ -244,10 +244,6 @@ pub struct MvRef {
     pub day: Option<Day>,
     /// What it is.
     pub src: MvSrc,
-    /// Whether it is a binding's member of a decision whose day is a hole, whose legs the
-    /// binding read as the plan has them (refcore's `hole_day_dec_body`, on the member's own
-    /// record). L §5.19 Bindings.
-    pub member: bool,
 }
 
 /// What a movement value is, found again at the reader's cut (refcore's `Mv.src`). L §5.14.
@@ -330,19 +326,14 @@ impl Value {
             Value::Code(Code::Word(w)) => Ok(w.clone()),
             Value::Code(Code::Nominal(n)) => Ok(format!("nominal {n}")),
             Value::Record(fields) => record_text(m, fields),
-            Value::List(items) => {
+            // a list, and a tuple as its keys, in brackets: `[a, 1]` (L §2.4 Values; tally
+            // 2.3.1 R4, Q1.8)
+            Value::List(items) | Value::Tuple(items) => {
                 let mut out = Vec::with_capacity(items.len());
                 for item in items {
                     out.push(item.text(m)?);
                 }
                 Ok(format!("[{}]", out.join(", ")))
-            }
-            Value::Tuple(items) => {
-                let mut out = Vec::with_capacity(items.len());
-                for item in items {
-                    out.push(item.text(m)?);
-                }
-                Ok(format!("({})", out.join(", ")))
             }
             Value::Calendar(cal) => Ok(cal.text()),
             Value::None => Ok("none".to_owned()),
@@ -374,9 +365,13 @@ impl Value {
     }
 }
 
-/// A window as it prints: `window(lo, hi)`, its stretch (refcore's `fmt` of an `Iv`).
-/// L §4.4, §5.18.
+/// A window as it prints: `window(lo, hi)`, its stretch, and a window of one day as that day
+/// (refcore's `fmt` of an `Iv`). A question names a window by [`Window::question_text`].
+/// L §2.4 Values (tally 2.3.1 R4, N250.7), §4.4, §5.18.
 fn window_text(w: &Window) -> String {
+    if w.lo == w.hi {
+        return w.lo.text();
+    }
     format!("window({}, {})", w.lo.text(), w.hi.text())
 }
 

@@ -198,7 +198,10 @@ impl Engine {
             match &entry.change {
                 Change::Bad(err) | Change::PermBad(err) => return Err(Stop::Refused(err.clone())),
                 Change::Delta(flow) => q = q.checked_add(flow).map_err(crate::eval::num_stop)?,
-                Change::Hole(hole) | Change::Perm(hole) => holes.push(hole.clone()),
+                Change::Hole(hole) | Change::Perm(hole) | Change::Open(hole) => {
+                    holes.push(hole.clone());
+                }
+                Change::Close(hole) => closed(&mut holes, hole),
                 Change::Reset { .. } | Change::Mark => {}
             }
             if let Some(coll) = &entry.coll {
@@ -280,6 +283,15 @@ fn is_opening(e: &Ent) -> bool {
 /// (refcore's `m_bal_modelled`). E §6.2.
 fn booked_elsewhere(e: &Ent, obs: &[&str]) -> bool {
     matches!(e.change, Change::Reset { .. }) || e.mv.as_deref().is_some_and(|mv| obs.contains(&mv))
+}
+
+/// The holes counted so far, `holes`, after a [`Change::Close`] of `hole`: the hole its
+/// [`Change::Open`] counted ends, or, with none counted, the movement may be held before and
+/// is that hole (L §6.1; tally 2.3.1 R1, N245.21).
+fn closed(holes: &mut Vec<Hole>, hole: &Hole) {
+    if !super::state::ended(holes, hole) {
+        holes.push(hole.clone());
+    }
 }
 
 #[cfg(test)]

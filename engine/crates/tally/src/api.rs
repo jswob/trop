@@ -235,7 +235,7 @@ fn joint_lines(lines: Vec<String>) -> Vec<String> {
     lines
         .into_iter()
         .filter(|line| !(line.starts_with("warning: WARN-UNREAD") && line.contains('\u{b7}')))
-        .map(|line| line.replace('\u{b7}', "."))
+        .map(|line| crate::base::dotted(&line))
         .collect()
 }
 

@@ -1,0 +1,34 @@
+model same2
+  tally 2
+  on 2026-01-01
+  start 2026-01-01
+  end 2026-12-31
+source s "s"
+unit PLN: currency minor 0.01
+place konto: accounts PLN lives 2026-01-01..
+place world: outside lives 1900-01-01..
+input a1: money PLN
+input d1: date
+input d2: date
+move in1: transfers
+  on d1
+  leg cash from world to konto amount a1
+move in2: transfers
+  on d2
+  leg cash from world to konto amount a1
+ask b01: bal(konto, 2026-03-01)
+ask b07: bal(konto, 2026-03-07)
+ask b31: bal(konto, 2026-03-31)
+ask f1: flows(in1, 2026-03)
+ask c0: count(m in transfers over 2026-03)
+ask c4: count(m in transfers over 2026-04)
+ask dy: m.day for m in transfers over 2026-03
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  opening[konto] = 500.00 PLN at 2026-01-01 start "s"
+  a1 = 100.00 PLN "s"
+  d1 = 2026-03-05 "s"
+  d2 = 2026-03-10 "s"
+  same in1 = in2

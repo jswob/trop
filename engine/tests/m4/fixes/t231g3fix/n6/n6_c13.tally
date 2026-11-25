@@ -1,0 +1,44 @@
+model lp
+  tally 2
+  on 2026-06-30
+  start 2026-01-01
+  end 2026-12-31
+
+source s "probe"
+unit PLN: currency minor 0.01
+input w: date
+input rate: money PLN
+input ratio: num
+input pct: num %
+input g: num %/year
+index ks = [k1, k2]
+axis mode
+  ma "a"
+  mb "b"
+
+def cost: money PLN at reader
+  rule one = rate
+def modal: money PLN = if mode == ma then rate else rate + rate at reader
+
+ask c13: cost as if {law 2026-09-01, rate = 1.00 PLN, law 2026-02-01}
+
+version v
+  cite s
+  governs 2026-01-01..2026-06-30
+  known 2026-01-01
+  rate = 10.00 PLN "s"
+
+version v2
+  cite s
+  governs 2026-07-01..
+  known 2026-03-01
+  rate = 20.00 PLN "s"
+
+version v3
+  cite s
+  governs always
+  known 2026-01-01
+  w = 2026-02-01 "s"
+  ratio = 1 "s"
+  pct = 10 % "s"
+  g = 2 %/year "s"

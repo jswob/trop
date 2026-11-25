@@ -325,8 +325,9 @@ fn bad_table() -> Output {
 /// the command doesn't take is a usage error (S-usage, tally 2.2.1): `run` takes `--ask` and
 /// `--pin=bytes`, `check` and `reprint` take `--pin=bytes`. After `run`, every word before
 /// `--ask` is a path and every word after it an ask id; after `check` and `reprint`, every word
-/// is a path. None for any other command, an option the command doesn't take, or a word that
-/// isn't UTF-8.
+/// is a path. None for any other command, an option the command doesn't take, a missing
+/// operand (no path; `--ask` with no ask id), or a word that isn't UTF-8 (O §2: a usage
+/// error, exit 2; tally 2.3.1 S12).
 fn parse(args: &[OsString]) -> Option<Command> {
     let words: Vec<&str> = args.iter().map(|arg| arg.to_str()).collect::<Option<_>>()?;
     let (first, rest) = words.split_first()?;
@@ -346,17 +347,18 @@ fn parse(args: &[OsString]) -> Option<Command> {
     } else {
         tally::Pin::Canonical
     };
-    match *first {
-        "run" => Some(run_line(rest, pin)),
-        "check" => Some(Command::Check {
-            paths: paths_of(rest),
-            pin,
-        }),
-        _ => Some(Command::Reprint {
-            paths: paths_of(rest),
-            pin,
-        }),
+    if *first == "run" {
+        return run_line(rest, pin);
     }
+    let paths = paths_of(rest);
+    if paths.is_empty() {
+        return None;
+    }
+    Some(if *first == "check" {
+        Command::Check { paths, pin }
+    } else {
+        Command::Reprint { paths, pin }
+    })
 }
 
 /// The words of `check` or `reprint` but `--pin=bytes`: its paths.
@@ -369,8 +371,8 @@ fn paths_of(words: &[&str]) -> Vec<String> {
 }
 
 /// The words after `run`, its options already taken: the paths before `--ask`, the ask ids
-/// after it.
-fn run_line(words: &[&str], pin: tally::Pin) -> Command {
+/// after it; none where no path is given or `--ask` names no ask (O §2, a missing operand).
+fn run_line(words: &[&str], pin: tally::Pin) -> Option<Command> {
     let mut paths = Vec::new();
     let mut asks = Vec::new();
     let mut after_ask = false;
@@ -383,16 +385,19 @@ fn run_line(words: &[&str], pin: tally::Pin) -> Command {
             paths.push((*word).to_owned());
         }
     }
+    if paths.is_empty() || after_ask && asks.is_empty() {
+        return None;
+    }
     let asks = if asks.is_empty() {
         tally::Asks::Every
     } else {
         tally::Asks::Named(asks)
     };
-    Command::Run {
+    Some(Command::Run {
         paths,
         request: tally::Request::new(asks),
         pin,
-    }
+    })
 }
 
 /// `run`: the paths resolved against the table, then the engine.
@@ -718,13 +723,26 @@ mod tests {
         for words in options {
             assert_eq!(out(words, &[]).1, EXIT_USAGE, "{words:?}: S-usage");
         }
+        // a missing operand: no path, `--ask` with no ask id (O §2; tally 2.3.1 S12)
+        let missing: [&[&str]; 5] = [
+            &["check"],
+            &["reprint", "--pin=bytes"],
+            &["run"],
+            &["run", "--ask", "a"],
+            &["run", "x", "--ask"],
+        ];
+        for words in missing {
+            let (text, code) = out(words, &[]);
+            assert_eq!(code, EXIT_USAGE, "{words:?}: a missing operand");
+            assert!(text.starts_with("usage: tally run"), "{text}");
+        }
         assert_eq!(
             paths(&args(&["reprint", "x", "--pin=bytes"])),
             ["x"],
             "reprint takes --pin=bytes"
         );
         assert_eq!(
-            run(&args(&["run"]), b"1:a").code,
+            run(&args(&["run", "x"]), b"1:a").code,
             EXIT_USAGE,
             "a table that isn't netstrings"
         );

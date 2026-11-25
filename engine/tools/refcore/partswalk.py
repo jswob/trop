@@ -531,6 +531,11 @@ def w_pgroup_run(self, place, unit, grp, prev, refused):
             hl = _hole_leg(e, place)
             if hl is not None and (e.mv.id, hl.note) not in refused and (e.mv.id, hl.note) not in self.bad_legs:
                 batch.append(hl)
+        elif e.kind == 'unsame' and e.qs:
+            # the last of a `same` group's days: the hole part its first side brought ends, and the leg books as
+            # written (rulings 17 B; walk.Walk.book_leg's unsame; f10 p8)
+            qt = set(x[0] for x in e.qs)
+            st = PState(st.known, tuple(h for h in st.holes if not qt <= set(x[0] for x in h.qs)), st.coll, st.bad)
         elif e.kind == 'reset' and _is_pad(e):
             lg = e.mv.legs[0]
             if (e.mv.id, lg.name) not in refused and (e.mv.id, lg.name) not in self.bad_legs and \

@@ -459,10 +459,14 @@ def fmt(v):
     if isinstance(v, Lst):
         return '[%s]' % ', '.join(fmt(x) for x in v.items)
     if isinstance(v, Tup):
-        return '(%s)' % ', '.join(fmt(x) for x in v.items)
+        # a tuple as its keys in brackets (L §2.4 Values; tally 2.3.1 R4, Q1.8)
+        return '[%s]' % ', '.join(fmt(x) for x in v.items)
     if isinstance(v, Special):
         return v.name
     if isinstance(v, Iv):
+        if isinstance(v.lo, datetime.date) and v.lo == v.hi:
+            # a window of one day prints as that day (L §2.4 Values, §4.4; tally 2.3.1 R4, N250.7)
+            return fmt(v.lo)
         return 'window(%s, %s)' % (fmt(v.lo), fmt(v.hi))
     if isinstance(v, Hole):
         return fmt_hole(v)

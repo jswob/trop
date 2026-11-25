@@ -1,0 +1,57 @@
+model r5
+  tally 2
+  on 2026-10-25
+  start 2026-01-01
+  end 2026-12-31
+
+source s "invented"
+index ms = month 2026-01..2026-12
+index qs = month 2026-01..2026-12 by 3
+index ys = year 2020..2030 by 3
+index y1 = year 2020..2030
+index qq = month 2026-01..2027-12 by 3
+index tens = 10..50 by 10
+index ws = [wa, wb, wc]
+kind people
+input m1: month
+input q1: quarter
+input y0: year
+input mk: key ms
+input qk: key qs
+input yk: key ys
+input wk: key ws
+input tk: key tens
+input d1: date
+input b: bool
+input f: bool
+input vy[y in ys]: int
+input vm[m in ms]: int
+input vv[q in qs]: int
+
+ask f21: check tk == (if b then 10 else 20)
+
+version ver
+  cite s
+  governs always
+  known 2026-01-01
+  m1 = 2026-03 "s"
+  q1 = 2026-Q1 "s"
+  y0 = 2024 "s"
+  mk = 2026-02 "s"
+  qk = 2026-04 "s"
+  yk = 2026 "s"
+  wk = wb "s"
+  tk = 30 "s"
+  d1 = 2026-01-05 "s"
+  b = true "s"
+  f = false "s"
+  vy[2020] = 20 "s"
+  vy[2023] = 23 "s"
+  vy[2026] = 26 "s"
+  vy[2029] = 29 "s"
+  vm[2026-07] = 7 "s"
+  vm[2026-10] = 10 "s"
+  vv[2026-01] = 1 "s"
+  vv[2026-04] = 2 "s"
+  vv[2026-07] = 3 "s"
+  vv[2026-10] = 4 "s"

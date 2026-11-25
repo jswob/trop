@@ -548,9 +548,10 @@ def hole_day(v, use):
     return imprecise_hole(v, use)
 
 
-def m_move_tuples(self, mi, ctx):
+def m_move_tuples(self, mi, ctx, only=None):
     """The binding tuples of a move at the cut (E §4.1 step 1): (env, keys, status, coll), status True, a Hole (an
-    unknown member) or ('domainhole', Hole); coll what deciding that tuple read."""
+    unknown member) or ('domainhole', Hole); coll what deciding that tuple read. With only (the vkeys of one tuple),
+    that tuple alone: the other members of each binding are never bound, so their wheres are never read."""
     out = []
     waits_at = getattr(mi, 'dated_wheres', ())
 
@@ -580,7 +581,9 @@ def m_move_tuples(self, mi, ctx):
 
         def refused(e2, err, cw, wt):
             # binding order (L §4.3, R18 clause 2; 235.5): an earlier where that waits is read first, once the at
-            # has its keys; a false one drops the tuple, a refused one is the tuple's refusal
+            # has its keys; a false one drops the tuple, a refused one is the tuple's refusal. The tuple's existence
+            # reads on: its later keys and their wheres, a false one ending the read (no instance), the first
+            # refusal printing; then its day and when (L §5.14 existence; tally 2.3.1 R6, C-1: no list stops)
             if wt:
                 self.stack.append(cw)
                 try:
@@ -591,16 +594,20 @@ def m_move_tuples(self, mi, ctx):
                     return
                 if isinstance(got, TallyError):
                     err = got
-            out.append((e2, keys + [v] + [None] * (len(mi.binds) - i - 1), ('refused', err), cw))
+            if _refd(st):
+                err = st[1]
+            go(i + 1, e2, keys + [v], ('refused', err), cw)
 
         for v, s in res:
+            if only is not None and vkey(v) != only[i]:
+                continue
             e2 = dict(env)
             e2[b.var] = v
             if isinstance(s, TallyError):
                 refused(e2, s, cd, waiting + ((i,) if waits else ()))
                 continue
             s2 = st
-            if isinstance(s, Hole):
+            if isinstance(s, Hole) and not _refd(st):
                 s2 = s if st is True else merge(st, s)
             cw = _coll()
             cw.merge(cd)
@@ -629,9 +636,9 @@ def m_move_tuples(self, mi, ctx):
                     self.stack.pop()
                 if w is False:
                     continue
-                if w is NONE:
+                if w is NONE and not _refd(s2):
                     raise refuse('RUN-NONE', 'a where is none here')
-                if isinstance(w, Hole):
+                if isinstance(w, Hole) and not _refd(s2):
                     s2 = w if s2 is True else merge(s2, w)
             if wt:
                 self.stack.append(cw)
@@ -642,14 +649,18 @@ def m_move_tuples(self, mi, ctx):
                 if got is False:
                     continue
                 if isinstance(got, TallyError):
-                    out.append((e2, keys + [v] + [None] * (len(mi.binds) - i - 1), ('refused', got), cw))
+                    refused(e2, got, cw, ())
                     continue
                 wt, h = got
-                if h is not None:
+                if h is not None and not _refd(s2):
                     s2 = h if s2 is True else merge(s2, h)
             go(i + 1, e2, keys + [v], s2, cw, wt)
     go(0, {}, [], True, _coll())
     return out
+
+
+def _refd(st):
+    return isinstance(st, tuple) and st[0] == 'refused'
 
 
 def m_waiting_wheres(self, mi, waiting, env, ctx):
@@ -736,6 +747,33 @@ def m_move_instances(self, mi, ctx):
     return out
 
 
+def m_tuple_inst(self, mi, keys, ctx):
+    """One binding tuple's instance of a plan move, keys its vkeys, or None where it has none: its existence is a cell
+    of its own (L §5.14; tally 2.3.1 R6), read once whichever reader asks first, so a tuple whose existence or amount
+    reads another tuple of its move reads that tuple's cell, and only a tuple that reads itself is a cycle."""
+    tctx = self.tctx(ctx)
+    kk = tuple(keys)
+    wk = self.wkey(tctx)
+    key = ('tinst', mi.id, wk, kk)
+    if key in self.run_cache:
+        return self.run_cache[key]
+    full = self.run_cache.get(('inst', mi.id, wk))
+    if full is not None:
+        hit = [i for i in full if tuple(vkey(k) for k in i.keys) == kk]
+        self.run_cache[key] = hit[0] if hit else None
+        return self.run_cache[key]
+    if key in self.inst_active:
+        raise refuse('RUN-CYCLE', '%s reads its own instances' % mi.id)
+    self.inst_active.add(key)
+    try:
+        out = self.insts_of_tuples(mi, self.move_tuples(mi, tctx, only=kk), tctx)
+    finally:
+        self.inst_active.discard(key)
+    r = out[0] if out else None
+    self.run_cache[key] = r
+    return r
+
+
 def m_answer_booking(self, mi, i, tctx, upto=None):
     """E §5 step 1: "An A0 that is a hole, from its amounts or its when, stays a hole movement until a version answers
     it, with a value or with a refusal (LANGUAGE §8), under cuts from that version's known, and the answer is its
@@ -780,9 +818,6 @@ def m_insts_of_tuples(self, mi, tuples, tctx, upto=None):
         out = []
         for env, keys, st, c in tuples:
             if isinstance(st, tuple) and st[0] == 'refused':
-                if None in keys:
-                    # a later key is unknown, so are its day and places: every place from the run's start
-                    raise st[1]
                 # tally 2.1.6 (issue #51): its day and its legs' places are read as for any instance (neither depends
                 # on whether it exists), so the refusal reaches its places from its day (L §8.4, E §4.2); a false
                 # `when` leaves no instance, as under a hole `where`
@@ -1037,7 +1072,16 @@ def m_inst_body(self, mi, env, inst, c1, exists0=True):
     """(exists, legs, attrs, for, fulfils) of an instance at the context's cut."""
     ex = exists0
     if mi.decl.when is not None:
-        w = self.ev(mi.decl.when, env, c1)
+        # a decision's `when` read at its point: those reads decided its existence, the set its link stands for (L
+        # §8.2 l.2252; tally 2.3.1 C-9, G2's review finding 3)
+        cw = self.push()
+        try:
+            w = self.ev(mi.decl.when, env, c1)
+        finally:
+            self.stack.pop()
+            self.cur.merge(cw)
+            if mi.decision:
+                inst.exist_coll = cw
         if w is NONE:
             raise refuse('RUN-NONE', 'the when of %s is none here' % inst.id)
         if w is False and isinstance(inst.day, Hole):
@@ -1172,8 +1216,6 @@ def m_decision_instances(self, mi, ctx):
             # tally 2.1.7 R2 (#104): a refusal is the instance's status, not a way of reading it: an instance its
             # key's `where` refuses is kept, with its day, and refused for every read of it (L §8, §8.4), as a plan's
             # is (insts_of_tuples); the walk refuses the places its legs give from its day (Walk dec_bad)
-            if None in keys:
-                raise st[1]
             inst = self.eval_inst(mi, env, keys, tctx)
             if inst is None:
                 continue
@@ -1199,20 +1241,13 @@ def m_decision_instances(self, mi, ctx):
 # -- statuses (E §4.1 step 3) -----------------------------------------------------------------------------------
 
 def m_obs_links(self, ctx):
-    """Instance id -> the observations that fulfil it; RUN-RECORD for a link to nothing (L §5.19).
-
-    "A link reads only what it names: the existence of the instance, by its keys, `where` and `when` (an instance
-    exists only where all three hold, ENGINE.md §4.1), never its amounts" (L §5.19, round 17): the instance is found
-    among the move's binding tuples with its when (link_tuple), and its legs' places and names are read, not its
-    amounts (a plan whose amount reads a binding that checks the link is no cycle). Each target's links are judged on
-    their own (obs_links_for), since a `when` read to judge one link may read the status of another instance, which
-    rests on that instance's links (MC-X-F1: the whole table was handed out half built)."""
+    """Instance id -> the observations whose fulfils names it (L §5.19: a link names; it reads no instance)."""
     key = ('links', self.wkey(ctx))
     hit = self.run_cache.get(key)
     if hit is not None:
-        links, c = hit
-        self.cur.merge(c)
-        return links
+        # the table hands no link's reads to the reader that asked for it: each observation carries its own link's
+        # reads, which go to the readers that rest on that link (L §8.2 one read set, §5.19; tally 2.3.1 R2, item 6)
+        return hit[0]
     links = {}
     c = _coll()
     self.stack.append(c)
@@ -1223,7 +1258,6 @@ def m_obs_links(self, ctx):
                 links[tid] = r
     finally:
         self.stack.pop()
-    self.cur.merge(c)
     self.run_cache[key] = (links, c)
     return links
 
@@ -1246,8 +1280,8 @@ def m_link_targets(self, ctx):
 
 
 def m_obs_links_for(self, tid, ctx):
-    """The observations that fulfil instance tid, its links judged (L §5.19). A link whose judging reads the
-    instance's own observations again is a cycle (RUN-CYCLE), which link_tuple takes as existing."""
+    """The observations whose fulfils names instance tid, each standing in for it by the name (L §5.19; tally 2.3.1
+    rulings 22): only rows stated `same` that disagree, or unjoined rows of one transfer, are refused here."""
     wk = self.wkey(ctx)
     key = ('link1', wk, tid)
     hit = self.run_cache.get(key)
@@ -1268,34 +1302,11 @@ def m_obs_links_for(self, tid, ctx):
         for o in self.link_targets(ctx).get(tid, []):
             o.__dict__['_judge'] = None
             _, mid, kv = o.fulfils
-            mi = m.moves[mid]
-            found = self.link_tuple(mi, list(kv), ctx)
-            bad = found is None
-            places = set()
-            if not bad:
-                places = self.link_places(mi, found, ctx)
-                op = set()
-                for lg in o.legs:
-                    op.add(lg.frm.name)
-                    op.add(lg.to.name)
-                if places and not (places & op):
-                    bad = True
-            if bad:
-                o.err = refuse('RUN-RECORD', 'observation %s fulfils %s, which doesn\'t exist or doesn\'t touch its '
-                                             'places' % (o.id, tid))
-                continue
-            lnames = [ln.name for ln, _d in mi.legs]
-            have = set(lg.name for lg in o.legs)
-            lack = [n for n in lnames if n not in have]
-            if lack and m.kind_legs(o.kind):
-                # L §5.19 (round 12): a fulfils naming an instance "that has a leg the observation lacks, is refused
-                # (RUN-RECORD)"; L §8.4 "observation <r> fulfils <instance> and lacks its leg <l>"
-                o.err = refuse('RUN-RECORD', 'observation %s fulfils %s and lacks its leg %s' % (o.id, tid, lack[0]))
-                # what reads the instance's realised movement rests on the refused record (L §8.4: a refusal
-                # propagates like a hole)
-                self.run_cache.setdefault(('badlinks', wk), {}).setdefault(tid, o.err)
-                continue
-            o.target = _LinkTarget(tid, self, mi, list(kv), ctx)
+            # the row stands in for the instance its fulfils names, by the name alone: the name's move, keys and
+            # `for`, never the instance's existence, day, legs or amounts; a name the model doesn't hold is the
+            # residual ledger's to report (L §5.19; tally 2.3.1 rulings 22, the critic's P1-C2, P1-C5); a missing
+            # leg is load's (check3.check_link_legs)
+            o.target = _LinkTarget(tid, self, m.moves[mid], list(kv), ctx)
             res.append(o)
         res = self.same_fulfils_differ(tid, res, ctx)
         res = self.unjoined_refused(tid, res, ctx)
@@ -1530,16 +1541,39 @@ def same_obs_differ(a, others, leg=None, m=None, fact=None):
     for g in a.legs:
         if leg is not None and g.name != leg:
             continue
-        mem = [(a, g)] + [(b, h) for b in others for h in b.legs if h.name == g.name]
+        # legs pair by name, then by order among the unpaired; a leg with no partner is HOLE-SAME, its missing side
+        # none (tally 2.3.1 rulings 25, P42 B2 and note 5, P43)
+        mem = [(a, g)]
+        for b in others:
+            hs = [h for h in b.legs if h.name == g.name]
+            if not hs:
+                a_un = [x for x in a.legs if not any(y.name == x.name for y in b.legs)]
+                b_un = [y for y in b.legs if not any(x.name == y.name for x in a.legs)]
+                ku = next((j for j, x in enumerate(a_un) if x is g), None)
+                hs = b_un[ku:ku + 1] if ku is not None else []
+                if not hs and b.legs:
+                    hs = [None]
+            mem.extend((b, h) for h in hs)
+        if len(mem) < 2:
+            continue
+        if any(h is None for o, h in mem) and fact != 'day':
+            d = day_text(g.day if isinstance(g.day, datetime.date) else a.day)
+            q = '%s are one, but %s differs on %s: %s' % (
+                and_list(shown(o.id) for o, h in mem), 'leg %s' % g.name, d,
+                and_list('%s (%s)' % ('none' if h is None else fmt(h.amount), shown(o.id)) for o, h in mem))
+            return Hole([(q, ', '.join(shown(o.id) for o, h in mem))])
+        mem = [(o, h) for o, h in mem if h is not None]
         if len(mem) < 2:
             continue
         mem.sort(key=lambda t: id_order(m, t[0].id) if m is not None else shown(t[0].id))
-        for what, get in (('the amount of %s' % g.name, lambda h: h.amount), ('the day of %s' % g.name,
-                                                                                lambda h: h.day)):
-            if fact is not None and not what.startswith('the %s ' % fact):
+        # one form for a leg's disagreement, the leg's, whichever fact and reader (L §8.1 HOLE-SAME; tally 2.3.1
+        # N245.20: a balance and a sum print one question), once per fact (P36, Q3)
+        what = 'leg %s' % g.name
+        for fk, get in (('amount', lambda h: h.amount), ('day', lambda h: h.day)):
+            if fact is not None and fk != fact:
                 continue
             xs = [get(h) for o, h in mem]
-            day = what.startswith('the day ')
+            day = fk == 'day'
             if any(isinstance(x, Hole) for x in xs):
                 if day:
                     # a side whose day is a hole: the read carries that hole's question (P43 S1 a)
@@ -1566,7 +1600,15 @@ def same_obs_differ(a, others, leg=None, m=None, fact=None):
             else:
                 if len(set(vkey(x) for x in xs)) == 1:
                     continue
-                d = day_text(g.day if isinstance(g.day, datetime.date) else a.day)
+                # every side's day, merged as a list (tally 2.3.1 N245.3: L §8.1, a hole carries every question)
+                ds = sorted(set(h.day if isinstance(h.day, datetime.date) else o.day for o, h in mem
+                                if isinstance(h.day, datetime.date) or isinstance(o.day, datetime.date)))
+                if ds:
+                    d = ', '.join(str(day_text(x)) for x in ds)
+                else:
+                    # no side's day known: the day prints as its hole prints (L §8.1; G5's builder, d5)
+                    from .values import fmt_hole
+                    d = fmt_hole(a.day) if isinstance(a.day, Hole) else day_text(a.day)
             # L §8.1 HOLE-SAME, the rows in the order of their ids, each of a larger class named (tally 2.1.8 S6)
             q = '%s are one, but %s differs on %s: %s' % (
                 and_list(shown(o.id) for o, h in mem), what, d,
@@ -1692,13 +1734,15 @@ def m_unjoined_refused(self, tid, res, ctx):
 
 
 class _LinkTarget:
-    """The instance a confirmed link names: its id at once; the instance itself (its for, its kind) only when a reader
-    asks for more, so the link alone reads no amount."""
+    """The instance a link names: its id at once; the instance itself only when a reader asks for more, so the link
+    alone reads no amount. Its `for` is the named tuple's, read from its keys whether or not it exists (L §5.14
+    `for k`; tally 2.3.1 rulings 22, the critic's P1-C6)."""
 
     def __init__(self, iid, eng, mi, keys, ctx):
         self.id = iid
         self._src = (eng, mi, keys, ctx)
         self._inst = None
+        self.decision = mi.decision
 
     def __getattr__(self, name):
         if name.startswith('_'):
@@ -1707,58 +1751,23 @@ class _LinkTarget:
             eng, mi, keys, ctx = self._src
             self._inst = eng.find_inst(mi, keys, ctx)
         if self._inst is None:
+            if name == 'forp':
+                eng, mi, keys, ctx = self._src
+                return eng.named_for(mi, keys, ctx)
             raise AttributeError(name)
         return getattr(self._inst, name)
 
 
-def m_link_tuple(self, mi, keys, ctx):
-    """The binding tuple of move mi at these keys, at the ask's cut (its keys, `where` and `when`, L §5.19), or None; an
-    instance whose `when` is false at that cut doesn't exist (E §4.1 step 2: "An instance whose when is true exists,
-    whatever its amounts"). A membership or a when that is a hole or refused is taken as existing: its link is judged
-    where its instance is."""
+def m_named_for(self, mi, keys, ctx):
+    """The `for` of move mi's binding tuple at these keys, its existence unread (L §5.14 `for k`, §5.19)."""
+    if mi.decl.forp is None:
+        return None
     tctx = self.tctx(ctx)
     kk = tuple(vkey(k) for k in keys)
-    for env, ks, st, c in self.move_tuples(mi, tctx):
-        if tuple(vkey(k) for k in ks) != kk:
-            continue
-        if st is False:
-            return None
-        if mi.decl.when is not None and st is True:
-            try:
-                law = self.move_law(mi, env, tctx)
-                if not isinstance(law, Hole):
-                    w = self.ev(mi.decl.when, env, tctx.but(law=law))
-                    if w is False:
-                        return None
-            except TallyError as e:
-                if load_now(e):
-                    raise
-        return env
+    for env, ks, st, c in self.move_tuples(mi, tctx, only=kk):
+        if tuple(vkey(k) for k in ks) == kk:
+            return self.ev(mi.decl.forp, env, tctx)
     return None
-
-
-def m_link_places(self, mi, env, ctx):
-    """The places the legs of mi's instance at env give, as known at the cut (no amount is read). Unread where a
-    place can't be read here (a hole, a law date not known): the link is then judged by its keys alone."""
-    tctx = self.tctx(ctx)
-    places = set()
-    try:
-        law = self.move_law(mi, env, tctx)
-        if isinstance(law, Hole):
-            return set()
-        lctx = tctx.but(law=law) if law is not None else tctx
-        for ln, _d in mi.legs:
-            for e in (ln.frm, ln.to):
-                p = self.ev(e, env, lctx)
-                if isinstance(p, Thing):
-                    places.add(p.name)
-                else:
-                    return set()
-    except TallyError as e:
-        if load_now(e):
-            raise
-        return set()
-    return places
 
 
 def m_status(self, i, ctx):
@@ -1782,12 +1791,18 @@ def m_status(self, i, ctx):
         # L §6.4: "A move the scenario declares books nothing before D: an instance whose day falls before D is left
         # out"
         st = 'leftout'
-    elif i.err is not None:
-        st = 'refused'
     elif applied and not i.decision:
         # on any day, an instance that an observation the cut applies fulfils is modelled past: its observations stand
-        # in for it (E §4.1 step 3, L §5.19); one fulfilling a hole movement answers it
+        # in for it by the name alone, its refusal too (E §4.1 step 3, L §5.19; tally 2.3.1 rulings 22, P32 B2); one
+        # fulfilling a hole movement answers it
         st = 'modelled'
+    elif applied and (isinstance(d, Hole) or day_lo(d) is None):
+        # a decision tuple whose day is a hole or refused has no point to be booked at: a row that names it stands in
+        # for it, by the name alone, and the hole or refusal is its own reads' alone (L §5.19; tally 2.3.1 P32 B3,
+        # statement F (a), (b): d3_holeday, b3_refday_min)
+        st = 'modelled'
+    elif i.err is not None:
+        st = 'refused'
     elif isinstance(d, Hole) or isinstance(i.exists, Hole):
         st = 'hole'
     elif i.decision:
@@ -2018,10 +2033,11 @@ def m_adjust_all(self, ctx):
     return out
 
 
-def m_adjust_move(self, mi, ctx):
+def m_adjust_move(self, mi, ctx, one=None):
     """The adjustments of one plan move's instances (E §5 steps 1-4), kept per move, so a plan that reads another
-    plan's flows measures that plan only (E §4.1: the instance graph is acyclic)."""
-    key = ('adjm', mi.id, self.wkey(ctx)) + self.upto_tag()
+    plan's flows measures that plan only (E §4.1: the instance graph is acyclic); with one, that instance's alone
+    (a flows of one instance reads its cell, L §5.14 existence; tally 2.3.1 R6)."""
+    key = ('adjm', mi.id, self.wkey(ctx)) + self.upto_tag() + ((('one', one.id),) if one is not None else ())
     out = self.run_cache.get(key)
     if out is not None:
         return out
@@ -2035,7 +2051,7 @@ def m_adjust_move(self, mi, ctx):
     # a balance) prints the rows its value reads (E §10 l.472; R1; tally 2.1.8 #169-g)
     tracing, self.tracing = self.tracing, False
     try:
-        out = self.adjust_move_compute(mi, ctx)
+        out = self.adjust_move_compute(mi, ctx, one)
     finally:
         self.inst_active.discard(key)
         self.tracing = tracing
@@ -2043,14 +2059,14 @@ def m_adjust_move(self, mi, ctx):
     return out
 
 
-def m_adjust_move_compute(self, mi, ctx):
+def m_adjust_move_compute(self, mi, ctx, one=None):
     m = self.m
     K = ctx.cut
     tctx = self.tctx(ctx)
     out = []
     kds = self.known_dates()
     if True:
-        for i in self.plan_list(mi, ctx):
+        for i in (self.plan_list(mi, ctx) if one is None else [one]):
             st = self.status(i, ctx)
             if st not in ('past', 'hole', 'none'):
                 continue

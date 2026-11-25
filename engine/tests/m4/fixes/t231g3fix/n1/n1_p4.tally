@@ -1,0 +1,42 @@
+model n1x
+  tally 2
+  on 2026-06-30
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+unit PLN: currency minor 0.01
+unit hour "h"
+index ks = [k1, k2]
+index ms = month 2026-01..2026-12
+input n: int
+input bb: bool
+input w: date
+input mo: month
+input yr: year
+input mk: key ms
+input rr: rate
+input csh: money PLN
+input wage: num PLN/hour
+input ratio: num
+input kv[k in ks]: money PLN
+def dd: int = n + n
+
+ask p4: n with n = 5.00 PLN
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  n = 3 "s"
+  bb = true "s"
+  w = 2026-02-01 "s"
+  mo = 2026-03 "s"
+  yr = 2026 "s"
+  mk = 2026-04 "s"
+  rr = 2 %/year "s"
+  csh = 10.00 PLN "s"
+  wage = 30 PLN/hour "s"
+  ratio = 1 "s"
+  kv[k1] = 1.00 PLN "s"
+  kv[k2] = 2.00 PLN "s"

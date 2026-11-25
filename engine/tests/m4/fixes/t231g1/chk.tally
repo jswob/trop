@@ -1,0 +1,36 @@
+model chk
+  tally 2
+  on 2026-06-30
+  start 2026-01-01
+  end 2026-12-31
+
+source s "probe"
+unit PLN: currency minor 0.01
+index ks = [a, b, c]
+input h: int
+input z: int
+input t[k in ks]: int
+input flag[k in ks]: bool
+input dh: date
+
+ask q_div: z / h
+ask q_mul: z * h
+ask q_any: any(flag[k] for k in ks)
+ask q_all: all(flag[k] for k in ks)
+ask q_or: flag[a] or flag[c]
+ask q_or2: flag[c] or flag[a]
+ask q_and: flag[b] and flag[c]
+ask q_and2: flag[c] and flag[b]
+ask q_first: first(k in ks where flag[k])
+ask q_cnt: count(k in ks where flag[k])
+ask q_ab: add_days(dh, z / z)
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  h = ?"what is h?" "s"
+  z = 0 "s"
+  flag[a] = true "s"
+  flag[b] = false "s"
+  dh = ?"which day?" "s"

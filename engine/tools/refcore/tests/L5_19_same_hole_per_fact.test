@@ -78,21 +78,25 @@ ask mx: max(m.cash.amount for m in twos over 2026-03)
 === expect dys fee amt pind
 dys (m = in1): 2026-03-05
   unfulfilled: in1
+  unfulfilled: in2
   cut 2026-06-10
 dys (m = in3): 2026-03-20
   unfulfilled: in3
   cut 2026-06-10
 fee: 2.00 PLN
   unfulfilled: in1
+  unfulfilled: in2
   unfulfilled: in3
   cut 2026-06-10
-amt: ?"in1 and in2 are one, but the amount of cash differs on 2026-03-05: 100.00 PLN (in1) and 120.00 PLN (in2)" (in1, in2)
+amt: ?"in1 and in2 are one, but leg cash differs on 2026-03-05: 100.00 PLN (in1) and 120.00 PLN (in2)" (in1, in2)
   unfulfilled: in1
+  unfulfilled: in2
   unfulfilled: in3
   cut 2026-06-10
 pind (m = in1): 2026-03-05
   pinned: d2 = 2026-03-05
   unfulfilled: in1
+  unfulfilled: in2
   cut 2026-06-10
 pind (m = in3): 2026-03-20
   unfulfilled: in3

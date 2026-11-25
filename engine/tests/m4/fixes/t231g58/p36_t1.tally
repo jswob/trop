@@ -1,0 +1,64 @@
+model p36
+  tally 2
+  on 2026-10-25
+  start 2026-01-01
+  end 2026-12-31
+
+source s "invented"
+unit PLN: currency minor 0.01
+unit EUR: currency minor 0.01
+
+index ks = [k1, k2]
+index month = month 2026-01..2026-12
+
+place konto: accounts PLN lives 2026-01-01..
+place boss: outside lives 1900-01-01..
+
+input el[k in ks]: bool
+input pc[k in ks]: num %
+input ry: rate
+input n[k in ks]: int
+input x[k in ks]: money PLN
+input e[k in ks]: money EUR
+input fx: num PLN/EUR
+input md: rounding
+input dd: int
+
+move wage[m in month]: transfers
+  on day_of(m, dd)
+  at start_of(m)
+  leg cash from boss to konto amount x[k1]
+
+def dx[k in ks]: money PLN = x[k] * n[k]
+
+ask a1: sum(pc[k] for k in ks where el[k])
+ask a2: sum(ry for k in ks where el[k])
+ask a3: sum(n[k] for k in ks where el[k])
+ask a4: sum(dx[k] for k in ks where el[k])
+ask a5: sum(round(e[k] * fx, minor(PLN), md) for k in ks where el[k])
+ask a6: if el[k1] then 0 else x[k1]
+ask a7: if el[k1] then x[k1] else if el[k2] then 0 else 0
+ask a8: sum(if el[k] then x[k] else 0 for k in ks)
+ask a9: sum(flows(konto, m) for m in month where el[k1])
+ask a10: sum(x[k] for k in ks where el[k]) + x[k2]
+ask a11: if el[k1] then pc[k1] else 0
+ask a12: if el[k1] then ry else 0
+ask a13: max(0, sum(x[k] for k in ks where el[k]))
+ask a14: sum(e[k] for k in ks where el[k]) * fx
+def s4: money PLN = sum(dx[k] for k in ks where el[k])
+ask a15: explain s4
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  el = false "s"
+  pc = 5 "s"
+  ry = 3 %/year "s"
+  n = 2 "s"
+  x = 10.00 PLN "s"
+  e = 10.00 EUR "s"
+  fx = 4.30 PLN/EUR "s"
+  md = half-up "s"
+  dd = 10 "s"
+  opening[konto] = 0 PLN at 2026-01-01 start "s"

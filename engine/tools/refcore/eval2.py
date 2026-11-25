@@ -159,11 +159,9 @@ def m_round_real(self, x, to, env, ctx, uo, what, encd_hull=None):
 def m_trans_call(self, n, vals, to, ctx, env=None):
     """A transcendental built-in: exp, ln, sqrt, pow, periodic, factor, accrue (L §7.3, §3.3)."""
     name = n.name
-    h = self.hole_args(vals)
+    h = self.known_first(vals, self.builtin_checks(name, vals), n, env)
     if h:
         return h
-    for v in vals:
-        self.no_none(v, name)
     from .values import Iv
     # off L §4.4's list: a ranged argument is the hole (tally 2.3)
     vals = self.off_list(name, *vals)
@@ -337,7 +335,7 @@ def m_as_day(self, v, what):
 
 def m_c_dcf(self, n, env, ctx):
     vals = self.args(n, env, ctx)
-    h = self.hole_args(vals)
+    h = self.known_first(vals, [self.ck_day('dcf'), self.ck_day('dcf'), self.ck_daycount('dcf')], n, env)
     if h:
         return h
     # off L §4.4's list (tally 2.3, C3): its ends never agree, so a ranged argument is the hole

@@ -3,23 +3,23 @@
 //! answer; at most 64 combinations, `LOAD-FORKS`), §5.11 (`as if` and its pins), §5.18 (an
 //! ask's `with` pins), §5.16 Pins (a sample pin), §6.4 (a pin's scenario), §3.2 and §7.1 (a
 //! bare figure in a pin), §8.3 (`LOAD-ASIF`, `-SCENARIO`, `-KEY`, `-FIELD`, `-FORKS`).
-//! Twin: engine/tools/refcore/check.py (`pin`, `pin_literal`, `check_graph`'s forks,
-//! `reach_axes`); check2.py (`m_sample_pin`).
+//! Twin: engine/tools/refcore/check.py (`pin`, `pin_row`, `pin_literal`, `check_graph`'s
+//! forks, `reach_axes`); check2.py (`m_sample_pin`).
 //! Invariants: the search is a loop over an explicit stack (R-16); the count of combinations
 //! is exact (no cap on its own arithmetic before it is compared); a pin's checks run in
-//! refcore's order, each refusal at the pin's line.
+//! refcore's order, each refusal at the pin's line; a pin's value that is its target's row is
+//! read by the row reader, load's and the run's one (`eval::convert`).
 
 use super::check::{Checker, Figure, Files, Scope, Stands};
-use super::keys::index_key_of;
 use super::random::sample_type;
 use super::steps::refuse;
 use super::texts::text;
-use super::types::{is_date, lit_rule, numcls, refused, uerr};
+use super::types::{is_bool, is_date, lit_rule, numcls, refused, uerr};
 use crate::base::{Code, Load, Reach, Refusal};
+use crate::eval::{ConvertFor, convert};
 use crate::model::{BindInfo, Graph, NameKind, Node, NodeKind, Reality, Rel, Ty};
 use crate::num::{Num, NumError};
-use crate::syntax::{Expr, Key, Lit, PRef, Pin, PinForm, Stop};
-use crate::time::PeriodKind;
+use crate::syntax::{Ask, Expr, Key, Lit, PRef, Pin, PinForm, Stop, Value as Written};
 use std::collections::{BTreeMap, BTreeSet};
 
 /// The most axis combinations one ask may reach. L §5.5.
@@ -356,7 +356,7 @@ impl Checker {
         if kind == NameKind::Axis {
             return axis_pin(m, sc, target, value);
         }
-        let (binds, declared, node) = match kind {
+        let (binds, declared, node, factor) = match kind {
             NameKind::Input => {
                 let input = m.inputs.at(m.names.input_id(name)?)?;
                 if input.builtin && (name == "opening" || name == "stated") {
@@ -365,11 +365,13 @@ impl Checker {
                     let message = format!("a pin of balance reading {name} states no instant");
                     return Err(sc.place(refused(Load::Instant, message)));
                 }
-                (&input.binds, input.ty.clone(), NodeKind::Input)
+                let factor = &input.unit_factor;
+                (&input.binds, input.ty.clone(), NodeKind::Input, factor)
             }
             NameKind::Def => {
                 let def = m.defs.at(m.names.def_id(name)?)?;
-                (&def.binds, Some(def.ty.clone()), NodeKind::Def)
+                let factor = &def.unit_factor;
+                (&def.binds, Some(def.ty.clone()), NodeKind::Def, factor)
             }
             NameKind::Unit
             | NameKind::Kind
@@ -397,61 +399,99 @@ impl Checker {
             ty = inner;
         }
         let pinned = Node::new(node, name);
-        pin_key(m, value, &ty, name).map_err(|stop| sc.place(stop))?;
-        if !pin_literal(m, sc, value, &ty)? {
-            if matches!(ty, Ty::Dist(_)) {
-                self.expr(m, sc, value, None, depth)?;
-            } else {
-                let t = self.expr(m, sc, value, Some(&ty), depth)?;
-                let what = format!("the pin of {name}");
-                self.assign(m, sc, &ty, value, &t, &what)
-                    .map_err(|stop| sc.place(stop))?;
-            }
-        }
+        let one = Num::int(1);
+        let factor = if target.fields.is_empty() {
+            factor
+        } else {
+            &one
+        };
+        self.pin_value(m, sc, (name, value), (&ty, factor), depth)?;
         self.edge(&sc.item, pinned, Rel::Pin);
         Ok(())
     }
-}
 
-/// A bare figure, month, quarter or day pinned on a key of an index is read as the same
-/// literal written in a row of it: one the index lacks is refused `LOAD-KEY`, a four-digit
-/// figure in refcore's words, the rest in the row's (refcore's `assign`, its key arm; P16).
-/// L §3.2 Inline figures, §2.5.
-fn pin_key(m: &Reality, node: &Expr, ty: &Ty, name: &str) -> Result<(), Stop> {
-    let (Ty::Key(id), Expr::Lit(lit)) = (ty, node) else {
-        return Ok(());
-    };
-    let read_as_key = matches!(lit, Lit::Month(..) | Lit::Quarter(..) | Lit::Day(_))
-        || matches!(lit, Lit::Num(n) if n.whole && n.unit.is_none());
-    if !read_as_key || m.names.kind(id) != Some(NameKind::Index) {
-        return Ok(());
+    /// A pin's value on a target of type `ty`, whose unit brings `factor`, read by one path: a
+    /// value that is its target's row ([`crate::eval::pin_row`]) is read by the row reader, each
+    /// literal it reaches through brackets, a sign and both arms of an `if`; any other is typed
+    /// at `ty` and assigned to it (refcore's `pin`: `pin_row`, then `tc` and `assign`; tally
+    /// 2.3.1 statement G). L §5.11 A pin is a row, §2.5 Keys, §3.2.
+    fn pin_value(
+        &mut self,
+        m: &Reality,
+        sc: &Scope,
+        (name, value): (&str, &Expr),
+        (ty, factor): (&Ty, &Num),
+        depth: u32,
+    ) -> Result<(), Stop> {
+        if matches!(ty, Ty::Dist(_)) {
+            self.expr(m, sc, value, None, depth)?;
+            return Ok(());
+        }
+        if crate::eval::pin_row(value, ty) {
+            return self.row_pin(m, sc, (name, value), (ty, factor), depth);
+        }
+        let t = self.expr(m, sc, value, Some(ty), depth)?;
+        let what = format!("the pin of {name}");
+        self.assign(m, sc, ty, value, &t, &what)
+            .map_err(|stop| sc.place(stop))
     }
-    let index = m.indexes.at(m.names.index_id(id)?)?;
-    if index_key_of(index, lit).is_some() {
-        return Ok(());
+
+    /// A pin's value read as its target's row, in the text's order: each `if`'s condition
+    /// typed as the `if` types it, the `if` taking the target's type; each literal under the
+    /// figure's literal rule, then read by the row reader at the target's type and index,
+    /// refused in the row's words (`LOAD-KEY` off the index's keys, `LOAD-UNIT` of the wrong
+    /// type, `LOAD-PRECISION`) at the pin's line (refcore's `pin_row`, `convert_value`; tally
+    /// 2.3.1 statement G, P37). L §5.11 A pin is a row, §2.5 Keys, §3.2, §7.1.
+    fn row_pin(
+        &mut self,
+        m: &Reality,
+        sc: &Scope,
+        (name, value): (&str, &Expr),
+        (ty, factor): (&Ty, &Num),
+        depth: u32,
+    ) -> Result<(), Stop> {
+        let of = ConvertFor {
+            factor: factor.clone(),
+            keys: Vec::new(),
+        };
+        let mut work = vec![(value, false)];
+        while let Some((node, negative)) = work.pop() {
+            if let Expr::Paren(inner) = node {
+                work.push((inner, negative));
+            } else if let Expr::Neg(inner) = node {
+                work.push((inner, !negative));
+            } else if let Expr::If(parts, kept) = node {
+                let [c, yes, no] = parts.as_ref();
+                let narrowed = sc.narrowed(m, Some(c));
+                let ct = self.expr(m, &narrowed, c, None, depth)?;
+                if !is_bool(&ct) {
+                    return Err(sc.place(uerr(format!("if of {}", ct.show()))));
+                }
+                kept.set(ty);
+                work.extend([(no, negative), (yes, negative)]);
+            } else if let Expr::Lit(lit) = node {
+                let row = if negative {
+                    crate::eval::negated_literal(lit)?
+                } else {
+                    lit.clone()
+                };
+                if let Lit::Num(n) = &row {
+                    lit_rule(sc, Figure::Num, &n.text, Some(&n.value))
+                        .map_err(|stop| sc.place(stop))?;
+                }
+                match convert(m, &Written::Lit(row), ty, name, &of) {
+                    // a form the run doesn't build yet is left to the read, as a row's is
+                    Ok(_) | Err(Stop::NotBuilt(_)) => {}
+                    Err(stop @ (Stop::Refused(_) | Stop::Deep)) => return Err(sc.place(stop)),
+                }
+            } else {
+                return Err(sc.place(super::check::invariant(
+                    "a pin read as a row reached no literal".to_owned(),
+                )));
+            }
+        }
+        Ok(())
     }
-    let four = matches!(lit, Lit::Num(n) if n.four);
-    let period = match lit {
-        Lit::Month(..) => Some(PeriodKind::Month),
-        Lit::Quarter(..) => Some(PeriodKind::Quarter),
-        Lit::Day(_) => Some(PeriodKind::Day),
-        Lit::Num(_)
-        | Lit::MonthDay(..)
-        | Lit::Key(_)
-        | Lit::Cur(_)
-        | Lit::Bool(_)
-        | Lit::Inf { .. }
-        | Lit::Nominal(_)
-        | Lit::Name(_) => None,
-    };
-    let message = if four && !index.is_int {
-        format!("the pin of {name} is year4, not a key of {id}")
-    } else if (index.is_int && period.is_none()) || (period.is_some() && index.period == period) {
-        format!("{} is not a key of {id}", text(node))
-    } else {
-        return Ok(());
-    };
-    Err(refused(Load::Key, message))
 }
 
 /// An axis pin, `ax = option`: no keys or fields, an option of the axis (refcore's `pin`,
@@ -597,6 +637,60 @@ pub(super) fn pin_ties(m: &Reality, scope: &Scope, pins: &[Pin]) -> Result<(), S
             ));
         }
         rest = tail;
+    }
+    Ok(())
+}
+
+/// A line's `law D` and `as known D`, as a clause or a `with` pin, are its pins of the law date
+/// and the cut: two of one on ask `ask`'s line are two pins of one cell, `LOAD-OVERLAP pins
+/// <a> and <b> of the law date overlap at no keys` (`of the cut`), its `with` pins first, then
+/// its clause (refcore's `check_ask`; tally 2.3.1 R3, N245.4). L §5.11 A pin is a row, §4.6,
+/// §8.3.
+///
+/// # Errors
+///
+/// That `LOAD-OVERLAP`, unplaced.
+pub(super) fn line_pins(ask: &Ask) -> Result<(), Stop> {
+    same_cell(&ask.pins, (ask.law.as_ref(), ask.known.as_ref()))
+}
+
+/// Pins `pins` of one line or one `as if`, with the line's clauses `law` and `known`: two
+/// `law D`, or two `known D`, are two pins of one cell, `LOAD-OVERLAP`, as [`line_pins`] says
+/// (L §5.11 "two pins of one cell"; G3's review N6, the lead's ruling: as W3's line rule).
+/// L §4.6, §8.3.
+///
+/// # Errors
+///
+/// That `LOAD-OVERLAP`, unplaced.
+pub(super) fn same_cell(
+    pins: &[Pin],
+    (law_clause, known_clause): (Option<&Expr>, Option<&Expr>),
+) -> Result<(), Stop> {
+    for law in [true, false] {
+        let mut same: Vec<String> = pins
+            .iter()
+            .filter_map(|pin| match &pin.form {
+                PinForm::Law(e) if law => Some(format!("law {}", text(e))),
+                PinForm::Known(e) if !law => Some(format!("known {}", text(e))),
+                PinForm::Law(_)
+                | PinForm::Known(_)
+                | PinForm::Wording(..)
+                | PinForm::Scenario(_)
+                | PinForm::Set { .. } => None,
+            })
+            .collect();
+        let (clause, word, cell) = if law {
+            (law_clause, "law", "the law date")
+        } else {
+            (known_clause, "as known", "the cut")
+        };
+        same.extend(clause.iter().map(|e| format!("{word} {}", text(e))));
+        if let [first, second, ..] = same.as_slice() {
+            return Err(refused(
+                Load::Overlap,
+                format!("pins {first} and {second} of {cell} overlap at no keys"),
+            ));
+        }
     }
     Ok(())
 }

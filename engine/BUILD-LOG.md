@@ -8299,3 +8299,1560 @@ No other tuple's rows print.
 - **Open STOP-REPORTs:** none.
 - **Usage:** about 0.11 % of the week this turn (1.22 % for the session) by `engine/tools/usage` before this entry.
 - **Checks:** `check quick: green, 11 steps (95s)`; `check commit: green, 24 steps (177s)`.
+
+## 2026-11-24 tally 2.3.1 G1, what an operation decides: R1, S9, S16, S23 (issue #259)
+
+The builder's turn on group 1 of the ruled plan (`tmp/spec-2.3.1/inputs/plan.md` §2, §8.1, §12, §16; the lead's rulings win). On `build/2.3.1` from 25a5a63d, before the pin: each row goes by the plan's text and the rulings, and T's stores still hold today's bytes, so the ids each change moves are red until T's turn, by design. **Waiting for T and the pin.**
+
+**Commits** (none pushed):
+- 773cc356 `fix(eval): any and all decide past a refused term`
+- c9d77e79 `fix(eval): an unknown rule that would end a conflict is its hole`
+- 3c25cb10 `fix(eval): an undecided comparison of two windows names both days`
+- d8ac8022 `fix(book): a hole-day movement in a binding, as its day leaves it`
+- e63a5620 `fix(walk): a lifespan's end on a hole balance is the balance's hole`
+- 60ea011e `fix(eval): never is the latest date in min, max, argmin and argmax`
+- a070b183 `fix(eval): a nominal code below 1 is refused where it is read`
+- e8bc5406 `fix(book): two planned same days bound the movement's hole`
+
+**Each row, its probe and the engine's line** (probes run by `tmp/spec-2.3.1/g1/both.sh`, this worktree's release engine beside refcore of tally 2.3; my probe texts are in `tmp/spec-2.3.1/g1/`):
+
+| Row | Plan's answer | Probe | Engine now (before) |
+|---|---|---|---|
+| Q1.6 `any`/`all`, option B | refused member first: `true`, `false` | `g1/anyall_first` (critic's `anyall`, `ks = [c, a, b]`) | `q_any: true`, `q_all: false` (`RUN-DIV` both) |
+| N256.3 | the hole, not `RUN-CONFLICT` | `inputs/m4/gate-review-probes/agent/a03_conflict_hole` q1, e1 | `?"does it apply?" (ch)` (`RUN-CONFLICT`); q2 stays refused |
+| Q1.15 = N250.6 | names both days | `inputs/spec-2.3/review/g2/pin/t_touch` r10 | the hole of w and of v, `unknown day: v`, `unknown day: w` (w alone) |
+| N245.21 | known after both days | `engine/tests/m3/fixes/t221/rv2/h2` blc, fl; `g1/two_days` | `blc: 128.00 PLN`, `fl: 128.00 PLN`, `blm` the hole (all three the hole before) |
+| N250.1 | 0 | `inputs/spec-2.3/review/g1fix/b1/b1e` nmb, nmp, smb; nmbu | `0`, `0`, `0.00 PLN` (holes); `nmbu` stays the hole |
+| N250.2 | `false` | `b1/b1a` al; `g1/n250_2` al | no change: see below |
+| N250.8 | the hole both ways | `inputs/critic/holeday` d_to, d_amt, d_cnt; p_to, p_amt | the hole; `other`, `100.00 PLN` (as before: by name it was the hole already; the binding path is what moved, `t23-g1/surv-hole-dec`) |
+| N250.21 | `100.00 PLN` | `engine/tests/m3/fixes/t23/surv/changed_amt` k2_amt | `100.00 PLN`, refcore's bytes (the hole) |
+| #248 face (b) | the balance's hole | `inputs/critic/life_amt` s_end, k_jul; `life_day` s_end; `spec-2.3/review/g1/j/j3q` q | `?"how much was moved out?" (out_amt)`; `?"which day was it moved?" (out_day)`; `?"which law date?" (win_day)` (`RUN-LIFESPAN … holding` before); `life_day` s_p60, `j3q` q_p15 stay refused |
+| S9 (N256.4) | `min(never, d)` is d | `g1/s9` m1 to m4, a1 to a4 | `2026-05-01`, `never`, `2026-03-01`, `never`, `a`, `b` (`RUN-DOMAIN … and never compared`) |
+| S16 (N255.1) | `RUN-DOMAIN` | `engine/tests/m4/fixes/g1/a9_nominal` q_0 | `refused: RUN-DOMAIN nominal 0: m is a positive int (L §3.3)` (`RUN-DIV`); q_n stays `103.812890625` |
+| S23 (N250.11) | 0 | `engine/tests/m4/items/age/age.tally` a_last; `spec-2.3/review/g2/pin/e_last` r26 | `0` before and after: the engine already gives it; refcore's `RUN-LIMIT` is refcore's |
+
+**How each is built** (L, E as ruled; where the plan leaves a reading open I took the one its row names, written here):
+- **`any`/`all`** (`eval/aggregate.rs` `any_all`): a refused or `none` term is kept, the first in binding order, and the terms are read on; a deciding term returns at once; no decider: the first refusal, then the hole. A refused **`where`** still refuses the aggregate, as refcore's `members` does before `agg_anyall`: the ruling names terms. `or` and `and` keep left to right.
+- **N256.3** (`eval/rules.rs` `changes_outcome`): beside two or more candidates, a rule of unknown applicability changes the outcome when its applying alone would leave fewer than two candidates (it beats all but at most one, itself counted where no applicable rule beats it). So a03's d1 (`top beats a, base`) is the hole, and d2 (`mid beats base` alone: `a` and `mid` conflict either way) stays `RUN-CONFLICT`. Several unknown rules are each judged alone.
+- **Two windows** (`eval/windows.rs` `window_compare`): the hole goes through `imprecise_all` over both sides, the form the other two-window readers use.
+- **N245.21** (`book/same_booking.rs`, `walk/state.rs`, `walk/flows.rs`): where every side is a plan, the amounts agree and the days differ, the first side's end books `Change::Open(h)` (not booked; the place is the HOLE-SAME hole h, kept in `St.pending`) and the last side's `Change::Close(h)` beside its own booking as written, which ends h. A reading between them leaves `pending` empty, so the Close books h as a hole to the next reading. `flows` over a span: a pair with one day alone in the span is h, with both it counts as booked, with neither nothing (`one_end_inside`). Explain prints the first day's ends as `hole:` rows and the last day's as the amount. Observed rows (the warning's rule) and decisions (waited for at their point) are untouched.
+- **N250.1** (`book/members.rs` `movements_of`, `hole_day_member`): an instance of an uncertain kind whose day is a hole and that nothing fulfils is no member of a binding without `with uncertain`, a decision's and a plan's alike.
+- **N250.8** (`book/members.rs` `mv_field`): a hole-day decision's leg is its hole through a binding too. `unread_field`, `walk/plan.rs` `hole_day_legs` and the `MvRef.member` flag that served them go (the flag was also part of a movement's equality).
+- **N250.21** (`book/members.rs` `changed_leg`, `moved_leg_record`): per field. A hole-day plan's leg that a later version only moves is a record whose moved end and day are the hole, its other end and its amount its own; one whose amount a version changes (δ not a known 0) is as before (`same_leg_record`); one a version both moves and changes is the whole hole, as before.
+- **#248 (b)** (`walk/day.rs` close): `RUN-LIFESPAN` is tested only on `st.known()`, as `WARN-NEGATIVE` beside it.
+- **S9** (`eval/extremes.rs` `extreme_order`): `never` is later than every day in `min`, `max`, `argmin`, `argmax` only; `queries.rs`'s sort (`quantile`) and arithmetic are untouched.
+- **S16** (`eval/rates.rs` `nominal_positive`): any `nominal m` with m < 1. The message is mine: the plan gives none; the pin's refcore may word it otherwise.
+
+**Rows that needed no engine change, and what I found:**
+- **N250.2:** a known-false term beside a hole-day member is already `false` on both (`g1/n250_2`: `al: false`, `an: true`). b1a's `al` stays the hole: its "false" term is `plain`'s amount, `min(bal(sav), small)`, a decision that reads `sav` after the hole-day `sweep`, so it is a hole too and R1 keeps it. The plan's row and the review's N-b read b1a's term as known; it isn't.
+- **S23:** the engine gives 0 already (`a_last`, `r26`); the held row is refcore's.
+- **For the lead, outside the class:** a plain balance of a place an unfulfilled uncertain hole-day movement touches is still the hole without `with uncertain` (`g1/b1e_bal` bb2, bb4), where L §5.14 Certainty leaves it out. R1's row names the binding only, so I left balances.
+- `j3q` qe9, now explaining the hole balance, prints `no movement` (the `shut` instance of hole law date isn't listed): explain's existing form, not this group's.
+
+**What `check commit` shows red, by change** (T's stores at 25a5a63d's bytes; all in the classes R1, S9 and S16 name; **none outside a class**):
+- `any`/`all`: `paper/agg__refusal_first/t1`, `paper/agg__refusal_first/t2` (to `true`, `false`).
+- N256.3: none.
+- Two windows: `fixes/g2/q1_s4`, `fixes/gate8/m2_g3_h`, `paper/kleene_agg_argm__hole/a` (each gains the second day's question).
+- Hole-day bindings: `t23-g1/surv-hole-dec` (N250.8: `from_world` from 1 to the hole). N250.1 moves none stored. N250.21's held `t23-g1/surv-changed-amt` now prints refcore's bytes.
+- #248 (b): `d77/lifespan_end` (e3, plan §12's d77a `e3`).
+- S9: `fixes/g13/rf_w_model_with_rf_w_n14` (`min(lifespan(konto).to, d1)` to 2026-01-01).
+- S16: `spec/g1/a9_nominal/q_0`, `spec/p12/accrue/h_a__z_c`, `h_b__z_c`, `h_dc__z_c`, `h_p__z_c`, `h_r__z_c`, `spec/p12/periodic/h_r__z_c`.
+- N245.21: none (the stored runs of `h2` ask `fl1` and `cnt`, which don't move).
+- The tests red: `m1_fixes_g13_reads_ranges_and_sites`, `m1_fixes_g2_windows_and_powers`, `m1_fixes_gate8_survivors`, `m2_fixes_tally_218_d`, `m3_fixes_t23_g1`, `m4_constructs_paper`, `m4_fixes_spec_g1`, `m4_fixes_spec_p12` (8 of 1 547). The steps after the tests step didn't run.
+
+- **Size** (`git diff --shortstat 25a5a63d -- engine/crates`): 19 files, +1 023 −192; code +391 −192, my unit tests +632 (eight tests, each a whole small text run through `api::run`). The plan: R1 0.4 to 0.7 k changed lines with tests, the singletons' share small; this is about 1.2 k with tests, 0.58 k without: over, by the tests' texts and N245.21's walk entries (+~150).
+- **Kernel files touched:** `eval/aggregate.rs`, `eval/rules.rs`, `eval/windows.rs`, `eval/extremes.rs`, `eval/rates.rs`, `eval/expr.rs`, `eval/ty.rs`, `book/members.rs`, `book/same_booking.rs`, `book/same.rs`, `book/observe.rs`, `walk/day.rs`, `walk/state.rs` (a fence module: `check fences` green), `walk/flows.rs`, `walk/modelled.rs`, `walk/plan.rs`, `ask/walked.rs`, `load/observed.rs`, `model/value.rs`.
+- **Exceptions:** +0 (`EXCEPTIONS.lock` unchanged).
+- **Mutants:** none proved. Sites new for T: `changes_outcome`'s `left < 2`; `any_all`'s kept refusal; `ended`'s first-match; `one_end_inside`'s `!=`; `Changes::from`/`to`; `nominal_positive`'s `< 1`; `extreme_order`'s two `Day` arms.
+- **Open STOP-REPORTs:** none.
+- **Usage:** about 0.96 % of the week this turn by `engine/tools/usage` before this entry.
+- **Time:** about 64 minutes, about 34 of them checks (`check quick` 20 runs, `check commit` 6, the release binary 4, `check fences` 1).
+- **Checks:** `check quick: green, 11 steps (45s)`; `check fences: green, 1 step (69s)`; `check commit: red at tests, stopped after 10 of 24 steps (158s)`, red only on the ids above.
+
+## 2026-11-24 tally 2.3.1 G2, existence and one read set: R6, R2's link rows, C-9 (issue #259)
+
+The builder's turn on group 2 of the ruled plan (`tmp/spec-2.3.1/inputs/plan.md` §0, §7, §3, §9, §10, §16's group 2 row; rulings 7, 11, 12; answer.md C-1, C-2, C-9, C-13.1, C-13.5, C-13.6, C-13.8, C-13.10). On `build/2.3.1` from G1's 67eaacd9, before the pin: T's stores still hold today's bytes, so the ids each change moves are red until T's turn. **Waiting for T and the pin.** Five ids sit outside a class as written, under the STOP-REPORT below (c4_when).
+
+**Commits** (none pushed):
+- 3241ef4b `fix(walk): a tuple refused before its later keys stands for itself` (R6: one existence cell per binding tuple; P40's list stop goes)
+- 29ed633a `fix(book): a field read of an instance that doesn't exist is refused` (item 3)
+- e63a07b5 `fix(walk): a link's reads go only to the reads that rest on that link` (item 6, R2, C-13.6)
+- cbb928dc `fix(walk): a link to a decision is judged at its walk point` (C-9)
+- 6eb19ff1 `fix(walk): a link to a refused decision run is refused with it` (C-9's refused run, R2; explain's existence trace agrees with the value)
+
+**Each probe, the plan's row and the engine's line** (`tmp/spec-2.3.1/g2/probes.sh`, each ask alone and all; this worktree's engine beside refcore of tally 2.3, in `g2/final/` and `g2/refcore/`):
+
+| Probe | Plan's row | Engine now (refcore) |
+|---|---|---|
+| `planner/ex/first` | b has no `assumed:` line (item 6) | `b: 100.00 PLN`, `unfulfilled: rent[2026-03]`, no `assumed:`; a and c keep `assumed: jan is a guess (ok[2026-01])` (refcore: b carries it) |
+| `planner/ex/where2` | values (C-1; the refused tuple is its own movement, its day read) | `f: 10.00 PLN`, `b: 970.00 PLN`, `c: 3` (`RUN-DIV` all) |
+| M4 `k_stop3`, `planner/ex/k_stop3_nodiv` | l4 30.00 PLN, f 270.00 PLN, both orders | `l4: 30.00 PLN`, `f: 270.00 PLN` in every order (`RUN-DIV`; nodiv's f `RUN-CYCLE`) |
+| M4 `k_stop2`, `fix/c1_stop` | values | k_stop2 `l2: 30.00 PLN`, `f: 270.00 PLN` (+ `unfulfilled: spend[2026-02, a]`); c1_stop `f: 200.00 PLN`, x, d, e `30.00 PLN` (refcore `ENGINE-INVARIANT`, `RUN-DIV`) |
+| M4 `k_refw` | 290.00 PLN, no instance (kept) | `l: 290.00 PLN` (`REFCORE-NOT-YET`) |
+| `critic/w1_day` | b3 970.00, f2 10.00, c 3; b5, f5, n `RUN-DIV` | the same; e5 `RUN-DIV` |
+| `critic/w2_none` | no instance: b5 960.00, f5 0.00, n 4; e5 `RUN-NONE spend[2026-05] doesn't exist: a field read of it` | the same |
+| `critic/w3_hole` | f2, f5 refused too (a refused day as a hole one) | all seven `RUN-DIV` (f2, f5 the hole) |
+| `critic/w4_false` | no instance: b5 960.00, f5 0.00, n 4 | the same; e5 `RUN-NONE` (item 3) |
+| `critic/w5_whenhole` | no row; by R6's order and R1 the refused `where` comes first, as w1 | b3 970.00, f2 10.00, c 3; b5, f5, n, e5 `RUN-DIV` (the same) |
+| `critic/x_none` | d2 (and dd) `RUN-NONE spend[2026-02] doesn't exist: a field read of it` | d2, a2, dd that line; d3 `2026-03-20`, isn `false`, n_un 1, n_eq 0, n_eq3 1 (d2 `2026-02-20`) |
+| `critic/selfread` | no cycle: values | **not built:** b, f3, g3 `RUN-CYCLE pay reads its own instances` (the same) |
+| `critic/dec_link` | loads and answers | loads; at the text's lim 500.00 PLN, Feb's `when` (500.00 < 500.00) is false at its point, so b, f, loose `RUN-RECORD observation bank[r1] fulfils topup[2026-02], which doesn't exist or doesn't touch its places`; at 600.00 PLN (`g2/dec_link_on`) b 870.00, f 400.00, loose 30.00 PLN, in any ask order (refcore `LOAD-READS` all) |
+| `critic/l_false` | a refused `RUN-RECORD` (C-13.6) | a `RUN-RECORD observation bank[a1] fulfils rent[2026-01], …`, b 100.00 PLN, c `RUN-RECORD` (a 0.00 PLN) |
+| `planner/ex/hdfalse` | the hole | b, f, n `?"which day?" (hd)` (the same) |
+| `g2/step7b` (mine) | E §3.1 step 7's kept part: a plan that reaches a decision's existence is `LOAD-READS` | `pay`'s amount reads a row linked to `topup`: `LOAD-READS bal(konto) with no day outside a decision`, every ask (the same) |
+
+**How each is built** (L, E as ruled; where the plan leaves a reading open I took the recommended one, written here):
+- **R6** (`walk/plan.rs` `refused_tuple`, `stopped_tuple`, `stopped_parts`, `stopped_when`, `reads_unbound`; `walk/tuples.rs` `tuple_at`, `linked_instance`; `walk/narrow.rs` `kept_tuple`): a tuple refused before its later keys is one refused instance at the keys it has, no longer a stop of the list. Its day is still read, and its `when` too where neither reads a key it lacks: a `never` or `none` day, or a false `when`, gives no instance whatever came before; a hole day keeps a hole day; a known day dates the refusal, which refuses the places of its legs from that day (all places from the run's start where its day can't be read). A lookup at longer keys finds it by prefix. The `Reader` enum, `links_met`, `links_left` and `links_judged` go. A refused instance on a hole day books its refusal (`walk/move_flows.rs`, w3).
+- **Item 3** (`book/members.rs` `mv_field`, `made_to_exist`, `not_there`): a field read, `.day` included, of an instance that doesn't exist or isn't there (no record, or `exists` No, or status None, and no adjustment makes it) is `RUN-NONE <m>[k] doesn't exist: a field read of it`; legs too. Decisions are untouched by `made_to_exist`.
+- **Item 6** (`walk/plan.rs` the status loops, `book/observe.rs` `refused_link`, `walk/move_flows.rs` `count_move`, `walk/narrow.rs` `judge_named`): each instance's status is read under its own register (`push` / `pop_alone`, merged into that instance), so a link's `assumed:` lines go only to the readers that rest on it. A `flows` whose span holds an unfulfilled instance named by a refused link is refused with that link (C-13.6, l_false). `judge_each` is read apart in both the memo's read set and the register: without the register's half the narrow path printed an `assumed:` line the plain twin didn't (`check fences` red once, then green). The link bound stays (C-13.8).
+- **C-9** (`walk/tuples.rs` `link_tuple`'s decision arm, `trace_existence`; `book/observe.rs` `judged`, `unlink_at_point`, `obs_links_for`'s guard; `walk/order.rs` `book_run`, `unlink_run`, `refused_run`; `eval/state.rs`, `eval/timelines.rs` `links_at_point`, `plans_making`): a decision's `when` that reads running state is not read when its link is judged; the link waits for the main walk. At the instance's point the run decides it: exists No refuses the naming rows `RUN-RECORD`; a run refused there (`RUN-ORDER`, `RUN-TIE`, a refused body) refuses them with its own refusal (6eb19ff1, R2). A read from outside the walk runs the main walk first. While a plan's instances are being made (`plans_making`), reaching such a link is `LOAD-READS` (step 7's kept part, `step7b`). explain's existence trace leaves the same `when` to the walk point, so `edw` and `qdw` agree.
+- **A limit I know of:** a row linked to a decision and dated before its point is booked on its own day before the verdict; only the walk's later readers see the refusal.
+
+**What `check commit` shows red, by change** (81 ids; T's stores at 67eaacd9's bytes):
+- **G1's 15:** `paper/agg__refusal_first/t1`, `t2`, `fixes/g2/q1_s4`, `fixes/gate8/m2_g3_h`, `paper/kleene_agg_argm__hole/a`, `t23-g1/surv-hole-dec`, `d77/lifespan_end`, `fixes/g13/rf_w_model_with_rf_w_n14`, `spec/g1/a9_nominal/q_0`, `spec/p12/accrue/h_a__z_c`, `h_b__z_c`, `h_dc__z_c`, `h_p__z_c`, `h_r__z_c`, `spec/p12/periodic/h_r__z_c`.
+- **R6, 3241ef4b (34, P40's list stop):** `fixes/gate8/k_stop/q`; `fixes/p40/c1_stop/` d, d2, d2__d, df, e, f, f2, f2__f, fd, fd__xf, x, x__f, xf; `fixes/p40/p40a/` c4, f, f__f3, f3, f3__f, l4; `g6/refused_where_later_key`; `spec/p40/k_stop2/` f, f__l2, l2, l2__f; `spec/p40/k_stop3/` f__l4, l4__f; `spec/p40fix/c1_stop/` d__f, e__f, f__e, f__x__d__e__f2__d2__fd__df__xf, xf__df__fd__d2__f2__e__d__x__f; `spec/p40fix/p40a/` f__l4__c4__f3, f3__c4__l4__f.
+- **Item 3, 29ed633a (6, `.day` or a field of an instance whose `when` is false):** `fixes/g12/` r_p_mr_q4, r_p_mr2_q4, r_p_mr2_x1, r_p_mr2_x3, r_p_mr3_q4; `fixes/g14/t_mb5_l`.
+- **Item 6, e63a07b5 (21):** `fixes/g12/` pm2_g10_observe_observe, pm3_observe_observe, pm4_g10_observe_observe, pm8_g10_observe_observe (`rare_ok`'s `assumed:` left rent's explanation: it decides only `rare`); `fixes/gate8/k_link/` qa, qa__qz, qz__qa; `fixes/gate8/k_pin/q`; `fixes/p40/c2_link/` nq, qa, qo, qzq, zq; `fixes/p40/c5_wref/` nq, qa, qo, qzq, zq; `spec/p43/c2_link/` both orders; `fixes/g4/nb3_at` (C-13.6: q_sw 0.00 PLN to `RUN-RECORD`).
+- **C-9, cbb928dc and 6eb19ff1 (5), outside the class as the plan writes it:** `fixes/p40/c4_when/` edw, emx, exm, qdw; `spec/p40fix/c4_when/qo`. The STOP-REPORT below.
+- The tests red: the m1 g12 explain parts 1, 2, 11 to 14, 16, 22, 23; `m1_fixes_g13_reads_ranges_and_sites`, `m1_fixes_g14_the_sweep_part_2`, `m1_fixes_g2_windows_and_powers`, `m1_fixes_gate8_survivors`, `m2_fixes_records`, `m2_fixes_tally_218_d`, `m3_fixes_t23_g1`, `m4_constructs_paper`, `m4_fixes_gate8`, `m4_fixes_p40`, `m4_fixes_p40fix`, `m4_fixes_spec_g1`, `m4_fixes_spec_p12`, `m4_fixes_spec_p40`, `m4_fixes_spec_p40fix`, `m4_fixes_spec_p43`, `s_kernel_g6_plan_pass` (26 of 1 553). The steps after the tests step didn't run.
+
+**Not built, for the hand-off** (each with what I found):
+- **selfread** (no cycle: values): a tuple reading another tuple of its own move needs the list's instances evaluated one tuple at a time while the list is being made, and pay2's `where` needs a tuple made at its own keys alone, or the read recurses. A list cell made tuple by tuple, with `plan_active` keyed by (move, keys), is the shape; about 0.15 to 0.25 k.
+- **Q1.10** (a `count` holds each run's existence and day, no amount; the g3 count rows get new bytes): needs the existence reads kept apart from the amount reads on `Inst`, `Body`, the members and the run trace, so a count takes only the first; about 0.15 k.
+- **Q2.24** (`inputs-of flows(…)` lists an instance whose day is outside the span): `Collected::outside()` (`eval/register.rs`) already keeps the day's rows; the case needs its own probe to show where the engine drops it.
+- **Q2.38 = N256.2** (an `on` read from an `assumed` window row prints `assumed:`), **Q2.39** (a plan with a false `when` lists what decided it, as a decision does), **N250.3** (`explain` of a hole-day instance lists the adjustment a binding over `adjustments` read), **N250.9** (an ask whose `law` is a window prints `unknown day:` and `cut`): not started.
+- N250.15 stays as built.
+
+- **Size** (`git diff --shortstat 67eaacd9 -- engine/crates`): 9 files, +877 −195; code +507 −195, my unit tests +370 (six new tests and one updated, each a whole small text through `api::run`). The plan: R6 0.45 to 0.9 k, R2 0.35 to 0.5 k, with tests; this is about 1.07 k with tests for R6, item 3, item 6 and C-9, with five R2 rows and selfread not built.
+- **Kernel files touched:** `walk/plan.rs`, `walk/tuples.rs`, `walk/narrow.rs` (fence F7: `check fences` red once, then green), `walk/move_flows.rs`, `walk/order.rs`, `book/observe.rs`, `book/members.rs`, `eval/state.rs`, `eval/timelines.rs`.
+- **Fences:** `check fences: green, 1 step (53s)` after the last edit to `narrow.rs`; the fences' suites pass in the last `check commit` (none of its 26 red tests is one).
+- **Exceptions:** +0 (`EXCEPTIONS.lock` unchanged).
+- **Mutants:** none proved. Sites new for T: `reads_unbound`'s `skip(bound)`; `stopped_parts`'s `Ok(true)` for a hole day and for a decision; `tuple_at`'s `starts_with`; `link_tuple`'s and `trace_existence`'s `plans_making == 0`; `obs_links_for`'s `plans_making > 0`; `judged`'s four conditions; `made_to_exist`'s `a.made`; `mv_field`'s `exists == No || status == None`; `count_move`'s hole-day refusal arm; `refused_link`'s `find_map`; `unlink_at_point`'s `why`.
+- **Open STOP-REPORTs:** one, below (c4_when).
+- **Usage:** about 1.04 % of the week this turn by `engine/tools/usage tmp/spec-2.3.1/g2-ids.txt` before this entry.
+- **Time:** about 95 minutes, about 33 of them checks (`check quick` 22 runs, `check commit` 6, `check fences` 3).
+- **Checks:** `check quick: green, 11 steps (40s)`; `check fences: green, 1 step (53s)`; `check commit: red at tests, stopped after 10 of 24 steps (127s)`, red only on the ids above.
+
+## STOP-REPORT 2026-11-24: c4_when's LOAD-READS answers by R6 and C-9, where the plan keeps it
+
+- **Kind:** other (the ruled plan's row against the rule it cites)
+- **Where:**
+  - The text: `engine/tests/m4/fixes/p40/c4_when.tally` l.74 to 78 (`dr`, `when bal(konto) > lim`), l.172 (`bank4[w2]` fulfils `dr[2026-02]`), l.45 to 52 (`own`'s amount reads `ln`, which sums `bank2`'s rows).
+  - The plan: `tmp/spec-2.3.1/inputs/plan.md` l.269 (P43: "`c4_when`: both `LOAD-READS` (stays)"), l.467, l.497 ("`c4_when`'s `qo` `LOAD-READS`, P43's kept part").
+  - The code: `walk/tuples.rs` `link_tuple`'s decision arm, `book/observe.rs` `judged`.
+- **Rule or gate:** E §3.1 step 7 ("existence" added), E §4.2 step 3, L §5.14.2 l.1423; tally 2.3.1 R6, C-9, P43.
+- **What happens:**
+  - `engine/tools/check commit`, exit 1. Beside the classes it is red on `fixes/p40/c4_when/` edw, emx, exm, qdw and `spec/p40fix/c4_when/qo`.
+  - qdw shows: `refcore "refused: LOAD-READS bal(konto) with no day outside a decision", the engine "qdw: refused: RUN-ORDER decisions dd and dr read each other on 2026-02-05"`. edw, emx and exm give the same RUN-ORDER, and qo gives `?"own[2026-02] on 2026-02-05 changed after it was paid (version febk); is back pay due, and when?" (own[2026-02])`.
+- **What I tried:**
+  - I traced the old LOAD-READS. It came only from the main walk judging every row's link outside the decision's point (`bank4[w2]` to `dr[2026-02]`'s `when`), the path `critic/dec_link` takes and C-9 overturns.
+  - The plan's reason for qo, "`own`'s amount reads `ln`, which reads the rows' links", holds. But `ln` reads `bank2`, whose rows name only `own`, so no plan of this text reaches a decision's existence, and step 7's kept part doesn't apply.
+  - That part is built and still refuses where it should: `tmp/spec-2.3.1/g2/step7b.tally`, a plan whose amount reads a row linked to a running-read decision, gives `LOAD-READS` on both engines.
+  - Keeping c4_when at LOAD-READS would need one of two things. One is a load rule refusing any reality where a row links to such a decision, which refuses `dec_link` too, against C-9. The other is a refusal tied to the ask, which is special-casing. I did neither.
+- **What I ask:** the lead rules c4_when by R6 and C-9:
+  - emx, exm, edw and qdw get `RUN-ORDER decisions dd and dr read each other on 2026-02-05`, and qo gets the back-pay hole; T re-stores the five.
+  - The plan's three lines are corrected at the round, with `step7b`'s form as the case step 7 keeps.
+  - Or the lead names the narrower rule wanted.
+- **State:** the last green commit is 6eb19ff1 on `check quick`; this entry is committed with it. Nothing is uncommitted; my scratch is in `tmp/spec-2.3.1/g2/`.
+
+## 2026-11-24 tally 2.3.1 G1's review fixes: B1 to B6, N1, N7 (issue #259)
+
+The builder's turn on G1's review (`tmp/spec-2.3.1/inputs/review-g1.md`, 6 blocking, 7 non-blocking; rulings 14, pick P7), on top of G2's 8d76e92e. Each fix is its own commit, and before each one this worktree's release engine ran every probe under `tmp/spec-2.3.1/inputs/review/g1/` (and a03) against the run before it (`tmp/spec-2.3.1/g1fix/sweep.sh`; the base and each step's outputs are in `g1fix/base`, `b1` … `n7`). Every line that moved is listed below; nothing else moved. **Waiting for T and the pin.**
+
+**Commits** (none pushed):
+- bddf26ae `fix(eval): a refused where is a refused term of any and all`
+- 62c0f1d7 `fix(eval): step 5's unknown rule beside many candidates is the hole`
+- 64eb3043 `fix(eval): explain lists every candidate of a step-5 hole`
+- c6af9f3e `fix(walk): a two-day same pair's ends are holes to the scenario check`
+- e167953e `fix(book): same's two days bound a decision side too`
+- 6fe72a27 `fix(ask): a two-day pair's last day after a reading explains as its hole`
+- 474e6110 `fix(book): a three-sided two-day same lists its middle side`
+- bcdf0493 `refactor(book): same_mask's hole end goes through same_entry`
+
+**Each finding, its probe and the engine's line now** (before in brackets; the review's refcore line where it records one):
+
+| Finding | Probe | Engine now |
+|---|---|---|
+| B1 (L l.1194) | `p21_where_min` aw; `p02_where_refused` aw, lw | `aw: true`; `aw: true`, `lw: false` (all `RUN-DIV`); refcore `true`, `false`. `cw` (`count`) and `fw` (`first`) stay `RUN-DIV` |
+| B2 (L l.1140) | a03 q2; `p20_step5_min` q2; `p04_step5` q2, q8, q10, e2 | each `?"does it apply?" (ch)` (`RUN-CONFLICT`); refcore a03 q2 the hole. `p04` q9 (the unknown rule beaten by a candidate, beating none) stays `RUN-CONFLICT rules a and b` |
+| B3 (L l.1616) | `p20` e1, a03 e1; `p04` e2, e11 | `rule a: candidate`, **`rule base: candidate`**, `rule top: unknown` (no `base` line); p04 e2 gains `rule base`, e11 `rule b` |
+| B4 (E §9 inv. 3) | `p16/r.tally` + `p16/up.tally` bs, bs3, d | `bs: 100.00 PLN`, `bs3` the HOLE-SAME hole, d's changed line `100.00 PLN against …` (`ENGINE-INVARIANT` all three); refcore `100.00 PLN` and the hole |
+| B5 (L l.1359, rulings 14) | `p18_same_dec` b31, b8, b31k, f, ex | `100.00 PLN` each, ex's 2026-03-07 row `in2.cash (past): +100.00 PLN` (the hole); b6, between the days, stays the hole |
+| B6 (L l.1616) | `p09_same_two` ex2 | 2026-03-07 row `j2.cash (past): hole: ?"j1 and j2 are one, but leg cash differs on …" (j1, j2)` (`+100.00 PLN`); refcore's row |
+| N1 (rulings 14) | `p10_same_three` a8, a9, fa, fb | each gains `unfulfilled: x2` (x1 and x3 only); a6, before x2's day, lists x1 alone as before |
+| N7 (R-127) | all | no line moves |
+| N6 | `p08_nominal` | no change: the words stay `nominal 0: m is a positive int (L §3.3)` (rulings 14) |
+
+**How each is built:**
+- **B1** (`eval/aggregate.rs`): a `where` refused at run makes the walk's step `Step::Refused`, not a stop of the walk. `any`/`all` read their members through `walk_terms`, which keeps such a tuple in its place as that refusal, so `any_all` treats it as it does a refused term. Every other reader stops on it as before: `walk_members` and `first_in_order` (`eval/extremes.rs`) return it at once. A domain hole beside a refused `where` stays refused, and a domain refused later in the walk gives the first refusal in binding order, as before. The load and invariant codes still stop (`a_terms_refusal`).
+- **B2** (`eval/rules.rs` `changes_outcome`): the one test of l.1140 for any number of candidates. A rule is relevant if it would beat a candidate, no candidate beats it, or there is no candidate. G1's "fewer than two left" branch is gone.
+- **B3**: the trace marks every candidate of a step-5 hole, in the def's canonical order.
+- **B4** (`invariant.rs` `day_odds`): `Change::Open` and `Change::Close` are flagged like `Hole`, since a two-day pair's ends are its HOLE-SAME hole.
+- **B5** (`book/same_booking.rs` `same_end`): the two-day bound takes any instance side, a plan's or a decision's. A side that is an observed row still books as written (N4's ground, left). With the decision on the *later* day (`g1fix/p18_rev.tally`) it reads the wallet the pair has left a hole, so its amount is a hole and the pair stays the hole, on both builds. Nothing to build there.
+- **B6** (`ask/walked.rs` `entry_rows`, `closes`): explain replays the pairs' open holes by unit (a reading clears them), as the walk's state does. A close that ends none prints as the hole it books, and the leg written beside it, the same movement, leg, unit and point, isn't printed as an amount.
+- **N1** (`book/same_booking.rs` `EndBook::Between`): a side of a two-day group that is neither the first day nor the last books a `Change::Mark` at its end, which changes no balance but meets its register, as the first's and the last's are met. `book/same.rs`'s observation arms take it (rows never reach it).
+- **N7**: same_mask's `EndBook::Hole` arm adds its worth and books through `same_entry`.
+
+**Not built, for the lead:**
+- **N5** (rulings 14: a movement whose `when` is refused is a refused term under `any`/`all`). It isn't in this turn's list, and it isn't B1's path. A refused instance refuses the whole movement domain in `book/members.rs`'s `movement_members` (three sites: the day, the existence and `i.err`), before any term is read. The shape would be a refused member carried in `Values::Moves` to `Step::Refused`, about 0.1 k, touching `count`, `sum` and `flows` over movements only to keep their refusal. `p03c` am, am2, lm, lm2 are still `RUN-DIV`.
+- N2, N3 and N4 are left (#260).
+
+**What `check commit` shows red** (one run, after the last fix): 26 of 1 558 tests, the same 26 tests G2's entry names, and 81 ids: G1's 15 and G2's 66 (R6 34, item 3 6, item 6 21, C-9 5), each in its list. **No new id**, none outside a class. The review's fixes move no stored answer: their forms (a refused `where` under `any`/`all`, a step-5 hole beside two candidates, a two-day pair under a scenario, with a decision side, a reading between or three sides) aren't in T's stores.
+
+- **Size** (`git diff --shortstat 8d76e92e -- engine/crates`): 7 files, +552 −75; about +320 of it my unit tests (seven: `a_deciding_term_decides_any_and_all_past_a_refused_one` widened, `an_unknown_rule_that_could_change_a_conflict_makes_the_def_its_hole`, `explaining_a_step_5_hole_lists_every_candidate`, `a_scenario_that_makes_a_same_pair_two_days_answers`, `a_decision_side_of_two_days_is_bounded_too`, `a_two_day_pairs_last_day_after_a_reading_explains_as_its_hole`, `a_three_sided_two_day_result_lists_every_side`), the code about +230 −75.
+- **Kernel files touched:** `eval/aggregate.rs`, `eval/extremes.rs`, `eval/rules.rs`, `invariant.rs`, `book/same_booking.rs`, `book/same.rs`, `ask/walked.rs`. No fence module.
+- **Exceptions:** +0 (`EXCEPTIONS.lock` unchanged).
+- **Mutants:** none proved. Sites new for T: `next_tuple`'s `a_terms_refusal` guard; `walk_terms`'s `(Some(_), Some(stop))` arm; `changes_outcome`'s three-way `||`; the invariant's `Open | Close` flag; `same_end`'s `!any(Obs)`; `entry_rows`'s `held.contains` and `closes`'s `!found`; `EndBook::Between`'s mark.
+- **Open STOP-REPORTs:** none new (G2's c4_when stays the lead's).
+- **Usage:** about 0.25 % of the week this turn, 1.25 % in all, by `engine/tools/usage tmp/spec-2.3.1/g1-ids.txt` before this entry.
+- **Time:** about 45 minutes, about 30 of them checks (`check quick` 13 runs, the release binary 9, `check commit` 1).
+- **Checks:** `check quick: green, 11 steps (51s)` (before N7's commit); `check commit: red at tests, stopped after 10 of 24 steps (115s)`, red only on the 81 ids above.
+
+## 2026-11-24 tally 2.3.1 G2, the review's fixes and the rulings' answers (issue #259)
+
+The builder's second turn on group 2: G2's review (`tmp/spec-2.3.1/inputs/review-g2.md`, 6 blocking), rulings items 15 and 16 (P8, P9), 14's N5, and the group's rest. On `build/2.3.1` after G1's fixes (e0a641d8). The stop (D12): before each commit I swept the review's probes (`tmp/spec-2.3.1/g2/sweep.sh`: every text under `inputs/review/g2/`, each ask alone, forward and reversed, as `both.sh` runs them) against my base sweep at e0a641d8, and every line that turned is named in its commit. **Waiting for T and the pin.**
+
+**Commits** (none pushed):
+- 89fab47f `fix(eval): a field at a refused tuple's later keys is its refusal` (B2)
+- 5dc806a9 `fix(walk): a link to a refused instance is refused, observed too` (B5, rulings 16 Q1)
+- ca6ad0da `fix(ask): a row refused at its decision's later point refuses its day` (B1, Q2)
+- c57f8d88 `fix(eval): a refused movement compared, with none too, is refused` (Q3)
+- f2b6f1db `fix(load): a plan reaching a running decision's link is refused at load` (B6, Q4)
+- ff89b7c4 `fix(walk): what decided a decision at its point is its link's read set` (B3)
+- cd11809a `fix(book): a binding takes no modelled pins from outside its span` (B4)
+- 1a49fb13 `refactor(load): reached_link names its decision in a loop` (the exceptions step's nested-closure report on f2b6f1db)
+- 4e9b2cd2 `fix(walk): a refused-when link is judged at its instance's booking cut` (Q1 narrowed, D12)
+- 0dff4127 `fix(eval): only a written m[k] of a plan's refused instance is refused` (Q3 narrowed, D12)
+
+**Each finding, its probe's line now** (this worktree's engine, from the review's folder):
+- **B1** `g_early`: `b: refused: RUN-RECORD observation bank[r1] fulfils topup[2026-02], …` (was 900.00 PLN); `x/dl500early` b4, b6, b8 and b the same, from the row's day 02-03; `x/dl500late` refuses from its row's day only (b4, b6 500.00 PLN). How: a point that refuses the link of a row dated before it notes the row (`unlink_run`); the ask is answered again with the row refused from its day in every walk of its own timeline, the first answer's warnings and bookings put back (`ask/answer.rs` `answer_lent`; seeded in `walk/agenda.rs` `plan_walk`); each round adds a row. **Q2** follows: `g2/q2_between.tally` (a decision on 02-03 between the row's 02-02 and the point 02-05) gives `fc: refused: RUN-RECORD …` at lim 500, `fc: 400.00 PLN` at 600. Side effect: in the second answer `topup[2026-02]` is refused, not absent (its `when` reads the refused row), so `x/dl500early` dy is `RUN-RECORD`, where `x/dl500late` dy is `RUN-NONE … doesn't exist`.
+- **B2** `b2_prefix`: `dy`, `am` `refused: RUN-DIV division by zero` (were `RUN-NONE spend[2026-02, a] doesn't exist`); r6a, r6c, `x/r6_window`, w2k's three the same. `move_ref` takes the refused tuple whose keys begin the written ones.
+- **B3** `x/da_runwhen2` f: `400.00 PLN`, `assumed: feb guess (ok[2026-02])`, iof lists `ok[2026-02]`, as `x/da_runwhen`; `x/dl_pin` lp: `pinned: lim = 500.00 PLN`. The `when` is read under its own register in `move_body`; at the point those reads join the link's cell, the rows that name it and the walk's copies (`link_reads_at_point`). They include the running balance's register, so every reader of a decision's link in `x/dl*`, `x/dlc*`, `x/dlk*` and dec_link gains `unfulfilled: topup[2026-01]` and, in inputs-of, amt, lim, opening[konto]; no value moves. That is the rule as ruled ("the walk point's reads … are the link's read set"); say if the balance's own register should stay out.
+- **B4** `x/first_bind` sm, `x/first_cuts` kf: no `assumed:` line. `movements_of` takes a modelled-past instance's pins and assumptions only where its day rests in the span.
+- **B5** `x/dl500` ob: `refused: RUN-RECORD …` (was 400.00 PLN); `x/lf_readers` ob, `x/nb3_at` q_obs: `RUN-RECORD` (were `RUN-NONE observed(…) is none here`); `x/dl_whenref` ob, `x/lf_whenref` ob: `RUN-DIV`. `observed_of` reads a decision's links as its point judged them and is refused where every row is.
+- **B6** `x/s7_lone`: `check` and every ask give `refused: LOAD-READS pay reaches a running read or projection of topup without reads topup (x/s7_lone.tally:30)`, exit 1, refcore's line. `move_reads` for a plan follows its defs and day to the observed inputs they read; a row of one, in any version, naming a decision whose `when` reads running state (`reads_running`) is the mark. Asks and defs reading such rows still load (dec_link, c4_when `ok`). The run guard in `obs_links_for` stays for forms load can't see (a binding over a kind); its message is still not the catalogue's (non-blocking 2).
+
+**Rulings 16's other answers, 14's N5:**
+- **Q1, built narrow** (4e9b2cd2): a link whose tuple's `when` is refused is refused with the instance, a plan's and a decision's (`x/lf_whenref` n, loose, ob `RUN-DIV`; `x/dl_whenref` ob); an instance dated before the cut is judged by its `when` at its booking cut (`m1/fixes/gate8/linkdiv2` stays 12.00 PLN, gate 8's C13). **Not built: a tuple refused by its `where`** keeps its link. Judging it through the list's refused instance (`refused_tuple` inside `link_tuple`, 5dc806a9 as first written) moved stored answers to defects: `ENGINE-INVARIANT a booked plan amount changed` (spec/p22/n4_own, spec/p30/x1g_order, x1h_order_min), `RUN-CYCLE spend reads its own instances` (spec/p30/x1d_selfk_min, spec/p32, spec/p40fix/p40b, spec/p43/c6_own), and c4_when's efo, epo, qo, qn, nq, ez, en to `RUN-DIV`, against ruling 15's qo. By D12 it gave way. The case needs the tuple's existence cell read without the list's guard (R6's per-tuple cell, as `linked_refused` reads it for `o.fulfils`).
+- **Q3, built narrow** (0dff4127): a plan's refused instance written `m[k]` and compared is its refusal (x5 `RUN-DIV` in r6a, r6b, r6c, `x/r6_window`, w2k's three). A movement reached through `o.fulfils`, or a decision's instance, compares as before. The general form read the plan's list from inside its own `where` or amount (the RUN-CYCLE and ENGINE-INVARIANT above, through `o.fulfils == none`), and a decision's run made asks walk (c2_link and c3_dec gained `WARN-NEGATIVE konto …`). Both gave way (D12).
+- **Q5, not built:** `x/dlc3_600k` fc reached `RUN-ORDER decision topup[2026-02] is read before it has run` only through the general Q3 and went back to 30.00 PLN with it; `x/dlc3_500k` fc is `RUN-RECORD`. The form needs `o.fulfils` of a row linked to a decision not yet run at the reader's point to be `RUN-ORDER` in the link's own read (`obs_target` inside a walk), not in the comparison.
+- **N5, not built** (`review/g1/p03c_anyall_when`: am, lm, am2, lm2 still `RUN-DIV`): `span_members` stops at a refused member. It needs a refused status on `MvMember` and `aggregate::Member`, `any`/`all` deciding past it (rulings 17 A) and every other aggregate refusing on it.
+- **Non-blocking 1:** untouched; no fix reached `mv_field`'s parse of the id.
+
+**The group's rest, not built** (hand-off; nothing started this turn): selfread and Q1.10 as in my first entry; Q2.24 (`Collected::outside()` already keeps the day's rows; it needs its probe); Q2.38, Q2.39, N250.3; N250.9 (`g2/n250_9.tally`: `lw … law window(2026-02-01, 2026-02-10)` prints only the hole on both engines; the bytes the row wants aren't in my inputs).
+
+**What `check commit` shows red** (87 ids; T's stores at the group's start):
+- **The 81 of my first entry, unchanged as a set:** G1's 15; R6 34; item 3 6; item 6 21; C-9 5 (c4_when, ruled by item 15). Lines moved inside them by this turn: `fixes/g4/nb3_at` q_obs to `RUN-RECORD` (B5).
+- **New, 6, Q1's form** (5dc806a9, kept by 4e9b2cd2): `fixes/p40/c5_wref/` dq, qd, qdd, qw and `spec/p40fix/c5_wref/` ed, ew. `bank3[w3]` names `wz[2026-02]`, whose `when` (`ten / dz2[m] > 0`, dz2 0 in every version) is refused at every cut, so its link is refused and `dl[2026-02]` with it (`RUN-DIV`).
+- **None outside a class.** Two passes of `check commit` along the way showed 71 to 81 more, each named above under Q1 and Q3, and gone after the narrowing.
+- The steps after the tests step didn't run, so doc, build, deny, the fuzz build and the rest are unconfirmed.
+
+- **Size** (`git diff --shortstat e0a641d8 HEAD -- engine/crates`): 14 files, +641 −32; code +380 −32, unit tests +261 (eight new tests and one extended, each a small text through `api::run`).
+- **Kernel files touched:** `ask/answer.rs`, `book/members.rs`, `book/observe.rs`, `book/same.rs`, `eval/expr.rs`, `eval/state.rs`, `eval/timelines.rs`, `load/strata.rs`, `walk/agenda.rs`, `walk/body.rs`, `walk/order.rs`, `walk/plan.rs` (tests only), `walk/tuples.rs`, `lib.rs` (an export).
+- **Fences:** no edit to `walk/narrow.rs` or its twin this turn, so `check fences` wasn't run; the fences' suites pass in the last `check commit` (none of its red tests is one).
+- **Exceptions:** +0 (`EXCEPTIONS.lock` unchanged; one report-only hit, fixed by 1a49fb13).
+- **Mutants:** none proved. Sites for T: `unlink_run`'s `wo.obs.day < point` and `base`; `answer_lent`'s round test; `refused_when_link`'s `*d < cut`; `names_movement`; `reached_link`'s `info.observed` and `mv.decision`; `reads_running`'s `b.args.is_empty()`; `movements_of`'s `outside`; `link_reads_at_point`'s `links_at_point` test.
+- **Open STOP-REPORTs:** none new.
+- **Usage:** about 0.82 % of the week this turn (1.07 % to 1.89 %) by `engine/tools/usage tmp/spec-2.3.1/g2-ids.txt` before this entry.
+- **Time:** about 65 minutes, about 40 of them checks (`check quick` about 28 runs, `check commit` 5, the sweeps about 1).
+- **Checks:** `check quick: green, 11 steps (59s)`; `check commit: red at tests, stopped after 10 of 24 steps (107s)`, red only on the 87 ids above.
+
+## 2026-11-24 tally 2.3.1 G1's last fix: statements A and B (issue #259)
+
+The builder's turn on G1's fix review (`tmp/spec-2.3.1/inputs/review-g1fix.md`, 3 blocking, 9 notes), by rulings 17 (pick P10): one statement for each mended form, each built in one place, on top of G2's 31d1aa26. Before each commit this worktree's release engine ran every probe of both reviews (`inputs/review/g1/`, `inputs/review/g1fix/` with s2 to s5's scenario pairs, a03, my `p18_rev`) against the run before (`tmp/spec-2.3.1/g1fix/sweep2.sh`; outputs `g1fix/c0` at the start, `c1` after A, `c2`/`c3` within B). Every moved line is below; nothing else moved. **Waiting for T and the pin.**
+
+**Commits** (none pushed):
+- 34aef13b `fix(eval): every tuple of any, all and sum is one member` (statement A)
+- 1f90d356 `fix(book): a same group is one movement whatever its sides' kinds` (statement B)
+- ffae6aaa `refactor(book): a binding's refused member found by a function` (the exceptions step's nested-closure report on A's closure)
+
+**Each finding and note, its probe and the engine's line now** (before in brackets):
+
+| Finding | Probe | Engine now |
+|---|---|---|
+| G3 (A) | `g1fix/f04_domhole_min` wr, tr | `wr: true` (`RUN-DIV`), `tr: true` (the hole of dh3) |
+| N6 (A) | `f03_domain_hole` ah, aq, aw; lq, lw | `true`, `true`, `true` (the hole, the hole, `RUN-DIV`); `false`, `false` (the hole, `RUN-DIV`); ar, arr stay `true` |
+| N5 of the first review (A) | `g1/p03c_anyall_when` am, lm2; `g1/p03_anyall_moves` am, lm2 | `am: true`, `lm2: false`, each with `unfulfilled: mb` (`RUN-DIV`); am2 and lm (no member decides) stay `RUN-DIV`, now listing what they read (`unfulfilled: mb`); `cm` (`count`) stays `RUN-DIV` with no line |
+| N1's `sum` (A) | `f02_sum_zero` sr, sr0; `f01_where_aggs` sw, s0 | `sr: 7`, `sr0: 0`, `sw: 7`, `s0: 0` (`RUN-DIV`); sh 7, sh0 0 as before |
+| G1 (B) | `f12_dec_sides_min` b6, b8, c6, c8 | `b6` the hole `?"in1 and in2 are one, but the leg at wallet differs on 2026-03-05: 100.00 PLN (in1) and its day 2026-03-07 (in2)" (in1, in2)` (100.00 PLN), `b8: 100.00 PLN` (the hole); `c6` that hole for j1, j2 (as before), `c8: 100.00 PLN` (two holes) |
+| G1 (B) | `s5/r.tally` + `s5/up.tally` | `b31`, `cu31`, `eb31`, `ec31` `100.00 PLN` (holes); `b6`, `b8` (between 03-05 and 05-07) the hole (100.00 PLN); `ex`, `eb31`, `ec31`'s rows: the first day `hole:`, the last day `+100.00 PLN` |
+| G2 (B) | `s3/r.tally` + `s3/up.tally` bu, bu3, du, eu | no `before from: x2 on 2026-03-07 removed by up` line (one each before); values as before; `s3/rb` + `dn` unchanged |
+| N2 (B) | `f09_three_explain` e8, e9; `f13_three_shared_day` e8, e9; s3 eu | each gains the middle side's row, `x2.cash (past): hole: ?"x1, x2 and x3 are one, …"` (none) |
+| N7 (B) | `f13` c9, n3, s3; `g1/p10_same_three` ny, sy; `p10b_same_agree` ny, sy; `g1/p09_same_two` cnt; `f09`'s binding | values as before (`c9: 1`, `ny: 1` …), each now lists every side: `unfulfilled: x1`, `x2`, `x3` (x1 alone); `y1`, `y2` (y1 alone); `in1`, `in2` |
+| N4 (note) | `ask/walked.rs` `closes` | one `retain`, no captured state |
+| N5 (note) | `walk_terms`' `Err` arm | gone: a load refusal or a broken invariant passes on where it is met |
+
+**How each is built:**
+- **A** (`eval/aggregate.rs`, `book/members.rs`, `eval/bindings.rs`, `eval/extremes.rs`). The walk carries a `Reading`: `Each` for `any`, `all` and `sum`, `Stops` for every other reader, whose bytes therefore don't move. Under `Each` a tuple is read as its domain, its `where`, its term:
+  - a refused inner domain, a refused `where` (with its scope where it is the last binding's) and a movement whose existence is refused become `Step::Refused`;
+  - an inner domain hole becomes `Step::Hole`;
+  - `walk_terms` keeps each as a `Tuple` in binding order.
+  `span_members` keeps an instance whose evaluation is refused as a member (`MvMember.refused`) under `Each` and refuses at it as before under `Stops`, with the same early return. A refused instance with no day still refuses the domain under both, since it can't be placed in or out of the span. `any_all`: a deciding member decides; else the first refused tuple refuses; else a hole. A member whose `where` is a hole is a hole member whatever its term. `terms_aggregate` takes tuples; for `sum`:
+  - a refused tuple whose term is known 0 in its scope adds 0 (`adds_zero`); else it refuses at once, first in binding order;
+  - an inner domain hole and a hole-`where` member whose term is refused are hole members (`member_term`).
+  `count`, `first`, `min` and `max` are untouched (`p03c` cm, `f01` cw and fw).
+- **B** (`book/same_booking.rs`, `walk/state.rs` fence, `ask/walked.rs`, `book/members.rs`, `book/same.rs`):
+  - A decision not yet run on another day is waited for whatever the mover's kind (`same_ends`). Where the days differ, `same_wait_for` opens the group's hole (`EndBook::Open`), where it used to book a lasting hole.
+  - In `same_end`, every side but the last opens the hole the group's first side opened (`group_open`, found in the place's log by the group's ids), and the last closes with it. So a hole opened before a decision's amount was known is still the one its point ends. `EndBook::Between` (the first fix's N1 `Mark`) goes: the middle side opens the same hole, so its row prints in explain (N2) and stays in a scenario's walk (G2, since `Before` drops only `Mark`).
+  - `ended` (`walk/state.rs`) takes every copy of the hole (`check fences: green, 1 step (55s)`), and `closes` in explain does the same.
+  - A binding over a group binds it once and notes each other side's `unfulfilled`/`uncertain` beside the kept one (`group_sides`, N7).
+  - The decision-later twin `g1fix/p18_rev` (the decision reads the pair's own wallet) stays the hole: its amount reads the open hole, so the sides don't agree at its point.
+
+**For the lead:**
+- **A one-day agreeing group's balance register** still lists only its latest side (`p10b` a6: `unfulfilled: x3`), since its other sides book nothing (`Skip`). Statement B's "its register … list every side" reads as covering it too; I left it, as no probe of either review names it. Build it the same way: the skipped sides open nothing but carry their register on a no-change entry the scenario check keeps.
+- `f13` pe's pinned-day form and N8's day pins are untouched.
+
+**What `check commit` shows red** (one run, after the last commit): 30 of 1 567 tests, 102 ids, against G2's 87 (my last 81 and its six `c5_wref`). **15 new, each in a statement:**
+- **A (1):** `r11/expr_stays` (`e_sum: sum(0 for k in ks where v[k] / zero > 1)` is `0`, refcore `RUN-DIV`).
+- **B (14):** each a binding over a `same` group now listing every side:
+  - `fixes/gate8/m2_d512_plans_same` (`pay2[2026-03]`);
+  - `fixes/rv/g4f_f1_member_list`, `g4f_f1_member_range_9`, `g4f_f1_member_range_10` (`pay[aa]` beside `pay[zz]`, `pay[10]` beside `pay[9]`);
+  - `t221-g2/` 219-1-same-planned, p42-leg-to, p42-span-days, rv2-n4-count-same, rv2-n6-two-legs, rv2-q3-per-fact (`in2`);
+  - `t221-g3/` mut-same-chain-line, mut-same-mover-right, rv3-n4-release-line (`dec`);
+  - `t23-g1/same-end-differ` (`j2`).
+None of the 87 turned green or left the list. None is outside a statement.
+
+- **Size** (`git diff --shortstat 31d1aa26 -- engine/crates`): 9 files, +550 −188, about +210 of it unit tests (`every_tuple_is_one_member_of_any_and_all`, `two_decisions_of_two_days_are_one_movement`, `q_where_sum` turned to 6).
+- **Kernel files touched:** `eval/aggregate.rs`, `eval/bindings.rs`, `eval/extremes.rs`, `book/members.rs`, `book/same_booking.rs`, `book/same.rs`, `walk/state.rs` (fence), `ask/walked.rs`, `lib.rs`.
+- **Exceptions:** +0 (`EXCEPTIONS.lock` unchanged; the nested-closure report fixed by ffae6aaa).
+- **Mutants:** none proved. Sites new for T: `next_tuple`'s `exists` arm and `then_some(inner)`; the inner domain's `Reading::Each` guard; `adds_zero`'s `is_zero`; `member_term`'s `unknown.is_some()`; `span_members`' `Reading::Stops` arm and `retain`'s `|| refused_of`; `same_ends`' `later`; `group_open`'s `rev().find_map`; `ended`'s `<`; `group_sides`' two notes.
+- **Open STOP-REPORTs:** none new.
+- **Usage:** about 0.44 % of the week this turn, 1.80 % in all, by `engine/tools/usage tmp/spec-2.3.1/g1-ids.txt` before this entry.
+- **Time:** about 40 minutes, about 20 of them checks (`check quick` 8, the release binary 4, `check fences` 1, `check commit` 2).
+- **Checks:** `check quick: green, 11 steps (79s)`; `check fences: green, 1 step (55s)`; `check commit: red at tests, stopped after 10 of 24 steps (144s)`, red only on the 102 ids above.
+
+- 2026-11-24T17:15:21Z CONFIG-CHANGE BLOCKED: source skills /Users/jswob/.claude-personal/skills/synced/eea50a48-ef05-45fd-a077-2f30fee77fdd_b08d67ee-f5da-4e8a-8360-24723a436a14/import-memory/SKILL.md (R-81)
+
+## 2026-11-24 tally 2.3.1 G2's last fix: statements C and D, and G2 (issue #259)
+
+The builder's turn on G2's fix review (`tmp/spec-2.3.1/inputs/review-g2fix.md`, 5 blocking), by rulings 19 (pick P12), on top of G1's 878d49fb. Statement C was committed before the 17:42 worktree loss. Statement D's edits were lost and are redone here from the same design. Before each commit this worktree's quick engine ran every probe of both reviews (`inputs/review/g2/` with x/, w2k/, base/ and g1's p03c, and `inputs/review/g2fix/` with the b1_scen and b6_scen pairs and `check` of every text and household X) in both.sh's form against the run before. The scripts are `tmp/spec-2.3.1/g2/sweep.sh`, `sweep2.sh` and `orders.sh`; the outputs are `cbase` at C, `d1` after D and `g2x` after G2. Every moved line is below; nothing else moved, and no probe changes with ask order. **There is no third review: the lead checks these lines against refcore.**
+
+**Commits** (none pushed):
+- 3f703e44 `fix(walk): a refused link refuses its row on every timeline, its reads` (statement C)
+- 8d90120e `fix(load): step 7 marks any running read of an existence, row-precise` (statement D)
+- 21a7bb88 `fix(walk): explain of a decision's link lists what decided its existence` (G2, note 5)
+- 2a7a9e3a `refactor(walk): the link's refusal owned, no nested closure or chain` (the exceptions step's lifetime, nested-closure and long-chain reports on C and D; note 7's `(why, point)`)
+
+**Each finding and note, its probe and the engine's line now** (before in brackets):
+
+| Finding | Probe | Engine now |
+|---|---|---|
+| G1 (C) | `g2fix/b1_pin_min` bp | `refused: RUN-RECORD observation bank[r1] fulfils topup[2026-02], …` / `pinned: lim = 500.00 PLN` / `unfulfilled: topup[2026-01]` (900.00 PLN) |
+| G1 (C) | `b1_with` b04p, bp, b04a, ba | each `refused: RUN-RECORD …`, e.g. ba with `pinned: rd = r2` (900.00, 870.00, 900.00, 870.00 PLN) |
+| G1 (C) | `b1_scen_base` + `b1_scen_sc` fs, bs, b4s | `RUN-RECORD …` (as before) |
+| G5 (C) | `b1_early_alim` ob and every reader | `refused: RUN-RECORD …` / `assumed: lim guess (lim)` / `unfulfilled: topup[2026-01]` (no register line); iof also lists `bank[r1]`; `b1_early_assumed` the same |
+| G5 (C) | `b3_whenref_az` ob, ful, dy, loose | `ob: refused: RUN-DIV division by zero` / `assumed: zz guess (zz)` (no `assumed:`) |
+| C's read set | `q2_rows` ob, loose; `q2_reset` fc, efc | gain `unfulfilled: topup[2026-01]`; fc, efc gain `anchor: konto 2026-02-04 end, stated 1 040.00 PLN, …` |
+| note 2 (C, "a reading after it states the balance") | `q2_reset` b04, b06 | `1 040.00 PLN` each, the anchor's line `difference refused: RUN-RECORD …` (as before) |
+| G2 | `b3_da_runwhen2_ex` ef | lists `[4] running read bal(konto) = 500.00 PLN, the balance up to this point of 2026-02-05`, `[5] row v:lim = 600.00 PLN`, `[6] row v:ok[2026-02] = true` (only fm, d5) |
+| G2 | `b3_pins`, `b3_pins_sw` ef; first review's `x/dl600`, `dl600early`, `dl600late`, `dl_chk3`, `dl_chk10`, `dlc3_600`, `dlc3_600k`, `dlc10_600`, `dlk600`, `dl_limhole` ef | each explanation gains the `when`'s running read and `lim` (`lm` in b3_pins) at the point; no value, register or check line moves |
+| G3 (D) | `check b6_dated`, `check b6_flows`, every ask | `refused: LOAD-READS pay reaches a running read or projection of topup without reads topup (b6_dated.tally:31)`, exit 1 (`ok`; fp `RUN-CYCLE`) |
+| G4 (D) | `b6_row` | `check`: `ok`, `WARN-UNREAD input fm` (LOAD-READS); fp `30.00 PLN` / `unfulfilled: pay[2026-04]`; q `400.00 PLN`; loose, b, f `refused: RUN-NONE bank[r2] is none here: a field read of it` (b with `unfulfilled: pay[2026-03]`) |
+| note 6 (D) | `b5_cycle` | q `400.00 PLN`, ob `400.00 PLN`, n `1`, loose `30.00 PLN`, b `870.00 PLN` (the no-link twin's), f `400.00 PLN`, each with `unfulfilled: topup[2026-01]` but q; the same alone, forward and reversed (`tally run: not implemented`, exit 69) |
+| spec Q2 (D) | `check b6_scen_base b6_scen_sc` | `scenario sc: refused: LOAD-READS pay reaches … (b6_scen_base.tally:31)`, exit 1 (as before) |
+| D, unmarked | `check b6_plainwhen`, `b6_nolink` | `ok` (as before) |
+| household X (D) | `check` of `engine/tests/integration/amendments/real11/c1`, `real11/c6`, `cut11/mc` | `ok`, exit 0; mc with its `WARN-UNREAD input oracle_*` lines (as before) |
+| note 1 | `x/dl500early` dy | `refused: RUN-RECORD …` (as before; for the lead) |
+| note 4 | `b4_first` | untouched (the change doesn't reach it) |
+| note 5 | `book/same.rs` `observed_of` | the `unwrap_or` fallback is gone: the links were judged just before, so a verdict not kept is `ENGINE-INVARIANT` (no probe moves) |
+| note 7 | `unlink_run`'s `(why, point)` | now `&Unlinked`, which owns its refusal, day and read set. `refused_when_link`'s `(tuple, when)` is untouched |
+
+**How each is built:**
+- **C** (`eval/timelines.rs`, `walk/order.rs`, `walk/agenda.rs`, `ask/answer.rs`). An early row is an `EarlyRow`: the timeline's world and what its pins hold (`LayerData::same`, never a layer's number), the cut, the row, the refusal and the read set that refused it. `unlink_run` first takes the reads that refused the link into the link's cell and its rows (`link_reads_at_point`): the refused run's own read set, or, for a `when` false, the `when`'s reads already there. It then notes each row dated before the point on the timeline in force (`note_early_row`). `plan_walk` refuses a noted row from its day on its own timeline and merges the read set into the row (`early_row`), so every reader carries it. The answer loop is unchanged but keyed so.
+- **D** (`load/targets.rs`, `load/keyed.rs`, `load/strata.rs`, `model/graph.rs`, `walk/tuples.rs`).
+  - `check_move` sets the move's marks and reads apart while its keys' `where`s and its `when` are checked, and puts them back as they would have stood (`reads_apart`, `reads_back`). What it set apart is `graph.existence`.
+  - `marked_decisions` marks a decision whose existence holds a running read of E l.127's list (every `Mark` but `LegOf`), itself or through the defs it reads.
+  - A read `bank[r2]` records its row (`graph.named_rows`). `rows_read` keeps those rows for an item that reads the input no other way, else every row. `reached_link` refuses a plan only where one of those rows, in any version, names a marked decision's instance.
+  - At run, a marked decision's link is judged at its walk point (`link_tuple`), as a `bal(x)` `when`'s already was. That is note 6's form.
+  - `reads_running` goes.
+- **G2** (`walk/body.rs` `trace_link_decided`, called from `flows` of a modelled decision instance and from `observed_of`). Where a link is judged at its point and a traced read at the ask's cut reads it, the `when` is read again at the point as it ran, traced and kept nowhere, once per explain, as `trace_run` reads a body.
+
+**For the lead:**
+- `b6_row` loose, b and f read `bank[r2]` at cuts where version feb isn't known, so `RUN-NONE bank[r2] is none here`; only fp's refcore line is in the review. Check those three against refcore.
+- An early row's read set includes the row itself (C: the balance that refused the decision rests on it), so `b1_early_alim` iof lists `bank[r1]` where its point-day twin doesn't.
+
+**What `check commit` shows red** (one run, after the last commit): 30 of 1 570 tests, 102 ids, the same set as G1's last entry's 102 (its 15 and my 87). Every id it names is present, and no first differing line is one of this turn's forms (no `LOAD-READS` but c4_when's ruled class, no explain `running read`). **None new, none gone.** The steps after the tests step didn't run, so doc, build, deny, the fuzz build and the rest are unconfirmed.
+
+- **Size** (`git diff --shortstat 878d49fb HEAD -- engine/crates`): 15 files, +537 −126, of it about +150 unit tests: `an_early_row_whose_link_is_refused_refuses_on_every_timeline_with_what_refused_it`, `step_7s_mark_is_any_running_read_of_the_existence_and_row_precise` and `explain_of_a_reader_of_a_decisions_link_lists_what_decided_its_existence`, each a small text through `api::run`.
+- **Fences:** no edit to `walk/narrow.rs` or its twin, so `check fences` wasn't run; the fences' suites pass in the last `check commit` (none of its red tests is one).
+- **Exceptions:** +0 (`EXCEPTIONS.lock` unchanged; three report-only hits, fixed by 2a7a9e3a).
+- **Mutants:** none proved. Sites for T: `early_row`'s `same` and `cut`; `unlink_run`'s `wo.obs.day < un.point`; `reads_back`'s order; `running_mark`'s `LegOf`; `rows_read`'s `only_by_id` and `(Some(_), None)`; `link_tuple`'s `marked` guard; `trace_link_decided`'s `judged_there`.
+- **Open STOP-REPORTs:** none.
+- **Usage:** about 2.62 % of the week by `engine/tools/usage tmp/spec-2.3.1/g2-ids.txt` before this entry, about 0.73 % this turn (1.89 % at its start).
+- **Checks:** `check quick: green, 11 steps (53s)`; `check commit: red at tests, stopped after 10 of 24 steps (118s)`, red only on the 102 ids above.
+
+## 2026-11-24 tally 2.3.1 G1's last fix, statement B into flows and the nominal words (issue #259)
+
+The builder's turn on the lead's probes of G1's last fix (`tmp/spec-2.3.1/inputs/lead-probes/g1last-verdict.md`, pick P13), on top of G2's 604f5fe1. Each commit was swept over every probe of both reviews (`g1fix/sweep2.sh`; the worktree's `tmp/` was rebuilt, so the baseline `g1fix/d-base` is a fresh release build at 604f5fe1, then `d1`, `d2`). Every moved line is below; nothing else moved. **Waiting for T and the pin.**
+
+**Commits** (none pushed):
+- 2fc9d570 `fix(eval): nominal 0's refusal in rulings 14's words`
+- 31202ab5 `fix(walk): flows strictly between a same group's days is its hole`
+
+**Each item, its probe and the engine's line now:**
+- **L2** (statement B, `walk/flows.rs` `one_end_inside`): `g1/p09_same_two` f_6 (`flows(wallet, 2026-03-06 .. 2026-03-06)`, strictly between 03-05 and 03-07) is `?"in1 and in2 are one, but leg cash differs on 2026-03-05, 2026-03-07: 100.00 PLN (in1) and 100.00 PLN (in2)" (in1, in2)` (`0.00 PLN` before), refcore W2c's line.
+  - The span is tested against the group's range, from its first side's Open to the Close that ends it:
+    - a span that holds every day counts the movement;
+    - one that misses the range adds nothing;
+    - any other is the hole, one strictly between the days included.
+  - A pair whose last side ended no hole keeps the old test, the hole where its first day is in the span.
+  - p09's other spans (f_n, f_a, f_b, f_x, f_y) and every other probe's `flows` stay as they were.
+- **The words** (`eval/rates.rs`): `p08_nominal` a0, p0 and `p19_factor_nominal` pr are `refused: RUN-DOMAIN nominal 0: m is a positive int` (the `(L §3.3)` suffix gone).
+- **L1** (`g1fix/f10_two_day_parts.tally`, every ask `tally run: not implemented`, exit 69): **not built, STOP-REPORT below.**
+  - This is not the `same` group's walk. Every ask of a reality whose kind keeps parts stops `NotBuilt("parts at run")` (`ask/answer.rs` `answer_lent`, `keeps_parts`): the parts walk is M5b's (`engine/spec/BUILD-ORDER.md` l.44, l.257).
+  - The same text without its `same` line (`g1fix/f10_no_same.tally`) stops the same way.
+
+**What `check commit` shows red** (one run, after the last commit): 102 ids, the same count as G2's last entry's 102. Each id the two changes can reach is among them, with nothing new: `spec/g1/a9_nominal/q_0` (now `… m is a positive int`), the six `spec/p12/* h_*__z_c`, B's bindings (`t23-g1/same-end-differ` …), A's `r11/expr_stays`. No `flows` vector moved: no stored answer reads a span strictly between a group's days.
+
+- **Size** (`git diff --shortstat 604f5fe1 -- engine/crates`): 3 files, +22 −11 (the unit test `a_same_movement_of_two_days_is_known_after_both` gains `f_between`).
+- **Kernel files touched:** `eval/rates.rs`, `walk/flows.rs`, `book/same_booking.rs` (its test). No fence module.
+- **Exceptions:** +0.
+- **Mutants:** none proved. New site for T: `one_end_inside`'s `e.at <= limit && lo < c.at`.
+- **Usage:** about 0.13 % of the week this turn, 2.04 % in all, by `engine/tools/usage tmp/spec-2.3.1/g1-ids.txt` before this entry.
+- **Checks:** `check quick: green, 11 steps (52s)`; `check commit: red at tests, stopped after 10 of 24 steps (106s)`, red only on the 102 ids above.
+
+## STOP-REPORT 2026-11-24: f10's parts walk over a same group is M5b's, not built in this round
+
+- **Kind:** other (a finding asks for a milestone's form the build order places later)
+- **Where:** the text `tmp/spec-2.3.1/inputs/review/g1fix/f10_two_day_parts.tally` (kind `savings`: `owned by arrive`, `step`, `takes`). The finding: the lead's verdict L1. The code: `ask/answer.rs` `answer_lent` (`if self.parts { return Err(Stop::NotBuilt("parts at run")) }`) and `keeps_parts`.
+- **Rule or gate:** `engine/spec/BUILD-ORDER.md` M5b ("Parts and labels": owned and batched kinds, arrivals, takes, relabels, R-115, hole parts; l.44, l.257 to l.261); L §5.7, §3.6.
+- **What happens:**
+  - `engine/target/release/tally run …/f10_two_day_parts.tally` gives `tally run: not implemented`, exit 69, for every ask, b4 (a plain balance before either day) included.
+  - `tmp/spec-2.3.1/g1fix/f10_no_same.tally`, the same text without `same x1 = x2`, gives the same. No part of the engine walks parts yet.
+  - The text is valid, and refcore answers it, b4 to k8, but p8 is `REFCORE-NOT-YET`.
+- **What I tried:** read the stop back to its cause. Statement B's two-day booking is built for every walk that books a place's balance. The parts walk that would carry it into a place's parts (the arrival rule, the takes fill, R-115's check after every arrival) is a whole milestone (80 tests), with new kernel files.
+- **What I did not do:** build parts, or special-case f10.
+- **What I ask:** the lead rules L1 as M5b's, a not-built stop where the round requires none. Statement B's parts side then lands with M5b's walk, and f10 goes to M5b's checks (`b6` the HOLE-SAME hole, `b8` 100.00 PLN, `p6` per party). Or the lead names the narrower form wanted.
+- **State:** the last green commit is 31202ab5 on `check quick`. This entry is committed after it, and nothing is uncommitted.
+
+## 2026-11-24 tally 2.3.1 G2, the group's rest on the third pin (issue #259)
+
+The builder's turn on the lead's verdict (`tmp/spec-2.3.1/inputs/last-fixes-verdict.md`), on top of G1's 5e5e55a5. The oracle is refcore at the third pin (spec/2.3.1 486df3fe, refcore ecf49579, extracted to `tmp/spec-2.3.1/g2/pin3/`). Before each commit, every probe of both reviews was swept (`g2/sweep.sh`, `g2/sweep2.sh`; labels `cbase`, `p15`, `q1`, `q3`, `q5`) in three orders: each ask alone, forward, reversed. The lines below are the only ones that moved. Items 1 to 3 are built. Of item 4, nothing is built: Q1.10 is a STOP-REPORT (below), and the other rows are handed off.
+
+**Commits** (none pushed):
+- e6faa8c0 `fix(walk): a decision none at its point stays none past its own early row` (P15)
+- 22da8a5f `fix(walk): a link to an instance its `where` refuses is refused with it` (Q1 whole)
+- 03fe0f26 `fix(book): `m[k] == none` of a decision's refused instance is refused` (Q3 whole)
+- 6b0770d3 `fix(book): `o.fulfils` before a later decision's point is RUN-ORDER` (Q5)
+
+**Each item, its probe and the engine's line now:**
+- **Item 1, rulings 16's Q1 and Q3 whole** (`walk/tuples.rs` `link_tuple`: a tuple's refused `where` or `when` refuses the link; `book/members.rs` `refused_movement`: the decision exclusion is gone).
+  - `g2fix/b5_plan` k1 and o1 are `RUN-DIV`, and `x/c4_when` qo, nq, qn, ez, en, efo and epo are `RUN-DIV`. Both are refcore's lines.
+  - `x/lf_whenref` is refcore's bytes.
+  - Stored p22, p30, p32, p40b and p43 meet no `ENGINE-INVARIANT` and no new `RUN-CYCLE`, so there was no link-code defect to mend.
+  - Q3 whole moved no probe line. Nothing in the probes reads `m[k] == none` of a refused decision outside what Q1 already refuses.
+- **Item 2, P15** (`eval/timelines.rs` `EarlyRow.none_of`, `none_by_own_row`; `walk/order.rs` `run_one_body`). A decision none at its point stays none, whatever the refusal its own early row met in an earlier answer.
+  - `b1_early_alim` dy, `b1_early_assumed` dy and `x/dl500early` dy are `refused: RUN-NONE topup[2026-02] doesn't exist: a field read of it`, refcore's line, with the assumption's read kept (`assumed: lim guess`).
+- **Item 3, Q5** (`walk/order.rs` `link_awaited`; `book/members.rs` `fulfils_awaited`, called in `mv_field` before the row's record verdict).
+  - `x/dlc3_600k` fc (`30.00 PLN` before) and `x/dlc3_500k` fc (`RUN-RECORD observation bank[r1] …` before) are `refused: RUN-ORDER decisions chk and topup read each other on 2026-02-03`, refcore's line, the same in all three orders.
+  - Left: under the refusal the engine still lists `unfulfilled: topup[2026-01]`, which refcore leaves out. That is a read-set line of a refused walk, outside Q5's form.
+- **Item 4, plan §3's rows, against refcore at the pin:** nothing built.
+  - **N5** (`g1/p03c_anyall_when`): am is `true` on both, so the value is done. Left: under cm (`count`, refused `RUN-DIV` by mw's `when`), refcore lists `unfulfilled: mb`, a member before the refused one, and the engine doesn't. The cause is `book/members.rs` `span_members`: `Reading::Stops` returns before the second loop notes the earlier members' entries.
+  - **selfread** (`critic/selfread.tally`): b, f3 and g3 are still `RUN-CYCLE pay reads its own instances`; refcore gives 900.00 PLN, 10.00 PLN and 10.00 PLN. The fix is a read of the move's own earlier tuple while its list is made (`walk/plan.rs` `make_list`, `make_prefix`, and the tuple loop under them): tuples made in key order, each existence before the next. It is bigger than this turn's budget.
+  - **Q1.10:** a STOP-REPORT, below.
+  - **Q2.24, Q2.38, Q2.39, N250.3, N250.9:** not reached.
+
+**What `check commit` shows red** (one run, after the last commit): 31 of 1 571 tests, 122 ids. All of the 102 on my last list are among them, and none turned green. 20 are new, all in item 1's class (Q1 whole):
+- 11 give refcore's bytes at the pin, for T's re-store:
+  - `fixes/gate8/k_link/qz`, `fixes/gate8/k_r65/l`, `fixes/gate8/x1r/l4`;
+  - `fixes/p40/c2_link/qn`, `c4_when/qn`, `c5_wref/qn`;
+  - `spec/gate8/x1r/l24`, `l24__l4`, `l4__l24`, `l24__f`, `f__l24`.
+- 9 are `spec/p43` explain rows (`c2_link` en, ez; `c4_when` en, ez, epo and its two orders; `c5_wref` en, ez):
+  - The value line is the refused `RUN-DIV`, as on refcore.
+  - The engine's derivation also lists the refused `where`'s rows (`row v:ten`, `row v:dz[2026-03] = 0`), as P43 stores them: an existence read lists the `where` rows it rests on, in the engine's order (P44). Refcore at the pin leaves them out.
+  - For T's re-store, or the lead's word if refcore's form is meant.
+- No other id is new. The steps after the tests didn't run, so doc, build, deny and the fuzz build are unconfirmed.
+
+- **Size** (`git diff --shortstat 5e5e55a5 HEAD -- engine/crates`): 4 files, +155 −11. About 70 of it is unit tests: `a_decision_reading_the_fulfils_of_a_row_linked_to_a_later_one_is_run_order` (new), and dy in `an_early_row_whose_link_is_refused_refuses_on_every_timeline_with_what_refused_it`.
+- **Fences:** no edit to `walk/narrow.rs` or its twin.
+- **Exceptions:** +0 (`exceptions --check`: no FAIL).
+- **Mutants:** none proved. Sites for T:
+  - `none_by_own_row`'s `none_of` and `cut` tests;
+  - the `own_none` arm in `run_one_body`;
+  - `link_tuple`'s `tuple.refused` guard;
+  - `refused_movement`'s guard;
+  - `link_awaited`'s `chain_run` and `n.id != mid`;
+  - `mv_field`'s `name == "fulfils"`.
+- **Open STOP-REPORTs:** Q1.10 (below).
+- **Hand-off:**
+  - **selfread:** tuple-level reads of the move's own list, as above.
+  - **N5's cm line:** a refused count lists the members before the refused one.
+  - **Q2.24, Q2.38, Q2.39, N250.3, N250.9:** not begun. Each is a read-set form (plan §3 l.102 to l.114).
+  - **Q5's `unfulfilled: topup[2026-01]`** under the refused fc.
+- **Usage:** about 3.17 % of the week by `engine/tools/usage tmp/spec-2.3.1/g2-ids.txt` before this entry, about 0.55 % this turn.
+- **Checks:** `check quick: green, 11 steps (40s)`; `check commit: red at tests, stopped after 10 of 24 steps (93s)`, red only on the 122 ids above.
+
+## STOP-REPORT 2026-11-24: Q1.10, a count's read set: refcore at the pin lists neither the runs' existence nor their days, where L §8.2 says it holds them
+
+- **Kind:** the spec and the oracle disagree.
+- **Where:** `engine/tests/m4/fixes/g3fix/t2_tie_inputs.tally` i_cn (copied as `tmp/spec-2.3.1/g2/q110/dec.tally`), and its plan twin `tmp/spec-2.3.1/g2/q110/plan.tally` (no `reads konto`, amount `amt2[j] + amt2[j]`). The code: `book/members.rs` `span_members`, whose second loop merges each member's whole `i.coll`, its legs' reads included.
+- **Rule or gate:** L §8.2 One read set at 486df3fe, l.2252: a read over movements holds, for each movement, "what decided whether it counts and how much: its existence (§5.14) up to a day outside the span, the amounts it sums and the link …". Plan §3 Q1.10: "a count sums no amount: it holds each run's existence and day only".
+- **What happens** (`inputs-of cn`, `cn = count(m in transfers over sp .. sp)`):
+
+  | text | engine | refcore at the pin | the spec's words would give |
+  |---|---|---|---|
+  | dec | amt2[j1], amt2[j2], lim, opening[konto], sp, w, wl | sp | sp, w (the day), wl (the `when`) |
+  | plan | amt2[j1], amt2[j2], sp, w, wl, the two `unfulfilled` | the same as the engine | sp, w, wl, the two `unfulfilled` |
+
+  - In dec, refcore drops the existence and the day with the amount.
+  - In plan, refcore keeps the amounts.
+  - Neither matches "existence and day only".
+- **What I tried:** traced the member's read set. A run's legs' reads are kept apart in `Inst.leg_reads`, and also merged into `i.coll` (`walk/body.rs` l.466). So the spec's form is a member's read set without them, with the field reads (`mv_field`) adding them back for a `sum`. That change reaches every count over a plan's or a decision's movements, so it can't be checked against refcore at the pin.
+- **What I did not do:** build either form, or special-case a count.
+- **What I ask:** the lead rules which is meant:
+  - (a) the spec's words, existence and day, for plans and decisions alike; refcore is fixed to it;
+  - (b) refcore's dec form, nothing of a run;
+  - (c) decisions only.
+  The builder then takes Q1.10 with the class's stored rows (`f3_span` e_cn and i_cn, g3fix's count rows) moving on both.
+- **State:** the last green commit is 6b0770d3 on `check quick`. This entry is committed after it, and nothing else is uncommitted.
+
+## 2026-11-24 tally 2.3.1 G2, the group's rest, second turn (issue #259)
+
+The builder's turn after the lead's ruling of Q1.10 (option (a), pick P16) and the merge of T's two re-runs (5137020f). The oracle is refcore at the third pin (`tmp/spec-2.3.1/g2/pin3/`). Before each commit, every probe of both reviews was swept in three orders (labels `rl`, `q110`, `n5`, `ex`, `cy` over `q5`). Every moved line is below.
+
+**Commits** (none pushed):
+- 6b1d4935 `fix(walk): a link reads its instance's existence in order, its day too`
+- 886dbd36 `fix(book): a binding's member holds its existence and day, no amount` (Q1.10 (a))
+- ddf46822 `fix(book): a refused binding lists the members it took before` (N5's cm)
+- 50a589c2 `fix(walk): an existence read's explanation prints its day before `when``
+- 6c60569f `fix(walk): a cycle through a link's existence is its move's own`
+
+**Item 1, the merged reds.** The first `check commit` on 5137020f was red at 90 ids. 69 were on T's `Logged-Red:` lines; the other 21 were red on my last list, all in the classes below. 23 turned green:
+- **The link's existence in R6's order** (6b1d4935; `walk/tuples.rs` `link_tuple`, as refcore's `m_link_tuple`): the keys' `where`s, the law date, the day, then the `when`. A false or `none` read ends it, whatever came before; otherwise the first refusal refuses the link. The booking-cut reading of a refused `when` (`refused_when_link`) is gone, as the pin has it. A modelled instance whose rows' link is refused refuses `flows` (`move_flows.rs`, refcore's `badlinks`).
+  - Green: `fixes/gate8/k_dayref/l` (a refused day, `RUN-DIV`), `fixes/t231g2/k_refw/l` (a refused `where`, then a false `when`: `RUN-RECORD`), `fixes/gate8/linkdiv2`, `fixes/g6c/p06_holebook_io` i1 and i2, `fixes/narrow/n1_fulfils` i_feb and i_may, `fixes/p32/d_pin/fa`.
+- **N5's form** (ddf46822): `r11/count_refused_day`, `r2/reach_count`.
+- **The existence explanation's order**, the day before the `when` (50a589c2; `existence_reads`): `fixes/p40/c2_link/ed`, `c3_dec/ed`, `ed__qd`, `qd__ed`, `c4_when/ed`, `ept`.
+- **A cycle through a link's existence**, `RUN-CYCLE spend reads its own instances` (6c60569f): `fixes/p32/e_selfcycle` f, f__l24, f__l4, l24, l24__f, l4, l4__f. The cell a cycle returns to is noted where it is met (`cycle_at`). A cell still active when the refusal reaches the existence read was being computed before that read began, as refcore's `outer` test has it.
+
+**The reds left, by cause** (the last `check commit`: 80 ids, 47 on T's lines):
+- **Waiting on the writer, explain's scope and rows** (18):
+  - `fixes/p40/c2_link` en, ez and its two orders; `c4_when` en, ez, epo, epf, edw, emx, exm and its two orders; `c5_wref` ed, en, ew, ez; `c6_own/efs`.
+  - Under a link refused by its `where`, the engine lists the reads that refused it (P21) and refcore lists none.
+  - Refcore lists every tuple's `where` rows (`dz[2026-01..04]`) where the engine lists the one tuple's (R6's one-tuple rows), and in ew the reverse.
+- **R2's read-set mechanisms, not diagnosed this turn** (14):
+  - `fixes/g11` r_agent_o1, o2, r_p_b_ib, ibl, ik, v_inputs_of_balance and `later/inputs_of_balance`: a balance's `inputs-of`, refcore `card_2026:late`/`d`/`d2` where the engine gives `opening[konto]`/`d0`/`go`.
+  - `fixes/g12/r_p_rid`, `fixes/g3/f3_span/i_fk1`, `fixes/gate8/m2_g7_p2`, `m2_gate_b9n`, `m2_gate_p5` (refcore's `unfulfilled: groc[2026-04]`).
+  - The two `I:X:replay_september` checks (`unfulfilled: health_pay[2026-07]`).
+- **selfread** (3): item 3, not built (below).
+- **f10** (6): M5b's parts walk, G1's STOP-REPORT.
+- **G1's** `m2_d512_both_cover_day` (statement B); `b3_whenref_az` ful and loose (G1's cause on T's line); `b3_whenref_az/ef` (`assumed: zz guess` extra, not diagnosed).
+- **Unruled:** `q2_reset/f` (an anchor after a refused early row).
+- **Not on T's lines** (33):
+  - 21 red before the merge: the "every side listed" class (`t221-g2/*`, `t221-g3/*`, `t23-g1/same-end-differ`, `fixes/rv/g4f_*`, `m2_d512_plans_same`, `t231rv1` p09 cnt and p10 ny, sy), and item 6's held `fixes/g12/pm*_observe_observe`.
+  - 12 Q1.10's (below), turned red for T's re-store.
+  - 1 more: `spec/p31/g6c/p06_holebook_io/e1`, the explanation's new order (50a589c2). Refcore at the pin gives the engine's bytes now; the stored row holds the old order.
+
+**Item 2, Q1.10 (a)** (886dbd36). A binding's member holds what decided whether it counts and its day: `Inst.exist_coll`, its reads before its legs (`Body.exist`, taken in `inst_body`), with its keys' `where`s. A field read of a leg or an attribute takes the whole set, as before.
+- Probe: `tmp/spec-2.3.1/g2/q110/plan.tally` i_cn is `v:sp`, `v:w`, `v:wl`, `unfulfilled: dk[j1]`, `unfulfilled: dk[j2]` (the amounts gone).
+- Of the reviews' probes only `g2fix/b4_first` im3 moves (`rent_amt` leaves).
+- New red for T's re-store, each a binding that sums no amount: `fixes/g3/f3_span/i_cn`, `fixes/t231rv2/b4_first/im3`, `fixes/g10/p_d7` (q2's `last … ties by s.day` loses the `unfulfilled:` lines its leg's `bal(konto)` brought), `fixes/g11/r_agent_mv1`, `r_agent_mv2_i_n`, `r_p_b_inn`, `fixes/g5/p6_unc`, `fixes/gate8/m2_g2_f18`, `_m2`, `_m3`, `m2_g6_kbs2`, `r7/t_f18`.
+- **Left:** a decision run's traced read still prints its whole body under a count. `q110/dec.tally` i_cn keeps `amt2[j1]`, `amt2[j2]`, `lim`, `opening[konto]`: `trace_counted` reads the run again with its legs (`trace_run`). The split is a member's trace of the run's `when` and day only, with the legs traced where a field read takes them.
+
+**Item 3, the hand-off's rows:**
+- **N5's cm** (ddf46822, `member_reads`, `members_before`): `g1/p03c_anyall_when` cm is `refused: RUN-DIV division by zero` / `unfulfilled: mb`, refcore's lines.
+  - The first review's r6_window, r6a, r6b_onekey, r6c_twokey_leg, w1_day_2k, w3_hole_2k and w5_whenhole_2k gain refcore's `unfulfilled:` lines; each is nearer refcore at the pin (`vsref.sh`: 39→23, 21→15, 15→12, 21→15, 29→21, 39→23, 29→21).
+- **selfread:** not built; b, f3 and g3 are still `RUN-CYCLE … reads its own instances`. Refcore's mechanism is `m_tuple_inst`: a plan's `flows` with every key given reads that one tuple's instance as its own cell, made from `move_tuples(only=keys)` and guarded by that tuple alone. The engine needs the same in `move_flows` and a keys-only `move_tuples`. g3's `where` form reads it while the move's tuples are made, and b needs both forms.
+- **Q5's `unfulfilled: topup[2026-01]`** under the refused fc: not built. The probable cause, unverified: the engine reads `+ 0 * bal(konto)` after the refused left operand, as R1's strict evaluation reads both operands, and `bal(konto)` brings the line. Refcore stops at the left one.
+- **Q2.24, Q2.38, Q2.39, N250.3, N250.9:** not reached.
+
+- **Size** (`git diff --shortstat 8726cc21 HEAD -- engine/crates`): 9 files, +261 −124.
+- **Fences:** no edit to `walk/narrow.rs` or its twin.
+- **Exceptions:** +0 (`exceptions --check`: no FAIL).
+- **Mutants:** none proved. Sites for T:
+  - `link_tuple_read`'s `Existence::Ends` and `bad.unwrap_or`;
+  - `through_existence`'s `active.contains`;
+  - `count_move`'s refused-link test;
+  - `member_reads`' `exist_coll` fallback;
+  - `members_before`;
+  - `existence_reads`' order.
+- **Open STOP-REPORTs:** none new. Q1.10's is ruled (P16).
+- **Usage:** about 3.61 % of the week by `engine/tools/usage tmp/spec-2.3.1/g2-ids.txt` before this entry, about 0.42 % this turn.
+- **Checks:** `check quick: green, 11 steps (70s)`; `check commit: red at tests, stopped after 10 of 24 steps`, red only on the 80 ids above.
+
+## 2026-11-24 tally 2.3.1 G2, the review's fixes, statement E (issue #259)
+
+The builder's turn on G2's rest review (`tmp/spec-2.3.1/inputs/review-g2rest.md`) and statement E (rulings 20, pick P17). Before each commit, the probes of all three reviews were swept:
+- `g2/` and `g2fix/` in three orders, over the last turn's `cy`;
+- `g2rest/` `ex/` and `q5/`, each ask alone, against the reviewer's lines at 3e51d647 (`g2/sweep3.sh`);
+- `g2rest/` `t/` and `cy/` by hand.
+
+Every moved line is below.
+
+**Commits** (none pushed):
+- 264df10d `fix(walk): every decision's link waits for its walk point`
+- 775eca47 `fix(book): a field read of a none instance lists its cell's reads`
+
+**Statement E, as built.** It is not one function. The readers of a decision's or a hole-day plan's existence now agree on the review's probes, through the link's verdict:
+- **Every decision's link waits for its walk point**, whatever its `when` reads (`link_tuple_read`). A plan's list reading such a link is `LOAD-READS` only where load marks the decision (`obs_links_for`).
+- **A hole day doesn't let a false `when` end a cell an earlier read refused** (L l.1361; `Existence::Hole`).
+- **A `RUN-NONE` field read lists the cell's reads** (`mv_field`).
+
+The one function E asks for, the instance's existence cell read by every reader (field, `== none`, `observed`, link, `o.fulfils`, `flows`, binding, `explain`, `inputs-of`) with one value, refusal, hole and register, isn't built. It is the hand-off below.
+
+**Each finding and note, its probe's line now** (`review/g2rest/`):
+- **B1** (`t/hd_false`): n and ob are `refused: RUN-DIV division by zero`, as d, e and f are. `ex/wr_dh_nf` n, ob2 and x are `RUN-DIV` too, as all its readers are.
+- **B2** (`t/cyc_link`): eq, ful, loose and ob are `refused: RUN-ORDER decisions chk and topup read each other on 2026-02-05`, as dy and ft are. Its twin `cyc_link_runwhen` is unchanged.
+- **Q5 for every decision** (P17), moved for refcore to follow at the writer's turn:
+  - `q5/q5_prev_o_nowhen` and `q5_same_o_nowhen` fc are `RUN-ORDER` (`30.00 PLN` before);
+  - `q5_same_k_nowhen` cn, ful and loose are `RUN-ORDER`;
+  - `q5_prev_k_nowhen` b, eb and ful are `RUN-ORDER` (chk's run is refused, so the balance is too);
+  - of the old probes, `x/c4_when` ept and its explanation are `RUN-ORDER` (dd and dr on one day).
+- **N3** (`g2fix/b1_early_alim` dy): `RUN-NONE topup[2026-02] doesn't exist: a field read of it` / `assumed: lim guess (lim)` / `unfulfilled: topup[2026-01]`, the lines ob lists. The same lines join the dy answers of `x/dl500`, `dl500early`, `dl500late`, `dlc10_500`, `dlc3_500`, `dlc3_500k`, `dlk500`, `b1_early_assumed`, `b1_point_alim`, `b1_point_assumed` and `q5/*_500`.
+- **N8:** `cycle_at` is taken where it is read (`through_existence`) and cleared where a link's read begins.
+- **N10:** `link_awaited` and `fulfils_awaited` cite E §4.2 step 3; `none_by_own_row` cites L §5.14, §8.4 and E §4.2 step 3.
+- **Not done:**
+  - **N1** (`t/hd_false_nowhere`): ob is still `RUN-RECORD … doesn't exist`, where the cell is the hole `?"feb day"`. A link would need a hole verdict (`LinkVerdict` has none), and `observed` would need to read it.
+  - **N2** (`cy/two_def`): still oa, fa `RUN-RECORD`, bp `RUN-CYCLE the link to a[2026-02] reads its own observations`. A cycle met while judging a link is swallowed in `judged` (`Err(Refused) → Ok(None)`), and the link guard (`link_active`) has its own message.
+  - **N7:** untouched. **N9:** the `exist_coll` fallback stays; it goes with the one function.
+  - **N11**, files over 1 000 lines (R-127): `book/members.rs` 2 453, `walk/order.rs` 1 976, `walk/plan.rs` 1 949, `eval/state.rs` 1 071. A split belongs to the one function's turn (the existence cell's own module).
+
+**What `check commit` shows red** (one run, after the last commit): 99 ids, all 80 of the last list among them, none green. 19 are new, each E's:
+- 12 `fixes/p40` ids gain `warning: WARN-NEGATIVE konto is below zero from 2026-01-05`. Judging every decision's link at its point runs the main walk on these asks, and the walk warns. Refcore runs it too once it is mended to P17. The ids: `c2_link` ed, qd; `c3_dec` ed, ed__qd, qd, qd__ed; `c4_when` ed, ept, qd; `c5_wref` dq, qd, qw.
+- 7 gain the cell's register under a `RUN-NONE` field read (N3): `fixes/g12/r_p_mr_q4`, `r_p_mr2_q4`, `r_p_mr2_x1`, `r_p_mr2_x3`, `r_p_mr3_q4` (`top[2026-02].day`: `unfulfilled: rent[2026-0x]`), and `fixes/t231rv2/b1_point_alim/dy`, `b1_point_assumed/dy`.
+- The steps after the tests didn't run.
+
+- **Size** (`git diff --shortstat 13d1b008 HEAD -- engine/crates`): 5 files, +46 −25.
+- **Fences:** no edit to `walk/narrow.rs` or its twin.
+- **Exceptions:** +0 (`exceptions --check`: no FAIL).
+- **Mutants:** none proved. Sites for T:
+  - `link_tuple_read`'s `mv.decision && self.plans_making == 0`;
+  - `hole_day && bad.is_some()`;
+  - `obs_links_for`'s `marked` test;
+  - `through_existence`'s `take`.
+- **Open STOP-REPORTs:** none.
+- **Hand-off:**
+  - Statement E's one function: an `existence_cell(m, mv, keys, cut, ctx)` giving `Missing | Exists | Hole | Refused | Awaited` with its reads, called by `mv_field`, `refused_movement`, `observed_of`, `link_tuple`, `fulfils_of`, `count_move`, `span_members`, `trace_existence`. It would also decide N1, N2 and N9.
+  - N7.
+- **Usage:** about 3.86 % of the week by `engine/tools/usage tmp/spec-2.3.1/g2-ids.txt` before this entry, about 0.22 % this turn.
+- **Checks:** `check quick: green`; `check commit: red at tests, stopped after 10 of 24 steps`, red only on the 99 ids above.
+
+## 2026-11-24 tally 2.3.1 G3 and G4: pins and keys, then the singletons (issue #259)
+
+The builder's turn on groups 3 (R3, R5) and 4 (the singletons' meanings), against the pin 624cae3b (text and refcore). The engine changed only where it differed from a ruled row. Probes and scripts are in `tmp/spec-2.3.1/g3/`:
+- refcore at the pin, copied to `ref/`;
+- its 22 new tests split into `t/`;
+- `cmp.sh` (the engine against a test's expected bytes, warnings aside);
+- `pair.sh` (both interpreters on a text).
+
+The writer's notes for W3 and W4 aren't in this worktree's `inputs/writer-notes.md`, which holds W1 only. I went by the commits' messages (44ed9a00 to 624cae3b), the landed text and refcore's new tests.
+
+**Commits** (none pushed):
+- 00624126 `fix(pins): a line's law date and cut are one pin each; a pin is a row` (R3: N245.4, N245.9, N256.6)
+- 21a22901 `fix(check): keys and periods are points; a check prints their step` (R5: Q2.8, N250.10, N255.2)
+- 93b52aec `fix(load): a returned tuple compares and stands in key positions` (S6)
+- ccbd4344 `fix(ask): axis options with other pinned sets print apart` (S8)
+- b4335b87 `fix(load): a cycle of written orders is LOAD-ORDER` (S11)
+- bec373a6 `fix(eval): a mean of rates keeps their unit` (S17)
+- e5468493 `fix(load): a written-order cycle's search keeps no silent default` (S11's `or_default` and `map_or("")`, two report-only R-27 hits the lock doesn't hold; no answer moves)
+
+**Each row, the engine's line beside the plan's:**
+- **N245.4** (R3): `cost with law 2026-02-01 law 2026-09-01` → `refused: LOAD-OVERLAP pins law 2026-02-01 and law 2026-09-01 of the law date overlap at no keys (…:15)`, the `with` pins first, then the clause. Two `with law` pins and `with known` beside `as known` (`of the cut`) behave the same way. The plan says LOAD-OVERLAP; refcore's bytes match.
+- **N245.9** (R3): `(cost as if {known 2026-09-01}) + cost law 2026-03-01` → `refused: REQ-CLOCK known 2026-09-01 is after the model's on 2026-06-30`, the run's one result. This was `RUN-DOMAIN` on its line. The plan says REQ-CLOCK; refcore matches.
+- **N256.6** (R3): `ratio with ratio = 50 %` on a plain num → `0.5`, `pinned: ratio = 0.5` (was 50 %). The plan says 0.5; refcore matches.
+- **Q2.6, Q2.29** (R3, judged): no code. Refcore at the pin has no bytes for the ruled forms. See the two STOP-REPORTs below.
+- **Q2.8, N250.10** (R5): `check month_of(d1) == month_of(d0)` → `…, difference 1` (no difference before; the "not implemented" stop was already gone). Two quarters, two years, a year and a `year by 3` key, a key and a month: each prints its difference in period values, as refcore does.
+- **N255.2** (R5): a period literal's position reaches through brackets (L §2.5 Keys):
+  - `check qk == (2026-10)` beside a key of a `month … by 3` index is that index's key, `difference -2` (refcore's), not −6;
+  - `(2026-08)` off its grid is `LOAD-KEY 2026-08 is not a key of qs`, as the bare literal is, on both.
+  - Still different: an `if` arm holding the literal (`(if true then 2026-10 else 2026-07)`) is −6 on the engine, −2 on refcore. L l.355 reaches into `if` arms too; not built, a corner left for the review.
+- **S1, S7:** no code. Both interpreters print the same bytes on refcore's guards (`L5_11_beaten_rule_defeats_nothing`, `L3_1_none_equals_only_none`), `critic/none_eq` (18 lines), `critic/x_none` (16) and `review/g1fix/f07`, `f08`.
+- **S4:** no code. `beats__ver`, `beats__ver3` are `LOAD-CYCLE a beats cycle in x: a -> b -> a` on both; `beats__ver2` (13 lines), `a04_beats_versions` (57) and refcore's `L5_11_beats_cycle_across_versions` match too.
+- **S6:** t1 false, t2 true, t3 true; `v[argmin(…)]` 3.00 PLN; `v[first(…)]` 5.00 PLN (was LOAD-UNIT for the whole text). A tuple of other key types stays LOAD-UNIT.
+- **S8:** `q1 [mode = ma]: 5` with `pinned: k = 5`, and `q1 [mode = mb]: 5` (was `[mode = *]`).
+- **S11:** `refused: LOAD-ORDER save before spend before top before save: written orders form a cycle (order_cycle.tally:16)` (was RUN-ORDER at run).
+- **S17:** `mean(r[k] for k in ks)` over rates → `0.04 1/year` (was `RUN-DOMAIN 0.12 /year / 3: rate arithmetic outside L §3.3`).
+- **S25:** no code. `explain lo[2026-02]` and `inputs-of lo[2026-02]` on step 7b's form print `refused: LOAD-READS pay reaches a running read or projection of topup without reads topup` on both (`p/s25/`). G2's mark at load gave it.
+
+**The critic's probes:**
+- `critic/keys`: the same 101 lines on both.
+- `critic/lawpin` (the critic's text): `LOAD-PARSE … got with` on both, because `with` comes after `law` there. The writer's rewrite (refcore's `L5_11_line_law_pins_kept`, which holds `lawpin3`'s t1 to t5) matches: q1 10.00 PLN at law date 2026-02-01, t1 and t3 30.00 PLN, t4 20.00 PLN.
+- Refcore's 20 new interpreter tests (the two CLI tests aside) all print the engine's bytes now.
+
+**Found, outside this turn's rows:** `explain twoc` on `p4_holeone`'s text (two `as if`s, each pinning `b[k2]` to one hole) prints the second inner `dbl[k2]` again on the engine, `(dbl[k2]: see [7])` on refcore. Base refcore does the same, so the pin didn't move it. It's Q2.2's memo (two pins, two entries) under `explain`; for the review (`p/q26.tally` e3).
+
+**What `check commit` shows red** (two runs: after G3, after G4). 106 ids:
+- G2's 99, every one still red.
+- 7 new, each inside its change's class:
+  - **R5** (21a22901), 4: a check of two plain months, quarters or years gains its difference (the plan expected 3 to 6): `fixes/g2/b11_yearmin/a2` (`difference -1`), `items/months/m_differ` (1), `items/months/q_differ` (11), `items/months/y_differ` (−2). Refcore at the pin prints these differences.
+  - **S8** (ccbd4344), 3: the engine's `spec/g1` stores merged `[mode = *]` options whose `pinned:` lines differ: `spec/g1/p3_memo/q_ax`, `spec/g1/p5_axhole/q_ax`, `spec/g1/p5_axhole/q_axc`. Refcore at the pin prints the engine's split lines on all three.
+  - R3, S6, S11 and S17 moved none.
+- None outside a class.
+- The red tests are T's vector targets alone (31 of 1578; the new one, `m4_fixes_spec_g1`, is S8's three). The 11 unit tests below pass.
+- The steps after the tests didn't run.
+
+**Size** (`git diff --shortstat 6e33dc7a HEAD -- engine/crates`): 13 files, +672 −22.
+
+| Group | Plan | Built (code + tests) | Note |
+|---|---|---|---|
+| R3 | 0.15 to 0.2 k | +230 −5 (code about 112, tests 118) | over by the tests |
+| R5 | 0.07 to 0.12 k | +106 −5 (code 15, tests 91) | within |
+| Singletons | 0.2 to 0.35 k | +338 −14 (with the exceptions fix) | at the top |
+
+- **Kernel files touched:** none. Every change is in `load/`, `eval/`, `ask/`:
+  - `ask/answer.rs`, `ask/axes.rs`, `ask/check.rs`
+  - `eval/expr.rs`, `eval/keys.rs`, `eval/pins.rs`, `eval/queries.rs`
+  - `load/check.rs`, `load/compare.rs`, `load/keyed.rs`, `load/pins.rs`, `load/strata.rs`, `load/types.rs`
+- **Unit tests** (11):
+  - `eval/pins.rs` 4: law and cut pins overlap; a law and a cut pin stand; REQ-CLOCK in the line; a figure with its unit is the row;
+  - `ask/check.rs` 2: points' steps; a bracketed literal off the grid;
+  - `load/compare.rs` 2: a tuple compares and keys; another tuple is refused;
+  - `ask/axes.rs` 1, `load/strata.rs` 1 (`written_cycle`), `eval/queries.rs` 1.
+- **Fences:** no edit to a fence or its twin.
+- **Exceptions:** +0 (`exceptions --check`: 6, report-only hits 8, no FAIL).
+- **Mutants:** none proved. Sites for T:
+  - `line_pins`'s `[first, second, ..]`;
+  - `unit_figure`'s `n.unit.is_some()` and `written_typed`'s `n.unit() == *unit`;
+  - `difference`'s `late.kind() != PeriodKind::Day`;
+  - `operand`'s bracketed period literal;
+  - `tuple_keys`'s `binds.len() < 2`;
+  - `compare_rest`'s tuple `eq`;
+  - `pinned_texts`'s `entry.word == "pinned"`;
+  - `written_cycle`'s `Some(true) => {}`;
+  - `mean`'s rate arm.
+- **Open STOP-REPORTs:** two, below (Q2.6, Q2.29).
+- **Usage:** about 0.76 % of the week by `engine/tools/usage tmp/spec-2.3.1/g3-ids.txt` before this entry.
+- **Time:** about 40 minutes, 20:47 to 21:27. About 20 minutes of it were checks: the release binary three times (about 7 minutes), `check quick` four times (5), `check commit` three times (5), clippy steps (2).
+- **Checks:** `check quick: green, 11 steps`; `check commit: red at tests, stopped after 10 of 24 steps`, red only on the 106 ids above.
+
+## STOP-REPORT 2026-11-24: Q2.6, a per-tuple `as if` pin in `explain` "with its value": refcore at the pin prints it as written
+
+- **Kind:** other: a ruled row with no oracle bytes.
+- **Where:** plan §4's row Q2.6 ("with its value (E §10 l.454 'the pins with their values'), written form beside it | both (judged)"); E §10 l.454; refcore at 624cae3b (`ask.py`'s explain, unchanged by a96b98fc).
+- **Rule or gate:** R3; DONE gate 10 (refcore is the oracle, byte for byte).
+- **What happens:** `explain two[k1]` on `p4_holeone`'s text (`tmp/spec-2.3.1/g3/p/q26.tally`; `two[k] = (dbl[k] as if {b[k] = c[k]}) - (dbl[k] as if {b[k] = c[k] + x})`): both interpreters print `[5] pin b[k] = c[k] for k in ks` and `[14] pin b[k] = c[k] + x for k in ks`, the written form with no value. A pin that isn't per tuple prints its value on both (`pin b[k2] = ?"which c?" (c[k2])`).
+- **What I tried:** nothing in code. The ruled form ("with its value, written form beside it") has no bytes: neither its order nor its words (`pin b[k] = c[k] for k in ks: b[k1] = 1.00 PLN`, or a value line under it) appear in refcore or the landed text. Any form the engine printed now would differ from refcore and turn T's stores red.
+- **What I ask:** the writer's bytes for the form (refcore's explain of a per-tuple pin), or the row withdrawn to "as written". The engine follows at the next pin.
+- **State:** e5468493 green on `check quick`; nothing uncommitted. The engine prints what refcore prints.
+
+## STOP-REPORT 2026-11-24: Q2.29, a `with` axis pin shares a timeline with the same option outside the pins: refcore's bytes are neither the engine's nor E §3.2's `see [n]`
+
+- **Kind:** the spec and refcore disagree.
+- **Where:** plan §4's row Q2.29 ("shares it: the pinned axis reaches its option's cell | both (judged; no store)"); L §5.11 A pin is a row ("a pinned axis reaches the cell its option's fan-out reaches"); E §3.2 (a cell met again is `see [n]`); refcore at 624cae3b.
+- **Rule or gate:** R3; DONE gate 10.
+- **What happens:** `explain fl with rd = r2` on `inputs/m4/review/g3/f7_axpin.tally` (e_fl). Its block `[15] outside the pins [rd = r2]`:
+  - the engine prints `[16] fl = 70.00 PLN` with all its reads: `(v:sp: see [5])`, `(v:w: see [6])`, a new `[17] running read bal(konto) …`, `(v:amt: see [8])`, a new `[18] ra = 70.00 PLN …`;
+  - refcore at the pin, and before it, prints `[16] fl = 70.00 PLN` / `rule base: won` / `(v:sp: see [5])` and nothing more of the walk's reads;
+  - the cell shared with `[4]` (inside the pins, rd = r2) would read `(fl: see [4])` by E §3.2.
+  - `f7f_count_axpin` is the same form; there refcore's rd = r1 cell is `REFCORE-NOT-YET axis rd read outside the axes the ask reaches`.
+  - `f7b_axpin_plan` and `f7c_axpin_wb` print the same bytes on both.
+- **What I tried:** nothing in code. Refcore's bytes share the walk's reads but not the cell, a form the text doesn't state. The engine's bytes share neither. E §3.2's form shares the cell.
+- **What I ask:** which of the three is the ruled one, with refcore mended to it at the writer's turn. The engine follows then. No store holds the form (the plan's "no store").
+- **State:** e5468493 green on `check quick`; nothing uncommitted. The engine is unchanged for Q2.29.
+
+## 2026-11-24 tally 2.3.1 G3, the review's fixes (issue #259)
+
+The builder's turn on G3's review (`tmp/spec-2.3.1/inputs/review-g3.md`): B1 to B4 with note 7, then notes 1, 6 and 9, under the lead's rulings (pick P22). The range is 5d91db6a..f7b516b4. Before each commit I swept the review's probes (`min/`, `p/`; `tmp/spec-2.3.1/g3/sweep.sh`, one folder per step in `g3/fix/`) against refcore at the pin and against the step before. Every line that moved is explained by its finding below. G2's uncommitted `book/observe.rs` was left as it was: never staged, and checked unchanged after each `cargo fmt`.
+
+**Commits** (none pushed):
+- 99eb3e02 `fix(eval): a returned tuple that is a hole keys its read as that hole` (B1)
+- 83197d17 `fix(load): a bracketed tuple or an if's tuples key the read` (B2)
+- 7d95a597 `fix(eval): a mean of rates is a rate of their period` (B3)
+- c2482128 `fix(load): a period literal's key position reaches an if's arms` (B4, note 7)
+- 9606c207 `fix(load): a literal pin of the wrong type is refused as its row` (N1)
+- 03d5e509 `fix(load): two law or known pins in one as if are LOAD-OVERLAP` (N6)
+- f7b516b4 `fix(load): a written-order cycle's walk breaks as ENGINE-INVARIANT` (N9)
+
+**Each finding, its probe's line now:**
+- **B1** `min/b1_tuple_hole`: `t1: ?"which u?" (u[k1, j2])`, refcore's bytes (was exit 69). `p/tup_t1`, `tupw_w5`, `tupw_w6` and `tupz_z1` moved to refcore's bytes with it.
+- **B2** `min/b2_tuple_paren`: `t1: 3`, refcore's (was LOAD-UNIT). An `if`'s tuple arms key the read too. `p/tup_t3` and `t8` moved to refcore's bytes.
+- **B3** `min/b3_mean_rate`: `a1: 0.05 /year`, and `+ r[k1]` and its `check` answer (were RUN-DOMAIN). The rate class is kept and printed as the engine prints a rate.
+  - Refcore prints `1/year` for a mean of rates, and its `periodic` refuses one. 12 probe texts differ only by that: `b3_mean_rate` a2, `mn_a1`, `a3`, `a7`, `a13`, `a15`, `a17`, `mn2_c4`, `c6`; and `mn_a9`, `mn2_c5`, where refcore prints `/None` (note 5).
+  - Refcore mends to it (P22), as does its `L5_11_returned_tuple_compares` m1, `0.04 1/year` on refcore and `0.04 /year` here. `mn_a8`, `mn2_c3` and `c7` now match refcore.
+- **B4 with note 7** `min/b4_period_reach`: n1 `difference -2`, n2 `difference -1`, refcore's (were −6 and −3). `b4b_off_grid` is `LOAD-KEY 2026-08 is not a key of qs`, `b4c_year_off_grid` is `LOAD-KEY 2028 is not a key of ys`, and `p/r5o_o1`, `o2` and `r5k_k4` are `LOAD-KEY 2026-08 …`, all refcore's (were answers).
+  - In a comparison, a literal reaches through brackets and both `if` arms when every leaf is a literal of one granularity. This covers years too.
+  - At a key position, an `if`'s key literals are resolved as bare ones (refcore's `reach_leaves`).
+  - At run, a month or quarter `if` arm takes the key's grid.
+  - Also moved to refcore's bytes: `r5o_o4`, `o5`, `r5e_e7`, `r5g_g1`–`g4`, `g6`, `r5n_n1`–`n3`, `n8`. 18 texts moved, all to refcore.
+- **N1** `p/r3p_p7`: `LOAD-UNIT 5 1/year and num have different units`, refcore's (was `the pin of ratio is num 1/year, not num`). Also moved to refcore's bytes: `p8`, `p20`, `r3m_m1`–`m5`, `m7`; `m6` was already equal.
+  - A pin whose value is one literal (a figure, signed or in brackets; a date, a month or a quarter) that the type can't take is refused in the row reader's words. That is `eval::convert`, load's own row check. Only the words of a refusal change; no acceptance moves.
+- **N6** `p/r3c_c34`: `refused: LOAD-OVERLAP pins law 2026-02-01 and law 2026-09-01 of the law date overlap at no keys (p/r3c_c34.tally:22)`, by the lead's ruling, as W3's line rule. `r3_a10` (two `law`) and `r3_a11` (two `known`, `of the cut`) are the same. Refcore still answers these 3 and mends to it. `c33`'s value pins were already LOAD-OVERLAP on both.
+- **N9** `written_cycle`: each earlier move's list is built by grouping the ordered pairs, with no `or_insert_with(Vec::new)`. The two `?` are ENGINE-INVARIANT. No probe moved.
+- **Still different** (23 texts, against 51 at the base):
+  - B3's print, 12;
+  - N6's ruling, 3;
+  - note 2, `r3p_p16`; note 3, `r3f_f6` and `r3p_p21`; note 4, `mn_a4`; note 5, `mn_a12`;
+  - note 9's `(file:line)`, `r5e_e18` and `r5g_g5` (not in this turn's list);
+  - the #261 row, `q26`;
+  - `tup_t10`, where refcore names its internal `tupitem` in a LOAD-KEY. This is unchanged since the base and refcore's fault.
+
+**What `check commit` shows red:** 111 ids, the last list's 106 (every one still red) and 5 new ones. All 5 are in N1's class: T's stores hold the earlier refcore's `the pin of X is T, not U`, and the engine now prints the row's words.
+- `m4/fixes/g2/b4_date` a1: `2026 and date have different units (a value of the wrong type)`. The lead's ruling: T re-stores it.
+- `m4/fixes/g2/b13_ratety`: `2026 and month have different units (a value of the wrong type)`.
+- `m1/fixes/g13/r_s_model_with_r_s_k15`: `5 and date have different units (a value of the wrong type)`.
+- `r_s_model_with_r_s_k18`: `a value of the wrong type: a date for int`.
+- `r_s_model_with_r_s_k21`: `5 and text have different units (a value of the wrong type)`.
+- Refcore at the pin prints the engine's bytes on `b4_date` and `b13_ratety`. The guard refuses refcore on T's files (R-80), so I didn't run the `r_s_k*` three. Their messages are the forms refcore prints on `p/r3m_m7` and `m3`. T re-stores these four with `b4_date`.
+- None gone; none outside a class. The red tests are T's vector targets alone (32 of 1584). The 7 new unit tests pass, and the steps after the tests didn't run.
+
+**Size** (`git diff --shortstat 5d91db6a HEAD -- engine/crates`): 9 files, +479 −88.
+
+| Commit | Lines (in, out) |
+|---|---|
+| B1 | +17 −2 |
+| B2 | +56 −9 |
+| B3 | +18 −6 |
+| B4 | +204 −40 (tests 71) |
+| N1 | +109 −11 (tests 22) |
+| N6 | +39 −4 (tests 20) |
+| N9 | +36 −16 |
+
+- **Kernel files touched:** none. The changes are in `eval/keys.rs`, `eval/queries.rs`, `eval/years.rs`, `eval/pins.rs`, `load/compare.rs`, `load/keyed.rs`, `load/types.rs`, `load/pins.rs` and `load/strata.rs`.
+- **Unit tests** (7 new):
+  - `load/compare.rs` 4: a tuple hole; a bracketed or `if` tuple; a period literal through brackets and `if` arms; an off-grid arm or bracketed year;
+  - `eval/pins.rs` 2: a literal pin refused as its row; two pins of one cell in an `as if`;
+  - `eval/queries.rs`: its mean test now expects `/year` and `+ r[k1]`;
+  - `load/strata.rs`: its test takes the `Result`.
+- **Fences:** no edit to a fence or its twin.
+- **Exceptions:** +0. `exceptions --check`: 6; report-only hits 8, the same as before (strata's hit was the `or_default` fixed in e5468493, and N9 adds none).
+- **Mutants:** none proved. Sites for T:
+  - `arm_keys`'s two skips (another granularity; a year at a non-year index);
+  - `period_literal`'s `shared` granularity test;
+  - `row_refusal`'s `keyed` and `negative` arms;
+  - `same_cell` from `as_if`;
+  - `written_cycle`'s grouping.
+- **STOP-REPORTs:** none new. Q2.6 and Q2.29 (above) stay open.
+- **For refcore's mend** (the writer's turn, P22):
+  - a mean of rates prints in the rates' unit (`/year`), and `periodic` takes it;
+  - two `law` or two `known` pins in one `as if` are LOAD-OVERLAP (N6).
+- **check quick:** green, 11 steps.
+
+## 2026-11-25 tally 2.3.1 G2, links by part 1 (issue #259)
+
+The eighth G2 brief: links follow the exist study's part 1 in the critic's repaired form (rulings 22, P23 to P25), with the lead's two facts of the same day (`LOAD-LEG`; P27, a `where`-false decision tuple has no point). Swept against refcore at the spec writer's ffebad27 (pin 6, part 1 built, extracted read-only under `tmp/spec-2.3.1/g2/pin6/`), not only against the statement.
+
+- **The paused edit: dropped.** It renamed `obs_links_for`'s re-entry cycle message and stopped `judged` swallowing cycles. Both paths go with part 1.
+- **Commits:**
+  - 4ed8131a `feat(book)`: (1) to (6), and the removals;
+  - 070f1744 `fix(walk)`: a counted modelled decision's `flows` lists what decided it exists (`exist_coll`), as refcore's `flows_move` does.
+
+**The statement, each sentence with one mechanism and a probe's line now** (the engine equals pin 6 on each):
+
+1. **By the name.** `judge_links` keeps every row that names the tuple, minus S1's and the unjoined rows (`fulfils_differ`, `unjoined`, L l.1728). It reads nothing of the instance, and `o.fulfils` is the name (`MvSrc::Inst`, compared by id). In `flows` of a move, a named tuple the list lacks, one that is none, or one whose day is a hole is counted by its rows, each on its own day (`named_tuples`, `count_by_rows`; P1-C7). A row is for the named tuple's `for` (`named_for`, in `flows` of a move and of a place; P1-C6).
+   - `critic-part1/h1_hole`: `fr: 330.00 PLN`, `ff9: 110.00 PLN`, `ff: -120.00 PLN`.
+   - `f1_for`: `ff: -120.00 PLN`.
+   - `exist-study/p1_badlink`: `a: 100.00 PLN`, `ob: 100.00 PLN`, `n: 1`, `dy: refused: RUN-NONE rent[2026-01] doesn't exist: a field read of it`.
+2. **The point.** `decision_fulfilled` (cbb928dc's booking) is unchanged; a `where`-false tuple isn't in the decision's list, so its row books in the first batch (P27). A run at the point that is refused or none and that rows name books only those rows, with no refusal (refcore's `run_one`; P1-C1).
+   - `d1_point_bad`: `sk: 200.00 PLN`, `b: 500.00 PLN`, `f: 400.00 PLN`.
+   - `review/g2rest/t/dl_whenref_k`: `b`, `kb: 870.00 PLN`.
+3. **A dead name** refuses and warns nothing. `x/dl_whenref` `ful: 1`.
+   - Rulings 16 Q3 stays for a plan's refused `m[k]` compared with `none` only. Rulings 18's reach to a decision's run and to a comparison with another movement is gone with ruling 22 (`refused_movement`, `comparison`).
+   - `g2fix/q3_cmp` is pin 6's on every ask.
+4. **Adjustments:** no change. `a1_adj*` are pin 6's bytes.
+5. **`LOAD-LEG`** (`load/overlap.rs`, `legs_named`): a standing row whose kind declares legs but not one of the named move's. `l1_lacks`: `refused: LOAD-LEG observation bank[a1] fulfils rent[2026-01] and lacks its leg fee (l1_lacks.tally:46)`.
+6. **The field read.** Load notes an item that reads a field through `.fulfils` (`Graph::fulfils_fields`, `post_rest`). Step 7's row-precise reach (`reached_link`, `rows_read`) counts only those items.
+   - `m1_mark`: `refused: LOAD-READS rest reaches a running read or projection of topup without reads topup (m1_mark.tally:22)`.
+   - `exist_mark`'s `o.fulfils == none` form loads. The rewritten unit test checks both.
+
+**Removed** (by function):
+- `link_tuple`, `link_tuple_read`, `link_places`, `LinkVerdict`, `link_verdict`;
+- the run's place and leg judgments, `states_leg`, `record`;
+- statement C: `EarlyRow`, `early_row`, `note_early_row`, `none_by_own_row`, `early_seed`/`early_found`, and the answer's re-walk loop;
+- links at the point: `links_at_point`, `unlink_at_point`, `unlink_run`, `Unlinked`, `link_reads_at_point`, `trace_link_decided`, `Body.decided`, and `judged`'s main walk;
+- Q5: `link_awaited`, `fulfils_awaited`;
+- C-13.6: `refused_link` and `count_move`'s two checks;
+- `obs_links_for`'s plan-making refusal;
+- the existence readers `o.fulfils` used: `linked_instance`, `through_existence`, `linked_read`, `linked_refused`, `linked_day`, `existence_list`, `cycle_at`;
+- 13 unit tests; one, step 7's, rewritten.
+
+`plans_making` stays, for `trace_existence`.
+
+**Lines** (`git diff --shortstat 1c5d42b3 HEAD -- engine/crates`): 20 files, +309 −1470. 4ed8131a is +303 −1471 and 070f1744 is +7.
+
+**The sweep** (`p1/vs6.sh`): every ask alone, whole bytes, against pin 6, over the critic's 25 texts, the study's probes, and `review/g2*`, `g3` (429 texts):
+- **Value lines differ only on:**
+  - G3's `p/` set (`mn_a4`, `mn_a12`, `r3f_f1`, `r3f_f2`, `r3f_f4`, `r3p_p16`, `r5e_e18`, `r5g_g5`, `tup_t9`, `tup_t10`, `tup_t13`): none is a link, and the fraction and tuple-print lines look like pin 6's other changes;
+  - 26 asks `explain <rule def>`, `tally run: not implemented` (`g2rest/ex/wf_*`, `t/wf_x`): the reviewer's run at 3e51d647 printed the same.
+- **Listing-only differences:** 105 texts. Two are part 1's: `d1_point` `f` (refcore lists `unfulfilled: skim[2026-02]`) and `p4_whynot` (the `assumed:` line of `dy` and `ex`, and `explain fa`'s rows [5] to [10]). The rest are the listing class under #261 (P19).
+- **Not done:** pin 6 refuses `o.fulfils == none` where the named instance is a refused plan instance. Its `_LinkTarget` reads `err`. The engine doesn't (Q3 is kept to a written `m[k]`, and the name reads no existence). No probe or vector meets it; it is for the writer and the lead.
+
+**`check commit`:** red at tests, 43 of 1575 test targets; **263 red vector ids**:
+- **77** are this turn's baseline of 79. Two went green: `fixes/p40/c2_link/qd`, `c4_when/qd`.
+- Of the 77, 68 are on my 99 and 71 on G3's 111, with the causes those entries give.
+- **186 are new.** None is in `t-link-class.txt` (those 691 asks aren't stored). Each is T's stored answer from before part 1, and the engine prints pin 6's bytes on all of them:
+  - 156 whole answers checked against pin 6, the ask alone or in its `__` order (`p1/reds6.sh`, `multi6.sh`, on copies);
+  - `b1_scen`, `b6_scen` (8) and `gate8/linkdiv2`: the same, on copies;
+  - `kernel/g10/observe`: the same `LOAD-LEG` (so too `g12/pb_g10_observe_observe`, `pp_proj_*`, `pp4_proj_*`, `gate8/m2_rt_l5_19_fulfils_lacks_leg`);
+  - the rest, by their stored line: `g12/*ledger_ledger`, `g12/v_mvq`, `g10/ledger`, `g4/nb3_at`, `gate8/m2_rt_*` (a dead link's `RUN-RECORD`); `g4/nb3_atT` (a `held:` line); `t221-gd/208-4-count` (S1 reached once both links stand); `t23-g1/ledger-left-out`, `ledger-never` (a window-day tuple a row names, P1-C7); `I:X:konto_balance@b_r1` (a listing line).
+- **By the stored line, of the 186:**
+  - 97: "doesn't exist or doesn't touch its places";
+  - 53 other: mostly a refused named instance's `RUN-DIV`, which the link no longer reads; the rest are listing or hole lines;
+  - 29: `LOAD-READS` (statement D's mark, now only a field read);
+  - 5: "lacks its leg" (now `LOAD-LEG`);
+  - 1: Q5's `RUN-ORDER`;
+  - 1: S1.
+  - T re-stores them from pin 6.
+
+**Exceptions:** +0. `exceptions --check`: 6; report-only 8, as before (a nested closure and a long chain in the new code were restructured).
+
+**Mutants:** none proved. Sites for T:
+- `count_by_rows`'s `for` arms;
+- `named_tuples`' key prefix;
+- `book_run`'s refused-with-rows branch;
+- `legs_named`'s legless-kind skip;
+- `rows_read`'s `fulfils_fields` filter;
+- `refused_movement`'s decision skip;
+- `comparison`'s `none` side.
+
+**STOP-REPORTs:** none new. Q2.6 and Q2.29 stay open.
+
+**check quick:** green, 11 steps.
+
+## 2026-11-25 tally 2.3.1 G5, one printer (issue #259)
+
+The builder's turn on group 5 (R4: the declared-type printer, the `held:` merge, `RUN-NONE`'s words), against pin 6 (spec/2.3.1 ff4249e7, refcore ffebad27, merged 06ab0eb7). Plan §5's engine rows, rulings 1 and pick P24 (the merge is in). Probes and scripts are in `tmp/spec-2.3.1/g5/`:
+- `pair.sh` (this worktree's release engine against its refcore, pin 6);
+- `t/`: refcore's W5 tests split into texts (`bin/split.py`);
+- `p/`: my probes and the critic's, copied;
+- `ref0/`: refcore before pin 6 (06ab0eb7^1), to tell pin 6's changes from older differences.
+
+Link forms (`book/observe.rs`, `walk/tuples.rs`, step 7's reach) untouched.
+
+**Commits** (none pushed):
+- f06dd646 `fix(format): a declared item prints in its declared type` (Q2.9, N256.7, N250.7, Q1.8)
+- d600b595 `fix(ask): held: prints once per row and keys, its reads in runs` (Q1.5)
+- bb34ce17 `fix(eval): RUN-NONE names its read: a condition, a built-in's name` (Q2.37, N256.8, Q1.13)
+- db7033f8 `fix(ask): the fork oracle's held: line is once per row, as refcore's` (the fence suite's held line)
+
+**The mechanisms:**
+1. **Declared type.**
+   - `coerce_def` gives a unitless def value its declared `num` or `num %`.
+   - A check's `differs` sides print with `typed_text`; the difference stays plain.
+   - `Value::text` prints a one-day window as its day (a question still names it `window(a, b)`, as refcore's `window_text` does) and a tuple in brackets.
+2. **The merge.** The register collects `held` texts and merges them (`merged_held`, refcore's `merge_held`): texts alike up to the last `, read for` are one line; their day, month, quarter or year points are sorted by kind, then place; consecutive ones form a run `a .. b`. A text read for another form stays as it is. `pin_day` and the merge share `iso_day`.
+3. **The words.**
+   - `boolean` (for `and`, `or`, `not`), `if`'s condition and membership name the read with `none_here`, as `a condition` and `a membership test`.
+   - `named_none(call, (i, v))` names argument i and the built-in before that argument's own check, in written order, as refcore's `known_first` does. It covers `round` (all three arguments: x and the step were `arithmetic`), `add_business`, `last_business`, `schedule`, `periodic`, `factor`, `accrue` (all six) and `dcf`'s two days. `dcf`'s day count keeps its own refusal, as refcore's does.
+
+**Each row, the engine's line beside the plan's:**
+- **Q2.9** (`critic/pct` q_dnum, q_dpct): `0.1` and `10 %`. Plan: the declared type. Refcore matches.
+- **N256.7** (`pct2` q_chk): `differs: p = 10 %, n + p = 0.2, difference -0.1`. Plan's row word for word. Refcore matches.
+  - `p/n2567` c2: `pn = 0.3 %, p = 10 %`; c6: `dz = 0 %`.
+- **N250.7** (refcore's `L2_4_one_day_window_and_tuple`): `q_w: 2026-03-05`, `[1] row v:w = 2026-03-05`. Plan: the day.
+- **Q1.8**: tuple `q_t: [a, a]`. Calendar `q3: calendar(weekends [sat, sun], added [2026-06-24])` (`p/q18`), unchanged; both interpreters agree with the plan.
+- **P36** (`L7_1_bare_zero_in_nested_if`): the same 34 lines on both before and after; the engine already built it.
+- **Q1.5** (`L8_2_held_once_per_row`): `held: rd[de] = 2026-01-02 (v), read for 2026-01-05 .. 2026-01-07, 2026-01-09 .. 2026-01-11`, keys apart. Plan: one line per row and keys.
+- **Q2.37** (`L8_4_none_names_its_read`): `ok[b] is none here: a condition` for `if`, `and`, `or`, `not`, and `st[b] is none here: a membership test`. Plan: `a condition`, `a membership test`, no article.
+- **N256.8, Q1.13**: `r[b] is none here: accrue`, `md_n is none here: round`, `n_n is none here: last_business`. Plan: the read's name and the built-in's.
+- **N256.6**: G3's, unchanged (`q_wn: 0.5`, `pinned: n = 0.5`).
+- **N256.12**: `q_dr: 0 /year` (a rate def's 0 in an untaken branch, `p/q216`). The same on both; no change.
+- **`z3`** (`m4/fixes/g2fix/q5_zero`): `refused: RUN-ZERO add_business(window(2026-03-02, 2026-03-04), 0, cal)`. The same on both, the plan's window form; no `unknown day:` line on either. A refusal carries no hole, so I read "its line kept" as nothing to add. No change.
+- **Q2.16, Q1.14, N245.3, N245.15, N245.18, N245.20**: refcore at pin 6 prints the old form. STOP-REPORT below; the engine is unchanged.
+
+**Probes** (`pair.sh`, every ask):
+- The same bytes on both:
+  - `critic/pct` (44 lines);
+  - `critic/pct2` and `planner/ex/pct3` with `explain if c then p else n` taken out (18 and 32 lines). As written they print `LOAD-RESERVED if is a keyword` on both;
+  - refcore's 8 W5 tests' texts. `L6_1`'s joint text is `LOAD-PIN` out of its folder on both;
+  - `p/q216`, `n2567`, `q18`, `days`, `ut_print`, `ut_none`;
+  - the 2.2.1 review's `hs/s1`, `day/d4`, `hs/h10`;
+  - `q5_zero`.
+- `p/nonesweep` (52 none-argument asks) differs only on forms that differ the same way against refcore before pin 6 (`ref0/`); listed in the STOP-REPORT.
+
+**What `check commit` shows red:** 435 ids. All of the 263 are still red, none gone, and **172 are new**, each in its change's class. The guard refuses `git checkout`, so I couldn't run `check commit` at each commit. I ran it at the head and sorted each new id by its first moved line (`bin/classify.py`; each line read, the `held:` ones checked by machine: the engine's merged line extends the stored line).
+
+**A, the declared-type printer (f06dd646), 2.** A tuple is now `[k2, j1]` where the store holds `(k2, j1)`:
+- `constructs/argm/t_tuple`
+- `paper/print__rows/c`
+
+No stored `%` or one-day-window answer moved in the gating stores.
+
+**B, the merge (d600b595), 82.** A `held:` line is now one line per row and keys:
+- `I:D:d11_pairs`, `I:M:RC-08`
+- `I:X:pit37@c1_fast`, `c2_fast`, `c3_fast`, `c4_fast`, `c6_fast`, `c7_fast`, `v3_fast`, `v4_fast`
+- `I:X:social_and_health@c2_fast`, `c7_fast`
+- `U:set/law/LAW-13/LAW-13`, `U:set/surf/SURF-04/SURF-04`, `U:surf/SURF-04/SURF-04`
+- `changes/run/` `b1`, `b2`, `b3`, `b4a`, `b4b`, `b6a`, `b6b`, `b7`, `c1`, `c2`, `c3`, `c4a`, `c4b`, `c6a`, `c6b`, `c7`
+- `fixes/g6/r1_register/` `b`, `r_min`, `r_sum`, `sv`, `sv_all`
+- `fixes/g9/`:
+  - `r_known_later_a_bal_late`, `r_known_later_a_low_late`, `r_known_later_k_at_known`, `r_known_later_k_low_mid`, `r_known_later_k_mid`
+  - `r_scen_more_s_early`, `r_scen_more_s_late`, `r_scen_more_s_mixed`
+  - `u_amount_q_back`, `u_amount_q_edge`, `u_amount_q_fwd`, `u_amount_q_min_low`, `u_amount_q_sum_bal`, `u_amount_q_sum_low`
+  - `u_place_q_back`, `u_place_q_fwd`, `u_place_q_min_low`, `u_place_q_sum_bal`, `u_place_q_sum_low`
+- `fixes/gate8/` `d512_hole_ans`, `k4_changed_after`, `m2_g6_kae`, `m2_g6_kin2`, `m2_g7_p1_cuts`, `m2_gate_b2`, `m3_uncertain_hole`, `p47_k4_changed_after`
+- `fixes/rv/g3_b3_uncertain_partial`
+- `goldens/` `g10_rent`, `g6_raise`, `g7_price_year`, `pins_business`, `pins_employment`, `pins_y22`, `r7_joint_2027`, `r7_joint_oki_2030`, `r7_oki_2030`, `r7_pins_2027`
+- `last/net_worth`, `operations/asks`
+- `paper/cal__register/` `a`, `e`, `i`
+- `r11/sum_first`
+- `spec/lawdate/` `g1-d-last`, `w-asks-count`
+
+**C, the words (bb34ce17), 88.** `a value is none here: <use>` (and `round`'s `x is none here: arithmetic`, P26's store) is now `<read> is none here: <a condition | a membership test | the built-in>`:
+- `constructs/logic/none_and`, `none_or`
+- `fixes/g1/a12_nonehole/q_acc`, `q_per`
+- `fixes/g1/b2_rates/q_fac_none`, `q_per_none`
+- `fixes/p12/accrue/`:
+  - `h_a__n_b`, `h_a__n_c`, `h_a__n_dc`, `h_a__n_p`, `h_a__n_r`
+  - `h_b__n_a`, `h_b__n_c`, `h_b__n_dc`, `h_b__n_p`, `h_b__n_r`
+  - `h_c__n_a`, `h_c__n_b`, `h_c__n_dc`, `h_c__n_p`, `h_c__n_r`
+  - `h_dc__n_a`, `h_dc__n_b`, `h_dc__n_c`, `h_dc__n_p`, `h_dc__n_r`
+  - `h_p__n_a`, `h_p__n_b`, `h_p__n_c`, `h_p__n_dc`, `h_p__n_r`
+  - `h_r__n_a`, `h_r__n_b`, `h_r__n_c`, `h_r__n_dc`, `h_r__n_p`
+  - `n_a__k_c`, `n_a__z_c`, `n_b__k_c`, `n_b__z_c`, `n_dc__k_c`, `n_dc__z_c`
+  - `n_p__k_c`, `n_p__m_r`, `n_p__z_c`, `n_r__k_c`, `n_r__z_c`
+- `fixes/p12/add_business/` `h_cal__n_d`, `h_cal__n_n`, `h_d__n_n`, `h_n__n_d`, `n_d__z_n`
+- `fixes/p12/dcf/` `h_a__n_b`, `h_b__n_a`, `h_dc__n_a`, `h_dc__n_b`
+- `fixes/p12/factor/` `h_n__n_r`, `h_r__n_n`
+- `fixes/p12/last_business/` `h_cal__n_mo`, `h_cal__n_n`, `h_mo__n_n`, `h_n__n_mo`
+- `fixes/p12/periodic/` `h_c__n_r`, `h_r__n_c`, `n_r__z_c`
+- `fixes/p12/round/` `h_step__n_mode`, `h_x__n_mode`
+- `fixes/p12/schedule/` `h_cal__n_e`, `h_cal__n_mo`, `h_e__n_mo`, `h_e__n_roll`, `h_mo__n_e`, `h_mo__n_roll`, `h_roll__n_e`, `h_roll__n_mo`
+- `fixes/t231g34/none_eq/q_in`
+- `items/none/` `q_and`, `q_if`, `q_member`, `q_not`
+- `spec/p12/schedule/h_cal__n_roll`
+- `spec/p26/items/none/q_round`
+- `spec/p26/p12/round/` `h_mode__n_step`, `h_mode__n_x`, `h_step__n_x`, `h_x__n_step`, `n_x__g_step`, `n_x__z_step`
+
+**None outside a class.** The red tests are T's runner targets alone: 76 of 1578. My 3 new unit tests pass.
+
+**Size** (`git diff --shortstat 06ab0eb7 HEAD -- engine/crates`): 10 files, +442 −78. The plan's R4 is 0.4 to 0.6 k with tests: 520 changed lines, within.
+
+| Commit | Lines (in, out) |
+|---|---|
+| A, the declared type | +89 −15 (tests about 62) |
+| B, the merge | +175 −29 (tests 49) |
+| C, the words | +175 −32 (tests 95) |
+| the fence's line | +3 −2 |
+
+- **Kernel files touched:** none. The changes are in `eval/rules.rs`, `ask/check.rs`, `model/value.rs`, `ask/register.rs`, `eval/builtin.rs`, `business.rs`, `rates.rs`, `dates.rs`, `expr.rs` and `tally-cli/tests/fork_oracle.rs`.
+- **Unit tests** (3 new, each holding refcore's bytes for its text):
+  - `ask/check.rs` `a_declared_item_prints_in_its_declared_type`;
+  - `ask/register.rs` `held_prints_once_per_row_and_keys_its_reads_in_runs`: days, months across a year, quarters, years apart, a band row, another form;
+  - `eval/builtin.rs` `none_is_refused_by_its_read_and_its_use`.
+- **Fences:** no fence module or twin edited. Fence suite `fork_oracle`'s `forks_on_prints_forks_off_and_refcore_on_its_own_reality` held the unmerged `held: rent …, read for 2026-07-01`; it now holds refcore's merged line. `check fences`: green, 1 step (50s).
+- **Exceptions:** +0. `exceptions --check`: 6; report-only 8, as before.
+- **Mutants:** none proved. Sites for T:
+  - `held_point`'s run test `last.checked_add(1) == Some(point.1)` and its kind test;
+  - the quarter's `1..=4`;
+  - `coerce_def`'s new arm, its `s != shown`;
+  - `window_text`'s `lo == hi`;
+  - `named_none`'s calls (each argument index).
+
+## STOP-REPORT 2026-11-25: R4's rows that refcore at pin 6 doesn't print, and RUN-NONE words where refcore and the landed row differ
+
+- **Kind:** other: the spec and refcore disagree (the brief: a STOP-REPORT, and go on).
+- **Where:** plan §5's table; L §2.4 Values (l.342), §8.4 `RUN-NONE`'s row (l.2363); refcore ffebad27. Writer notes W5, "Not done in refcore".
+- **Rule or gate:** R4; DONE gate 10.
+- **What happens:** the same bytes on both interpreters for each row below, against the plan's row. The engine is unchanged for each, so it keeps refcore's bytes:
+  - **Q2.16** (`p/q216` e_p): `explain p` of a `num %` input prints `[1] row v:p = 0.01`, and its head `e_p: 0.01`. The plan says `1 %` (a declared item in its type); refcore's explain prints `fmt_value` with no type.
+  - **Q1.14** (`p/q18` q2): `given h[*] = 2` prints `given: h = 2 (g)`. The plan and l.342 say `given h[*] = …` as written.
+  - **N245.3** (2.2.1 review `day/d4` fl1): `the amount of cash differs on 2026-03-09`. The plan says both days, merged as a list.
+  - **N245.20** (`hs/s1` bk against sm): `leg fee differs` from a balance, `the amount of fee differs` from a sum. The plan says one form, the leg's.
+  - **N245.18:** not probed. Refcore didn't build it (W5).
+  - **N245.15** (`p/n24515`): `dv + kn` (never + none) prints `never in arithmetic` on both; `none + never` has no form the checker loads (`int + date`, `date - date` are LOAD-UNIT).
+  - **Older differences**, the same against refcore before pin 6 (`p/nonesweep`, `ref0/`):
+    - `min(xn, x1)`: engine `xn is none here: ordering`, refcore `a value is none here: min`;
+    - `max`: the same, `max`;
+    - `abs(xn)`: engine `xn is none here: arithmetic`, refcore `a value is none here: abs`;
+    - `xn < x1`: engine `xn is none here: ordering`, refcore `… an ordering`;
+    - `sum`, `max` over a none term: engine `tn[b] is none here: aggregate`, refcore `a term of sum is none here`;
+    - `age_months`: engine names `age_months`, refcore `age`.
+    - The landed row ("the built-in's name; arithmetic, ordering, … aggregate", no article) reads `xn is none here: min` for the first two. Neither interpreter prints that.
+  - **A rate's arithmetic** (`critic/pct` q_r0, q_ifr): `r - r` prints `0 1/year` on both, where §5.18 prints a rate `0.076 /year`. A def of that value prints `0 /year` (`q216` q_dr).
+- **What I tried:** nothing in code for these. Any form the engine printed would differ from refcore and turn T's stores red outside the change's class.
+- **What I ask:** the writer's bytes in refcore for each, or each row withdrawn to "as both print". The engine follows at the next pin.
+- **State:** db7033f8 green on `check quick`; nothing uncommitted but this entry.
+
+**Usage:** about 0.6 % of the week by `engine/tools/usage tmp/spec-2.3.1/g5-ids.txt` before this entry.
+
+**Time:** about 32 minutes, 09:48 to 10:20. About 13 minutes of it were checks:
+- the release binary twice (4.5 min);
+- `check quick` three times (1.5);
+- `check commit` twice (3.5);
+- `check fences` once (1);
+- refcore runs (about 2).
+
+**Checks:**
+- `check commit: red at tests, stopped after 10 of 24 steps (86s)`, red only on the 435 ids above (76 of 1578 test targets, all T's);
+- `check fences: green, 1 step (50s)`;
+- `check quick`: below, after this entry's commit.
+
+**Waiting for T.**
+
+## 2026-11-25 tally 2.3.1 G2, the review's fixes on part 1 (issue #259)
+
+The ninth G2 brief: the five blocking findings of part 1's review (`tmp/spec-2.3.1/inputs/review-part1.md`, probes in `inputs/review/part1/`), ruled by the lead (P32). The fixes sit on G5's printer (f06dd646 to eba7acc1), whose printer and `held:` code I left alone. Each fix has its own commit and a unit test written first. Before each commit I swept the review's probes, the critic's and the earlier G2 reviews' (`tmp/spec-2.3.1/g2/p1/sw.sh`, value lines; `res6.sh`, every `residuals` ask whole, against pin 6). Every value line that moved is in its finding's class.
+
+- **Commits:**
+  - 40e0121b `fix(walk)` B2: a row stands in for a refused instance it names;
+  - cf01eb8c `fix(walk)` B3: a decision with a hole day a row names isn't booked;
+  - bf1f91f1 `fix(walk)` B5: flows for a period over a hole period is that hole;
+  - 40cafbae `fix(load)` B1: step 7's reach finds a fulfils field read however spelled;
+  - a4e3853d `fix(book)` B4: a row's instance is matched in every ledger it may touch;
+  - 7603f3cf `refactor(load)`: B1's sets by `is_disjoint`, for `check commit`'s exceptions step; no value moves.
+
+**Each finding, its mechanism and its probe's lines now:**
+
+- **B1** (`load/keyed.rs`, `load/strata.rs`). A bracketed `(o.fulfils)` base marks the reader, as the chain form does. A def keyed by a kind and read at a `.fulfils` key reaches through its reader, by E §3.1 step 5. It does so where that def reads a field of its key, itself or down the defs it passes its key to (`fulfils_keyed`, `key_fields`, `key_passes`). One that reads no field of its key loads.
+  - `m2_paren` and `m2_keyed`, with `m3_paren_val` and `m3_paren_val_false`, refuse every ask: `LOAD-READS rest reaches a running read or projection of topup without reads topup`, as `m1_mark` does.
+- **B2** (`walk/plan.rs`, `walk/order.rs`). A refused plan instance a row names is modelled, and so is a refused decision run with rows. Field reads keep the refusal.
+  - `x1_refused`: `c 790.00`, `fp -110.00`, `fr 210.00`, `fj 110.00`, `kt 2`, `st 110.00`, `fi bank[a1]` (PLN); `dy` and `e` print `RUN-DIV`.
+  - `x2_refused_dec`: `fr 210.00`, `kt 2`, `st 110.00`, `fi bank[a1]`.
+  - The same class moved `x/lf_whenref` `a` and `c`, `g2fix/b5_plan` `a1` and `c`, and `g2rest/t/q1_plan_k` `kb` and `kf`, each from `RUN-DIV` to a number.
+- **B3** (`walk/plan.rs`, `walk/agenda.rs`). A decision tuple with a hole day that a row names is modelled, not booked as a hole movement.
+  - `d3_holeday`: `b 0.00`, `sk 700.00`, `md 100.00`, `j2 200.00` PLN; `fk` and `bk` stay the hole.
+- **B5** (`walk/flows.rs`). Under `, for k`, each movement is kept with its period's hole: a row's named tuple's, a plan instance's or a run's. An entry of one makes `flows` that hole.
+  - `f2_for_hole` and `f2_for_hole_nolink`: `ff`, `ffw` and `ffp` print `?"which period is february's rent for?" (per[2026-02])`.
+- **B4** (`book/ledger.rs`). The ledger of x takes an instance, plan or decision, that touches x or that a row at x fulfils. The instance must be on a covered day or fulfilled by any row. Every row that fulfils it is on its line, with no flow into x where the row touches none. A hole day is the last such row's.
+  - `r1_notouch_known_cov` `rs` matches `rent[2026-01]` on 2026-01-05 and `rent[2026-02]` on 2026-02-05: model −100.00, observed 0.00, difference 100.00 PLN. Its `rs2` prints model 0.00, observed −110.00 and −120.00 PLN.
+  - `r1_notouch_known` prints the same lines.
+  - In `r1_notouch_ledger` and `h1_hole_notouch` `rs`, the hole-day instance is matched on 2026-01-07, no longer under `?`.
+
+**Lines that moved away from pin 6, by finding.** Refcore at ffebad27 prints the old line on each of these, so each is the writer's (W9):
+
+- **B1:** the four texts above, which pin 6 loads.
+- **B2:** the `x1_refused` and `x2_refused_dec` (and `_late`) lines above, and the class's `lf_whenref`, `b5_plan` and `q1_plan_k` lines.
+- **B3:** the `d3_holeday` lines.
+- **B5:** `f2_for_hole` and `f2_for_hole_nolink`, where pin 6 prints 0.00 and −100.00 and counts the row in every period (N3).
+- **B4:** the `residuals` lines above, and five more ledgers:
+  - `d2_three` and `d1_point` `rs` add `matched topup[2026-02]` (an uncovered day a row fulfils);
+  - `d1_point_bad` `rs` adds model 0.00, observed 400.00 PLN;
+  - `x/nb3_at` `q_led` adds `matched sw[2026-03]` (model 0.00, observed −10.00 PLN);
+  - `u1_unc_notouch` `rs` adds `partly fulfilled refund[2026-01]` (observed 0.00 of 300.00 PLN at pot; an uncertain kind's observations there sum to less);
+  - `x2_refused_dec` and `x2_refused_dec_late` `rs` refuse `RUN-DIV`: the run a row fulfils is now on the ledger, and its amounts are its refusal, as the plan twin `x1_refused`'s `rs` was before this turn. B2's statement lists no ledger read; this is for the fix review.
+- **Not B4:** `s1_same_differ` `rv`'s `?` line differs from pin 6 as before. It is the refused `same` pair, N2, which goes to #260. B4 adds rows to `last_fulfilled` and doesn't make a `?` line.
+
+**What `check commit` shows red:** 443 ids (`tmp/spec-2.3.1/g2/red-p1c.txt`, from `tests-p1c.log`). They are all of G5's 435, none gone, and **8 new**, each in its finding's class:
+
+- **B2 (6):** each from a refusal to the row's value:
+  - `fixes/gate8/linkdiv` (`q_fl` 12.00 PLN);
+  - `fixes/t231rv2/b3_whenref_az/f` (400.00 PLN) and `/iof` (its source is now the row, `bank[r1]`);
+  - `fixes/t231rv2/b5_plan/a1` and `/c`;
+  - `fixes/t231rv2/b6_row/f`: topup's existence, refused through pay's read of a none row, now stands in by `bank[r1]`, 400.00 PLN.
+- **B4 (2):** `fixes/gate8/m2_g4_p_both_konto` and `_amt` gain the line of an instance a row fulfils (`move save`).
+- **The other lists:** of my 99 (`red-e.txt`), 68 are in the 435 and still red, and 31 were already green before G5's entry. Of G3's 111 (`g3/red-fix.txt`), 71 and 40. Nothing in either list changed this turn.
+
+**Lines out and in:** +448 −47 in `engine/crates` over 9 files:
+- B2 +45 −4;
+- B3 +43 −4;
+- B5 +85 −16;
+- B1 +136 −2;
+- B4 +143 −25;
+- the refactor +2 −2.
+
+**STOP-REPORTs:** none new. G5's (R4's rows) stays open.
+
+**Exceptions:** delta 0. I restructured the two report-only flags (`long-chain-review` in `ledger.rs`, `nested-closure-review` in `strata.rs`) and wrote no exception.
+
+**Mutants:** none run.
+
+**Usage:** about 5.53 % of the week by `engine/tools/usage tmp/spec-2.3.1/g2-ids.txt` before this entry, about 1.1 points this turn.
+
+**Checks:**
+- `check commit: red at tests, stopped after 10 of 24 steps (147s)`, red only on the 443 ids above (76 of 1583 test targets, all T's);
+- `check quick`: green at each fix's commit; the last run follows this entry's commit.
+
+**Next:** the fix review of this G2 fix. The writer's W9 takes B1 to B5 into refcore with G5's rows, N1 and N3 among them.
+
+## 2026-11-25 tally 2.3.1 G2, the last fix: statement F (issue #259)
+
+The tenth and last G2 brief: statement F (rulings 23, P34), after the part-1 fix review (`tmp/spec-2.3.1/inputs/review-part1fix.md`, probes in `inputs/review/part1fix/`). "An instance's own state reaches only reads of the instance; a row that fulfils it reads only the instance's name and its `for`." It sits on the lead's merge of T's re-run on pin 6 (8d45e4e1). Built from the statement, not refcore: pin 7 is being mended beside this. Before each commit I swept `part1fix/` (with `b2_sc/`), `part1/`, the critic's and the earlier G2 reviews' probes (`g2/p1/sw2.sh`, value lines; `res7.sh`, every `residuals` ask whole). Every moved line is in its clause's class below.
+
+**Commits, a clause each, one mechanism each:**
+- 76fe1d0a `fix(walk)` (c): `unbooked`, the after-run count, reads the period's hole from the same `, for k` set as the log's entries (`hole_of`).
+- 4afab399 `fix(load)` (d): one set, `linked_moves`, gives the moves a move's rows name, for the mark and for `reads`. The keyed reach goes by key position (`fulfils_keyed`, `key_fields`, `key_passes` carry positions).
+- 7281c6ba `fix(book)` (a): one reading, `cell_of`, of the existence cell, a hole or a refusal, for `m[k] == none` (`existence_cell`, now every move and the hole) and for field reads (`mv_field`).
+- 3e8c545f `fix(walk)` (b): a dayless instance (a hole day or a refused one) that a row stands in for is one case each in the decision agenda (never booked) and in `flows` of a move (counted by its rows).
+- 6f2f596a `fix(book)` (a), the ledger: an instance's model at a place it touches is `cell_of`'s cell.
+
+**Each clause with its probes' lines now** (`part1fix/` unless named):
+
+- **(a) The reads of the instance:**
+  - N4: `e` is `refused: RUN-DIV` in `b2_dec_cov`, `b2_dec3`, `b2_dec3_norow`, `b3_refday`, `b3_refday_min` and `part1/x2_refused_dec`. It was `false`.
+  - N5: `b2_mix` and `b2_mix_noa2` `dy2`, `e2` print `?"feb divisor?" (dz[2026-02])`, and `part1/x3_hole_when` `dy`, `e` print `?"jan divisor?"`. They were a day and `false`. In `x3_hole_when` `rs`, the matched line's model is that hole.
+  - A refusal still refuses the ledger whole: `x1_refused`, `x2_refused_dec`, `b2_mix` `rs`.
+- **(b) Readers of a row:**
+  - `b3_refday_min`: `c 790.00`, `fp -110.00`, `f 110.00`, `kt 1`; `e` and `dy` refuse `RUN-DIV`.
+  - `b3_refday_plan`: `f 110.00`.
+  - `b3_refday`: `sk 700.00`, `md 100.00`, `f 400.00`, `b 0.00`, `j2 200.00`, as `d3_holeday` prints.
+- **(c) The row's period:** `b5_poste` `fa`, `fb` and `fc` print `?"which period is may's rent for?" (per[2026-05])`. They were −200.00, −200.00 and −100.00. `fw`, whose span leaves May out, stays −100.00.
+- **(d) Step 7 and `reads`:**
+  - `b1_two_row`: `g 0.00`, `b 470.00`, `f 400.00` PLN, refcore's; `b1_two_inst` stays `LOAD-READS`.
+  - `b1_reads`, `b1_reads_plain`, `b1_reads_paren`, `b1_reads_pass` load. At run, `g`, `b`, `f` refuse `RUN-ORDER decisions rest and topup read each other`: topup's `when` reads `bal(konto)`, which rest moves, on the same day. That is the order refusal for two decisions that read each other, outside F's clause, so I record it for the lead's probes.
+
+**Lines that moved beyond F's named probes, each in a clause's class:**
+- **(a), `none == m[k]`:** a row whose `fulfils` is none, compared with `m[k]`, reads the instance's existence. This is rulings 16 Q3's refusal, now for holes and decisions too.
+  - `x/dl_whenref`, `g2fix/b3_whenref_az` and `g2rest/t/dl_whenref_k` `ful`: `RUN-DIV`.
+  - `g2rest/t/q1_plan` and `q1_plan_k` `s0`, `ks0`: the hole `?"mar dz"`.
+  - `x/dl_chk5` `ful` and `cyc_link` `eq` print `RUN-ORDER`: topup's main-walk run is refused there.
+- **(a), a hole existence:** `x/dl_limhole` `dy` and `ful`; `g2rest/t/c_order` `e7` and `hd_false_nowhere` `e`, whose existence is the day's hole; `b2_mix_noa2` `fi`, whose `ties by t.day` reads the day of an instance with a hole existence that no row names.
+- **(b):** `g2rest/t/c_order` `f1`, `f2`, `f3`, `f6`, `f7` and `hd_false` `f` print 100.00 PLN, where a named instance refused on a hole day refused every span.
+
+**What `check commit` shows red:** 144 ids (`tmp/spec-2.3.1/g2/red-f.txt`, from `tests-f.log`). Against the 443: 387 are gone and 56 still red, and 88 aren't in the 443. Since that list, the lead merged T's re-run on pin 6 (0ac4c5cd: 820 new vectors, the stores re-run on refcore at ffebad27), so I sort the 144 by T's re-run as well:
+
+- **41 are on T's `Logged-Red:` list** and still red. They are F's classes and T's held ones:
+  - F's classes: `t231rv3` `c_order` `f*`, `wr_dh_*` and `wt_dh_nr` `f`/`fj`, `dl_whenref_k`, `hd_false/f`, `cyc_link_runwhen/eq`;
+  - the `unfulfilled: topup[2026-01]` and `pinned:` listing lines of `q5_*_500/dy` and `p15_*`;
+  - `t231p1/d1_point` and `d1_point_bad` `rs` (B4);
+  - and `t23-g1/ledger-*`, `items/g5/q_dot`, `t221-gd/208-4-count`, `g6cfix/x1b_when/n`, `gate8/m2_g6_kbs2`.
+- **51 are in the 443 and not logged**, each in its earlier class:
+  - last turn's B2/B4 ids: `linkdiv`, `b3_whenref_az`, `b5_plan`, `b6_row`, `m2_g4_p_both_konto*`;
+  - card listing order (`g11`, `gate8/m2_g2_f18*`, `r7/t_f18`, `later/inputs_of_balance`);
+  - the `LOAD-KEY` words (`g2fix/p5_b4`, `p7_yk_out`, `r3_y4_*`);
+  - `t231g2/selfread`'s `RUN-CYCLE`;
+  - `f10_two_day_parts`, not built;
+  - the `g12` `unfulfilled:` listings;
+  - `c4_when`'s explain listing (`edw`, `epo`, `en…`, `qn…`; #261);
+  - and the rest of G5's classes.
+- **52 are in neither:** new vectors T stored at pin 6 that turn red here.
+  - 50 are F's: (a) `t231rv3/wh_*` and `wt_*` `d` and `e` (holes), `c_order/e7`, `hd_false_nowhere/e`, `q1_plan*` `s0`/`ks0`, `q5_same_k_nowhen/ful`; (b) `wr_*` and `w*_nr` `b`/`f`/`k`, `q1_plan_k` `kb`/`kf` (the row's values where a refused `where` or key refused them).
+  - 2 are `p40/c4_when` `ept` and `epf`, listing-only (`ept: 0.00 PLN` as stored). The engine lists `row v:d5` and `v:ok[2026-02]` under the pins, as `c4_when`'s held rows `en`, `ez` and `ed` do (#261). I didn't find which clause moved them.
+
+**Lines out and in:** +335 −66 in `engine/crates` over 11 files:
+- (c) +32 −2;
+- (d) +98 −37;
+- (a) +90 −18;
+- (b) +64 −7;
+- (a)'s ledger +52 −3.
+
+**STOP-REPORTs:** none new. G5's (R4's rows) stays open.
+
+**Exceptions:** delta 0 (`check commit`'s exceptions step green).
+
+**Mutants:** none run.
+
+**Usage:** about 5.91 % of the week by `engine/tools/usage tmp/spec-2.3.1/g2-ids.txt` before this entry, about 0.35 points this turn.
+
+**Checks:**
+- `check commit: red at tests, stopped after 10 of 24 steps (113s)`, red only on the 144 ids above (29 of 1594 test targets, all T's);
+- `check quick`: green at each commit; the last run follows this entry's commit.
+
+**Next:** the lead's own probes of statement F against refcore at pin 7 and the spec. This is G2's last fix.
+
+## 2026-11-25 tally 2.3.1 G5, the second turn: the landed text where refcore lagged (issue #259)
+
+G5's STOP-REPORT was ruled (pick P31): the text is clear and refcore was wrong. W9 mended refcore, and pin 7 is in the build (cbc06772). This turn builds the five rows to pin 7's bytes, each its own commit, a unit test first.
+
+**Commits:**
+
+| Commit | Row | Lines (in, out) |
+|---|---|---|
+| 4a77e092 `fix(ask): explain prints a declared num % row and head in its type` | Q2.16 | +83 −4 |
+| 147a4bc6 `fix(load): a row's keys print as written, a written * kept` | Q1.14 | +60 −20 |
+| c97116af `fix(eval): RUN-NONE names min, max, abs, age and an aggregate's term` | l.2366's row, the rest | +50 −13 |
+| 8a5beb06 `fix(book): HOLE-SAME names the leg, its days and each row once` | N245.3, N245.20, N245.18 | +220 −30 |
+| — | a rate's zero | none: `r - r` already prints `0 /year`, as refcore's L8_4 case |
+
+**Each row's probe line against refcore pin 7's** (W9's cases split in `tmp/spec-2.3.1/g5/t7/`; `pair.sh`, the same bytes):
+- **Q2.16:** `L8_4_none_words_and_rate_zero` `e_p`: `e_p: 1 %`, its row `[1] row v:p = 1 %`.
+- **Q1.14:** `L5_11_given_star_as_written`: `row v1:paint[*]`.
+- **RUN-NONE:** `L8_4` `xn is none here: min` / `max` / `abs`; `dn is none here: age_months`; `tn[b] is none here: sum`; `xn is none here: ordering`.
+- **N245.3:** `L8_1_same_days_merged` `fs`, `ob`: `leg cash differs on 2026-01-07, 2026-01-08`.
+- **N245.20:** `L8_1_same_one_form_per_leg` `b`, `fl`, `ob`, `sf`: `leg fee differs on 2026-01-07`.
+- **N245.18:** `L8_1_same_leg_names_differ` `b`, `fl`: two questions on konto, `100.00 PLN (bank[a1]) and 110.00 PLN (card[b1])` and `2.00 PLN (bank[a1]) and 3.00 PLN (card[b1])`; `c2` one question on karta.
+
+**N245.18's code:**
+- `same_end` looks for a same-named leg among all of the other member's legs, as refcore's `consol` does.
+- Where the other member has none, it takes that member's k-th leg at the place, where k is the mover's leg's position among its own legs there (`at_place`).
+- `touching` now takes the chosen legs.
+- A mover's leg with no end at its own place is `ENGINE-INVARIANT`. No vector reaches it.
+
+**The sweep** (every text under `tmp/spec-2.3.1/inputs/`, the engine before and after each commit, every moved text against refcore at pin 7):
+- Q2.16 and Q1.14: 5 texts moved.
+- RUN-NONE: 13 texts moved.
+- `same`: 37 texts moved.
+
+Every moved line moves to refcore's bytes, except where the text differed before and still differs:
+- **`m4/review/g6c/p/p07_same`:** refcore refuses there with `ENGINE-INVARIANT a booked plan amount changed …`. The engine's line only took the form `leg cash differs`.
+- **`spec-2.2.1/review/g3/agent/day/d5`:** refcore prints a hole day as Python's `Hole([('d1?', 'd1')])`. The engine prints `?"d1?" (d1)`, as before. Only the form `leg cash` moved.
+
+**Differences that were there before and haven't moved** (already listed in the first turn):
+- `i01_none_age` `g3`: the engine prints `never in age_months` where refcore prints `never in age`;
+- `m_misc` `r14`: the engine prints `never and never compared` where refcore prints `never`;
+- `g01_pins` and `b6_keyed`: REFCORE-NOT-YET (Q2.5).
+
+**Unit tests:**
+- `ask/explain.rs` `a_declared_items_head_and_rows_print_in_its_type`;
+- `model/key.rs` `a_written_star_prints_as_written`;
+- `eval/builtin.rs` `none_is_refused_by_its_read_and_its_use`, extended to `min`, `max`, `abs`, `age_months`, `sum` and the ordering;
+- `book/same_booking.rs` `sides_whose_leg_names_differ_pair_their_legs_by_order` (sm18) and `an_amount_that_differs_names_the_leg_and_both_days` (s1_same cut down; refcore gives the same line).
+
+**The builder's integration tests moved to pin 7's forms:**
+- `read_cases.rs`: `row v1:paint[*]`;
+- `load_cases.rs`: `overlap at [q1, *] and [*, t1]`;
+- `group4_cases.rs` s6: `leg cash differs`.
+
+**`check commit`'s red ids** (`tmp/spec-2.3.1/g5/red-F.txt`, 191, from `tests-F.log`):
+- G2's way of counting: `red.py` leaves out the two CLI usage ids `fixture/base/no-path` and `run/ask-empty`. They are red in G2's `tests-f.log` too, and nothing under `tally-cli/src` or `tests/m3` changed since.
+- **The 144 of G2's last entry:** all still red, none gone.
+- **47 new** (`new-F47-by-cause.txt`). Each is a stored answer of T's on refcore before pin 7, and each red line is the form W9 mended. Sample checks against pin 7 match the engine byte for byte: `q_arith2`, `q_abs`, `q_min`, `q_sum`, and the sweep's `p_both_konto_amt`, `paper-probes/agg__same` and `fx__same`.
+
+The 47 by cause:
+- **A row's written `*` (Q1.14), 19:**
+  - `fixes/g11/` `ai2_m_with_ai2_infl8_e_known`, `_lawed`, `_rent_s`, `_shift`
+  - `fixes/g12/` `pm6_` and `pm9_`: `remeasure_hole_legs`, `remeasure_hole_when`, `remeasure_refused`, `remeasure_refused_booking`, `remeasure_refused_leg_hole_when`, `remeasure_refused_when` (each `_<name>_<name>`)
+  - `r7/` `p45_fanout_pin_both_lines`, `p45_fanout_pin_one_line`, `t_f4_views`
+- **`HOLE-SAME` in the leg's form, both days (N245.3, N245.20), 24:**
+  - `fixes/g4/adj_amt`
+  - `fixes/gate8/` `m2_d512_day_rows`, `m2_d512_link_same`, `m2_d512_two_groups`, `m2_g4_b3_onefulfils`, `m2_g4_g3_amt`, `m2_g4_l_s_amt`, `m2_g4_s_amt`, `m2_g4_s_day`, `m2_rt_l5_19_same_rows_disagree_flows_hole`, `m2_rt_l5_19_same_rows_one_fulfils_hole`
+  - `fixes/t231g1/same2/dy`
+  - `paper/agg__same/` `b`, `c`; `paper/fx__same/` `b`, `c`
+  - `records/same-differs`
+  - `s6/hole_same_order_class`
+  - `t221-g2/` `219-2-warn-legs`, `mut-same-member-third-row`, `rv2-b2-same-register`, `rv2-n4-flows-same`, `rv2f-f7-membership`
+  - `t221-g3/p45-same-day-names`
+- **`RUN-NONE`'s built-in names (l.2366's row), 4:**
+  - `spec/p26/g1/a12_nonehole/q_arith2`: `a value is none here: max`, a hole beside the none;
+  - `spec/p26/items/none/` `q_abs`, `q_min`, `q_sum`.
+- **Outside these classes:** none.
+- **The red tests:** 43 of 1598, all in `tally-runner` (T's).
+
+**For T:** the 47 above re-run on pin 7.
+
+**Size** (`git diff --shortstat cbc06772 HEAD -- engine/crates`): 16 files, +413 −67.
+
+**Fences:** no fence module or twin edited. The fences' suites are green inside `check commit`'s tests step.
+
+**STOP-REPORTs:** none new. G5's (R4's rows) is answered by pick P31 and this turn.
+
+**Exceptions:** delta 0. `exceptions --check`: 6, report-only 8, as before. I restructured three report-only flags in `same_booking.rs` as I wrote it, and wrote no exception:
+- a nested closure;
+- a named lifetime;
+- a silent default `unwrap_or(0)`, now the invariant.
+
+**Mutants:** none proved. Sites for T:
+- `same_end`'s `k` and its `skip(k).take(1)`;
+- `at_place`'s `from || to`;
+- `sides_differ`'s empty-days fallback;
+- `written_pattern_text`'s `parts.len() > written`;
+- `extreme`'s `none_at` beside a hole.
+
+**Usage:** about 1.25 % of the week by `engine/tools/usage tmp/spec-2.3.1/g5-ids.txt` before this entry, about 0.15 points this turn past the first turn's 1.10.
+
+**Checks:**
+- `check commit: red at tests, stopped after 10 of 24 steps (152s)`, red only on T's stored answers: the 191 ids above (43 of 1598 test targets, all T's);
+- `check quick: green, 11 steps (45s)` at 8a5beb06's tree;
+- `check step release-binary: green, 1 step (100s)`;
+- the last `check quick` follows this entry's commit.
+
+**Next:** T's re-run of the 47 on pin 7, then G5's review.
+
+## 2026-11-25 tally 2.3.1 G3, the last fix: statement G (issue #259)
+
+The builder's turn on statement G (`inputs/rulings.md` item 24, pick P37): the fix review's BF1 and BF2 (`inputs/review-g3fix.md`) and its note 2. The range is 48d6aa2d..ab3b9173. Before each commit I swept every probe text of G3's two reviews (`review/g3/{min,p}`, `review/g3fix/*/`, 521 texts) against refcore at the branch's pin, copied to `tmp/spec-2.3.1/g3/g/ref/`, and against the base. Every moved line is G's. I left links, the printer and pins 6 and 7's forms alone.
+
+**Commits** (none pushed):
+- d9f33cd2 `fix(load): a pin is read by its target's row reader` (BF1, BF2)
+- ab3b9173 `fix(load): a year reached through an if's arms in a rule is a date` (note 2)
+
+**The one path.** `set_pin` now has one path, `pin_value`. It replaces `pin_key`, `pin_literal`'s use there, `row_refusal` and the literal half of `typed_pin`:
+- A pin whose every leaf, through brackets, a sign and both arms of an `if`, is a figure (or a date, month or quarter with no sign over it) is read by `eval::convert`, load's own row reader. This is `eval::pin_row`. Each literal is read at the target's type and index in the text's order, and each `if`'s condition is typed as `conditional` types it.
+- The run (`row_pinned`) takes the arm the conditions pick and reads it by the same reader. A hole condition reads both arms, as `e_if` does.
+- Any other value is typed and assigned as before.
+- Left out of the row path, as refcore's `pin_row` leaves them: a record, a distribution, an undeclared type, and a unit keyed by `$v`, whose row needs its keys' units.
+- `pin_literal` stays only for sample pins and `exact.rs`.
+- A fraction pinned is now read as its row (P22 N3). Refcore at the pin agrees: `1/2` on money is `LOAD-PRECISION 1/2 terminates; write it as a decimal`. Our own `tests/load_cases.rs` pin-fraction case moved to that line.
+- A date literal pinned in a rule is now read as its row, with no date rule, as in refcore's `pin_row`. No probe moved by it.
+
+**Each probe's line now** (`g3/g/out/g2/`):
+- **Off-grid, LOAD-KEY:**
+  - `b4c/b4_h5`: `LOAD-KEY 2026-08 is not a key of qs (b4_h5.tally:31)`, refcore's (was `h5: 3`).
+  - `b4c/b4_h4`: `LOAD-KEY 2026-08 is not a key of qs (…:31)` (was `h4: 3`); refcore still says RUN-KEY, the writer's to mend.
+  - `min/key_pin_paren`: `LOAD-KEY 2028 is not a key of ys (…:11)`, refcore's (was `k6: 2 028`).
+  - `n1b/n1_k3`: `LOAD-KEY -10 is not a key of tens (…:31)`, refcore's.
+  - `n1b/n1_k6` and `k7` are refcore's too.
+  - `b4c/b4_h7` (`yk = (if b then 2028 else 2029)`): `LOAD-KEY 2028 is not a key of ys`. Refcore prints `the pin of yk is year4, not a key of ys`. It is G's clause, but not among the writer's three, so it is for the writer.
+- **Wrong type, the row's words:**
+  - `min/n1_paren_int`: `LOAD-UNIT 2.5 is not an int (…:10)`;
+  - `min/n1_signed_int`: `LOAD-UNIT -2.5 is not an int`;
+  - `min/n1_year_pin`: `LOAD-KEY 2028 is not a key of ys (…:11)`;
+  - `n1/n1_p16`: `LOAD-UNIT a rate states its period: 5 (…:25)`;
+  - `n1/n1_p2` and `p3` are the same.
+  - All are refcore's bytes.
+- **On-grid, loads:**
+  - `b4c/b4_h8`: `h8: 29`, `pinned: yk = 2029` (was `RUN-KEY 2 029 is outside ys`).
+  - `b4/b4_f27`: `f27: 3`, `pinned: qk = 2026-07`, unchanged.
+  - Refcore refuses both, and the writer mends them.
+- **In a rule, LOAD-LITERAL:** `rule/r4`, `r7`, `r10`: `LOAD-LITERAL a date in a rule; make it a version (…:29)`, refcore's (were `z1: false`). `r8` already was. A year reached through brackets or arms beside a year key takes the date rule at the comparison's scope, as the bare one does through its year entry.
+- **Fractions:** `g3/p/r3f_f1`, `f2`, `f4` (`ratio = 1/3`) answer `1/3 (0.333333333333333)`, refcore's (were `LOAD-PARSE … only in rows`).
+- **Still different from refcore:** 19 texts (37 at the base):
+  - G's forms where refcore lags: `b4_h4`, `h7`, `h8`, `f27`, `b4c/b4__all`.
+  - The rest predate this turn: refcore's internal `tupitem` (`b1_a19`, `b1__all`, `b1__rev`, `b2_c10`, `b2__all`, `tup_t10`), N2 (`r3p_p16`), N4 (`mn_a4`), N5 (`mn_a12`, `b3_d23`), note 4 (`b4_f34`), N9's `(file:line)` (`r5e_e18`, `r5g_g5`) and #261 (`q26`).
+
+**`check commit`'s red ids** (`tmp/spec-2.3.1/g3/g/red-G.txt`, from `tests.log`; counted as G5's last entry counts, the two CLI usage ids left out): 186.
+- The last entry's 191, less 5 now green, all G's: `m4/fixes/g2fix/p5_b4`, `p7_yk_out`, `r3_y4_dk`, `r3_y4_mk` and `m1/fixes/g13/r_s_model_with_r_s_k20`. T's stores held the row's words (`2040 is not a key of ys`, `3.00 USD and money PLN have different units`), which the engine now prints.
+- None new. The red tests are T's stored answers alone: 41 of 1601 targets, all in `tally-runner`. The 3 new unit tests and our own `load_cases` pass.
+
+**Size** (`git diff --shortstat 48d6aa2d HEAD -- engine/crates`): 7 files, +358 −122.
+
+| Commit | Lines (in, out) |
+|---|---|
+| d9f33cd2 | +333 −122 (tests 110) |
+| ab3b9173 | +25 −0 (tests 20) |
+
+- **Kernel files touched:** none. The changes are in `load/pins.rs`, `load/compare.rs`, `eval/convert.rs`, `eval/pins.rs`, `eval/expr.rs` (`choice_unknown` shared) and `lib.rs`.
+- **Unit tests** (3 new):
+  - `eval/pins.rs` `a_pin_is_refused_as_its_row_through_brackets_signs_and_arms` (8 pins) and `an_on_grid_arm_pinned_is_its_key`;
+  - `load/compare.rs` `a_year_reached_through_brackets_or_arms_in_a_rule_is_a_date`.
+- **Fences:** no edit to a fence or its twin.
+- **Exceptions:** +0. `exceptions --check`: 6; report-only hits 8.
+- **Mutants:** none proved. Sites for T:
+  - `pin_row`'s `dated && !signed` and its type exclusions;
+  - `row_pin`'s `negative` flip;
+  - `pin_condition`'s agreeing arms;
+  - `period_literal`'s year rule.
+- **STOP-REPORTs:** none new.
+- **For the writer** (refcore at the branch's pin, beside its three lines of G): `b4_h7`'s off-grid arm, which G makes `LOAD-KEY 2028 is not a key of ys`.
+- **check quick:** green, 11 steps.
+- **check commit:** red at tests, stopped after 10 of 24 steps (113 s), red only on T's stored answers: the 186 ids above.
+
+## 2026-11-25 tally 2.3.1 G5, the review's fixes: the last fix (issue #259)
+
+The review of G5's two turns found 2 blocking issues and left four of R4's rows half built. The lead ruled them (pick P42, rulings 25). Refcore prints the same wrong lines on every one of these forms, so the bytes below follow L §8.4, L §2.4 l.342 and rulings 25, not refcore. Five items are built and one is handed off.
+
+**Commits:**
+
+| Commit | Items | Lines (in, out) |
+|---|---|---|
+| 31bfbbfd `fix(eval): RUN-NONE names the read beside a hole, in dates and keys` | 1 (B1), 4 (note 2, N256.8), 6 (note 6) | +60 −26 |
+| e30d8200 `fix(ask): a check's % side prints in its type beside a hole too` | 3 (note 1, N256.7) | +64 −12 |
+| cea88537 `fix(book): same legs pair by name, then order; one left alone is a hole` | 2 (B2, note 5, rulings 25) | +187 −25 |
+
+Items 1, 4 and 6 share one commit, against the brief's one commit an item: they share one unit test (`NONE_WORDS`) and one helper.
+
+**Each item's probe line now** (the review's `p/` texts, the release binary at cea88537's code):
+- **1, B1:** `b1_min` `a: refused: RUN-NONE xn is none here: min`. `max(pn, ph)` gives `pn is none here: max`, `q_arith2`'s form.
+- **2, B2 and note 5:**
+  - `same_fewer` `b` and `fl`: `?"bank[a1] and card[b1] are one, but leg fee differs on 2026-01-07: 2.00 PLN (bank[a1]) and none (card[b1])" (bank[a1], card[b1])`, not 898.00;
+  - `same_names`: `b: 898.00 PLN`, `fe: -102.00 PLN`, `ob: 2.00 PLN`, no question (cash pairs with cash, fee with charge);
+  - `same_plan` `b`: `?"p1 and p2 are one, but leg fee differs on 2026-03-05: 2.00 PLN (p1) and none (p2)" (p1, p2)`;
+  - sm18's two questions on konto and one on karta are unchanged (its unit test).
+- **3, note 1:**
+  - `b3_chk`: `c1: differs: p = 10 %, q = 30 %, difference -20 %` and `c2: p = 10 %, ph = ?"which?" (ph)`;
+  - `check2` `c2`: `xn + p = refused: RUN-NONE xn is none here: arithmetic, p = 10 %`; `c5`: `difference -10 %`.
+  - The comment that cited l.342 for a plain difference is mended.
+- **4, note 2:** `nonesw`: `s01 mn is none here: start_of`, `s05 kn … add_months`, `s07 dn … overlap_days`, `s10 xn … pow`, `s11 mn … day_of`, `s22 dn … window`. The same holds for `year_of`, `days_between`, `add_days`, `add_years`, `weekday` and `is_business`, all through `args_named`, ahead of a hole (E §8: a per-value refusal outranks a hole).
+- **6, note 6:** `t[kk]` with `kk` none gives `kk is none here: a key` (`given_key`; unit test `c_key`).
+- **5, note 3, not built (hand-off):**
+  - `pctyear` still prints `a1: 0.05 1/year` and `a2: 0 1/year`.
+  - The cause is at load: `num %/year` is declared `Ty::Num(1/year, Plain)`. Only a bare `%` gets `Shown::Percent` (`load/decls.rs` `is_percent`), so no printer can tell it from `num 1/year`.
+  - The fix is a type change:
+    - `is_percent` takes `%` among other terms;
+    - `expr.rs:1373`'s coercion (×1/100, unit one) keeps the unit;
+    - `ty.rs:217` prints `num %/year`;
+    - `typed_text` prints `%` in place of the unit's `1`.
+  - `pins.rs:749`, `calls.rs:978` and `arith.rs:249` match `Shown::Percent` at any unit and need a look.
+  - I left it out: it is past this turn's budget, and it is a note, not a blocking item.
+
+**For the lead and the writer (judged, not given):**
+- Rulings 25 gives no figure for the side with no partner leg. The engine prints `none` there (`… and none (card[b1])`): Tally's word for no value.
+- Its days are each side's: the paired legs' days and the unpaired row's own day.
+- The writer can mend refcore to the same bytes, or the lead can rule another word.
+
+**B2's code** (`book/same_booking.rs`):
+- `partner_at` pairs at the place: the leg of the same name there, else the k-th of the other side's legs whose names find no partner on either side, k being the mover's leg's place among its own.
+- `NotHere` (the other side has no leg at the place) books as before.
+- A missing partner is a disagreement only where the other side books the place (`touching`).
+- `unpaired_hole` names every side once, in id order.
+- The `ENGINE-INVARIANT` moved into `partner_at` and is still unreachable (the review traced all four callers).
+- The read path (`sides_differ`, by name over all legs) is unchanged: a row's own leg read stays that row's.
+
+**`check commit`'s red ids** (`tmp/spec-2.3.1/g5/red-H.txt`, 187, from `tests-H.log`, counted as before, the two CLI usage ids left out), against G3's last entry's 186 (`g3/g/red-G.txt`):
+- **None gone.**
+- **One new:** `fixes/p12/is_business/h_cal__n_d`. T's stored answer is refcore's `a value is none here: is_business`; the engine gives `d_n is none here: is_business` (N256.8, item 4).
+- **The 186:** unchanged, among them `q_arith2`, `q_abs`, `q_min` and `q_sum` from G5's earlier 47, now in the forms above.
+- **The red tests:** 42 of 1603, all in `tally-runner` (T's). My unit tests pass:
+  - `NONE_WORDS`, with 8 new asks;
+  - `a_declared_percent_side_prints_in_its_type_beside_a_hole_too`;
+  - `legs_pair_by_name_then_order_and_a_leg_left_alone_is_a_hole`.
+
+**For T:** the stored answers of these rows re-run once the writer has mended refcore to P42 (W13).
+
+**Size** (`git diff --shortstat fdcebe97 HEAD -- engine/crates`): 7 files, +311 −63.
+
+**Fences:** no fence module or twin edited.
+
+**STOP-REPORTs:** none. The `none` figure above is a judgement, flagged for the lead, not a stop.
+
+**Exceptions:** delta 0. `exceptions --check`: 6, report-only 8.
+
+**Mutants:** none proved. Sites for T:
+- `partner_at`'s name match, `my_free` and `their_free`, and `get(k)`;
+- `same_end`'s `touching(...).is_empty()` guard on an unpaired side;
+- `args_named`'s loop;
+- `extreme`'s `none` ahead of a hole;
+- `given_key`'s none.
+
+**Usage:** about 1.52 % of the week by `engine/tools/usage tmp/spec-2.3.1/g5-ids.txt` before this entry, about 0.23 points this turn.
+
+**Checks:**
+- `check commit: red at tests, stopped after 10 of 24 steps (118s)`, red only on T's stored answers: the 187 ids above (42 of 1603 test targets, all T's);
+- `check quick: green, 11 steps (57s)` at cea88537's tree;
+- `check step release-binary: green, 1 step (106s)`;
+- the last `check quick` follows this entry's commit.
+
+**Next:** the lead's probes of this fix (P39). Item 5 (`num %/year`) waits for the lead: a builder turn, or #260.
+
+## 2026-11-25 tally 2.3.1 G5, the round's last engine commits (issue #259)
+
+T's fifth re-run, on the eighth pin, is in the build (de4030b0). This turn takes T's last red ids that the engine owns. It is the round's last engine commit (R-77: it follows T's logged-red commit 8b2a4816).
+
+**Commits:**
+
+| Commit | Item | Lines (in, out) |
+|---|---|---|
+| b75de583 `fix(ask): a joint line keeps a written · inside its quoted texts` | 2, `q_dot` (Q2.34) | +39 −3 |
+| 59cce863 `fix(ask): a command with no path or no ask id is a usage error` | 3, S12's two CLI rows | +35 −17 |
+
+**Each item's line now:**
+
+1. **`fixes/g5/p6_unc`: not changed, a STOP-REPORT below.**
+   - The engine's `c1`, `count(x in promises over 2026-02) with uncertain`, lists `held: repay_dom = 1 (v), read for 2026-02-01`. Refcore at pin 8 also lists `held: owed[2026-02] = 500.00 PLN (v), read for 2026-02`.
+   - This is not the `held:` merge (`merged_held` merges what it is given). The engine never reads `owed[2026-02]` for a count.
+   - The id has been red all round: it is among G2's 144, my 191 and 187, and G3's 186.
+2. **`items/g5/q_dot`: green.** `a.q_dot: ?"the fee · as the bank states it" (fee)`.
+   - The cause: a joint model's lines turned every `·` into `.` (`api.rs` `joint_lines`, `Refusal::shown`). `·` is the members' internal separator, so a `·` the text writes went too.
+   - Now `base::dotted` turns it into `.` outside the line's quoted texts only. Names never hold a `·`, and every written text prints in quotes.
+3. **`fixture/base/no-path` and `run/ask-empty`: green.**
+   - `check` with no path, and `run … --ask` with no ask id, are usage errors: exit 2 with the usage text (O §2, "a missing operand").
+   - `reprint` and `run` with no path likewise.
+4. **Statement G's five** (`g13 k20` and the four `g2fix` rows): none is red at this tree. They are green on G3's last fix.
+
+**Unit tests:**
+- `base/refusal.rs` `a_written_middle_dot_prints_as_written`;
+- `tally-cli` `anything_else_is_a_usage_error`, with five missing-operand cases.
+
+**`check commit`'s red ids** (`tmp/spec-2.3.1/g5/red-J.txt`, 10), by holder:
+- **M5b (T holds), 6:** `fixes/t231rv2/f10_two_day_parts/` `b4`, `b6`, `b8`, `e8`, `k8`, `p6` (not implemented).
+- **#261 (T holds), 1:** `later/inputs_of_balance`, the listing-only line `card_2026:late` against the engine's `card_2026:opening[konto]`.
+  - `held.tsv` holds it under the target `m1_fixes`, but the vector runs in `m1_checks_g11`. For T: the hold's target.
+- **P42's forms, the writer's W13, 2:** refcore at pin 8 still prints the unnamed form, and the engine prints L §8.4's form:
+  - `fixes/g1/a12_nonehole/q_arith2`: `pn is none here: max`, against refcore's `a value is none here: max`;
+  - `fixes/p12/is_business/h_cal__n_d`: `d_n is none here: is_business`.
+- **The STOP-REPORT below, 1:** `fixes/g5/p6_unc`.
+- **None else.** The red tests are 6 runner targets, all T's.
+
+**The round's engine size** (`git diff --shortstat 25a5a63d..HEAD -- engine/crates`): 67 files, +6 681 −1 198.
+
+**Exceptions:**
+- Over the round: delta 0. `engine/EXCEPTIONS.lock` is unchanged since 25a5a63d; `exceptions --check` gives 6, report-only 8.
+- This turn: 0.
+
+**Fences:** none edited. **Mutants:** none run this round (P39). Sites for T:
+- `dotted`'s quote and escape states;
+- `parse`'s `paths.is_empty()`;
+- `run_line`'s `after_ask && asks.is_empty()`.
+
+**Usage:** about 1.75 % of the week by `engine/tools/usage tmp/spec-2.3.1/g5-ids.txt` before this entry, about 0.2 points this turn.
+
+**Checks:**
+- `check commit: red at tests, stopped after 10 of 24 steps (107s)`, red only on the 10 ids above;
+- `check quick: green` at 59cce863's tree;
+- the last `check quick` follows this entry's commit.
+
+**Next:** the round's close. The lead rules this STOP-REPORT, and T holds or re-stores `p6_unc` and the two P42 rows.
+
+## STOP-REPORT 2026-11-25: `fixes/g5/p6_unc`, an uncertain instance's amount that a count doesn't sum
+
+- **Smallest input:** `fixes/g5/p6_unc` (`tests/m2/vectors.refcore`). `move repay[m in months]: promises` (an `event uncertain` kind) `on day_of(m, repay_dom)`, `leg cash … amount owed[m]`, with `owed = 500.00 PLN` and `repay_dom = 1` from `version v`, `governs 2026..`. The ask is `c1: count(x in promises over 2026-02) with uncertain`, at cut 2026-01-01.
+- **The engine:** `c1: 1`, `uncertain: repay[2026-02]`, `held: repay_dom = 1 (v), read for 2026-02-01`.
+- **The test (refcore at pin 8):** the same, plus `held: owed[2026-02] = 500.00 PLN (v), read for 2026-02`.
+- **What I think is wrong: the test (refcore).**
+  - L §8.2 One read set (l.2251) says a read over movements holds, for each movement, "what decided whether it counts and how much: its existence …, the amounts it sums".
+  - A `count` sums no amount, and `repay`'s existence doesn't read `owed`. So `owed[2026-02]` is no read of `c1`.
+  - The engine's `member_reads` builds this as decided at tally 2.3.1 Q1.10, pick P16: "its amounts only where a field read sums them".
+  - With a field read that sums (`… where x.cash.amount > 0 PLN`, or `c4`'s `sum`), both interpreters print the `owed` line alike.
+  - The brief names R4's `held:` merge. The merge isn't involved: the engine never reads the row.
+- **What I tried:** the probe above, with and without the amount read; the `held:` merge code; the spec's row.
+- **What I did not do:** change the code. Listing the uncertain instance's full reads would contradict l.2251 and P16 for every count.
+
+**STOP-REPORTs open:** this one.

@@ -130,7 +130,7 @@ input|pay|cid, 2026-01|-|2026-03-01|none
 input|pay|cid, 2026-03|-|2026-03-01|hole pay at cid, 2026-03: no value for 2026-03 | pay[cid, 2026-03]
 input|born|ana|-|2026-03-01|row v1:born[ana]
 input|born|bob|-|2026-03-01|hole when was this person born? | born[bob]
-input|paint|red|-|2026-03-01|row v1:paint
+input|paint|red|-|2026-03-01|row v1:paint[*]
 input|paint|blue|-|2026-03-01|hole paint at blue: no value | paint[blue]
 input|fee||2026-06-01|2026-03-01|row v3:fee held
 input|fee||2026-02-01|2026-03-01|row v3:fee

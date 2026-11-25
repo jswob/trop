@@ -678,12 +678,15 @@ pub(super) fn req_clock(m: &Reality, ask: &Ask) -> Result<(), Stop> {
     if m.asks_alone.contains_key(&ask.id) {
         return Ok(());
     }
+    // a literal cut after on is `REQ-CLOCK` in every form, an `as if {known D}` in the line
+    // first (L §5.11 A pin is a row; tally 2.3.1 R3, N245.9)
+    let in_line = line_cuts(ask).into_iter().map(|e| ("known", e));
     let as_known = ask.known.iter().map(|e| ("as known", e));
     let with_known = ask.pins.iter().filter_map(|pin| match &pin.form {
         PinForm::Known(e) => Some(("with known", e)),
         PinForm::Law(_) | PinForm::Wording(..) | PinForm::Scenario(_) | PinForm::Set { .. } => None,
     });
-    for (what, written) in as_known.chain(with_known) {
+    for (what, written) in in_line.chain(as_known).chain(with_known) {
         // a literal in `( )` is that literal (E §11 `REQ-CLOCK`, S-233.8)
         let mut e = written;
         while let Expr::Paren(inner) = e {
@@ -703,6 +706,43 @@ pub(super) fn req_clock(m: &Reality, ask: &Ask) -> Result<(), Stop> {
         }
     }
     Ok(())
+}
+
+/// The cuts of the `as if {known D}` pins in ask `ask`'s line, its body's, its bindings', its
+/// clauses' and its pins' values, each `as if`'s before those it holds, in the text's order
+/// (refcore's `req_clock`, its walk). L §5.11 A pin is a row, E §11 `REQ-CLOCK`.
+fn line_cuts(ask: &Ask) -> Vec<&Expr> {
+    let mut work: Vec<&Expr> = match &ask.body {
+        AskBody::Exprs(exprs) => exprs.iter().collect(),
+        AskBody::Residuals(residuals) => vec![&residuals.place],
+        AskBody::Explain(e) | AskBody::InputsOf(e) | AskBody::ReadersOf(e) => vec![e],
+        AskBody::Check(a, b) => vec![a, b],
+        AskBody::Solve(solve) => vec![&solve.left, &solve.right, &solve.target],
+        AskBody::Diff(diff) => vec![&diff.expr],
+    };
+    for bind in &ask.binds {
+        work.extend(bind.on.iter().chain(bind.filter.iter()));
+    }
+    work.extend(ask.law.iter().chain(ask.known.iter()));
+    work.extend(ask.pins.iter().flat_map(pin_parts));
+    work.reverse();
+    let mut out = Vec::new();
+    while let Some(x) = work.pop() {
+        if let Expr::AsIf(_, pins) = x {
+            out.extend(pins.iter().filter_map(|pin| match &pin.form {
+                PinForm::Known(e) => Some(e),
+                PinForm::Law(_)
+                | PinForm::Wording(..)
+                | PinForm::Scenario(_)
+                | PinForm::Set { .. } => None,
+            }));
+        }
+        let mut next = crate::load::expr_children(x);
+        next.extend(extra_parts(x));
+        next.reverse();
+        work.extend(next);
+    }
+    out
 }
 
 /// The walk warnings an ask's engine met, each once, in the order met (refcore's

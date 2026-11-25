@@ -677,10 +677,11 @@ fn node_lines(
     let mut below = Vec::new();
     match &node.kind {
         TraceKind::Row => {
+            // a row prints in its item's declared type (L §2.4 Values; tally 2.3.1 R4, Q2.16)
             head.push(format!(
                 "{ind}[{no}] row {} = {}",
                 node.label,
-                value_text(m, node.value.as_ref())?
+                typed_value_text(m, node.value.as_ref())?
             ));
             head.extend(node.lines.iter().map(|l| format!("{ind}    {l}")));
         }
@@ -781,10 +782,22 @@ fn value_text(m: &Reality, item: Option<&Item>) -> Result<String, Stop> {
     }
 }
 
+/// A row's value as its derivation prints it, in its item's declared type: a `num %` row
+/// with its `%` (refcore's `fmt_value` with the row's `_t`); `?` where none came. L §2.4
+/// Values (tally 2.3.1 R4, Q2.16), E §10.
+fn typed_value_text(m: &Reality, item: Option<&Item>) -> Result<String, Stop> {
+    match item {
+        Some(Item::Value(v)) => v.typed_text(m).map_err(num_stop),
+        Some(item) => plain_text(m, item),
+        None => Ok("?".to_owned()),
+    }
+}
+
 /// A line's value as `explain` prints its head: under `partial` a hole in its linear form, as
-/// a value line prints it, the derivation below keeping the plain hole; else [`plain_text`]
-/// (refcore's `print_line`, `fmt_value` with the line's `partial`). L §5.18 Partial answers
-/// (tally 2.1.8 R15).
+/// a value line prints it, the derivation below keeping the plain hole; a value in the
+/// explained item's type; else [`plain_text`] (refcore's `print_line`, `fmt_value` with the
+/// line's `partial` and the ref's static type). L §5.18 Partial answers (tally 2.1.8 R15),
+/// §2.4 Values (tally 2.3.1 R4, Q2.16).
 ///
 /// # Errors
 ///
@@ -794,6 +807,11 @@ pub(super) fn head_text(m: &Reality, item: &Item) -> Result<String, Stop> {
         && let Some(text) = partial_text(m, h)?
     {
         return Ok(text);
+    }
+    // in the explained item's type, as a plain ask's line (L §2.4 Values; tally 2.3.1 R4,
+    // Q2.16)
+    if let Item::Value(v) = item {
+        return v.typed_text(m).map_err(num_stop);
     }
     plain_text(m, item)
 }
@@ -825,4 +843,65 @@ fn side_text(m: &Reality, item: &Item) -> Result<String, Stop> {
 /// An `ENGINE-INVARIANT` refusal: an explanation's own structure broke.
 pub(super) fn invariant(what: &str) -> Stop {
     Stop::Refused(Refusal::new(Code::EngineInvariant, what.to_owned()))
+}
+
+#[cfg(test)]
+mod tests {
+    use crate::api::{Asks, Files, Given, Request, run};
+
+    /// A declared `num %` input and a `num %` def built from a plain number.
+    const PCT: &str = r#"model explain_pct
+  tally 2
+  on 2026-06-30
+  start 2026-01-01
+  end 2026-12-31
+
+source s "invented"
+input p: num %
+input n: num
+
+def dp: num % = n
+
+ask e_p: explain p
+ask e_dp: explain dp
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  p = 1 % "s"
+  n = 0.1 "s"
+"#;
+
+    #[test]
+    fn a_declared_items_head_and_rows_print_in_its_type() {
+        // L §2.4 Values (tally 2.3.1 R4, Q2.16): the head in the explained item's type, a row
+        // in its item's declared type; a def's node as its value
+        let given = vec![Given {
+            path: "pct.tally".to_owned(),
+            bytes: Some(PCT.as_bytes().to_vec()),
+        }];
+        let lines = run(Files::new(given), &Request::new(Asks::Every))
+            .expect("an answer")
+            .lines()
+            .to_vec();
+        let provenance =
+            "version v, source s, \"invented\", locator \"s\", governs always, known 2026-01-01";
+        assert_eq!(
+            lines,
+            [
+                "e_dp: 10 %".to_owned(),
+                "  [1] dp = 0.1".to_owned(),
+                "      rule base: won".to_owned(),
+                "        [2] row v:n = 0.1".to_owned(),
+                format!("            {provenance}"),
+                "  cut 2026-06-30".to_owned(),
+                "e_p: 1 %".to_owned(),
+                "  [1] row v:p = 1 %".to_owned(),
+                format!("      {provenance}"),
+                "  cut 2026-06-30".to_owned(),
+            ],
+            "refcore's bytes"
+        );
+    }
 }

@@ -150,14 +150,26 @@ def m_residuals(self, place, span, by, ctx, unit=None):
     # the last day of the observations that fulfil each instance, in any span: a hole-day instance's day once an
     # observation fixes it (E §6.3 Grouping, L §5.19, in every ledger; tally 2.2.1 P37, N7; tally 2.3)
     ful_last = {}
-    for o in self.observations(octx):
+    # an instance an observation fulfils is a matched line on the instance's day, whatever places the row touches,
+    # its difference the whole amount at each place (E §6.3; tally 2.3.1 P32 B4): every row that fulfils it is on its
+    # line (no flow into x where it touches none), and a row at x brings in an instance that touches no x
+    ful_at = set()
+    ful_rows = {}
+    all_o = list(self.observations(octx))
+    sg0 = same_groups(m, octx)
+    by_id0 = dict((x.id, x) for x in all_o)
+    for o in all_o:
         f = o.fulfils
-        if isinstance(f, tuple) and f[0] == 'inst' and self_touch(o.legs, place):
+        if f is None and o.id in sg0:
+            f = next((by_id0[x].fulfils for x in sg0[o.id] if x in by_id0 and by_id0[x].fulfils is not None), None)
+        if isinstance(f, tuple) and f[0] == 'inst':
             tid = '%s[%s]' % (f[1], ', '.join(key_text(k) for k in f[2])) if f[2] else f[1]
             if isinstance(o.day, datetime.date):
                 ful_last[tid] = max(ful_last.get(tid, o.day), o.day)
-            if in_span(o.day):
-                ful_ids.add(tid)
+            ful_ids.add(tid)
+            ful_rows.setdefault(tid, []).append(o)
+            if self_touch(o.legs, place) and in_span(o.day):
+                ful_at.add(tid)
     def may_touch(i):
         # tally 2.1.7 R1, R2 (SR-1): a refused instance refuses the ledger exactly where a hole one would be a line of
         # it: a place its legs give, or any place where its legs' places couldn't be read (L §8.4)
@@ -170,7 +182,7 @@ def m_residuals(self, place, span, by, ctx, unit=None):
             st = self.status(i, ctx)
             if st in ('none', 'leftout'):
                 continue
-            touches = may_touch if st == 'refused' else (lambda j: self_touch(j.legs, place))
+            touches = may_touch if st == 'refused' else (lambda j: self_touch(j.legs, place) or j.id in ful_at)
             d = i.day
             # a refused instance whose day is refused may fall on any day, as a hole day's (tally 2.1.8 R11, #191 Q1)
             # a hole day an observation fulfils takes its last fulfilling observation's day, in every ledger, once
@@ -201,16 +213,25 @@ def m_residuals(self, place, span, by, ctx, unit=None):
                 raise i.err
             model.append(i)
     w = self.main_walk(ctx)
+    for mi in self.m.moves.values():
+        if not mi.decision:
+            continue
+        for i in self.decision_instances(mi, ctx):
+            if i.err is not None and day_lo(i.day) is None and i.id in ful_at:
+                # a refused instance a row at x fulfils, its day refused too: the refusal refuses the ledger whole
+                # (L §8.4; tally 2.3.1 P33, statement F (a))
+                raise i.err
     for iid in sorted(w.decs):
         run = w.decs[iid]
         dd = day_lo(run.day)
-        if dd is None or not in_span(dd) or not covered(dd):
+        if dd is None or not in_span(dd) or (not covered(dd) and iid not in ful_ids):
             continue
         if run.err is not None:
-            if may_touch(run):
+            # a refused existence a row names refuses its ledger line (tally 2.3.1 P33)
+            if may_touch(run) or iid in ful_at:
                 raise run.err
             continue
-        if not self_touch(run.legs, place):
+        if not self_touch(run.legs, place) and iid not in ful_at:
             continue
         model.append(run)
     model.sort(key=lambda i: (ful_last[i.id] if isinstance(i.day, Hole) else day_lo(i.day), i.order or ()))
@@ -297,6 +318,12 @@ def m_residuals(self, place, span, by, ctx, unit=None):
             by_adj.setdefault((iid, leg, vid), []).append(o)
             continue
         raise refuse('RUN-RECORD', 'observation %s fulfils %r' % (o.id, f))
+    in_obs = set(o.id for o in obs)
+    for tid, rows in ful_rows.items():
+        for o in rows:
+            if o.id not in in_obs and not self_touch(o.legs, place):
+                # a row that touches no x: on its instance's line, with no flow into x (E §6.3; P32 B4)
+                by_target.setdefault(tid, []).append(o)
     lines = []
     seen = set()
 
@@ -315,6 +342,10 @@ def m_residuals(self, place, span, by, ctx, unit=None):
     for i in model:
         dd = ful_last[i.id] if isinstance(i.day, Hole) else day_lo(i.day)
         mdl = self_flow(i.legs, place, unit)
+        if isinstance(getattr(i, 'exists', None), Hole) and (isinstance(mdl, Hole) or mdl != 0):
+            # its existence a hole: the model there is that hole, its difference too (L §5.14; tally 2.3.1 statement
+            # F (a), P36 R4)
+            mdl = Hole(i.exists.qs)
         os = by_target.get(i.id, [])
         seen.update(o.id for o in os)
         if not os:

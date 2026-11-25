@@ -11,7 +11,7 @@
 //! power that isn't an integer stops `NotBuilt` (`to u`, the transcendental kernel, is M6's);
 //! nothing here rounds.
 
-use super::builtin::power_past_64_bits;
+use super::builtin::{named_none, power_past_64_bits};
 use super::dates::{daycount_of, year_fraction_of};
 use super::expr::hole_of;
 use super::state::{
@@ -42,17 +42,23 @@ impl Engine {
         };
         let what = call.name.as_str();
         // refusals outrank holes (L §8; pick P12): each argument in written order, `none`
-        // refused, a known one's own check run, a hole's waiting; the rate's check reads the
-        // period word, which load fixes
+        // refused (named as written and by the built-in, R4), a known one's own check run, a
+        // hole's waiting; the rate's check reads the period word, which load fixes
+        named_none(m, call, (0, rate), env)?;
         let share = given(rate, what)?
             .then(|| rate_share(m, rate, period, what))
             .transpose()?;
         let times = match count {
-            Some(n) => given(n, what)?.then(|| plain_count(m, n)).transpose()?,
+            Some(n) => {
+                named_none(m, call, (1, n), env)?;
+                given(n, what)?.then(|| plain_count(m, n)).transpose()?
+            }
             None => None,
         };
+        let last = vals.len().checked_sub(1).ok_or_else(arity)?;
+        named_none(m, call, (last, code), env)?;
         let how = given(code, what)?
-            .then(|| compounding(m, what, code).and_then(not_divided_by_zero))
+            .then(|| compounding(m, what, code).and_then(nominal_positive))
             .transpose()?;
         let parts = match (share, how) {
             (Some((rq, share)), Some(how)) => Some(parts_under(&rq, share, how)?),
@@ -100,16 +106,23 @@ impl Engine {
         };
         let what = "accrue";
         // refusals outrank holes (L §8; pick P12): each argument in written order, `none`
-        // refused, a known one's own check run, a hole's waiting
+        // refused (named as written and by the built-in, R4), a known one's own check run, a
+        // hole's waiting
+        named_none(m, call, (0, principal), env)?;
         let principal = given(principal, what)?
             .then(|| principal_of(m, principal))
             .transpose()?;
+        named_none(m, call, (1, rate), env)?;
         let r = given(rate, what)?.then(|| yearly(m, rate)).transpose()?;
+        named_none(m, call, (2, from), env)?;
         day_given(from, what)?;
+        named_none(m, call, (3, to), env)?;
         day_given(to, what)?;
+        named_none(m, call, (4, daycount), env)?;
         if given(daycount, what)? {
             daycount_of(m, daycount)?;
         }
+        named_none(m, call, (5, code), env)?;
         let how = given(code, what)?
             .then(|| compounding(m, what, code).and_then(accrual))
             .transpose()?;
@@ -205,14 +218,14 @@ enum Accrual {
     Simple,
     /// `effective`.
     Effective,
-    /// `nominal m`, m not 0.
+    /// `nominal m`, m a positive int.
     Nominal(i64),
 }
 
 /// The accrual compounding `how` gives: `discount` is outside `accrue`'s row, `RUN-DOMAIN`
-/// (L §3.3, §8.4; refcore's `m_accrue_real`), and `nominal 0` divides by zero.
+/// (L §3.3, §8.4; refcore's `m_accrue_real`), and so is a `nominal m` with m below 1.
 fn accrual(how: Compounding) -> Result<Accrual, Stop> {
-    match not_divided_by_zero(how)? {
+    match nominal_positive(how)? {
         Compounding::Simple => Ok(Accrual::Simple),
         Compounding::Effective => Ok(Accrual::Effective),
         Compounding::Nominal(times) => Ok(Accrual::Nominal(times)),
@@ -225,11 +238,18 @@ fn accrual(how: Compounding) -> Result<Accrual, Stop> {
     }
 }
 
-/// Compounding `how`, unless it is `nominal 0`, whose r/0 is `RUN-DIV division by zero`
-/// whatever r is, a hole too (L §7.1, §8: refusals outrank holes).
-fn not_divided_by_zero(how: Compounding) -> Result<Compounding, Stop> {
-    if how == Compounding::Nominal(0) {
-        return Err(refuse(Run::Div, "division by zero".to_owned()));
+/// Compounding `how`, unless it is a `nominal m` whose m is below 1: `nominal m` takes a
+/// positive int, so the code is refused where it is read, `RUN-DOMAIN`, whatever the other
+/// arguments are, a hole too (L §3.3, §8.4; L §8, a check on a code is made once the code is
+/// known; tally 2.3.1 S16, N255.1).
+fn nominal_positive(how: Compounding) -> Result<Compounding, Stop> {
+    if let Compounding::Nominal(times) = how
+        && times < 1
+    {
+        return Err(refuse(
+            Run::Domain,
+            format!("nominal {times}: m is a positive int"),
+        ));
     }
     Ok(how)
 }
@@ -392,4 +412,83 @@ fn power(base: &Num, e: &Num) -> Result<Num, Stop> {
         return power_past_64_bits(base, e);
     };
     base.checked_pow(k).map_err(num_stop)
+}
+
+#[cfg(test)]
+mod tests {
+    use crate::api::{Asks, Files, Given, Request, run};
+
+    /// `accrue` and `periodic` under `nominal 0`, its principal a hole too, and under
+    /// `nominal 4` (`fixes/g1/a9_nominal`'s twin, N255.1).
+    const NOMINAL: &str = r#"model nominal
+  tally 2
+  on 2026-10-25
+  start 2026-01-01
+  end 2027-12-31
+
+source s "invented values"
+
+input r: rate
+
+input d0: date
+
+input d1: date
+
+input p: num
+
+input ph: num
+
+input c0: compounding
+
+input cn: compounding
+
+ask q_0: accrue(p, r, d0, d1, act365, c0)
+
+ask q_h: accrue(ph, r, d0, d1, act365, c0)
+
+ask q_p: periodic(r, month, c0)
+
+ask q_n: accrue(p, r, d0, d1, act365, cn)
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  r = 10 %/year "s"
+  p = 1000 "s"
+  ph = ?"which principal?" "s"
+  d0 = 2026-01-01 "s"
+  d1 = 2027-01-01 "s"
+  c0 = nominal 0 "s"
+  cn = nominal 4 "s"
+"#;
+
+    #[test]
+    fn a_nominal_code_below_one_is_refused_where_it_is_read() {
+        // L §3.3 "m a positive int", §8.4 (tally 2.3.1 S16, N255.1): RUN-DOMAIN, whatever
+        // the other arguments are, a hole too; nominal 4 computes
+        let given = vec![Given {
+            path: "nominal.tally".to_owned(),
+            bytes: Some(NOMINAL.as_bytes().to_vec()),
+        }];
+        let request = Request::new(Asks::Every);
+        let answer = run(Files::new(given), &request).expect("an answer");
+        let values: Vec<&str> = answer
+            .lines()
+            .iter()
+            .filter(|line| line.starts_with("q_"))
+            .map(String::as_str)
+            .collect();
+        let refused = "refused: RUN-DOMAIN nominal 0: m is a positive int";
+        assert_eq!(
+            values,
+            [
+                format!("q_0: {refused}"),
+                format!("q_h: {refused}"),
+                "q_n: 103.812890625".to_owned(),
+                format!("q_p: {refused}")
+            ],
+            "nominal 0 refused, nominal 4 computed"
+        );
+    }
 }

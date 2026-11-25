@@ -168,6 +168,55 @@ pub(crate) fn convert(
     Ok(Converted::Value(v))
 }
 
+/// Whether a pin's value `value` on a target of type `ty` is read as that target's row (L
+/// §5.11 A pin is a row; §2.5 Keys: the position reaches through brackets and into both
+/// branches of an `if`; tally 2.3.1 statement G): every leaf through brackets, a sign and the
+/// arms of each `if` is a figure, or a date, month or quarter with no sign over it, and the
+/// type is one a row's literal states. A record, a distribution, a unit keyed by `$v`, whose
+/// row takes its keys' units, and an undeclared type are typed as expressions (refcore's
+/// `pin_row`, its literal kinds).
+pub(crate) fn pin_row(value: &Expr, ty: &Ty) -> bool {
+    let keyed_unit = matches!(ty, Ty::Num(unit, _) if keyed(unit));
+    if keyed_unit || matches!(ty, Ty::Record(_) | Ty::Dist(_) | Ty::Unseen) {
+        return false;
+    }
+    let mut work = vec![(value, false)];
+    while let Some((node, signed)) = work.pop() {
+        if let Expr::Paren(inner) = node {
+            work.push((inner, signed));
+        } else if let Expr::Neg(inner) = node {
+            work.push((inner, true));
+        } else if let Expr::If(parts, _) = node {
+            let [_, yes, no] = parts.as_ref();
+            work.extend([(no, signed), (yes, signed)]);
+        } else if let Expr::Lit(lit) = node {
+            let dated = matches!(lit, Lit::Day(_) | Lit::Month(..) | Lit::Quarter(..));
+            if !(matches!(lit, Lit::Num(_)) || (dated && !signed)) {
+                return false;
+            }
+        } else {
+            return false;
+        }
+    }
+    true
+}
+
+/// A pin's row literal `lit` under signs that negate it: the figure negated, written with its
+/// minus, as its row is (refcore's `pin_row`, its `sign`); any other literal as it is. L §5.11.
+///
+/// # Errors
+///
+/// The number kernel's refusal of the negation.
+pub(crate) fn negated_literal(lit: &Lit) -> Result<Lit, Stop> {
+    let Lit::Num(n) = lit else {
+        return Ok(lit.clone());
+    };
+    let mut signed = n.clone();
+    signed.value = n.value.checked_neg().map_err(num_stop)?;
+    signed.text = format!("-{}", n.text);
+    Ok(Lit::Num(signed))
+}
+
 /// A written value's fault: load's, which reads the rows (L §8.3), whenever it is converted.
 fn refuse_load(code: Load, message: String) -> Stop {
     Stop::Refused(Refusal::new(crate::base::Code::Load(code), message))

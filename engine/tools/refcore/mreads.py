@@ -122,15 +122,22 @@ def m_hole_day_changed(self, src, name, rec, ctx):
     P12, N1). Read while those adjustments are measured (a move that reads the field), the field is the booking's."""
     if ('hadjs', self.wkey(ctx)) + self.upto_tag() in self.inst_active:
         return rec
-    amt = ends = False
+    amt = False
+    ends = set()
     for a in self.hole_inst_adjustments(src, ctx):
         if a.leg.name == name:
             amt = amt or isinstance(a.delta, Hole) or a.delta.q != 0
-            ends = ends or getattr(a, 'moved', False)
+            if getattr(a, 'moved', False):
+                # only the end the version moves (E l.247 "a leg's field it changes"; G1's review, p13 k2_from)
+                fr, to = getattr(a, 'froms', None), getattr(a, 'tos', None)
+                if fr is None or fr[0] != fr[1]:
+                    ends.add('from')
+                if to is None or to[0] != to[1]:
+                    ends.add('to')
     if not (amt or ends):
         return rec
     h = src.day
-    return Rec([(k, h if (k == 'amount' and amt) or (k in ('from', 'to') and ends) else v) for k, v in rec.fields])
+    return Rec([(k, h if (k == 'amount' and amt) or k in ends else v) for k, v in rec.fields])
 
 
 def m_mv_by_id(self, mid, ctx):
@@ -310,7 +317,8 @@ def m_mv_field(self, n, env, ctx):
         raise refuse('LOAD-FIELD', '%s is not a field of %s' % (n.name, fmt(v)))
     src = self.mv_record(v, ctx)
     if src is None:
-        raise refuse('RUN-RECORD', '%s doesn\'t exist' % v.id)
+        # a field read of an instance that doesn't exist is refused (L §5.14 existence, §8.4; tally 2.3.1 R6, C-2)
+        raise refuse('RUN-NONE', '%s doesn\'t exist: a field read of it' % v.id)
     what = n._r[1]
     sh = None
     name = n.name
@@ -368,10 +376,27 @@ def m_mv_field(self, n, env, ctx):
         else:
             # per fact (tally 2.2.1 P36, Q3): the leg's amount and its day, each its own hole where the rows differ
             sh = (self.same_rows_hole(src, name, ctx, 'amount'), self.same_rows_hole(src, name, ctx, 'day'))
+    if what == 'day' and isinstance(src, Inst) and isinstance(src.exists, Hole):
+        # an existence that is a hole: a field read of the instance is that hole (L §5.14; tally 2.3.1 statement F
+        # (a), N5)
+        return Hole(src.exists.qs)
     if what == 'day':
+        if isinstance(src, Inst) and (src.exists is False or getattr(src, 'status', None) == 'none'):
+            # `.day` included (L §5.14 existence; tally 2.3.1 R6, gate review 8); an instance a later version made
+            # exist exists as known now, its day its own, as its legs read (made_to_exist_leg; E §5 step 1; one
+            # instance, one answer: g2/i3_later d2 beside x2 false)
+            if any(self.made_to_exist_leg(src, a.leg.name, ctx) is not None for a in self.adjust_move(src.move, ctx)
+                   if a.inst.id == src.id):
+                return src.day
+            raise refuse('RUN-NONE', '%s doesn\'t exist: a field read of it' % v.id)
         return src.day
     if what == 'fulfils':
         f = src.fulfils
+        if f is None and isinstance(src, ObsMv):
+            # rows stated same are one movement, its fulfils stated on either row (L §5.19, §6.1 "read from both
+            # sides together"; tally 2.3.1 P32 N1: s1_same's n2)
+            f = next((x.fulfils for x in self.same_others(src, ctx) if getattr(x, 'fulfils', None) is not None),
+                     None)
         if f is None:
             return NONE
         if isinstance(f, tuple) and f[0] == 'adj':
@@ -383,9 +408,9 @@ def m_mv_field(self, n, env, ctx):
                     return a.mv()
             return NONE
         if isinstance(f, tuple):
-            mi = self.m.moves[f[1]]
-            t = self.find_inst(mi, list(f[2]), ctx)
-            return t.mv() if t is not None else NONE
+            # the name: its move and keys, never the instance's existence (L §5.19; tally 2.3.1 rulings 22, P1-C6): a
+            # field read through it is a field read of the instance (§5.14), refused where it doesn't exist
+            return Mv('%s[%s]' % (f[1], ', '.join(key_text(k) for k in f[2])) if f[2] else f[1])
         return f
     if what == 'leg':
         for lg in src.legs:
@@ -648,11 +673,23 @@ def m_movements_of(self, dom, ctx, owner=None):
         return out
     sub = m.kinds[dom[1]].subtree(m)
     pins = set()
+    stc = []
+    self.run_cache[('mvstat',) + key] = stc
     for mi in self.plan_moves():
         if mi.kind not in sub:
             continue
         for i in self.move_instances(mi, ctx):
-            st = self.status(i, ctx)
+            # judging its status reads its link: those reads are a reader's only where the instance's day can fall in
+            # its span (movement_members; L §8.2, tally 2.3.1 R2 item 6, G2's review finding 4)
+            c_st = self.push()
+            try:
+                st = self.status(i, ctx)
+            finally:
+                self.stack.pop()
+            if st == 'none':
+                # read to be left out: its `when`'s rows are the binding's where its day is in the span (as above)
+                c_st.rows.update(_rows_only(getattr(i, 'coll', None)).rows)
+            stc.append((i, c_st))
             if st in ('none', 'modelled'):
                 # the binding read its day to leave it out, so the pins that day took are the binding's reads too
                 # (R7; item 9 of the follow-up: a count that finds none lists its pin)
@@ -660,6 +697,10 @@ def m_movements_of(self, dom, ctx, owner=None):
                 pins |= {e for e in (ic.reg if ic is not None else ()) if e[0] == 'pinned'}
                 continue
             if st == 'uncertain' and not ctx.unc:
+                continue
+            if st == 'hole' and not ctx.unc and self.kind_certainty(i.kind) == 'uncertain':
+                # a binding counts an unfulfilled movement of an uncertain kind only with `with uncertain`, whatever
+                # its day (L §5.14 Certainty; tally 2.3.1 R1, N250.1)
                 continue
             out.append(i)
     self.run_cache[('mvpins',) + key] = pins
@@ -703,6 +744,9 @@ def m_movements_of(self, dom, ctx, owner=None):
                     ww = getattr(ww, 'base', None)
                 if r is not None and limit is not None and (r.point is None or r.point >= limit):
                     continue
+                if r is None and isinstance(i.day, Hole) and not ctx.unc and self.kind_certainty(i.kind) == 'uncertain':
+                    # an unfulfilled decision of an uncertain kind, whatever its day (L §5.14 Certainty; N250.1)
+                    continue
                 if r is None and isinstance(i.day, Hole) and i.exists is not False and not getattr(i, 'err', None):
                     # a decision whose day is a hole is never walked, and is a member with its hole: "a movement whose
                     # day is a hole makes every flows and binding over a span it might fall in a hole" (L §5.14;
@@ -711,6 +755,12 @@ def m_movements_of(self, dom, ctx, owner=None):
                     self.hole_day_dec_body(m.moves[q], i, ctx)
                     out.append(i)
                     continue
+                if r is not None and (r.exists is False or getattr(r, 'status', None) == 'none'):
+                    # read to be left out: its reads' rows are the binding's where its day is in the span (the third
+                    # mechanism; movement_members merges stc's by day)
+                    rc = _rows_only(getattr(r, 'coll', None))
+                    rc.rows.update(_rows_only(getattr(r, 'exist_coll', None)).rows)
+                    stc.append((r, rc))
                 if r is None or r.exists is False or getattr(r, 'status', None) in ('modelled', 'none'):
                     continue
                 if getattr(r, 'status', None) == 'uncertain' and not ctx.unc:
@@ -727,8 +777,8 @@ def m_movements_of(self, dom, ctx, owner=None):
 
 def m_hole_day_dec_body(self, mi, i, ctx):
     """A hole-day decision's legs, read once outside the walk (B1): the walk never runs it, and a binding's `where`
-    reads its places. Its places are read as a refused instance's are (moves.refused_places); its amounts are its
-    day's hole, since a decision's amount is read in the walk at its day."""
+    reads its places. Its places and amounts are its day's hole, by name and through a binding alike: a decision's
+    legs are read in the walk at its day (E §4.2 step 3; tally 2.3.1 R1, N250.8, C-13.9)."""
     if getattr(i, '_hd_body', False):
         return
     i._hd_body = True
@@ -743,6 +793,7 @@ def m_hole_day_dec_body(self, mi, i, ctx):
     for lg in legs:
         lg.amount = i.day
         lg.unit = self.leg_unit_static(decl[lg.name], lg.frm, lg.to)
+        lg.frm = lg.to = i.day
     i.legs = legs
 
 
@@ -784,6 +835,23 @@ def once_by_same(m, out, ctx, owner=None):
         else:
             kept.add(r)
     return [x for x in out if getattr(x, 'id', None) not in drop]
+
+
+def m_same_sides_reg(self, x, ctx):
+    """The other sides of instance x's `same` group, each unfulfilled one registered: one movement, its register every
+    side its line names (rulings 17 B)."""
+    g = same_groups(self.m, ctx).get(x.id)
+    if not g:
+        return
+    K = ctx.cut
+    by_id = dict((i.id, i) for i in self.plan_insts(ctx))
+    for y in g:
+        i = by_id.get(y)
+        if y == x.id or i is None or getattr(i, 'obs', None):
+            continue
+        if (not i.decision and i.status == 'past') or (
+                i.decision and day_lo(i.day) is not None and day_lo(i.day) < K):
+            self.reg(('unfulfilled', y))
 
 
 def m_same_kind_hole(self, x, kind, ctx):
@@ -899,7 +967,17 @@ def m_span_members(self, dom, sp, ctx, owner=None):
                 t, b._dom[1], (sp.end - ONE_DAY) if sp.end is not None else 'the end'))
     out = []
     fulfilled = set()
-    for x in self.movements_of(b._dom, ctx, owner):
+    xs = self.movements_of(b._dom, ctx, owner)
+    for i, c_st in self.run_cache.get(('mvstat', 'mvs', b._dom, self.wkey(ctx), ctx.unc,
+                                         id(ctx.walk) if ctx.walk is not None else None, ctx.wp, owner), ()):
+        if not (isinstance(i.day, datetime.date) and not sp.contains(i.day)):
+            self.cur.merge(c_st)
+    # a refused instance a row names stands in by that row, by the name alone (L §5.19 l.1713, l.1718; tally 2.3.1
+    # P32 B2): not a refused member
+    named_ids = set(self.link_targets(ctx))
+    for x in xs:
+        if isinstance(x, Inst) and x.err is not None and x.id in named_ids:
+            continue
         e1 = self.s1_refusal(getattr(x, 'id', None), ctx)
         if e1 is not None and (sp.contains(x.day) if isinstance(x.day, datetime.date) else True):
             # a binding over movements rests on each it takes (L §5.19 S1, P42): a count or a sum is refused
@@ -908,8 +986,10 @@ def m_span_members(self, dom, sp, ctx, owner=None):
         d = x.day if sh is None else sh
         st = True
         if d is None and x.err is not None:
-            # refused before its day was known: whether it is a member is refused with it (L §8.4)
-            raise x.err
+            # refused before its day was known: whether it is a member is refused with it (L §8.4), a refused member
+            # (rulings 17 A: `any`/`all` decide past it; every other reader is refused by it)
+            out.append((x.mv(), x.err, x))
+            continue
         if isinstance(d, Hole):
             st = d
         elif isinstance(d, datetime.date):
@@ -917,6 +997,12 @@ def m_span_members(self, dom, sp, ctx, owner=None):
                 if getattr(x, 'day_coll', None) is not None:
                     # the reads that put its day outside the span (L §8.2; tally 2.2.1 P35, N1)
                     self.day_reads(x.day_coll)
+                tsp = getattr(x, 'tspan', None)
+                if tsp is not None and tsp[0] is not None and self.trace_stack:
+                    # a decision run outside the binding's span is out of its read set: its traced reads go (L
+                    # §8.2; tally 2.3.1 R2, P18, explain's second mechanism)
+                    drop = set(tsp[1])
+                    tsp[0].children = [c for c in tsp[0].children if id(c) not in drop]
                 continue
         else:
             continue
@@ -931,7 +1017,9 @@ def m_span_members(self, dom, sp, ctx, owner=None):
                 d.window_text(), b._dom[1]), x.id)]), d)
             st = h if st is True else merge(st, h)
         if isinstance(x, Inst) and x.err is not None:
-            raise x.err
+            # a refused member (rulings 17 A)
+            out.append((x.mv(), x.err, x))
+            continue
         if isinstance(x, ObsMv) and x.target is not None:
             fulfilled.add(x.target.id)
         if b._dom[0] == 'event':
@@ -967,6 +1055,10 @@ def m_span_members(self, dom, sp, ctx, owner=None):
             elif isinstance(x, Inst) and x.decision and day_lo(x.day) is not None and day_lo(x.day) < K and \
                     not getattr(x, 'obs', None):
                 self.reg(('unfulfilled', x.id))
+            if isinstance(x, Inst):
+                # a `same` group binds once, by its first side (once_by_same); its register lists every side its
+                # line names, each unfulfilled one (rulings 17 B; p10 ny, p09 cnt)
+                self.same_sides_reg(x, ctx)
             if isinstance(x, Inst) and getattr(x, 'status', None) == 'uncertain':
                 self.reg(('uncertain', x.id))
             if x.coll is not None:
@@ -1061,12 +1153,25 @@ def m_read_state(self, w, place, unit, key):
 LATER_KINDS = ('pinned', 'assumed')
 
 
+def _rows_only(c):
+    """A collector holding c's rows alone (no register line), for inputs-of's read set."""
+    from .evaluate import Coll
+    out = Coll()
+    if c is not None:
+        out.rows.update(c.rows)
+    return out
+
+
 def m_day_reads(self, dc):
     """What the reads that put a movement's day outside a read list there: the pins and the assumed rows N1 names
     (a law date's held: rows are the statement's too, but 60 stored records would move: W8's hand-off)."""
     for r in (dc.reg if dc is not None else ()):
         if r[0] in LATER_KINDS:
             self.reg(r)
+    if dc is not None and self.cur is not None:
+        # the rows those reads read are the read set's, which inputs-of lists (L §8.2 One read set: "the reads that
+        # decided a movement doesn't count"; tally 2.3.1 R2, explain's third mechanism); the register as above
+        self.cur.rows.update(dc.rows)
 
 
 def m_later_reads(self, w, place, outside):
@@ -1588,6 +1693,20 @@ def m_flows_place(self, place, sp, env, ctx, fk=None):
         if fk is None or e.mv is None:
             return False
         fp = mv_for(e.mv)
+        t = getattr(e.mv, 'target', None) if getattr(e.mv, 'status', None) == 'observed' else None
+        if fp is None and t is not None and getattr(t, 'decision', False):
+            # a decision tuple's `for` is evaluated with its body, at its run: the row is for that period (L §5.14
+            # `for k`; tally 2.3.1 statement F (c), P36 R3)
+            ww = ctx.walk if ctx.walk is not None else self.main_walk(ctx)
+            run = None
+            while ww is not None and run is None:
+                run = ww.decs.get(t.id)
+                ww = ww.base
+            fp = getattr(run, 'forp', None)
+        if isinstance(fp, Hole):
+            # a movement for a hole period: whether it counts is that hole (L §8.1; tally 2.3.1 P32 B5)
+            holes.append(fp)
+            return True
         return fp is None or vkey(fp) != vkey(fk)
     last = sp.end - ONE_DAY if sp.end is not None else m.E
     w = ctx.walk
@@ -1673,7 +1792,11 @@ def m_flows_post_e(self, w, place, sp, last, env, ctx, fk, totals, holes):
     a hole movement, HOLE-POSTRUN, since its amount reads a walk that doesn't hold its day (L §8.1)."""
     from .evaluate import HoleSignal
     for i in w.post_e:
-        if fk is not None and (mv_for(i) is None or vkey(mv_for(i)) != vkey(fk)):
+        fp = mv_for(i) if fk is not None else None
+        # a hole period reaches a `, for k` read after the run's end too: whether it counts is that hole (L §8.1;
+        # tally 2.3.1 statement F (c), gap 1)
+        fh = fp if isinstance(fp, Hole) else None
+        if fk is not None and fh is None and (fp is None or vkey(fp) != vkey(fk)):
             continue
         if i.decision:
             if not sp.contains(i.day):
@@ -1687,7 +1810,7 @@ def m_flows_post_e(self, w, place, sp, last, env, ctx, fk, totals, holes):
             except (TallyError, HoleSignal):
                 ps = {None}
             if place in ps or None in ps:
-                holes.append(Hole([('after the run\'s end', i.id)]))
+                holes.append(fh if fh is not None else Hole([('after the run\'s end', i.id)]))
             continue
         for lg in i.legs or ():
             lo, hi = day_lo(lg.day), day_hi(lg.day)
@@ -1700,6 +1823,9 @@ def m_flows_post_e(self, w, place, sp, last, env, ctx, fk, totals, holes):
                 raise i.err
             if i.coll is not None:
                 self.cur.merge(i.coll)
+            if fh is not None:
+                holes.append(fh)
+                continue
             if isinstance(i.exists, Hole):
                 holes.append(i.exists)
                 continue
@@ -1782,7 +1908,44 @@ def m_flows_place_walk(self, w, limit, place, units, lo, sp, last, env, ctx, fk,
         # a perm before the span is a hole of the span unless its window ended before it (an unperm: the decision has
         # fallen, walk.dec_win_end; B5 of group 3's review)
         perms = []
+        # a `same` group is one movement, its day a hole bounded by its sides' days (rulings 17 B; L l.1359): a span
+        # holding the first and the last counts it known (the first's hole and the last's `unsame` both inside), one
+        # holding the last alone is its hole (G1's review, N9: p09 f_a, f_b)
+        in_sp = [e for e in lg.ents if lo < e.key <= limit]
+        before = set(e.qs for e in lg.ents if e.key <= lo and e.kind == 'hole' and e.qs)
+        opened = set(e.qs for e in in_sp if e.kind == 'hole' and e.qs) - before
+        closing = set(e.qs for e in in_sp if e.kind == 'unsame' and e.qs in opened)
+        # a group opened before the span and closed after it may fall in it: the hole (p09 f_6)
+        uns = {}
         for e in lg.ents:
+            if e.kind == 'unsame' and e.qs:
+                uns.setdefault(e.qs, []).append(e.key)
+        for q in sorted(before, key=str):
+            if q in uns and all(k > limit for k in uns[q]):
+                holes.append(_reask(Hole(q), 'flows of %s' % place))
+        prev_unsame = None
+        for e in lg.ents:
+            if prev_unsame is not None and e.kind == 'delta' and e.key == prev_unsame.key:
+                # the leg the late `unsame` books: its group may have fallen before the span, so the hole stands; the
+                # side is still the read's, listed (rulings 17 B: every side its line names, p10 fa)
+                prev_unsame = None
+                for r in e.reg:
+                    self.reg(r)
+                if e.coll is not None:
+                    self.cur.merge(e.coll)
+                continue
+            prev_unsame = None
+            if lo < e.key <= limit and e.kind == 'hole' and e.qs in closing:
+                # the group's first side, counted known at its last: its register is still the read's (N1)
+                for r in e.reg:
+                    self.reg(r)
+                if e.coll is not None:
+                    self.cur.merge(e.coll)
+                continue
+            if lo < e.key <= limit and e.kind == 'unsame' and e.qs and e.qs not in opened:
+                holes.append(_reask(Hole(e.qs), 'flows of %s' % place))
+                prev_unsame = e
+                continue
             if e.kind == 'delta' and e.wid is not None:
                 closed.add(e.wid)
             if e.key <= lo:
@@ -1920,18 +2083,45 @@ def m_flows_move(self, n, sp, fk, env, ctx):
                     # counted as the hole it is
                     i._rawhole = True
                     insts.append(i)
+                elif i.err is not None and day_lo(i.day) is None and i.exists is not False:
+                    # a refused day may fall in any span: read below, its rows standing in where the cut applies one,
+                    # else its refusal (L §8.4; tally 2.3.1 statement F, P36 R2)
+                    insts.append(i)
                 continue
             if limit is not None and run.point is not None and run.point >= limit:
                 continue
             insts.append(run)
+    elif keys and len(keys) == len(mi.binds):
+        # one instance: its own cell, so a tuple that reads another of its move is no cycle (L §5.14 existence;
+        # tally 2.3.1 R6, C-13.10)
+        one = self.tuple_inst(mi, keys, ctx)
+        insts = [one] if one is not None else []
     else:
         insts = self.move_instances(mi, ctx)
     total = None
     holes = list(pre_holes)
     u = None
     seen_units = set()
+    counted = set()
+    # the rows that name a tuple of this move stand in for it by the name in every read over movements (L §5.19
+    # l.1718; tally 2.3.1 rulings 22, the critic's P1-C7): a tuple the model doesn't hold, one that is none here, or
+    # one whose day is a hole is counted by its rows, on their own days
+    named = {}
+    for tid, obs_ in self.link_targets(ctx).items():
+        f0 = obs_[0].fulfils
+        # only a row the cut applies stands in (dated before K: L §4.5, E §4.1 step 3), as for `bal` (tally 2.3.1
+        # statement F (b), P36 R1)
+        obs_ = [o for o in obs_ if not (isinstance(o.day, datetime.date) and o.day >= ctx.cut)]
+        if obs_ and f0[1] == mi.id and (not keys or tuple(vkey(k) for k in f0[2][:len(keys)]) == tuple(keys)):
+            named[tid] = obs_
+    by_rows = set(named) - set(i.id for i in insts)
     for i in insts:
         if keys and tuple(vkey(k) for k in i.keys[:len(keys)]) != tuple(keys):
+            continue
+        if i.id in named and (getattr(i, '_rawhole', False) or isinstance(i.day, Hole) or i.err is not None or
+                              (mi.decision and getattr(i, 'status', None) == 'refused')):
+            # a refused one too: the rows stand in by the name alone (tally 2.3.1 P32 B2)
+            by_rows.add(i.id)
             continue
         if getattr(i, '_rawhole', False):
             if i.err is not None:
@@ -1942,8 +2132,35 @@ def m_flows_move(self, n, sp, fk, env, ctx):
             if sp.contains(i.day) and (fk is None or (i.forp is not None and vkey(i.forp) == vkey(fk))):
                 holes.append(Hole([('after the run\'s end', i.id)]))
             continue
-        st = i.status if mi.decision else self.status(i, ctx)
+        if mi.decision and i.id not in named and i.err is not None and day_lo(i.day) is None and \
+                not hasattr(i, 'point'):
+            # a refused-day tuple, never run, that no row at this cut stands in for: its own state at this cut
+            # (tally 2.3.1 P36 R2)
+            st = self.status(i, ctx)
+        elif mi.decision:
+            st = i.status
+        else:
+            # judging its status reads its link; that read is this reader's only where the instance's day can fall in
+            # the span: one out of it by its day rests on no link here (L §8.2, §5.19; tally 2.3.1 R2, item 6)
+            c_st = self.push()
+            try:
+                st = self.status(i, ctx)
+            finally:
+                self.stack.pop()
+            if not (isinstance(i.day, datetime.date) and not sp.contains(i.day)):
+                self.cur.merge(c_st)
+        if st == 'none' and i.id in named:
+            by_rows.add(i.id)
+            continue
         if st in ('none', 'uncertain'):
+            if st == 'none' and not (isinstance(i.day, datetime.date) and not sp.contains(i.day)):
+                # an observation fulfils it, so the link is refused: what rests on it is refused (L §8.4; tally 2.3.1
+                # R6, C-13.6)
+                bad = self.run_cache.get(('badlinks', self.wkey(ctx)), {}).get(i.id)
+                if bad is not None:
+                    if getattr(i, 'exist_coll', None) is not None:
+                        self.cur.merge(i.exist_coll)
+                    raise bad
             if st == 'none' and isinstance(i.day, datetime.date) and sp.contains(i.day) and \
                     getattr(i, 'coll', None) is not None and self.cur is not None:
                 # an instance in the span whose when is false is read to be left out: its reads are the line's, as a
@@ -1961,6 +2178,10 @@ def m_flows_move(self, n, sp, fk, env, ctx):
                 holes.append(sh)
                 continue
         if isinstance(d, Hole):
+            if i.err is not None:
+                # a refused movement whose day is a hole reaches every span as a hole day does, refused (L §8.4 "a
+                # refused day as a hole one"; §8: a refusal outranks a hole; tally 2.3.1 R6, w3)
+                raise i.err
             holes.append(d)
             continue
         if not sp.contains(d):
@@ -1975,11 +2196,19 @@ def m_flows_move(self, n, sp, fk, env, ctx):
             continue
         if fk is not None and not isinstance(i.forp, Hole) and (i.forp is None or vkey(i.forp) != vkey(fk)):
             continue
+        if fk is not None and isinstance(i.forp, Hole) and st == 'modelled':
+            # its rows are for the hole period: whether they count is that hole (L §8.1; tally 2.3.1 P32 N3)
+            holes.append(i.forp)
+            continue
+        counted.add(id(i))
         e1 = self.s1_refusal(i.id, ctx)
         if e1 is not None:
             # an instance a class of rows stated same fulfils with another: what reads it is refused (S1, P42)
             raise e1
         if st == 'modelled':
+            if mi.decision and getattr(i, 'exist_coll', None) is not None:
+                # what decided the decision exists at its point rests under its link (G2's review finding 3)
+                self.cur.merge(i.exist_coll)
             # on a day a statement covers, the observations that fulfil the instance stand in for it (L §5.14.3)
             obs = getattr(i, 'obs', None) or self.obs_links_for(i.id, ctx)
             bad = self.run_cache.get(('badlinks', self.wkey(ctx)), {}).get(i.id)
@@ -2058,9 +2287,47 @@ def m_flows_move(self, n, sp, fk, env, ctx):
             total = a.q if total is None else total + a.q
             u = unit_of_value(a)
             seen_units.add(u)
+    for tid in sorted(by_rows):
+        for o, others in once_obs(m, self.obs_links_for(tid, ctx), ctx):
+            for x in [o] + others:
+                if x.coll is not None:
+                    self.cur.merge(x.coll)
+            if fk is not None:
+                # the row is for the named tuple's period (L §5.14 `for k`)
+                fp = o.target.forp if o.target is not None else None
+                if isinstance(fp, Hole):
+                    holes.append(fp)
+                    continue
+                if fp is None or vkey(fp) != vkey(fk):
+                    continue
+            h = self.same_rows_hole(o, leg, ctx)
+            if h is not None:
+                holes.append(h)
+                continue
+            for lg in o.legs:
+                if leg is not None and lg.name != leg:
+                    continue
+                if not (isinstance(lg.day, datetime.date) and sp.contains(lg.day)):
+                    continue
+                a = lg.amount
+                if isinstance(a, Hole):
+                    holes.append(a)
+                    continue
+                total = a.q if total is None else total + a.q
+                u = unit_of_value(a)
+                seen_units.add(u)
+    if mi.decision and self.trace_stack:
+        # the runs of the walk this flows doesn't count are out of its read set: their traced reads go (L §8.2 One
+        # read set: "nothing a list or a walk read for another reader"; tally 2.3.1 R2, P18)
+        for i in insts:
+            tsp = getattr(i, 'tspan', None)
+            if tsp is not None and tsp[0] is not None and id(i) not in counted:
+                drop = set(tsp[1])
+                tsp[0].children = [c for c in tsp[0].children if id(c) not in drop]
     # settlements dated in the span, and HOLE-CHANGED (E §5 steps 5-6): only this move's adjustments are measured
     # unless it has some, whose settlements need the whole pass (E §4.1)
-    own = self.adjust_move(mi, ctx) if not mi.decision else []
+    own = self.adjust_move(mi, ctx, one=insts[0] if insts and keys and len(keys) == len(mi.binds) else None) \
+        if not mi.decision else []
     if own:
         self.settle(own, ctx)
         for a in own:
@@ -2428,13 +2695,14 @@ def m_c_observed(self, n, env, ctx):
     v = self.e_moveref(a, env, ctx)
     if isinstance(v, Hole):
         return v
+    mi = m.moves[a._r[1]]
     obs = self.obs_links_for(v.id, ctx)
+    # the rows that name it, by the name alone, whatever its existence (L §5.19; tally 2.3.1 rulings 22)
     bad = self.run_cache.get(('badlinks', self.wkey(ctx)), {}).get(v.id)
     if bad is not None:
         raise bad
     if not obs:
         return NONE
-    mi = m.moves[a._r[1]]
     legs = []
     # rows stated same are one movement, counted once (L §5.19: "counted once by observed(m[k])"); where they
     # disagree, the leg's amount is the disagreement's hole, HOLE-SAME

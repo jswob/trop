@@ -1,0 +1,83 @@
+# tally 2.3.1 R3, guard (N250.5 kept as built, C-7, C-10): a line's `law D` is read without the line's pins
+# (q1: 10.00 PLN, law date 2026-02-01, with w pinned to 2026-09-01); an `as if {law D}` inside an expression is
+# that as if's own, so two stand on a line (t1, t3 30.00 PLN); `law D` after on is allowed (t4).
+=== lawpin.tally
+model lawpin
+  tally 2
+  on 2026-06-30
+  start 2026-01-01
+  end 2026-12-31
+
+source s "probe"
+unit PLN: currency minor 0.01
+input w: date
+input rate: money PLN
+
+def cost: money PLN at reader
+  rule one = rate
+
+ask q0: cost law w
+ask q1: cost with w = 2026-09-01 law w
+ask q2: cost with w = 2026-09-01, law w
+ask q3: cost with law w, w = 2026-09-01
+ask q6: cost with w = 2026-02-01 law 2026-09-01 as known w
+ask q11: cost as if {known 2026-03-01} law 2026-03-01 as known 2026-05-01
+ask t1: cost as if {law 2026-02-01} + cost as if {law 2026-09-01}
+ask t2: cost as if {law 2026-02-01} law 2026-09-01
+ask t3: cost + cost as if {law 2026-02-01} law 2026-09-01
+ask t4: cost law 2027-03-01
+ask t5: cost as if {known 2026-03-01} law 2026-09-01 as known 2026-05-01
+
+version v
+  cite s
+  governs 2026-01-01..2026-06-30
+  known 2026-01-01
+  rate = 10.00 PLN "s"
+
+version v2
+  cite s
+  governs 2026-07-01..
+  known 2026-01-01
+  rate = 20.00 PLN "s"
+
+version v3
+  cite s
+  governs always
+  known 2026-01-01
+  w = 2026-02-01 "s"
+=== expect
+q0: 10.00 PLN
+  law date 2026-02-01, cut 2026-06-30
+q1: 10.00 PLN
+  law date 2026-02-01, cut 2026-06-30
+q11: 10.00 PLN
+  pinned: known 2026-03-01
+  law date 2026-03-01, cut 2026-05-01
+q2: 10.00 PLN
+  pinned: law w = 2026-02-01
+  law date 2026-02-01, cut 2026-06-30
+q3: 10.00 PLN
+  pinned: law w = 2026-02-01
+  law date 2026-02-01, cut 2026-06-30
+q6: 20.00 PLN
+  held: rate = 20.00 PLN (v2), read for 2026-09-01
+  law date 2026-09-01, cut 2026-02-01
+t1: 30.00 PLN
+  pinned: law 2026-02-01
+  pinned: law 2026-09-01
+  held: rate = 20.00 PLN (v2), read for 2026-09-01
+  cut 2026-06-30
+t2: 10.00 PLN
+  pinned: law 2026-02-01
+  law date 2026-09-01, cut 2026-06-30
+t3: 30.00 PLN
+  pinned: law 2026-02-01
+  held: rate = 20.00 PLN (v2), read for 2026-09-01
+  law date 2026-09-01, cut 2026-06-30
+t4: 20.00 PLN
+  held: rate = 20.00 PLN (v2), read for 2027-03-01
+  law date 2027-03-01, cut 2026-06-30
+t5: 20.00 PLN
+  pinned: known 2026-03-01
+  held: rate = 20.00 PLN (v2), read for 2026-09-01
+  law date 2026-09-01, cut 2026-05-01

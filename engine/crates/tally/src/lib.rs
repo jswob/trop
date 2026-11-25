@@ -43,6 +43,7 @@ pub mod base {
     mod table;
 
     pub use code::{Code, Hole, Load, Req, Run, Warn};
+    pub(crate) use refusal::dotted;
     pub use refusal::{Place, Reach, Refusal};
     pub use symbol::{Internal, Interner, Symbol};
     pub use table::Table;
@@ -119,7 +120,7 @@ pub mod model {
         MoveInfo, ObsLeg, Observation, PlaceInfo, PlaceReadings, Row, RuleVer, Table as BandTable,
         TimePos,
     };
-    pub use graph::{Graph, Mark, Node, NodeKind, ReadRole, Rel, Shift, Target};
+    pub use graph::{ExistenceReads, Graph, Mark, Node, NodeKind, ReadRole, Rel, Shift, Target};
     pub use ids::{
         AxisId, BandId, DefId, FillId, IndexId, InputId, KindId, MoveId, Name, Names, PlaceId,
         SourceId, ThingId, VersionId,
@@ -191,7 +192,9 @@ pub mod eval {
     pub(crate) use bindings::{names_in, order_text, reads_name, reads_var, written_bound};
     pub use context::Layer;
     pub(crate) use context::{GUARDED, UNSET_AXIS, world_named};
-    pub(crate) use convert::{ConvertFor, Converted, convert, convert_row, field_literal};
+    pub(crate) use convert::{
+        ConvertFor, Converted, convert, convert_row, field_literal, negated_literal, pin_row,
+    };
     pub(crate) use expr::{equal_sides, hole_of, resolved_sides};
     pub(crate) use extremes::min_max;
     pub(crate) use keys::{Given, thing_seen, to_key};
@@ -290,7 +293,7 @@ pub mod book {
     pub use adjust::{Adjustment, Measured, Settled};
     pub use ledger::{Fig, Ledger, Line, UnitLedger, fig_text};
     pub use ledger_order::{Group, GroupKey};
-    pub(crate) use members::{MvDom, MvMember, inst_ref};
+    pub(crate) use members::{MvDom, MvMember, Reading, inst_ref};
     pub use observe::{Coverage, Linked, Obs, inst_id};
     pub use reading::{Pad, Seen, reading_rank};
     pub(crate) use reading::{first_readings, gap_text, instant_text, readings};

@@ -33,7 +33,7 @@ warning: WARN-UNREAD input d0 is read by nothing
 warning: WARN-UNREAD input d1 is read by nothing
 warning: WARN-UNREAD input rd is read by nothing
 ,22:spec/lawdate/g1-d-last,12:spec-lawdate,4:spec,29:engine/tests/m3/fixes/lawdate,19:run g1_d_last.tally,49:g1_d_last.tally	m3/fixes/lawdate/g1_d_last.tally
-,1:0,717:q: 30.00 PLN
+,1:0,413:q: 30.00 PLN
   unfulfilled: pay[2026-01-05]
   unfulfilled: pay[2026-01-06]
   unfulfilled: pay[2026-01-07]
@@ -41,13 +41,7 @@ warning: WARN-UNREAD input rd is read by nothing
   unfulfilled: pay[2026-01-09]
   unfulfilled: pay[2026-01-10]
   unfulfilled: pay[2026-01-11]
-  held: rd[pl] = 2026-01-02 (v), read for 2026-01-05
-  held: rd[pl] = 2026-01-02 (v), read for 2026-01-06
-  held: rd[pl] = 2026-01-02 (v), read for 2026-01-07
-  held: rd[pl] = 2026-01-02 (v), read for 2026-01-08
-  held: rd[pl] = 2026-01-02 (v), read for 2026-01-09
-  held: rd[pl] = 2026-01-02 (v), read for 2026-01-10
-  held: rd[pl] = 2026-01-02 (v), read for 2026-01-11
+  held: rd[pl] = 2026-01-02 (v), read for 2026-01-05 .. 2026-01-11
   cut 2026-01-31
 warning: WARN-UNREAD input cal is read by nothing
 warning: WARN-UNREAD input d1 is read by nothing
@@ -473,7 +467,7 @@ warning: WARN-UNREAD input gap_day is read by nothing
 warning: WARN-UNREAD input one_amt is read by nothing
 warning: WARN-UNREAD input zero is read by nothing
 ,25:spec/lawdate/w-asks-count,12:spec-lawdate,4:spec,29:engine/tests/m3/fixes/lawdate,22:run w_asks_count.tally,55:w_asks_count.tally	m3/fixes/lawdate/w_asks_count.tally
-,1:0,3809:q2: 300.00 PLN
+,1:0,3589:q2: 300.00 PLN
   unfulfilled: back[adjustments[rent[2026-01].cash, v2]]
   unfulfilled: back[adjustments[rent[2026-02].cash, v2]]
   unfulfilled: back[adjustments[rent[2026-03].cash, v2]]
@@ -538,12 +532,7 @@ q4 (d = 2026-12-31): -11 550.00 PLN
   unfulfilled: rent[2026-04]
   unfulfilled: rent[2026-05]
   unfulfilled: rent[2026-06]
-  held: rent_amt = 950.00 PLN (v2), read for 2026-07-01
-  held: rent_amt = 950.00 PLN (v2), read for 2026-08-01
-  held: rent_amt = 950.00 PLN (v2), read for 2026-09-01
-  held: rent_amt = 950.00 PLN (v2), read for 2026-10-01
-  held: rent_amt = 950.00 PLN (v2), read for 2026-11-01
-  held: rent_amt = 950.00 PLN (v2), read for 2026-12-01
+  held: rent_amt = 950.00 PLN (v2), read for 2026-07-01, 2026-08-01, 2026-09-01, 2026-10-01, 2026-11-01, 2026-12-01
   law date 2026-06-30, cut 2026-06-30
 warning: WARN-NEGATIVE konto is below zero from 2026-01-01
 warning: WARN-UNREAD input d_open is read by nothing

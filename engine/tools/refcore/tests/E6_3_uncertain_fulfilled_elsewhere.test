@@ -1,0 +1,57 @@
+# tally 2.3.1 P32 B4 (E §6.3 partly fulfilled): an uncertain kind's instance a row elsewhere fulfils: observed
+# 0.00 of 300.00 at pot, so partly fulfilled. Before: no line.
+=== u1_unc_notouch.tally
+model u1
+  tally 2
+  on 2026-05-20
+  start 2026-01-01
+  end 2026-06-30
+
+source s "invented values"
+unit PLN: currency minor 0.01
+index month = month 2026-01..2026-03
+kind refunds: event uncertain
+  leg cash: PLN
+place pot: accounts PLN lives 2026-01-01..
+place pot2: accounts PLN lives 2026-01-01..
+place shop: outside lives 1900-01-01..
+place world2: outside lives 1900-01-01..
+input bank: observed
+input amt: money PLN
+input ok[m in month]: bool
+input d5: int
+
+move refund[m in month]: refunds
+  on day_of(m, d5)
+  at start_of(m)
+  when ok[m]
+  leg cash from shop to pot amount amt
+
+ask c: bal(pot, 2026-03-31)
+ask cu: bal(pot, 2026-03-31) with uncertain
+ask c2: bal(pot2, 2026-03-31)
+ask rs: residuals pot 2026-01-01..2026-03-31
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  amt = 300.00 PLN "s"
+  d5 = 5 "s"
+  ok[2026-01] = true "s"
+  ok[2026-02] = false "s"
+  ok[2026-03] = true "s"
+  opening[pot] = 1000.00 PLN at 2026-01-01 start "s"
+  opening[pot2] = 500.00 PLN at 2026-01-01 start "s"
+
+version q1
+  cite s
+  governs 2026-01-01..2026-03-31
+  known 2026-04-01
+  covers pot2
+  bank[a1] = (on: 2026-01-09, kind: transfers, leg cash from world2 to pot2 amount 120.00 PLN, fulfils: refund[2026-01]) "part of jan"
+=== expect rs
+rs: residuals pot 2026-01-01 .. 2026-03-31
+  2026-01 move refund: model 300.00 PLN, observed 0.00 PLN, difference -300.00 PLN
+    partly fulfilled refund[2026-01] on 2026-01-05: model 300.00 PLN, observed 0.00 PLN, difference -300.00 PLN, remainder 300.00 PLN: when does the rest arrive, or is it written off?
+  cut 2026-05-20

@@ -3,6 +3,7 @@
 # "observation <r> fulfils <instance> and lacks its leg <l>". pay has legs fee and main; the bank row (a transfer, one
 # leg cash) fulfils it: konto's balance (which books the refused observation) and observed(pay) are refused. (Was
 # REFCORE-UNSPECIFIED §5.19, writer 5's T-93: observed() with no observation holding the leg.)
+# tally 2.3.1 rulings 22 (part 1, a link names): the row stands in for the tuple it names by the name alone; no link is refused, judged at a point or re-walked, and only a field read through o.fulfils reaches step 7's mark. Re-stored.
 === m.tally
 model t
   tally 2
@@ -44,8 +45,4 @@ version st
 ask q: bal(konto, 2026-03-31)
 ask r: observed(pay)
 === expect
-q: refused: RUN-RECORD observation bank[r1] fulfils pay and lacks its leg fee
-  open: pay
-  cut 2026-12-31
-r: refused: RUN-RECORD observation bank[r1] fulfils pay and lacks its leg fee
-  cut 2026-12-31
+refused: LOAD-LEG observation bank[r1] fulfils pay and lacks its leg fee (m.tally:36)

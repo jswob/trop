@@ -1,0 +1,54 @@
+model dec_link
+  tally 2
+  on 2026-04-20
+  start 2026-01-01
+  end 2026-05-31
+
+source s "probe"
+unit PLN: currency minor 0.01
+index month = month 2026-01..2026-05
+place konto: accounts PLN lives 2026-01-01..
+place save: accounts PLN lives 2026-01-01..
+place shop: outside lives 1900-01-01..
+input bank: observed
+input lim: money PLN
+input amt: money PLN
+input d5: int
+
+
+
+def ln[m in month]: money PLN
+  rule guessed = amt
+  rule seen beats guessed = sum(o.cash.amount for o in bank over m where o.fulfils != none and o.fulfils.cash.amount > 0.00 PLN) when covered(konto, m)
+
+move rest[m in month]: transfers
+  on day_of(m, d5)
+  leg cash from konto to shop amount ln[m]
+
+move topup[m in month]: transfers
+  reads konto
+  on day_of(m, d5)
+  when bal(konto) < lim
+  leg cash from save to konto amount amt
+
+ask g: flows(rest, 2026-02)
+ask b: bal(konto, 2026-03-31)
+ask f: flows(topup, 2026-02)
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  opening[konto] = 100.00 PLN at 2026-01-01 start "s"
+  opening[save] = 5 000.00 PLN at 2026-01-01 start "s"
+  lim = 500.00 PLN "s"
+  amt = 400.00 PLN "s"
+  d5 = 5 "s"
+
+version feb
+  cite s
+  governs 2026-02
+  known 2026-03-01
+  covers konto
+  bank[r1] = (on: 2026-02-05, kind: transfers, leg cash from save to konto amount 400.00 PLN, fulfils: topup[2026-02]) "the top-up"
+  bank[r2] = (on: 2026-02-10, kind: transfers, leg cash from konto to shop amount 30.00 PLN) "loose"

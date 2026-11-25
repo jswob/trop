@@ -1,0 +1,80 @@
+# tally 2.3.1 C-9 with L §8.2 l.2252 (G2's review finding 3): what topup[2026-02]'s `when` read at its point,
+# `ok[2026-02]` included, is its link's read set: f lists `assumed: feb guess` and inputs-of lists ok, in either
+# order of the `and`'s operands (da_runwhen gives the same). Before: no register line, ok not listed.
+# tally 2.3.1 rulings 22 (part 1, a link names): the row stands in for the tuple it names by the name alone; no link is refused, judged at a point or re-walked, and only a field read through o.fulfils reaches step 7's mark. Re-stored.
+=== da_runwhen2.tally
+model da
+  tally 2
+  on 2026-04-20
+  start 2026-01-01
+  end 2026-05-31
+
+source s "probe"
+unit PLN: currency minor 0.01
+index month = month 2026-01..2026-05
+place konto: accounts PLN lives 2026-01-01..
+place save: accounts PLN lives 2026-01-01..
+place shop: outside lives 1900-01-01..
+input bank: observed
+input lim: money PLN
+input amt: money PLN
+input d5: int
+input fm: month
+input ok[m in month]: bool
+
+move topup[m in month]: transfers
+  reads konto, save
+  on day_of(m, d5)
+  when bal(konto) < lim and ok[m]
+  leg cash from save to konto amount min(amt, bal(save))
+
+def fl: money PLN = flows(topup, fm)
+ask f: fl
+ask iof: inputs-of fl
+ask ob: observed(topup[fm]).cash.amount
+ask n: count(o in bank over fm where o.fulfils == topup[fm])
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  opening[konto] = 100.00 PLN at 2026-01-01 start "s"
+  opening[save] = 5 000.00 PLN at 2026-01-01 start "s"
+  lim = 600.00 PLN "s"
+  amt = 400.00 PLN "s"
+  d5 = 5 "s"
+  fm = 2026-02 "s"
+  ok[2026-01] = true "j"
+  ok[2026-02] = true assumed "feb guess" "f"
+  ok[2026-03] = true "m"
+  ok[2026-04] = true "a"
+  ok[2026-05] = true "y"
+
+version feb
+  cite s
+  governs 2026-02
+  known 2026-03-01
+  covers konto
+  bank[r1] = (on: 2026-02-05, kind: transfers, leg cash from save to konto amount 400.00 PLN, fulfils: topup[2026-02]) "the top-up"
+=== expect
+f: 400.00 PLN
+  assumed: feb guess (ok[2026-02])
+  unfulfilled: topup[2026-01]
+  cut 2026-04-20
+iof:
+  bank[r1] (source s "probe", locator "the top-up")
+  v:amt (source s "probe", locator "s")
+  v:d5 (source s "probe", locator "s")
+  v:fm (source s "probe", locator "s")
+  v:lim (source s "probe", locator "s")
+  v:ok[2026-01] (source s "probe", locator "j")
+  v:ok[2026-02] (source s "probe", locator "f")
+  v:opening[konto] (source s "probe", locator "s")
+  v:opening[save] (source s "probe", locator "s")
+  assumed: feb guess (ok[2026-02])
+  unfulfilled: topup[2026-01]
+  cut 2026-04-20
+n: 1
+  cut 2026-04-20
+ob: 400.00 PLN
+  cut 2026-04-20

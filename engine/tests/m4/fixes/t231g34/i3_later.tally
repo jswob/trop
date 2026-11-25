@@ -1,0 +1,49 @@
+model i3_later
+  tally 2
+  on 2026-04-20
+  start 2026-01-01
+  end 2026-05-31
+
+source s "probe"
+unit PLN: currency minor 0.01
+index month = month 2026-01..2026-05
+place konto: accounts PLN lives 2026-01-01..
+place shop: outside lives 1900-01-01..
+input okw[m in month]: bool
+input amt: money PLN
+input d25: int
+input fm: month
+
+move spend[m in month]: transfers
+  on day_of(m, d25)
+  when okw[m]
+  leg cash from konto to shop amount amt
+
+ask d2: spend[fm].day
+ask a2: spend[fm].cash.amount
+ask x2: spend[fm] == none
+ask f2: flows(spend, fm)
+ask b: bal(konto, 2026-03-31)
+ask kd: spend[fm].day as known 2026-02-28
+ask ka: spend[fm].cash.amount as known 2026-02-28
+ask kf: flows(spend, fm) as known 2026-02-28
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  opening[konto] = 1 000.00 PLN at 2026-01-01 start "s"
+  amt = 10.00 PLN "s"
+  d25 = 25 "s"
+  fm = 2026-02 "s"
+  okw[2026-01] = true "s"
+  okw[2026-02] = false "s"
+  okw[2026-03] = true "s"
+  okw[2026-04] = true "s"
+  okw[2026-05] = true "s"
+
+version v2
+  cite s
+  governs always
+  known 2026-03-01
+  replace okw[2026-02] = true "late: feb did happen"

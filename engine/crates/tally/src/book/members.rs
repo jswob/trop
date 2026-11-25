@@ -24,10 +24,11 @@ use crate::eval::{Collected, Ctx, Engine, Entry, Env};
 use crate::hole::{Hole, spread};
 use crate::model::{Fulfils, KeyVal, MoveInfo, MvRef, MvSrc, Reality, Span, Value};
 use crate::num::Num;
-use crate::syntax::{Bind, Stop};
+use crate::syntax::{Bind, Certainty, Stop};
 use crate::time::Day;
 use crate::walk::{
-    Amount, At, Dated, End, Exists, Inst, Law, LegVal, Status, Term, WalkAt, invariant, qty_value,
+    Amount, At, Dated, End, Exists, Inst, Law, LegVal, Status, Term, WalkAt, invariant,
+    kind_certainty, qty_value,
 };
 
 /// What a binding over movements ranges over (refcore's `_dom`, `event` or `obs`).
@@ -66,6 +67,19 @@ pub(crate) struct MvMember {
     pub day: Dated,
     /// Its stable id (L §2.5).
     pub id: String,
+    /// The refusal its existence met at run, read as a refused member (`Reading::Each`).
+    pub refused: Option<Refusal>,
+}
+
+/// How a reader takes a binding tuple refused at run, by its domain, its `where` or a
+/// movement's existence: it stops on it, or reads it as one refused member, as `any`, `all`
+/// and `sum` do (tally 2.3.1, rulings 17 statement A). L §5.11, §8.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub(crate) enum Reading {
+    /// The first such refusal refuses the reader where it is met.
+    Stops,
+    /// Each tuple is one member, a refused one among them.
+    Each,
 }
 
 impl Moving {
@@ -122,7 +136,6 @@ impl Moving {
                 id: o.id.clone(),
                 day: Some(o.day),
                 src: MvSrc::Obs,
-                member: false,
             },
             Moving::Adj(a) => MvRef {
                 id: a.id.clone(),
@@ -134,13 +147,11 @@ impl Moving {
                     leg: a.leg.name.clone(),
                     vids: a.vids.clone(),
                 },
-                member: false,
             },
             Moving::Pad(p, at) => MvRef {
                 id: p.id.clone(),
                 day: Some(at.day),
                 src: MvSrc::Pad,
-                member: false,
             },
         }))
     }
@@ -171,12 +182,13 @@ impl Engine {
     ///
     /// # Errors
     ///
-    /// The refusals the day, the span or a member meets; `NotBuilt` past what S builds.
+    /// The refusals the day, the span or a member meets, a member's only where `reading` stops
+    /// on it; `NotBuilt` past what S builds.
     pub(crate) fn movement_members(
         &mut self,
         m: &Reality,
         bind: &Bind,
-        dom: (MvDom, &str),
+        (dom, reading): ((MvDom, &str), Reading),
         env: &Env,
         ctx: Ctx,
     ) -> Result<Result<Vec<MvMember>, Hole>, Stop> {
@@ -205,7 +217,7 @@ impl Engine {
                 ));
             }
         };
-        self.span_members(m, dom, &span, ctx).map(Ok)
+        self.span_members(m, (dom, reading), &span, ctx).map(Ok)
     }
 
     /// A binding whose day or span is a hole: no member when no movement of the kind the cut
@@ -219,7 +231,7 @@ impl Engine {
         h: Hole,
         ctx: Ctx,
     ) -> Result<Result<Vec<MvMember>, Hole>, Stop> {
-        let mut movements = self.movements_of(m, dom, ctx)?;
+        let mut movements = self.movements_of(m, dom, None, ctx)?;
         for x in &movements {
             // one left out by its `when` is no candidate: the pins its day took are read
             // (L §8.2; tally 2.1.8 §4, #161)
@@ -263,18 +275,21 @@ impl Engine {
 
     /// The movements of the domain dated in span `sp`, an instance and the observations that
     /// fulfil it counted once, each with what it brings to a reader (refcore's
-    /// `span_members`). L §5.19 Bindings, §5.14, §8.2.
+    /// `span_members`); an instance whose evaluation is refused refuses them, or, where
+    /// `reading` reads each, is one refused member (tally 2.3.1, rulings 17 statement A).
+    /// L §5.19 Bindings, §5.14, §8.2.
     pub(crate) fn span_members(
         &mut self,
         m: &Reality,
-        dom: (MvDom, &str),
+        (dom, reading): ((MvDom, &str), Reading),
         sp: &Span,
         ctx: Ctx,
     ) -> Result<Vec<MvMember>, Stop> {
         binds_future(m, dom, sp, ctx)?;
         let mut out: Vec<(Moving, Option<Hole>)> = Vec::new();
+        let mut refusals: Vec<(String, Refusal)> = Vec::new();
         let mut fulfilled: BTreeSet<String> = BTreeSet::new();
-        for x in self.movements_of(m, dom, ctx)? {
+        for x in self.movements_of(m, dom, Some(sp), ctx)? {
             if let Moving::Plan(i) = &x
                 && left_out(m, i)
             {
@@ -305,6 +320,8 @@ impl Engine {
                     if let Moving::Plan(i) = &x
                         && let Some(e) = &i.err
                     {
+                        // a refused result lists the members it took before (N5)
+                        self.members_before(m, &out, ctx.cut)?;
                         return Err(Stop::Refused(e.clone()));
                     }
                     continue;
@@ -322,11 +339,19 @@ impl Engine {
                 if let Exists::Unknown(h) = &i.exists {
                     st = spread(&[st.as_ref(), Some(h)]);
                 }
-                if let Some(e) = &i.err {
-                    // a refused result lists what it read like a value (L §8.2 One read set;
-                    // 208.2; P21)
-                    self.absorb(&i.coll);
-                    return Err(Stop::Refused(e.clone()));
+                // a refused result lists what it read like a value (L §8.2 One read set;
+                // 208.2; P21)
+                match (&i.err, reading) {
+                    (Some(e), Reading::Stops) => {
+                        self.members_before(m, &out, ctx.cut)?;
+                        self.absorb(&i.coll);
+                        return Err(Stop::Refused(e.clone()));
+                    }
+                    (Some(e), Reading::Each) => {
+                        self.absorb(&i.coll);
+                        refusals.push((i.id.clone(), e.clone()));
+                    }
+                    (None, _) => {}
                 }
             }
             // an adjustment of a hole-day instance is a member only where that day falls before
@@ -363,47 +388,112 @@ impl Engine {
             out.push((x, st));
         }
         let drop = self.counted_once(m, &out, &fulfilled, ctx.cut)?;
-        out.retain(|(x, _)| !drop.contains(x.id()));
+        out.retain(|(x, _)| !drop.contains(x.id()) || refused_of(&refusals, x.id()).is_some());
         let mut res = Vec::with_capacity(out.len());
         for (x, unknown) in out {
-            let mut coll = Collected::default();
-            match &x {
-                Moving::Plan(i) => {
-                    if unfulfilled(m, i, ctx.cut) {
-                        coll.note(self.entry_id(entry("unfulfilled", &i.id))?);
-                    }
-                    if i.status == Status::Uncertain {
-                        coll.note(self.entry_id(entry("uncertain", &i.id))?);
-                    }
-                    coll.merge(&i.coll);
-                }
-                Moving::Obs(o) => coll.merge(&o.coll),
-                Moving::Adj(a) => coll.merge(&a.coll),
-                // a binding that counts a pad lists it (L §8.2, the `pad:` row; N3 on #241)
-                Moving::Pad(p, _) => {
-                    coll.merge(&p.coll);
-                    coll.merge(&p.reg);
-                }
-            }
+            let coll = self.member_reads(m, &x, ctx.cut)?;
             let day = x
                 .day()
                 .ok_or_else(|| invariant("a member of a binding with no day"))?;
-            // a decision whose day is a hole has its legs read as the plan has them, on the
-            // member alone (B1; ruling 14; refcore's `hole_day_dec_body`)
-            let mut value = x.value();
-            if let (Value::Mv(r), Moving::Plan(i)) = (&mut value, &x) {
-                r.member = unread_hole(m, i).is_some()
-                    && m.moves.get(&i.move_id).is_some_and(|mv| mv.decision);
-            }
             res.push(MvMember {
-                value,
+                value: x.value(),
                 unknown,
                 coll,
                 day,
                 id: x.id().to_owned(),
+                refused: refused_of(&refusals, x.id()),
             });
         }
         Ok(res)
+    }
+
+    /// What member `x` of a binding brings to its reader under cut `cut`: its `unfulfilled`
+    /// and `uncertain` entries and what decided whether it counts, its existence and day, its
+    /// amounts only where a field read sums them; an observation's, an adjustment's and a pad's
+    /// reads (L §8.2 One read set l.2252; tally 2.3.1 Q1.10, pick P16; rulings 17 statement B).
+    ///
+    /// # Errors
+    ///
+    /// As [`Engine::group_sides`].
+    fn member_reads(&mut self, m: &Reality, x: &Moving, cut: Day) -> Result<Collected, Stop> {
+        let mut coll = Collected::default();
+        match x {
+            Moving::Plan(i) => {
+                if unfulfilled(m, i, cut) {
+                    coll.note(self.entry_id(entry("unfulfilled", &i.id))?);
+                }
+                if i.status == Status::Uncertain {
+                    coll.note(self.entry_id(entry("uncertain", &i.id))?);
+                }
+                coll.merge(i.exist_coll.as_ref().unwrap_or(&i.coll));
+                self.group_sides(m, i, cut, &mut coll)?;
+            }
+            Moving::Obs(o) => coll.merge(&o.coll),
+            Moving::Adj(a) => coll.merge(&a.coll),
+            // a binding that counts a pad lists it (L §8.2, the `pad:` row; N3 on #241)
+            Moving::Pad(p, _) => {
+                coll.merge(&p.coll);
+                coll.merge(&p.reg);
+            }
+        }
+        Ok(coll)
+    }
+
+    /// The members `out` a binding took before an instance whose evaluation refuses it, their
+    /// reads taken by the reader: a refused result lists what it read like a value, the
+    /// members before the refused one included (L §8.2 One read set; tally 2.3.1 N5, P21).
+    ///
+    /// # Errors
+    ///
+    /// As [`Engine::member_reads`].
+    fn members_before(
+        &mut self,
+        m: &Reality,
+        out: &[(Moving, Option<Hole>)],
+        cut: Day,
+    ) -> Result<(), Stop> {
+        for (x, _) in out {
+            let coll = self.member_reads(m, x, cut)?;
+            self.absorb(&coll);
+        }
+        Ok(())
+    }
+
+    /// The register entries the other sides of `i`'s `same` group bring beside it: a binding
+    /// binds the group once, by `i`, and lists every side its lines name, each `unfulfilled`
+    /// and `uncertain` as its own (rulings 17 statement B). L §6.1, §8.2.
+    ///
+    /// # Errors
+    ///
+    /// The refusals reading the group or a side's instances meets.
+    fn group_sides(
+        &mut self,
+        m: &Reality,
+        i: &Inst,
+        cut: Day,
+        coll: &mut Collected,
+    ) -> Result<(), Stop> {
+        let groups = self.same_groups(m, cut)?;
+        let Some(group) = groups.get(&i.id) else {
+            return Ok(());
+        };
+        for x in group.iter().filter(|x| **x != i.id) {
+            let name = x.split_once('[').map_or(x.as_str(), |(n, _)| n);
+            let Some(mv) = m.moves.get(name) else {
+                continue;
+            };
+            let insts = self.plan_list(m, mv, cut)?;
+            let Some(side) = insts.iter().find(|s| s.id == *x) else {
+                continue;
+            };
+            if unfulfilled(m, side, cut) {
+                coll.note(self.entry_id(entry("unfulfilled", &side.id))?);
+            }
+            if side.status == Status::Uncertain {
+                coll.note(self.entry_id(entry("uncertain", &side.id))?);
+            }
+        }
+        Ok(())
     }
 
     /// The members a binding over an event kind leaves out so that a planned instance and the
@@ -474,10 +564,16 @@ impl Engine {
     /// one only `with uncertain`), observations and adjustments; a settlement's candidates
     /// see only the adjustments being settled (refcore's `movements_of`). L §5.19 Bindings,
     /// E §5 step 5.
+    ///
+    /// A modelled-past instance's pins and assumptions are the binding's reads only where its
+    /// day rests in the binding's span `sp`, none given for a span that is a hole (L §8.2
+    /// l.2252, "a movement dated outside the span adds nothing"; tally 2.3.1 R2, item 6; G2's
+    /// review B4).
     fn movements_of(
         &mut self,
         m: &Reality,
         (dom, id): (MvDom, &str),
+        sp: Option<&Span>,
         ctx: Ctx,
     ) -> Result<Vec<Moving>, Stop> {
         let cut = ctx.cut;
@@ -514,11 +610,17 @@ impl Engine {
                 continue;
             }
             for i in self.move_instances(m, mv, cut)?.iter() {
+                let outside =
+                    sp.is_some_and(|s| matches!(&i.day, Some(Dated::Day(d)) if !s.contains(*d)));
                 match i.status {
                     // the modelled past: the pins its day took are the binding's reads too
-                    // (L §8.2 One read set; tally 2.1.8 §4, #161)
+                    // (L §8.2 One read set; tally 2.1.8 §4, #161), where it rests in the span
+                    Status::Modelled if outside => {}
                     Status::Modelled => pins.merge(&i.coll.deciding()),
                     Status::Uncertain if !ctx.unc => {}
+                    // an uncertain one unfulfilled is left out whatever its day (tally 2.3.1
+                    // R1, N250.1)
+                    Status::Hole if !ctx.unc && uncertain_on_hole_day(m, mv, i) => {}
                     // one that doesn't exist the binding read to leave out, which
                     // `span_members` lists (L §8.2 One read set; P20)
                     Status::None
@@ -601,7 +703,7 @@ impl Engine {
         for mv in decided {
             for inst in self.move_instances(m, mv, ctx.cut)?.iter() {
                 let Some(run) = self.chain_run(walk, &inst.id)? else {
-                    out.extend(hole_day_member(inst));
+                    out.extend(hole_day_member(m, (mv, inst), ctx));
                     continue;
                 };
                 if limit.is_some_and(|point| run.point >= point) {
@@ -627,35 +729,6 @@ impl Engine {
             }
         }
         Ok(out)
-    }
-
-    /// Field `name` of instance `i`, whose day is the hole `h`, that the plan pass didn't read
-    /// (`unread_hole`): a leg of a decision's instance that a binding met, `v` being its
-    /// member's value, is a record, its places read as the plan has them at cut `cut` and its
-    /// amount and day that hole, so a `where` on its places is decided; any other field, and
-    /// any field of the movement read by its name, is that hole (L §5.14, §5.19 Bindings; the
-    /// review of G1's fix, BF1, P10; ruling 14; refcore's `hole_day_dec_body`, `_body_hole`).
-    ///
-    /// # Errors
-    ///
-    /// A load refusal met reading its places.
-    fn unread_field(
-        &mut self,
-        m: &Reality,
-        (v, i): (&MvRef, &Inst),
-        (name, is_leg): (&str, bool),
-        (h, cut): (Hole, Day),
-    ) -> Result<Value, Stop> {
-        let Some(mv) = m.moves.get(&i.move_id).filter(|_| is_leg && v.member) else {
-            return Ok(Value::Hole(h));
-        };
-        let Some(legs) = self.hole_day_legs(m, mv, i, cut)? else {
-            return Ok(Value::Hole(h));
-        };
-        Ok(match legs.iter().find(|lg| lg.name == name) {
-            Some(lg) => same_leg_record(lg, &h),
-            None => Value::Hole(h),
-        })
     }
 
     /// The record behind a movement value at the reader's cut: an instance, an observation or
@@ -695,6 +768,32 @@ impl Engine {
                     .find(|(p, _)| p.id == v.id)
                     .map(|(p, at)| Moving::Pad(p, at)))
             }
+        }
+    }
+
+    /// The existence cell of movement `v`, a move's instance at the reader's cut, a plan's or a
+    /// decision's run, where it is no plain value: the hole, or `Err` its refusal; none for any
+    /// other (L §5.14 An instance's existence is a cell, §8.4; tally 2.3.1 R6, rulings 16 Q3;
+    /// rulings 23 (a): as it stands, whatever decided it).
+    ///
+    /// # Errors
+    ///
+    /// The instance's refusal; as [`Engine::move_instances`].
+    pub(crate) fn existence_cell(
+        &mut self,
+        m: &Reality,
+        v: &MvRef,
+        ctx: Ctx,
+    ) -> Result<Option<Hole>, Stop> {
+        let MvSrc::Inst(move_id, _) = &v.src else {
+            return Ok(None);
+        };
+        if m.moves.get(move_id).is_none() {
+            return Ok(None);
+        }
+        match self.mv_record(m, v, ctx)? {
+            Some(Moving::Plan(i)) => cell_of(&i),
+            Some(Moving::Obs(_) | Moving::Adj(_) | Moving::Pad(..)) | None => Ok(None),
         }
     }
 
@@ -764,10 +863,14 @@ impl Engine {
     /// `amount`, `day`), an attribute; an adjustment's `adjusts` and `change` (refcore's
     /// `mv_field`). L §5.14, §5.14.3, §5.19, §8.4.
     ///
+    /// A field read of a move's instance that doesn't exist, `.day` included, is refused
+    /// (L §5.14 An instance's existence is a cell; tally 2.3.1 R6, C-2).
+    ///
     /// # Errors
     ///
-    /// `RUN-RECORD` for a movement the cut doesn't see; the movement's refusal; a refused
-    /// leg; `LOAD-FIELD` for a field it lacks.
+    /// `RUN-NONE` for a move's instance that doesn't exist; `RUN-RECORD` for another movement
+    /// the cut doesn't see; the movement's refusal; a refused leg; `LOAD-FIELD` for a field it
+    /// lacks.
     pub(crate) fn mv_field(
         &mut self,
         m: &Reality,
@@ -776,6 +879,17 @@ impl Engine {
         ctx: Ctx,
     ) -> Result<Value, Stop> {
         let Some(src) = self.mv_record(m, v, ctx)? else {
+            let instance = match &v.src {
+                MvSrc::Inst(..) => true,
+                MvSrc::Missing => {
+                    let id = v.id.split_once('[').map_or(v.id.as_str(), |(n, _)| n);
+                    m.moves.get(id).is_some()
+                }
+                MvSrc::Obs | MvSrc::Adj { .. } | MvSrc::Kind(_) | MvSrc::Pad => false,
+            };
+            if instance {
+                return Err(not_there(&v.id));
+            }
             return Err(Stop::Refused(Refusal::new(
                 Code::Run(Run::Record),
                 format!("{} doesn't exist", v.id),
@@ -783,6 +897,17 @@ impl Engine {
         };
         let kind = src.kind(m)?;
         let is_leg = m.kind_legs(&kind).iter().any(|(n, _, _)| n == name);
+        // a leg's read of it is `leg_field`'s, which a later version may make exist
+        if !is_leg
+            && let Moving::Plan(i) = &src
+            && (i.exists == Exists::No || i.status == Status::None)
+            && !self.made_to_exist(m, i, ctx)?
+        {
+            // the refusal rests on the existence cell, so it lists what decided it, as every
+            // other reader of the cell does (L §8.2 l.2252; tally 2.3.1 statement E, N3)
+            self.absorb(i.exist_coll.as_ref().unwrap_or(&i.coll));
+            return Err(not_there(src.id()));
+        }
         match (&src, name) {
             // an adjustment's identity, its `day` and `adjusts`, carries none of its holes and
             // never its refusal, so a binding's `where` reading `a.adjusts` or `a.day` decides;
@@ -805,9 +930,12 @@ impl Engine {
             }
         }
         match &src {
+            // a field read of the instance carries its existence cell as it stands (tally
+            // 2.3.1 rulings 23 (a))
             Moving::Plan(i) => {
-                if let Some(e) = &i.err {
-                    return Err(Stop::Refused(e.clone()));
+                if let Some(h) = cell_of(i)? {
+                    self.absorb(i.exist_coll.as_ref().unwrap_or(&i.coll));
+                    return Ok(Value::Hole(h));
                 }
             }
             Moving::Obs(o) => {
@@ -818,23 +946,27 @@ impl Engine {
             Moving::Adj(_) | Moving::Pad(..) => {}
         }
         // a field the plan pass didn't read, of an instance whose day is a hole (a decision,
-        // which never runs without a day; one under a hole `at`), is that hole, but a
-        // decision's leg a binding met (L §5.14; the review of G1's fix, BF1, P10; ruling 14)
+        // which never runs without a day; one under a hole `at`), is that hole, read by its
+        // name or through a binding alike (L §5.14; E §4.2 step 3, "a read of its legs is that
+        // hole"; tally 2.3.1 R1, N250.8, C-13.9)
         if name != "day"
             && let Moving::Plan(i) = &src
             && let Some(h) = unread_hole(m, i)
         {
-            return self.unread_field(m, (v, i), (name, is_leg), (h, ctx.cut));
+            return Ok(Value::Hole(h));
         }
         // a leg a later version changes, of an instance whose day is a hole, is read as that
-        // hole: its amount and day, and its places too where the version moves them, since
-        // its booking cut is a hole with its day (L §5.14; pick P12, by C-4's measure, P10)
+        // hole where the version changes it, since its booking cut is a hole with its day: its
+        // day, its amount where a version changes it, its places where one moves them, the
+        // whole leg where one does both (L §5.14; pick P12, by C-4's measure, P10; tally 2.3.1
+        // R1, N250.21)
         if is_leg
             && let Moving::Plan(i) = &src
-            && let Some((h, moved)) = self.changed_leg(m, i, name, ctx.cut)?
+            && let Some((h, changes)) = self.changed_leg(m, i, name, ctx.cut)?
         {
             return Ok(match i.legs.iter().find(|lg| lg.name == name) {
-                Some(lg) if !moved => same_leg_record(lg, &h),
+                Some(lg) if !changes.moved() => same_leg_record(lg, &h),
+                Some(lg) if !changes.amount => moved_leg_record(m, lg, &h, changes)?,
                 Some(_) | None => Value::Hole(h),
             });
         }
@@ -866,10 +998,10 @@ impl Engine {
     }
 
     /// The hole of leg `leg` of instance `inst`, whose day is a hole, where a later version
-    /// known by cut `cut` changes it, and whether it moves the leg's places: C-4's measure
-    /// made an adjustment of it whose existence is that hole (`Engine::unsure_of`); none for
-    /// an instance with a day, or a leg no version changes (L §5.14, E §5 steps 1 and 2; pick
-    /// P12).
+    /// known by cut `cut` changes it, and what the versions change: C-4's measure made an
+    /// adjustment of it whose existence is that hole (`Engine::unsure_of`), which moves the
+    /// leg's places or whose δ is no known 0; none for an instance with a day, or a leg no
+    /// version changes (L §5.14, E §5 steps 1 to 3; pick P12; tally 2.3.1 N250.21).
     ///
     /// # Errors
     ///
@@ -880,7 +1012,7 @@ impl Engine {
         inst: &Inst,
         leg: &str,
         cut: Day,
-    ) -> Result<Option<(Hole, bool)>, Stop> {
+    ) -> Result<Option<(Hole, Changes)>, Stop> {
         let Some(Dated::Hole(h)) = &inst.day else {
             return Ok(None);
         };
@@ -889,7 +1021,7 @@ impl Engine {
             .get(&inst.move_id)
             .ok_or_else(|| invariant("a movement of a move load didn't build"))?;
         let mut changed = false;
-        let mut moved = false;
+        let mut changes = Changes::default();
         // the measure is no cause the walk's forms print: the read gives the day's hole, which
         // prints as a hole (E §10; P26)
         let before = self.trace_walked();
@@ -898,10 +1030,24 @@ impl Engine {
         for a in unsure? {
             if a.inst_id == inst.id && a.leg.name == leg {
                 changed = true;
-                moved = moved || !a.new_ends.is_empty();
+                // the ends as [from, to], before the step and after it; ends given with none
+                // before them move both (E §5 step 2)
+                match (a.before_ends.as_slice(), a.new_ends.as_slice()) {
+                    (_, []) => {}
+                    ([from0, to0], [from1, to1]) => {
+                        changes.from = changes.from || from0 != from1;
+                        changes.to = changes.to || to0 != to1;
+                    }
+                    _ => {
+                        changes.from = true;
+                        changes.to = true;
+                    }
+                }
+                let same_amount = matches!(&a.delta, Amount::Qty(d) if d.is_zero());
+                changes.amount = changes.amount || !same_amount;
             }
         }
-        Ok(changed.then(|| (h.clone(), moved)))
+        Ok(changed.then(|| (h.clone(), changes)))
     }
 
     /// A movement of a `same` group whose members state kinds not all inside the binding's
@@ -1103,21 +1249,14 @@ impl Engine {
                     .find(|a| a.inst_id == iid && a.leg.name == leg && a.vids.contains(&vid))
                     .map_or(Value::None, |a| Moving::Adj(a).value()))
             }
-            Some(Fulfils::Instance(mid, keys)) => {
-                let mv = m
-                    .moves
-                    .get(&mid)
-                    .ok_or_else(|| invariant("a link to a move load didn't build"))?;
-                // the instance by its existence alone, never its amounts: a field read of it
-                // takes it again at the reader's cut (L §5.19 Links; P22)
-                // the plan's list it reads is no cause the walk's forms print: the link prints
-                // as the observation's row (E §10; P26)
-                let before = self.trace_walked();
-                let named = self.linked_instance(m, mv, &keys, cut);
-                self.trace_walked_back(before);
-                let named = named?;
-                Ok(named.map_or(Value::None, |r| Value::Mv(Box::new(r))))
-            }
+            // the name alone, its move and keys, never the instance's existence: a field read
+            // through it takes the instance again at the reader's cut, `RUN-NONE` where it
+            // doesn't exist (L §5.19 Links; tally 2.3.1 rulings 22 (1), (6))
+            Some(Fulfils::Instance(mid, keys)) => Ok(Value::Mv(Box::new(MvRef {
+                id: super::observe::inst_id(&mid, &keys),
+                day: None,
+                src: MvSrc::Inst(mid, keys),
+            }))),
         }
     }
 
@@ -1165,10 +1304,7 @@ impl Engine {
             if let Some(made) = self.made_to_exist_leg(m, i, name, ctx)? {
                 return Ok(made);
             }
-            return Err(Stop::Refused(Refusal::new(
-                Code::Run(Run::None),
-                format!("{} doesn't exist: a field read of it", src.id()),
-            )));
+            return Err(not_there(src.id()));
         }
         if let Some(h) = body_hole(src) {
             return Ok(Value::Hole(h));
@@ -1207,6 +1343,25 @@ impl Engine {
             Ok(_) | Err(Stop::Refused(_)) => Ok(()),
             Err(stop) => Err(stop),
         }
+    }
+
+    /// Whether a later version made plan instance `i`, which didn't exist at its booking cut,
+    /// exist: one of the cut's adjustments of it, of any leg, whose step made it exist
+    /// (refcore's `made_to_exist_leg`). E §5 steps 1 and 3, L §5.14.3.
+    ///
+    /// # Errors
+    ///
+    /// As [`Engine::adjust_move`].
+    fn made_to_exist(&mut self, m: &Reality, i: &Inst, ctx: Ctx) -> Result<bool, Stop> {
+        let mv = m
+            .moves
+            .get(&i.move_id)
+            .ok_or_else(|| invariant("an instance of a move load didn't build"))?;
+        if mv.decision {
+            return Ok(false);
+        }
+        let adjustments = self.adjust_move(m, mv, ctx.cut)?;
+        Ok(adjustments.iter().any(|a| a.inst_id == i.id && a.made))
     }
 
     /// Leg `name` of plan instance `i`, which didn't exist at its booking cut, as a later
@@ -1286,7 +1441,6 @@ fn attr_field(m: &Reality, src: &Moving, name: &str) -> Result<Value, Stop> {
                 id: a.inst_id.clone(),
                 day: a.inst_day,
                 src: MvSrc::Inst(a.move_id.clone(), a.inst_keys.clone()),
-                member: false,
             }))),
             "change" => Some(amount_value(m, &a.delta, a.leg.unit.as_deref())?),
             _ => None,
@@ -1412,6 +1566,50 @@ fn same_leg_record(lg: &LegVal, same: &Hole) -> Value {
     ])
 }
 
+/// What the later versions change of a leg of an instance whose day is a hole: its `from`,
+/// its `to`, its amount (E §5 steps 2 and 3; tally 2.3.1 N250.21).
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
+struct Changes {
+    /// A version moves the leg's `from`.
+    from: bool,
+    /// A version moves the leg's `to`.
+    to: bool,
+    /// A version changes the leg's amount, or its δ isn't known to be 0.
+    amount: bool,
+}
+
+impl Changes {
+    /// Whether a version moves one of the leg's places (E §5 step 2).
+    fn moved(self) -> bool {
+        self.from || self.to
+    }
+}
+
+/// A leg of an instance whose day is the hole `h`, whose places later versions move as
+/// `changes` says and whose amount none changes, as a record: a place a version moves, and
+/// its `day`, that hole; its other place and its `amount` its own, fields that need no unknown
+/// (L §5.14; tally 2.3.1 R1, N250.21).
+///
+/// # Errors
+///
+/// The leg's amount refused.
+fn moved_leg_record(m: &Reality, lg: &LegVal, h: &Hole, changes: Changes) -> Result<Value, Stop> {
+    let end = |e: &End, moved: bool| match e {
+        _ if moved => Value::Hole(h.clone()),
+        End::Place(p) => Value::Key(KeyVal::Thing(p.clone())),
+        End::Hole(own) => Value::Hole(own.clone()),
+    };
+    Ok(Value::Record(vec![
+        ("from".to_owned(), end(&lg.from, changes.from)),
+        ("to".to_owned(), end(&lg.to, changes.to)),
+        (
+            "amount".to_owned(),
+            amount_value(m, &lg.amount, lg.unit.as_deref())?,
+        ),
+        ("day".to_owned(), Value::Hole(h.clone())),
+    ]))
+}
+
 /// An amount as a value: a quantity of its unit, or its hole. L §5.14.
 fn amount_value(m: &Reality, a: &Amount, unit: Option<&str>) -> Result<Value, Stop> {
     match a {
@@ -1430,7 +1628,6 @@ pub(crate) fn inst_ref(i: &Inst) -> MvRef {
         id: i.id.clone(),
         day: i.day.as_ref().and_then(Dated::day),
         src: MvSrc::Inst(i.move_id.clone(), i.keys.clone()),
-        member: false,
     }
 }
 
@@ -1511,6 +1708,15 @@ fn unfulfilled(m: &Reality, i: &Inst, cut: Day) -> bool {
     i.status == Status::Past
 }
 
+/// The refusal the existence of the movement `id` met among `refusals`, a binding's refused
+/// members (tally 2.3.1, rulings 17 statement A; L §5.19, §8).
+fn refused_of(refusals: &[(String, Refusal)], id: &str) -> Option<Refusal> {
+    refusals
+        .iter()
+        .find(|(r, _)| r == id)
+        .map(|(_, e)| e.clone())
+}
+
 /// A register entry with no figure (L §8.2).
 fn entry(word: &'static str, text: &str) -> Entry {
     Entry {
@@ -1557,15 +1763,29 @@ fn left_out(m: &Reality, i: &Inst) -> bool {
     i.status == Status::None || (run && i.exists == Exists::No)
 }
 
-/// A decision's instance `inst` that no walk ran: one that may exist and whose day is a hole
-/// runs on no day of the walk, so it is a member with that hole, never left out; else none
-/// (L §5.14: a movement whose day is a hole makes every binding over a span it might fall in
-/// a hole; tally 2.3 review of G1, B1).
-fn hole_day_member(inst: &Inst) -> Option<Moving> {
+/// A decision's instance `inst` of move `mv` that no walk ran: one that may exist and whose
+/// day is a hole runs on no day of the walk, so it is a member with that hole, never left
+/// out, but one of an uncertain kind that nothing fulfils, which a binding counts only `with
+/// uncertain` (the read `ctx`'s), whatever its day; else none (L §5.14: a movement whose day
+/// is a hole makes every binding over a span it might fall in a hole; §5.14 Certainty; tally
+/// 2.3 review of G1, B1; tally 2.3.1 R1, N250.1).
+fn hole_day_member(m: &Reality, (mv, inst): (&MoveInfo, &Inst), ctx: Ctx) -> Option<Moving> {
+    if !ctx.unc && inst.obs.is_empty() && uncertain_on_hole_day(m, mv, inst) {
+        return None;
+    }
     match inst.day {
         Some(Dated::Hole(_)) if inst.exists != Exists::No => Some(Moving::Plan(inst.clone())),
         Some(Dated::Hole(_) | Dated::Day(_)) | None => None,
     }
+}
+
+/// Whether instance `i` of move `mv` is of an uncertain kind and its day a hole: unfulfilled
+/// (a plan's status `Hole` is one no observation the cut applies fulfils), a binding without
+/// `with uncertain` leaves it out whatever its day (L §5.14 Certainty, §5.19 Bindings; tally
+/// 2.3.1 R1, N250.1).
+fn uncertain_on_hole_day(m: &Reality, mv: &MoveInfo, i: &Inst) -> bool {
+    matches!(i.day, Some(Dated::Hole(_)))
+        && kind_certainty(m, &mv.kind) == Some(Certainty::Uncertain)
 }
 
 /// Movements in movement order: by day, a hole day after every day, then by their typed order,
@@ -1577,6 +1797,28 @@ fn in_order(movements: Vec<Moving>) -> Result<Vec<Moving>, Stop> {
     }
     keyed.sort_by(|a, b| a.0.cmp(&b.0));
     Ok(keyed.into_iter().map(|(_, mv)| mv).collect())
+}
+
+/// Instance `i`'s existence cell where it is no plain value: `Err` its refusal, else the hole
+/// of an existence that is one; none where it exists or doesn't (L §5.14 An instance's
+/// existence is a cell, §8.4; tally 2.3.1 rulings 23 (a)).
+pub(super) fn cell_of(i: &Inst) -> Result<Option<Hole>, Stop> {
+    if let Some(e) = &i.err {
+        return Err(Stop::Refused(e.clone()));
+    }
+    Ok(match &i.exists {
+        Exists::Unknown(h) => Some(h.clone()),
+        Exists::Yes | Exists::No => None,
+    })
+}
+
+/// The refusal of a field read of move instance `id`, which doesn't exist (L §5.14 An
+/// instance's existence is a cell, §8.4 `RUN-NONE`; tally 2.3.1 R6, C-2).
+fn not_there(id: &str) -> Stop {
+    Stop::Refused(Refusal::new(
+        Code::Run(Run::None),
+        format!("{id} doesn't exist: a field read of it"),
+    ))
 }
 
 #[cfg(test)]
@@ -1737,6 +1979,119 @@ ask b: bal(sv2, 2026-06-30)
 ask f_p: flows(top, 2026-05) with dd = 2026-05-04
 "#;
 
+    /// An uncertain kind's decision and plan on day `dm`, written in for `DAY` (#250 row 1,
+    /// the review of G1's fix, N-a's `b1e`).
+    const MAYBE: &str = r#"model maybe
+  tally 2
+  on 2026-04-20
+  start 2026-01-01
+  end 2026-12-31
+
+source fixture "invented values"
+
+unit PLN: currency minor 0.01
+
+kind maybes: event uncertain
+  leg cash: PLN
+
+place sv2: accounts PLN lives 2026-01-01..
+
+place sv4: accounts PLN lives 2026-01-01..
+
+place world: outside lives 1900-01-01..
+
+input pay: money PLN
+
+input dm: date
+
+move mb: maybes
+  on dm
+  reads sv2
+  leg cash from sv2 to world amount min(bal(sv2), pay)
+
+move mp: maybes
+  on dm
+  leg cash from sv4 to world amount pay
+
+version v
+  cite fixture
+  governs always
+  known 2026-01-01
+  pay = 100.00 PLN "its cap"
+  dm = DAY "its day"
+  opening[sv2] = 500.00 PLN at 2026-01-01 start "own"
+  opening[sv4] = 500.00 PLN at 2026-01-01 start "own"
+
+ask n: count(t in maybes over 2026-05)
+
+ask s: sum(t.cash.amount for t in maybes over 2026-05)
+
+ask nu: count(t in maybes over 2026-05) with uncertain
+"#;
+
+    /// Pays on day `w`, written in for `DAY`, whose second a version known inside the run
+    /// moves to another place, its amount left (T's `t23-g1/surv-changed-amt`, #250).
+    const MOVED: &str = r#"model moved
+  tally 2
+  on 2026-06-10
+  start 2026-03-01
+  end 2026-06-30
+
+source fixture "invented values"
+
+unit PLN: currency minor 0.01
+
+index ks = [k1, k2]
+
+place konto: accounts PLN lives 2026-01-01..
+
+place other: accounts PLN lives 2026-01-01..
+
+place world: outside lives 1900-01-01..
+
+input amt[k in ks]: money PLN
+
+input dest[k in ks]: key accounts
+
+input w: date
+
+input d_at: date
+
+move pay[k in ks]: transfers
+  on w
+  at d_at
+  leg cash from world to dest[k] amount amt[k]
+
+version v
+  cite fixture
+  governs always
+  known 2026-01-01
+  d_at = 2026-03-01 "its law date"
+  w = DAY "its day"
+  amt[k1] = 100.00 PLN "its amount"
+  amt[k2] = 100.00 PLN "its amount"
+  dest[k1] = konto "its place"
+  dest[k2] = konto "its place"
+  opening[konto] = 500.00 PLN at 2026-03-01 start "own"
+  opening[other] = 0.00 PLN at 2026-03-01 start "own"
+
+version a1
+  cite fixture
+  governs 2026..
+  known 2026-03-20
+  replace amt[k1] = 150.00 PLN "raised"
+
+version a2
+  cite fixture
+  governs 2026..
+  known 2026-03-22
+  replace dest[k2] = other "moved"
+
+ask q2: pay[k2].cash
+
+ask q1: pay[k1].cash
+"#;
+
     /// The lines of ask `ask` over [`SWEEP`] with its day `day`.
     fn lines(day: &str, ask: &str) -> Vec<String> {
         lines_of(SWEEP, day, ask)
@@ -1787,18 +2142,13 @@ ask f_p: flows(top, 2026-05) with dd = 2026-05-04
     }
 
     #[test]
-    fn a_where_on_a_hole_day_decisions_places_is_decided() {
-        // ruling 14 (P10): a binding reads a hole-day decision's places as the plan has them,
-        // so a member the `where` fails is counted on no day; one it takes is the day's hole;
-        // read by its name, the place is that hole (B1's body; refcore's `hole_day_dec_body`)
+    fn a_hole_day_decisions_places_are_its_hole_through_a_binding_too() {
+        // E §4.2 step 3, "a read of its legs is that hole" (tally 2.3.1 R1, N250.8, C-13.9):
+        // a hole-day decision's place is the day's hole by its name and through a binding
+        // alike, so a `where` on it makes the member unknown, whether it would fail or take it
         let window = "?\"date within window(2026-05-04, 2026-05-06) not precise enough for the day of sweep\" (dd)";
         let day = "window(2026-05-04, 2026-05-06)";
-        assert_eq!(
-            lines_of(SWEEP, day, "w_to"),
-            ["w_to: 0", "  cut 2026-04-20"],
-            "the where fails"
-        );
-        for ask in ["w_from", "d_to"] {
+        for ask in ["w_to", "w_from", "d_to"] {
             assert_eq!(
                 lines_of(SWEEP, day, ask),
                 [
@@ -1809,6 +2159,57 @@ ask f_p: flows(top, 2026-05) with dd = 2026-05-04
                 "{ask}: the window's hole"
             );
         }
+    }
+
+    #[test]
+    fn an_uncertain_movement_on_a_hole_day_is_left_out_without_with_uncertain() {
+        // L §5.14 Certainty (tally 2.3.1 R1, N250.1): a binding counts an unfulfilled movement
+        // of an uncertain kind only `with uncertain`, whatever its day, a decision's and a
+        // plan's alike
+        let day = "window(2026-05-04, 2026-05-06)";
+        assert_eq!(
+            lines_of(MAYBE, day, "n"),
+            ["n: 0", "  cut 2026-04-20"],
+            "none counted"
+        );
+        assert_eq!(
+            lines_of(MAYBE, day, "s"),
+            ["s: 0.00 PLN", "  cut 2026-04-20"],
+            "none summed"
+        );
+        let nu = lines_of(MAYBE, day, "nu");
+        assert!(
+            nu.first()
+                .is_some_and(|line| line.starts_with("nu: ?\"date within window")),
+            "with uncertain, the day's hole: {nu:?}"
+        );
+    }
+
+    #[test]
+    fn a_hole_day_plans_leg_a_version_moves_keeps_its_amount() {
+        // L §5.14 (tally 2.3.1 R1, N250.21): a version that moves k2's place and leaves its
+        // amount makes the place it moves and the day the hole, its from and amount values;
+        // one that changes k1's amount leaves its places
+        let window = "?\"date within window(2026-03-05, 2026-03-25) not precise enough for the day of pay[k2]\" (w)";
+        assert_eq!(
+            lines_of(MOVED, "window(2026-03-05, 2026-03-25)", "q2"),
+            [
+                format!("q2: (from: world, to: {window}, amount: 100.00 PLN, day: {window})"),
+                "  unknown day: w".to_owned(),
+                "  cut 2026-06-10".to_owned()
+            ],
+            "the moved place's hole"
+        );
+        let k1 = "?\"date within window(2026-03-05, 2026-03-25) not precise enough for the day of pay[k1]\" (w)";
+        assert_eq!(
+            lines_of(MOVED, "window(2026-03-05, 2026-03-25)", "q1"),
+            [
+                format!("q1: (from: world, to: konto, amount: {k1}, day: {k1})"),
+                "  unknown day: w".to_owned(),
+                "  cut 2026-06-10".to_owned()
+            ],
+            "the changed amount's hole"
+        );
     }
 
     #[test]
@@ -1887,6 +2288,150 @@ ask f_p: flows(top, 2026-05) with dd = 2026-05-04
                     "  cut 2026-04-20"
                 ],
                 "{day}: booked after it"
+            );
+        }
+    }
+
+    /// A monthly spend skipped in February by its `when`, and in March by a `none` day: DAY
+    /// is February's.
+    const GONE: &str = r#"model gone
+  tally 2
+  on 2026-04-20
+  start 2026-01-01
+  end 2026-05-31
+
+source s "probe"
+
+unit PLN: currency minor 0.01
+
+index month = month 2026-01..2026-05
+
+place konto: accounts PLN lives 2026-01-01..
+
+place shop: outside lives 1900-01-01..
+
+input dd[m in month]: date
+
+input skip_m: month
+
+input amt: money PLN
+
+move spend[m in month]: transfers
+  on dd[m]
+  when m != skip_m
+  leg cash from konto to shop amount amt
+
+ask d2: spend[2026-02].day
+
+ask a2: spend[2026-02].cash.amount
+
+ask d3: spend[2026-03].day
+
+ask d4: spend[2026-04].day
+
+ask isn: spend[2026-02] == none
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  skip_m = 2026-02 "s"
+  amt = 10.00 PLN "s"
+  dd[2026-01] = 2026-01-20 "s"
+  dd[2026-02] = DAY "s"
+  dd[2026-03] = none "s"
+  dd[2026-04] = 2026-04-20 "s"
+  dd[2026-05] = 2026-05-20 "s"
+"#;
+
+    #[test]
+    fn a_field_read_of_an_instance_that_doesnt_exist_is_refused_its_day_too() {
+        // L §5.14 An instance's existence is a cell (tally 2.3.1 R6, C-2): a false `when` and
+        // a `none` day leave no instance; any field read of it is RUN-NONE, and the missing
+        // instance equals nothing
+        let gone =
+            |id: &str| format!("refused: RUN-NONE spend[{id}] doesn't exist: a field read of it");
+        for (ask, want) in [
+            ("d2", format!("d2: {}", gone("2026-02"))),
+            ("a2", format!("a2: {}", gone("2026-02"))),
+            ("d3", format!("d3: {}", gone("2026-03"))),
+            ("d4", "d4: 2026-04-20".to_owned()),
+            ("isn", "isn: false".to_owned()),
+        ] {
+            assert_eq!(
+                lines_of(GONE, "2026-02-20", ask),
+                [want, "  cut 2026-04-20".to_owned()],
+                "{ask}"
+            );
+        }
+    }
+
+    /// A two-key move whose first key's `where` is refused in February (DAY is unused).
+    const PREFIX: &str = r#"model prefix
+  tally 2
+  on 2026-01-01
+  start 2026-01-01
+  end 2026-03-31
+
+source s "probe"
+
+unit PLN: currency minor 0.01
+
+index month = month 2026-01..2026-03
+
+index kinds = [a]
+
+place konto: accounts PLN lives 2026-01-01..
+
+place shop: outside lives 1900-01-01..
+
+input dz[m in month]: int
+
+input ten: int
+
+input amt: money PLN
+
+input d25: int
+
+input fm: month
+
+move spend[m in month where ten / dz[m] > 0, k in kinds]: transfers
+  on day_of(m, d25)
+  leg cash from konto to shop amount amt
+
+ask dy: spend[fm, a].day
+
+ask am: spend[fm, a].cash.amount
+
+ask x5: spend[fm, a] == none
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  ten = 10 "s"
+  amt = 10.00 PLN "s"
+  d25 = 25 "s"
+  fm = 2026-02 "s"
+  dz[2026-01] = 1 "s"
+  dz[2026-02] = 0 "s"
+  dz[2026-03] = 1 "s"
+"#;
+
+    #[test]
+    fn a_field_read_at_the_full_keys_of_a_tuple_refused_before_them_is_its_refusal() {
+        // L §5.14 An instance's existence is a cell (l.1362; tally 2.3.1 R6, G2's review B2):
+        // the tuple refused before its later key stands for every instance its keys begin, so
+        // a field read at the full keys is its refusal, not a missing instance, and so is its
+        // comparison with none (rulings 16 Q3)
+        for ask in ["dy", "am", "x5"] {
+            assert_eq!(
+                lines_of(PREFIX, "", ask),
+                [
+                    format!("{ask}: refused: RUN-DIV division by zero"),
+                    "  cut 2026-01-01".to_owned()
+                ],
+                "{ask}"
             );
         }
     }

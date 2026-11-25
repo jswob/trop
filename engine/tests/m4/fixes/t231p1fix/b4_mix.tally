@@ -1,0 +1,48 @@
+model b4
+  tally 2
+  on 2026-05-20
+  start 2026-01-01
+  end 2026-03-31
+
+source s "probe"
+unit PLN: currency minor 0.01
+index month = month 2026-01..2026-03
+place pot: accounts PLN lives 2026-01-01..
+place pot2: accounts PLN lives 2026-01-01..
+place landlord: outside lives 1900-01-01..
+place world2: outside lives 1900-01-01..
+input bank: observed
+input amt: money PLN
+input d5[m in month]: int
+
+move rent[m in month]: transfers
+  on day_of(m, d5[m])
+  leg cash from pot to landlord amount amt
+
+ask c: bal(pot, 2026-03-31)
+ask c2: bal(pot2, 2026-03-31)
+ask rs: residuals pot 2026-01-01..2026-03-31
+ask rs2: residuals pot2 2026-01-01..2026-03-31
+ask rj: residuals pot 2026-01
+ask rf: residuals pot2 2026-02
+ask rk: residuals pot 2026-01-01..2026-03-31 as known 2026-01-20
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  amt = 100.00 PLN "s"
+  d5[2026-01] = 5 "s"
+  d5[2026-02] = ?"feb day?" "s"
+  d5[2026-03] = ?"mar day?" "s"
+  opening[pot] = 9000.00 PLN at 2026-01-01 start "s"
+  opening[pot2] = 500.00 PLN at 2026-01-01 start "s"
+
+version q1
+  cite s
+  governs 2026-01-01..2026-03-31
+  known 2026-04-01
+  covers pot
+  bank[a1] = (on: 2026-01-06, kind: transfers, leg cash from pot to landlord amount 60.00 PLN, fulfils: rent[2026-01]) "jan part one"
+  bank[a2] = (on: 2026-01-08, kind: transfers, leg cash from pot2 to world2 amount 50.00 PLN, fulfils: rent[2026-01]) "jan part two"
+  bank[a3] = (on: 2026-02-09, kind: transfers, leg cash from pot2 to world2 amount 120.00 PLN, fulfils: rent[2026-02]) "feb elsewhere"

@@ -426,15 +426,19 @@ fn grouped(
     results: &[(usize, Printed)],
     entries: &mut Entries,
 ) -> Result<Vec<Grouped>, Stop> {
-    let mut by_text: Vec<(&Printed, Vec<usize>)> = Vec::new();
+    let mut by_text: Vec<(&Printed, Vec<String>, Vec<usize>)> = Vec::new();
     for (at, (_, printed)) in results.iter().enumerate() {
-        match by_text.iter_mut().find(|(seen, _)| seen.same(printed)) {
-            Some((_, members)) => members.push(at),
-            None => by_text.push((printed, vec![at])),
+        let pins = pinned_texts(printed, entries)?;
+        let found = by_text
+            .iter_mut()
+            .find(|(seen, seen_pins, _)| seen.same(printed) && *seen_pins == pins);
+        match found {
+            Some((_, _, members)) => members.push(at),
+            None => by_text.push((printed, pins, vec![at])),
         }
     }
     let mut lines = Vec::new();
-    for (_, members) in &by_text {
+    for (_, _, members) in &by_text {
         let mut given = Vec::with_capacity(members.len());
         for at in members {
             given.push(combo_of(combos, results, *at)?);
@@ -445,6 +449,21 @@ fn grouped(
     }
     lines.sort_by_key(|line| axes.order_key(&line.product));
     Ok(lines)
+}
+
+/// The `pinned:` entries result `printed` met, their texts sorted: options give the line's
+/// result together only where these are one too, its register being part of the result
+/// (refcore's `Result.key`; tally 2.3.1 S8, Q2.7). L §5.5, §8.2.
+fn pinned_texts(printed: &Printed, entries: &Entries) -> Result<Vec<String>, Stop> {
+    let mut out = Vec::new();
+    for id in printed.met.ids() {
+        let entry = entries.entry(*id)?;
+        if entry.word == "pinned" {
+            out.push(entry.text.clone());
+        }
+    }
+    out.sort();
+    Ok(out)
 }
 
 /// The combination of the result at `at` of `results`.
@@ -556,6 +575,7 @@ fn invariant(what: &str) -> Stop {
 #[cfg(test)]
 mod tests {
     use super::{Axes, split};
+    use crate::api::{Asks, Files, Given, Request, run};
     use std::collections::BTreeSet;
 
     fn axes(counts: &[usize]) -> Axes {
@@ -570,6 +590,37 @@ mod tests {
 
     fn set(xs: &[usize]) -> BTreeSet<usize> {
         xs.iter().copied().collect()
+    }
+
+    #[test]
+    fn options_with_other_pins_print_apart() {
+        // L §5.5, §8.2 (tally 2.3.1 S8): 5 under both options, but only ma's line pins k
+        let text = "model axis_pins\n  tally 2\n  on 2026-10-18\n  start 2026-01-01\n  end \
+                    2026-12-31\n\nsource s \"s\"\naxis mode\n  ma \"a\"\n  mb \"b\"\ninput \
+                    k: int\ninput j: int\n\ndef d: int = if mode == ma then (k as if {k = j}) \
+                    else k\n\nask q1: d\n\nversion ver\n  cite s\n  governs always\n  known \
+                    2026-01-01\n  k = 5 \"s\"\n  j = 5 \"s\"\n";
+        let given = vec![Given {
+            path: "axis_pins.tally".to_owned(),
+            bytes: Some(text.as_bytes().to_vec()),
+        }];
+        let lines = run(Files::new(given), &Request::new(Asks::Every))
+            .expect("an answer")
+            .lines()
+            .to_vec();
+        assert_eq!(
+            lines,
+            [
+                "q1 [mode = ma]: 5",
+                "  pinned: k = 5",
+                "  reading: mode = ma",
+                "  cut 2026-10-18",
+                "q1 [mode = mb]: 5",
+                "  reading: mode = mb",
+                "  cut 2026-10-18",
+            ],
+            "two lines, not [mode = *]"
+        );
     }
 
     #[test]

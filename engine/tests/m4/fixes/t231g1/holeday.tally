@@ -1,0 +1,47 @@
+model holeday
+  tally 2
+  on 2026-04-20
+  start 2026-01-01
+  end 2026-12-31
+
+source s "probe"
+unit PLN: currency minor 0.01
+place konto: accounts PLN lives 2026-01-01..
+place save: accounts PLN lives 2026-01-01..
+place other: accounts PLN lives 2026-01-01..
+input amt: money PLN
+input lim: money PLN
+input hd: date
+
+move pw: transfers
+  reads konto
+  on hd
+  leg cash from konto to other amount amt + 0 * bal(konto)
+
+move px: transfers
+  reads konto
+  on hd
+  leg cash from konto to save amount min(amt, bal(konto))
+
+move plan: transfers
+  on hd
+  leg cash from save to other amount amt
+
+ask d_to: pw.cash.to
+ask d_amt: pw.cash.amount
+ask d_cnt: count(m in transfers over 2026 where m.cash.to == other)
+ask x_to: px.cash.to
+ask x_amt: px.cash.amount
+ask p_to: plan.cash.to
+ask p_amt: plan.cash.amount
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  opening[konto] = 1 000.00 PLN at 2026-01-01 start "s"
+  opening[save] = 1 000.00 PLN at 2026-01-01 start "s"
+  opening[other] = 0.00 PLN at 2026-01-01 start "s"
+  amt = 100.00 PLN "s"
+  lim = 50.00 PLN "s"
+  hd = ?"which day?" "s"

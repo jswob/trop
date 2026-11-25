@@ -1,0 +1,9 @@
+scenario sc over p
+  tally 2
+  from 2026-01-01
+
+version low
+  cite s
+  governs 2026-01-01..2026-05-31
+  known 2026-01-01
+  replace lim = 500.00 PLN "the scenario's limit"

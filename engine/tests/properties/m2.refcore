@@ -35,7 +35,7 @@ o_flows: 19 129.21 DUK
   cut 2025-04-20
 o_net: 3 230.60 DUK
   cut 2025-04-20
-,10:masking-00,4:late,1:0,1428:k_bal_0: 10 137.58 DUK
+,10:masking-00,4:late,1:0,1336:k_bal_0: 10 137.58 DUK
   cut 2025-02-13
 k_bal_1: 23 704.39 DUK
   pad: konto 2025-01-31 end, pads:st_1:konto@2025-01-31 end of 0.00 DUK
@@ -61,8 +61,7 @@ o_bal: 24 614.86 DUK
   unfulfilled: pay[2025-04]
   unfulfilled: rent[2025-04]
   unfulfilled: save[2025-04]
-  held: rent_amt = 874.39 DUK (late), read for 2025-05-01
-  held: rent_amt = 874.39 DUK (late), read for 2025-06-01
+  held: rent_amt = 874.39 DUK (late), read for 2025-05-01, 2025-06-01
   cut 2025-04-20
 o_flows: 18 838.06 DUK
   pad: konto 2025-01-31 end, pads:st_1:konto@2025-01-31 end of 0.00 DUK
@@ -71,8 +70,7 @@ o_flows: 18 838.06 DUK
   unfulfilled: pay[2025-04]
   unfulfilled: rent[2025-04]
   unfulfilled: save[2025-04]
-  held: rent_amt = 874.39 DUK (late), read for 2025-05-01
-  held: rent_amt = 874.39 DUK (late), read for 2025-06-01
+  held: rent_amt = 874.39 DUK (late), read for 2025-05-01, 2025-06-01
   cut 2025-04-20
 o_net: 3 230.60 DUK
   cut 2025-04-20
@@ -207,7 +205,7 @@ o_flows: 13 826.10 DUK
 o_net: 5 789.69 DUK
   cut 2025-04-20
 warning: WARN-UNREAD place shops is read by nothing
-,10:masking-02,4:late,1:0,1617:k_bal_0: 4 355.93 DUK
+,10:masking-02,4:late,1:0,1521:k_bal_0: 4 355.93 DUK
   cut 2025-03-21
 k_bal_1: 18 466.15 DUK
   pad: konto 2025-02-28 end, pads:st_2:konto@2025-02-28 end of 0.00 DUK
@@ -237,8 +235,7 @@ o_bal: 15 875.92 DUK
   pad: konto 2025-03-31 end, pads:st_3:konto@2025-03-31 end of 0.00 DUK
   unfulfilled: pay[2025-04]
   unfulfilled: rent[2025-04]
-  held: rent_amt = 1 957.13 DUK (late), read for 2025-05-01
-  held: rent_amt = 1 957.13 DUK (late), read for 2025-06-01
+  held: rent_amt = 1 957.13 DUK (late), read for 2025-05-01, 2025-06-01
   cut 2025-04-20
 o_flows: 13 294.29 DUK
   pad: konto 2025-01-31 end, pads:st_1:konto@2025-01-31 end of 0.00 DUK
@@ -246,8 +243,7 @@ o_flows: 13 294.29 DUK
   pad: konto 2025-03-31 end, pads:st_3:konto@2025-03-31 end of 0.00 DUK
   unfulfilled: pay[2025-04]
   unfulfilled: rent[2025-04]
-  held: rent_amt = 1 957.13 DUK (late), read for 2025-05-01
-  held: rent_amt = 1 957.13 DUK (late), read for 2025-06-01
+  held: rent_amt = 1 957.13 DUK (late), read for 2025-05-01, 2025-06-01
   cut 2025-04-20
 o_net: 5 789.69 DUK
   cut 2025-04-20
@@ -380,7 +376,7 @@ o_flows: 18 025.35 DUK
   cut 2025-04-20
 o_net: 3 405.04 DUK
   cut 2025-04-20
-,10:masking-04,4:late,1:0,2042:k_bal_0: 7 423.06 DUK
+,10:masking-04,4:late,1:0,1946:k_bal_0: 7 423.06 DUK
   pad: konto 2025-01-31 end, pads:st_1:konto@2025-01-31 end of 0.00 DUK
   unfulfilled: rent[2025-02]
   cut 2025-02-21
@@ -413,8 +409,7 @@ o_bal: ?"rent[2025-04] on 2025-04-04 changed after it was paid (version late); i
   unfulfilled: pay[2025-04]
   unfulfilled: rent[2025-04]
   unfulfilled: save[2025-04]
-  held: rent_amt = 1 394.20 DUK (late), read for 2025-05-01
-  held: rent_amt = 1 394.20 DUK (late), read for 2025-06-01
+  held: rent_amt = 1 394.20 DUK (late), read for 2025-05-01, 2025-06-01
   cut 2025-04-20
 o_flows: ?"rent[2025-04] on 2025-04-04 changed after it was paid (version late); is back pay due, and when?" (rent[2025-04])
   pad: konto 2025-01-31 end, pads:st_1:konto@2025-01-31 end of 0.00 DUK
@@ -424,8 +419,7 @@ o_flows: ?"rent[2025-04] on 2025-04-04 changed after it was paid (version late);
   unfulfilled: pay[2025-04]
   unfulfilled: rent[2025-04]
   unfulfilled: save[2025-04]
-  held: rent_amt = 1 394.20 DUK (late), read for 2025-05-01
-  held: rent_amt = 1 394.20 DUK (late), read for 2025-06-01
+  held: rent_amt = 1 394.20 DUK (late), read for 2025-05-01, 2025-06-01
   cut 2025-04-20
 o_net: 3 405.04 DUK
   cut 2025-04-20
@@ -784,7 +778,7 @@ o_flows: 24 740.20 DUK
 o_net: 4 947.85 DUK
   cut 2025-04-20
 warning: WARN-UNREAD place shops is read by nothing
-,10:masking-09,4:late,1:0,1596:k_bal_0: 12 464.87 DUK
+,10:masking-09,4:late,1:0,1504:k_bal_0: 12 464.87 DUK
   cut 2025-02-25
 k_bal_1: 32 812.83 DUK
   pad: konto 2025-01-31 end, pads:st_1:konto@2025-01-31 end of 0.00 DUK
@@ -814,8 +808,7 @@ o_bal: 33 278.09 DUK
   unfulfilled: pay[2025-04]
   unfulfilled: rent[2025-04]
   unfulfilled: save[2025-04]
-  held: rent_amt = 900.45 DUK (late), read for 2025-05-01
-  held: rent_amt = 900.45 DUK (late), read for 2025-06-01
+  held: rent_amt = 900.45 DUK (late), read for 2025-05-01, 2025-06-01
   cut 2025-04-20
 o_flows: 24 583.30 DUK
   pad: konto 2025-01-31 end, pads:st_1:konto@2025-01-31 end of 0.00 DUK
@@ -824,8 +817,7 @@ o_flows: 24 583.30 DUK
   unfulfilled: pay[2025-04]
   unfulfilled: rent[2025-04]
   unfulfilled: save[2025-04]
-  held: rent_amt = 900.45 DUK (late), read for 2025-05-01
-  held: rent_amt = 900.45 DUK (late), read for 2025-06-01
+  held: rent_amt = 900.45 DUK (late), read for 2025-05-01, 2025-06-01
   cut 2025-04-20
 o_net: 4 947.85 DUK
   cut 2025-04-20
@@ -873,7 +865,7 @@ o_flows: 19 954.03 DUK
   cut 2025-04-20
 o_net: 6 820.05 DUK
   cut 2025-04-20
-,10:masking-10,4:late,1:0,1652:k_bal_0: 5 275.08 DUK
+,10:masking-10,4:late,1:0,1556:k_bal_0: 5 275.08 DUK
   pad: konto 2025-01-31 end, pads:st_1:konto@2025-01-31 end of 0.00 DUK
   unfulfilled: rent[2025-02]
   cut 2025-02-24
@@ -905,8 +897,7 @@ o_bal: 25 074.58 DUK
   unfulfilled: pay[2025-04]
   unfulfilled: rent[2025-04]
   unfulfilled: save[2025-04]
-  held: rent_amt = 1 922.40 DUK (late), read for 2025-05-01
-  held: rent_amt = 1 922.40 DUK (late), read for 2025-06-01
+  held: rent_amt = 1 922.40 DUK (late), read for 2025-05-01, 2025-06-01
   cut 2025-04-20
 o_flows: 19 086.52 DUK
   pad: konto 2025-01-31 end, pads:st_1:konto@2025-01-31 end of 0.00 DUK
@@ -915,8 +906,7 @@ o_flows: 19 086.52 DUK
   unfulfilled: pay[2025-04]
   unfulfilled: rent[2025-04]
   unfulfilled: save[2025-04]
-  held: rent_amt = 1 922.40 DUK (late), read for 2025-05-01
-  held: rent_amt = 1 922.40 DUK (late), read for 2025-06-01
+  held: rent_amt = 1 922.40 DUK (late), read for 2025-05-01, 2025-06-01
   cut 2025-04-20
 o_net: 6 820.05 DUK
   cut 2025-04-20
@@ -1204,7 +1194,7 @@ o_flows: 14 432.04 DUK
 o_net: 6 020.23 DUK
   cut 2025-04-20
 warning: WARN-UNREAD place shops is read by nothing
-,10:masking-14,4:late,1:0,1559:k_bal_0: 8 470.53 DUK
+,10:masking-14,4:late,1:0,1463:k_bal_0: 8 470.53 DUK
   pad: konto 2025-01-31 end, pads:st_1:konto@2025-01-31 end of 0.00 DUK
   cut 2025-02-12
 k_bal_1: 16 843.38 DUK
@@ -1231,8 +1221,7 @@ o_bal: 20 997.01 DUK
   unfulfilled: pay[2025-04]
   unfulfilled: rent[2025-04]
   unfulfilled: save[2025-04]
-  held: rent_amt = 1 891.69 DUK (late), read for 2025-05-01
-  held: rent_amt = 1 891.69 DUK (late), read for 2025-06-01
+  held: rent_amt = 1 891.69 DUK (late), read for 2025-05-01, 2025-06-01
   cut 2025-04-20
 o_flows: 13 908.66 DUK
   pad: konto 2025-01-31 end, pads:st_1:konto@2025-01-31 end of 0.00 DUK
@@ -1241,8 +1230,7 @@ o_flows: 13 908.66 DUK
   unfulfilled: pay[2025-04]
   unfulfilled: rent[2025-04]
   unfulfilled: save[2025-04]
-  held: rent_amt = 1 891.69 DUK (late), read for 2025-05-01
-  held: rent_amt = 1 891.69 DUK (late), read for 2025-06-01
+  held: rent_amt = 1 891.69 DUK (late), read for 2025-05-01, 2025-06-01
   cut 2025-04-20
 o_net: 6 020.23 DUK
   cut 2025-04-20
@@ -1371,7 +1359,7 @@ o_flows: 8 613.71 DUK
   cut 2025-04-20
 o_net: 2 760.07 DUK
   cut 2025-04-20
-,10:masking-16,4:late,1:0,2066:k_bal_0: 10 080.98 DUK
+,10:masking-16,4:late,1:0,1970:k_bal_0: 10 080.98 DUK
   pad: konto 2025-01-31 end, pads:st_1:konto@2025-01-31 end of 0.00 DUK
   unfulfilled: pay[2025-02]
   unfulfilled: rent[2025-02]
@@ -1405,8 +1393,7 @@ o_bal: ?"rent[2025-04] on 2025-04-04 changed after it was paid (version late); i
   unfulfilled: pay[2025-04]
   unfulfilled: rent[2025-04]
   unfulfilled: save[2025-04]
-  held: rent_amt = 1 943.33 DUK (late), read for 2025-05-01
-  held: rent_amt = 1 943.33 DUK (late), read for 2025-06-01
+  held: rent_amt = 1 943.33 DUK (late), read for 2025-05-01, 2025-06-01
   cut 2025-04-20
 o_flows: ?"rent[2025-04] on 2025-04-04 changed after it was paid (version late); is back pay due, and when?" (rent[2025-04])
   pad: konto 2025-01-31 end, pads:st_1:konto@2025-01-31 end of 0.00 DUK
@@ -1416,8 +1403,7 @@ o_flows: ?"rent[2025-04] on 2025-04-04 changed after it was paid (version late);
   unfulfilled: pay[2025-04]
   unfulfilled: rent[2025-04]
   unfulfilled: save[2025-04]
-  held: rent_amt = 1 943.33 DUK (late), read for 2025-05-01
-  held: rent_amt = 1 943.33 DUK (late), read for 2025-06-01
+  held: rent_amt = 1 943.33 DUK (late), read for 2025-05-01, 2025-06-01
   cut 2025-04-20
 o_net: 2 760.07 DUK
   cut 2025-04-20
@@ -1695,7 +1681,7 @@ o_flows: 31 207.22 DUK
   cut 2025-04-20
 o_net: 5 698.16 DUK
   cut 2025-04-20
-,10:masking-20,4:late,1:0,1425:k_bal_0: 3 890.38 DUK
+,10:masking-20,4:late,1:0,1333:k_bal_0: 3 890.38 DUK
   cut 2025-02-10
 k_bal_1: 17 276.45 DUK
   pad: konto 2025-01-31 end, pads:st_1:konto@2025-01-31 end of 0.00 DUK
@@ -1721,8 +1707,7 @@ o_bal: 33 988.08 DUK
   unfulfilled: pay[2025-04]
   unfulfilled: rent[2025-04]
   unfulfilled: save[2025-04]
-  held: rent_amt = 943.60 DUK (late), read for 2025-05-01
-  held: rent_amt = 943.60 DUK (late), read for 2025-06-01
+  held: rent_amt = 943.60 DUK (late), read for 2025-05-01, 2025-06-01
   cut 2025-04-20
 o_flows: 30 097.70 DUK
   pad: konto 2025-01-31 end, pads:st_1:konto@2025-01-31 end of 0.00 DUK
@@ -1731,8 +1716,7 @@ o_flows: 30 097.70 DUK
   unfulfilled: pay[2025-04]
   unfulfilled: rent[2025-04]
   unfulfilled: save[2025-04]
-  held: rent_amt = 943.60 DUK (late), read for 2025-05-01
-  held: rent_amt = 943.60 DUK (late), read for 2025-06-01
+  held: rent_amt = 943.60 DUK (late), read for 2025-05-01, 2025-06-01
   cut 2025-04-20
 o_net: 5 698.16 DUK
   cut 2025-04-20
@@ -1853,7 +1837,7 @@ o_flows: 19 616.53 DUK
   cut 2025-04-20
 o_net: 4 893.45 DUK
   cut 2025-04-20
-,10:masking-22,4:late,1:0,1435:k_bal_0: 8 707.59 DUK
+,10:masking-22,4:late,1:0,1339:k_bal_0: 8 707.59 DUK
   cut 2025-02-12
 k_bal_1: 11 852.06 DUK
   pad: konto 2025-01-31 end, pads:st_1:konto@2025-01-31 end of 0.00 DUK
@@ -1879,8 +1863,7 @@ o_bal: 22 311.49 DUK
   unfulfilled: pay[2025-04]
   unfulfilled: rent[2025-04]
   unfulfilled: save[2025-04]
-  held: rent_amt = 1 437.22 DUK (late), read for 2025-05-01
-  held: rent_amt = 1 437.22 DUK (late), read for 2025-06-01
+  held: rent_amt = 1 437.22 DUK (late), read for 2025-05-01, 2025-06-01
   cut 2025-04-20
 o_flows: 18 826.60 DUK
   pad: konto 2025-01-31 end, pads:st_1:konto@2025-01-31 end of 0.00 DUK
@@ -1889,8 +1872,7 @@ o_flows: 18 826.60 DUK
   unfulfilled: pay[2025-04]
   unfulfilled: rent[2025-04]
   unfulfilled: save[2025-04]
-  held: rent_amt = 1 437.22 DUK (late), read for 2025-05-01
-  held: rent_amt = 1 437.22 DUK (late), read for 2025-06-01
+  held: rent_amt = 1 437.22 DUK (late), read for 2025-05-01, 2025-06-01
   cut 2025-04-20
 o_net: 4 893.45 DUK
   cut 2025-04-20

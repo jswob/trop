@@ -60,7 +60,7 @@ e2: rent[2026-03]
         version plan_2026, source plan, "plan", locator "umowa", governs 2026-01-01.., known 2026-01-01
     [2] row plan_2026:total = 1 000.00 PLN
         version plan_2026, source plan, "plan", locator "umowa", governs 2026-01-01.., known 2026-01-01
-    [3] row plan_2026:tenants = 2
+    [3] row plan_2026:tenants[*] = 2
         version plan_2026, source plan, "plan", locator "umowa", governs 2026-01-01.., known 2026-01-01
   adjustment adjustments[rent[2026-03].cash, late]: change refused: RUN-DIV division by zero on 2026-05-01 (version late)
   cut 2026-10-20

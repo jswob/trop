@@ -1,5 +1,6 @@
 # MC-X-F1, the register, q alone: L8_2_register_link_when's text with no other ask. The balance that counts r1 lists
 # what judging r1's link read, probe[2026-03]'s `when` counting adv_pay[2026-03] unfulfilled (L §8.2, L §5.19).
+# tally 2.3.1 rulings 22 (part 1, a link names): the row stands in for the tuple it names by the name alone; no link is refused, judged at a point or re-walked, and only a field read through o.fulfils reaches step 7's mark. Re-stored.
 === m.tally
 model m
   tally 2
@@ -56,7 +57,6 @@ version stmt
 q: 968.00 PLN
   unfulfilled: adv_pay[2026-01]
   unfulfilled: adv_pay[2026-02]
-  unfulfilled: adv_pay[2026-03]
   unfulfilled: probe[2026-01]
   unfulfilled: probe[2026-02]
   cut 2026-10-19

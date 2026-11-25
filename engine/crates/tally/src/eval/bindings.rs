@@ -18,6 +18,7 @@ use super::state::{Ctx, Engine, Env, a_day, invariant, refuse, wrong_type};
 use super::windows::{imprecise, one_day};
 use super::years::span_year;
 use crate::base::Run;
+use crate::book::Reading;
 use crate::hole::Hole;
 use crate::model::{Class, Domain, IndexInfo, KeyVal, Number, Reality, Span, Thing, Value, World};
 use crate::syntax::{
@@ -40,14 +41,15 @@ pub(super) enum Values {
 }
 
 impl Engine {
-    /// The values one binding ranges over in scope `env` (refcore's `bind_values`). L §5.11,
+    /// The values one binding ranges over in scope `env`, a movement whose existence is
+    /// refused a refused member where `reading` reads each (refcore's `bind_values`). L §5.11,
     /// §2.5, §5.7.
     pub(super) fn bind_values(
         &mut self,
         m: &Reality,
         bind: &Bind,
         env: &Env,
-        ctx: Ctx,
+        (ctx, reading): (Ctx, Reading),
     ) -> Result<Values, Stop> {
         match &bind.domain {
             Over::Name { qual: Some(_), .. } => {
@@ -73,10 +75,12 @@ impl Engine {
                 } else {
                     return Err(invariant("a binding over a name load didn't resolve"));
                 };
-                Ok(match self.movement_members(m, bind, dom, env, ctx)? {
-                    Err(h) => Values::Unknown(h),
-                    Ok(moves) => Values::Moves(moves),
-                })
+                Ok(
+                    match self.movement_members(m, bind, (dom, reading), env, ctx)? {
+                        Err(h) => Values::Unknown(h),
+                        Ok(moves) => Values::Moves(moves),
+                    },
+                )
             }
             Over::List(lits) => {
                 let fixed = m.list_keys.get(&bind.site.key());

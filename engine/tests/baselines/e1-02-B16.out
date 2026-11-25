@@ -106,7 +106,7 @@ tx2_owes_explain: 9 227.29 DUK
                         version hol_2022, source gazette, "Official Gazette of Lenia, notices of figures (tmp/cases/law/gazette.csv)", locator "GEN-1 v1 .2; Spring Day: gazette.csv line 1591 HOL-SPRING-2022", governs 2022-01-01..2022-12-31, known 2021-10-14
                   rule no_calendar: not applicable
                     (hol_2022:holidays: see [44])
-              [45] row hr1:order_rejected = false
+              [45] row hr1:order_rejected[*] = false
                   version hr1, source house_rules, "Household B's house rules B-HR1 – B-HR6 (tmp/cases/B/house-rules.md)", locator "B-HR1 .2: a standing order each month; only a statement shows one rejected", governs always, known 2022-03-18
               [46] row deed:deed_day = 2022-03-18
                   version deed, source b_d04, "B-D04 Deed of sale: the flat ul. Wrzosowa 12/5 (extract) (tmp/cases/B/docs/B-D04.md)", locator "B-D04", governs always, known 2022-03-18

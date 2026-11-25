@@ -1,0 +1,122 @@
+# tally 2.3.1 C-9 with L §8.4 l.2356 (G2's review finding 1; rulings 16 Q2): bank[r1] on 2026-02-03 fulfils
+# topup[2026-02], which its point (02-05) finds missing, so the link is refused and the row refuses konto from
+# its own day: b4, b6, b8 and b refused. Before: refused from the point (b4 900.00).
+# tally 2.3.1 rulings 22 (part 1, a link names): the row stands in for the tuple it names by the name alone; no link is refused, judged at a point or re-walked, and only a field read through o.fulfils reaches step 7's mark. Re-stored.
+=== dl500early.tally
+model dl
+  tally 2
+  on 2026-04-20
+  start 2026-01-01
+  end 2026-05-31
+
+source s "probe"
+unit PLN: currency minor 0.01
+index month = month 2026-01..2026-05
+place konto: accounts PLN lives 2026-01-01..
+place save: accounts PLN lives 2026-01-01..
+place shop: outside lives 1900-01-01..
+input bank: observed
+input lim: money PLN
+input amt: money PLN
+input d5: int
+input fm: month
+input de: date
+input e4: date
+input e6: date
+input e8: date
+
+move topup[m in month]: transfers
+  reads konto
+  on day_of(m, d5)
+  when bal(konto) < lim
+  leg cash from save to konto amount amt
+
+def fl: money PLN = flows(topup, fm)
+def bl: money PLN = bal(konto, de)
+ask f: fl
+ask b4: bal(konto, e4)
+ask b6: bal(konto, e6)
+ask b8: bal(konto, e8)
+ask ef: explain fl
+ask iof: inputs-of fl
+ask b: bl
+ask eb: explain bl
+ask ob: observed(topup[fm]).cash.amount
+ask dy: topup[fm].day
+ask ful: count(o in bank over fm where o.fulfils == topup[fm])
+ask loose: sum(o.cash.amount for o in bank over fm where o.fulfils == none)
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  opening[konto] = 100.00 PLN at 2026-01-01 start "s"
+  opening[save] = 5 000.00 PLN at 2026-01-01 start "s"
+  lim = 500.00 PLN "s"
+  amt = 400.00 PLN "s"
+  d5 = 5 "s"
+  fm = 2026-02 "s"
+  de = 2026-03-31 "s"
+  e4 = 2026-02-04 "s"
+  e6 = 2026-02-06 "s"
+  e8 = 2026-02-08 "s"
+
+version feb
+  cite s
+  governs 2026-02
+  known 2026-03-01
+  covers konto
+  bank[r1] = (on: 2026-02-03, kind: transfers, leg cash from save to konto amount 400.00 PLN, fulfils: topup[2026-02]) "the top-up"
+  bank[r2] = (on: 2026-02-10, kind: transfers, leg cash from konto to shop amount 30.00 PLN) "loose"
+=== expect
+b: 870.00 PLN
+  unfulfilled: topup[2026-01]
+  cut 2026-04-20
+b4: 900.00 PLN
+  unfulfilled: topup[2026-01]
+  cut 2026-04-20
+b6: 900.00 PLN
+  unfulfilled: topup[2026-01]
+  cut 2026-04-20
+b8: 900.00 PLN
+  unfulfilled: topup[2026-01]
+  cut 2026-04-20
+dy: refused: RUN-NONE topup[2026-02] doesn't exist: a field read of it
+  cut 2026-04-20
+eb: 870.00 PLN
+  [1] bl = 870.00 PLN
+      rule base: won
+        [2] row v:de = 2026-03-31
+            version v, source s, "probe", locator "s", governs always, known 2026-01-01
+        [3] bal(konto, 2026-03-31) = 870.00 PLN
+            balance of konto (PLN) at the end of 2026-03-31
+            from: opening v:opening[konto] = 100.00 PLN, 2026-01-01 start (version v, source s, locator "s")
+            2026-01-05:
+              topup[2026-01].cash (past): +400.00 PLN
+            2026-02-03:
+              bank[r1].cash (observed): +400.00 PLN
+            2026-02-10:
+              bank[r2].cash (observed): -30.00 PLN
+  unfulfilled: topup[2026-01]
+  cut 2026-04-20
+ef: 400.00 PLN
+  [1] fl = 400.00 PLN
+      rule base: won
+        [2] row v:fm = 2026-02
+            version v, source s, "probe", locator "s", governs always, known 2026-01-01
+        [3] row v:d5 = 5
+            version v, source s, "probe", locator "s", governs always, known 2026-01-01
+  cut 2026-04-20
+f: 400.00 PLN
+  cut 2026-04-20
+ful: 1
+  cut 2026-04-20
+iof:
+  bank[r1] (source s "probe", locator "the top-up")
+  v:d5 (source s "probe", locator "s")
+  v:fm (source s "probe", locator "s")
+  cut 2026-04-20
+loose: 30.00 PLN
+  cut 2026-04-20
+ob: 400.00 PLN
+  cut 2026-04-20

@@ -225,6 +225,19 @@ def m_movement_field(self, n, t, sc):
     name = n.name
     kid = t.ix
     legs = m.kind_legs(kid)
+    base = n.obj
+    while base.k == 'paren':
+        base = base.e
+    if base.k == 'field' and base.name == 'fulfils':
+        # a field read through `o.fulfils` is a field read of the instance (L §5.19; tally 2.3.1 rulings 22, P1-C6):
+        # it reaches a decision a row of any version can name (E §3.1 step 7), marked in check_moves_graph; however
+        # spelled: `(o.fulfils).cash` too (tally 2.3.1 P32 B1, m2_paren)
+        self.__dict__.setdefault('fulfils_items', set()).add(sc.item)
+    elif base.k == 'name' and sc.item is not None and sc.item[0] == 'def' and base.id in sc.keyvars:
+        # a def that reads a field of its movement key: keyed by an `o.fulfils`, that read is through the fulfils
+        # (E §3.1 step 5, "through whoever names or binds the key"; tally 2.3.1 P32 B1, m2_keyed)
+        # by the key's position: only the key bound to `o.fulfils` reaches (tally 2.3.1 statement F (d), gap 2)
+        self.__dict__.setdefault('keyfield_defs', set()).add((sc.item[1], sc.keyvars.index(base.id)))
     for ld in legs:
         if ld.name == name:
             n._r = ('mvfield', 'leg', name)
@@ -248,6 +261,7 @@ def m_movement_field(self, n, t, sc):
         return T.DATE
     if name == 'fulfils':
         n._r = ('mvfield', 'fulfils', name)
+        # the name alone: no running read (L §5.19; tally 2.3.1 rulings 22)
         return T.key('events')
     # L §5.7 A kind test narrows (tally 2.1, R-17): "There v's legs and attributes of K are readable"
     obj = n.obj
@@ -1421,6 +1435,42 @@ def m_check_moves_graph(self):
     m = self.m
     E = self.edges
     memo = {}
+    # step 7's reach through a link, row-precise (E §3.1 step 7; tally 2.3.1 rulings 22, P1-C6): an item that reads
+    # a field through `.fulfils` of the rows of an input it binds reaches each decision a row of that input, in any
+    # version, names; a decision's own reads are judged as before
+    named = {}
+    for inf in m.inputs.values():
+        for o in getattr(inf, 'obs', ()) if getattr(inf, 'observed', False) else ():
+            f = o.fulfils
+            if isinstance(f, tuple) and f and f[0] == 'inst' and f[1] in m.moves and not o.removed and o.kind:
+                # a row whose kind lacks a leg of the move its fulfils names is refused at load, on the rows that
+                # stand (L §5.19; tally 2.3.1 rulings 22, the critic's P1-C4); a legless kind (a waiver) lacks none
+                have = set(ld.name for ld in m.kind_legs(o.kind))
+                lack = [ln.name for ln, _d in m.moves[f[1]].legs if ln.name not in have]
+                if have and lack:
+                    tid = '%s[%s]' % (f[1], ', '.join(key_text(k) for k in f[2])) if f[2] else f[1]
+                    raise LoadError('LOAD-LEG', 'observation %s fulfils %s and lacks its leg %s' % (
+                        o.sid, tid, lack[0]), o.loc)
+            if isinstance(f, tuple) and f and f[0] != 'adj' and f[1] in m.moves and m.moves[f[1]].decision:
+                named.setdefault(inf.id, set()).add(f[1])
+    kf = set(getattr(self, 'keyfield_defs', set()))
+    passes = getattr(self, 'key_passes', set())
+    grew = True
+    while grew:
+        # a key passed on to a def that reads a field of it reads that field (statement F (d))
+        grew = False
+        for src, dst in passes:
+            if dst in kf and src not in kf:
+                kf.add(src)
+                grew = True
+    for item in set(getattr(self, 'fulfils_items', ())) | set(
+            it for it, did, pos in getattr(self, 'fulfils_keyed', ()) if (did, pos) in kf):
+        # a decision's legs, day and attributes are running reads (E §3.1 step 7): a field read through the
+        # `fulfils` of a row of any version that names a decision reaches them
+        bound = [t[1] for t, rels in E.get(item, {}).items() if t[0] == 'input' and 'bind' in rels]
+        for iid in bound:
+            for qid in named.get(iid, ()):
+                self.marks.setdefault(item, set()).add(('exist', ('move', qid)))
 
     def reached(item):
         if item in memo:
@@ -1470,6 +1520,8 @@ def m_check_moves_graph(self):
                 raise LoadError('LOAD-READS', '%s reaches a running read or projection of %s without reads %s' % (
                     qid, _tname(tgt), _tname(tgt)), loc)
             continue
+        # a field read through `o.fulfils` is a read of the named move, for the mark and for `reads` alike (E §3.1
+        # step 7; tally 2.3.1 statement F (d), N3): kept, so `reads topup` covers it and is satisfied by it
         on_rs = reached(('moveon', qid))
         if on_rs:
             w, tgt = sorted(on_rs, key=repr)[0]
@@ -1522,7 +1574,8 @@ def m_check_moves_graph(self):
     # walk-bound defs: "A def that reaches a mark and that a decision reaches is walk-bound: its cells carry the walk
     # point (§3.2); in an ask, or a def no movement reaches, a plain bal(x, d) is the balance on day d at the ask's
     # cut" (E §3.1 step 7, round 18 C3-8; L §5.14.1). A plan that reaches a mark is LOAD-READS (above).
-    m.walk_bound = set(d for d in m.defs if reached(('def', d)) and ('def', d) in from_decisions)
+    m.walk_bound = set(d for d in m.defs if any(x[0] != 'exist' for x in reached(('def', d))) and
+                       ('def', d) in from_decisions)
     m.walk_bound_fills = set(f for f in m.fills if reached(('fill', f)) and ('fill', f) in from_decisions)
     # the movements a projection leaves out: those that depend on its holder (E §3.1 step 7, L §5.14.1)
     inv = {}
@@ -1660,6 +1713,30 @@ def m_strata(self):
     # the walk orders a cycle's instances by the same pairs (m.written_order). Orders written both ways stay as
     # written
     wo = set(m.written_order)
+    # L §5.14.2 (tally 2.3.1 S11, N245.8): written orders that compose into a cycle are refused (LOAD-ORDER), a move
+    # before itself its smallest case (above); refcore stood them as written
+    bef = {}
+    for (x, z) in wo:
+        bef.setdefault(z, set()).add(x)
+    seen = {}
+
+    def cycle_from(x, path):
+        seen[x] = 1
+        for y in sorted(bef.get(x, ())):
+            if seen.get(y) == 1:
+                return path[path.index(y):] + [y]
+            if seen.get(y) is None:
+                c = cycle_from(y, path + [y])
+                if c:
+                    return c
+        seen[x] = 2
+        return None
+    for x in sorted(bef):
+        if seen.get(x) is None:
+            cyc = cycle_from(x, [x])
+            if cyc:
+                raise LoadError('LOAD-ORDER', '%s: written orders form a cycle' % ' before '.join(cyc),
+                                m.moves[cyc[0]].decl.loc)
     closure = set(wo)
     grew = True
     while grew:

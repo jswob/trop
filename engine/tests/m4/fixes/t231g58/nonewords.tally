@@ -1,0 +1,40 @@
+model none_words
+  tally 2
+  on 2026-06-30
+  start 2026-01-01
+  end 2026-12-31
+
+source s "probe"
+unit PLN: currency minor 0.01
+index ks = [a, b]
+input ok[k in ks]: bool
+input st[k in ks]: key ks
+input r[k in ks]: rate
+input p: money PLN
+input d0: date
+input d1: date
+input dc: daycount
+input cm: compounding
+
+ask c_if: if ok[b] then d0 else d1
+ask c_and: ok[a] and ok[b]
+ask c_or: ok[b] or ok[a]
+ask c_not: not ok[b]
+ask c_in: count(k in ks where st[k] in [a])
+ask c_acc: accrue(p, r[k], d0, d1, dc, cm) for k in ks
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  ok[a] = true "s"
+  ok[b] = none "s"
+  st[a] = a "s"
+  st[b] = none "s"
+  r[a] = 5 %/year "s"
+  r[b] = none "s"
+  p = 100.00 PLN "s"
+  d0 = 2026-01-01 "s"
+  d1 = 2027-01-01 "s"
+  dc = act365 "s"
+  cm = effective "s"

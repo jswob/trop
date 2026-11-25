@@ -1,0 +1,62 @@
+# tally 2.3.1 statement F (c), P36 R3 (L §5.14 `for k`, §8.1): rent is a decision and per[2026-02] a hole;
+# bank[a2] stands in for rent[2026-02], so it is for that hole period: every `, for k` read over it is the hole
+# (f1, f3); fj's span holds no row. Before: f1, f3 -100.00.
+=== b5_dec_row.tally
+model b5d
+  tally 2
+  on 2026-05-20
+  start 2026-01-01
+  end 2026-03-31
+
+source s "probe"
+unit PLN: currency minor 0.01
+index month = month 2026-01..2026-03
+place pot: accounts PLN lives 2026-01-01..
+place landlord: outside lives 1900-01-01..
+input bank: observed
+input amt: money PLN
+input d5: int
+input per[m in month]: month
+
+move rent[m in month]: transfers
+  reads pot
+  on day_of(m, d5)
+  for per[m]
+  when bal(pot) > 0.00 PLN
+  leg cash from pot to landlord amount amt
+
+ask f1: flows(pot, 2026-01-01..2026-03-31, for 2026-01)
+ask f3: flows(pot, 2026-01-01..2026-03-31, for 2026-03)
+ask fj: flows(pot, 2026-01-01..2026-01-31, for 2026-01)
+ask fm: flows(rent, 2026-01-01..2026-03-31, for 2026-01)
+ask fk: flows(pot, 2026-01-01..2026-03-31, for 2026-01) as known 2026-02-01
+ask c: bal(pot, 2026-03-31)
+ask n: count(t in transfers over 2026-01-01..2026-03-31)
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  amt = 100.00 PLN "s"
+  d5 = 5 "s"
+  per[2026-01] = 2026-01 "s"
+  per[2026-02] = ?"which period is february's for?" "s"
+  per[2026-03] = 2026-03 "s"
+  opening[pot] = 1000.00 PLN at 2026-01-01 start "s"
+
+version q1
+  cite s
+  governs 2026-01-01..2026-03-31
+  known 2026-04-01
+  bank[a2] = (on: 2026-02-05, kind: transfers, leg cash from pot to landlord amount 120.00 PLN, fulfils: rent[2026-02]) "feb"
+=== expect f1 f3 fj
+f1: ?"which period is february's for?" (per[2026-02])
+  unfulfilled: rent[2026-01]
+  cut 2026-05-20
+f3: ?"which period is february's for?" (per[2026-02])
+  unfulfilled: rent[2026-01]
+  unfulfilled: rent[2026-03]
+  cut 2026-05-20
+fj: -100.00 PLN
+  unfulfilled: rent[2026-01]
+  cut 2026-05-20

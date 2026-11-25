@@ -1,0 +1,64 @@
+# tally 2.3.1 R1, #253's option B (L §5.11's aggregate paragraph; the lead's ruling 10): `any` is true where a
+# term is true and `all` false where one is false, whatever the others are, refused ones included, so no binding
+# order decides it (L §2.5). t[a] = 0 refuses r[a], the first member; r[c] is true and r[b] false. q_any true,
+# q_all false, and so with the refused member's `where` (q_wany, q_wall); `or`, `and`, `first`, `count` and `if`
+# keep their order (q_or refused, q_or2 true). Before: q_any, q_all, q_wany, q_wall RUN-DIV.
+=== anyall_first.tally
+model anyall_first
+  tally 2
+  on 2026-06-30
+  start 2026-01-01
+  end 2026-12-31
+
+source s "probe"
+unit PLN: currency minor 0.01
+index ks = [a, b, c]
+input t[k in ks]: int
+input ten: int
+
+def r[k in ks]: bool
+  rule one = ten / t[k] > t[b]
+
+ask q_any: any(r[k] for k in ks)
+ask q_all: all(r[k] for k in ks)
+ask q_or: r[a] or r[c]
+ask q_or2: r[c] or r[a]
+ask q_and: r[b] and r[c]
+ask q_and2: r[c] and r[b]
+ask q_if: if r[a] then ten else ten / t[c]
+ask q_first: first(k in ks where r[k])
+ask q_cnt: count(k in ks where r[k])
+ask q_wany: any(true for k in ks where r[k])
+ask q_wall: all(false for k in ks where r[k])
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  ten = 10 "s"
+  t[a] = 0 "s"
+  t[b] = 5 "s"
+  t[c] = 1 "s"
+=== expect
+q_all: false
+  cut 2026-06-30
+q_and: false
+  cut 2026-06-30
+q_and2: false
+  cut 2026-06-30
+q_any: true
+  cut 2026-06-30
+q_cnt: refused: RUN-DIV division by zero
+  cut 2026-06-30
+q_first: refused: RUN-DIV division by zero
+  cut 2026-06-30
+q_if: refused: RUN-DIV division by zero
+  cut 2026-06-30
+q_or: refused: RUN-DIV division by zero
+  cut 2026-06-30
+q_or2: true
+  cut 2026-06-30
+q_wall: false
+  cut 2026-06-30
+q_wany: true
+  cut 2026-06-30

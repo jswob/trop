@@ -541,7 +541,8 @@ class Row:
                 parts.append('%s..%s' % (key_text(p[1]), key_text(p[2])))
             else:
                 parts.append(key_text(p[1]))
-        while parts and parts[-1] == '*':
+        # a `*` the text writes stays (`given h[*] = …`, L §2.5; tally 2.3.1 Q1.14); only unwritten trailing keys drop
+        while len(parts) > getattr(self, 'nwritten', 0) and parts[-1] == '*':
             parts.pop()
         return '[%s]' % ', '.join(parts) if parts else ''
 
@@ -806,9 +807,9 @@ class Reality:
             # the version that states the side's entry (its last, by known, when it has several); a place section's
             # lifespan, the place
             row = es[-1].version.id if es and es[-1].version is not None else \
-                names.get(o, (o + '.' if o else '') + thing.name.split('\u00b7')[-1])
+                names.get(o, (o + '.' if o else '') + thing.name.split('\ue0b7')[-1])
             out.append((txt, row))
-        raise SameDiffers([names.get(o, (o + '.' if o else '') + thing.name.split('\u00b7')[-1]) for o in seen],
+        raise SameDiffers([names.get(o, (o + '.' if o else '') + thing.name.split('\ue0b7')[-1]) for o in seen],
                           kind, when, out)
 
     def side_entries(self, thing, sub, o):

@@ -1,0 +1,45 @@
+# tally 2.3.1 R1, Q1.15 = N250.6 (L §4.4 naming each unknown day, §8.1 It carries): an undecided comparison of
+# two windows is the hole of both days, one question each (c1, c2); one window, its day alone (c3, c4); a window
+# with its own name is decided (c5). Before: c1 and c2 named w1 only.
+=== win2.tally
+model win2
+  tally 2
+  on 2026-04-20
+  start 2026-01-01
+  end 2026-12-31
+
+source s "probe"
+input w1: date
+input w2: date
+input d: date
+
+ask c1: w1 < w2
+ask c2: w1 == w2
+ask c3: w1 < d
+ask c4: d < w2
+ask c5: w1 < w1
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  w1 = window(2026-05-01, 2026-05-10) "s"
+  w2 = window(2026-05-05, 2026-05-20) "s"
+  d = 2026-05-07 "s"
+=== expect
+c1: ?"date within window(2026-05-01, 2026-05-10) not precise enough for w1 < w2" (w1) ?"date within window(2026-05-05, 2026-05-20) not precise enough for w1 < w2" (w2)
+  unknown day: w1
+  unknown day: w2
+  cut 2026-04-20
+c2: ?"date within window(2026-05-01, 2026-05-10) not precise enough for w1 == w2" (w1) ?"date within window(2026-05-05, 2026-05-20) not precise enough for w1 == w2" (w2)
+  unknown day: w1
+  unknown day: w2
+  cut 2026-04-20
+c3: ?"date within window(2026-05-01, 2026-05-10) not precise enough for w1 < d" (w1)
+  unknown day: w1
+  cut 2026-04-20
+c4: ?"date within window(2026-05-05, 2026-05-20) not precise enough for d < w2" (w2)
+  unknown day: w2
+  cut 2026-04-20
+c5: false
+  cut 2026-04-20

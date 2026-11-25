@@ -1,0 +1,86 @@
+# tally 2.3.1 R2 item 6 (G2's review finding 4, `as known` cuts): kf, a count over February and March, holds no
+# January link read. Before: kf held `assumed: jan is a guess`.
+# tally 2.3.1 rulings 22 (part 1, a link names): the row stands in for the tuple it names by the name alone; no link is refused, judged at a point or re-walked, and only a field read through o.fulfils reaches step 7's mark. Re-stored.
+=== first_cuts.tally
+model first
+  tally 2
+  on 2026-05-20
+  start 2026-01-01
+  end 2026-06-30
+
+source s "invented values"
+unit PLN: currency minor 0.01
+index month = month 2026-01..2026-06
+place pot: accounts PLN lives 2026-01-01..
+place landlord: outside lives 1900-01-01..
+input bank: observed
+input rent_amt: money PLN
+input ok[m in month]: bool
+input d5: int
+
+move rent[m in month]: transfers
+  on day_of(m, d5)
+  at start_of(m)
+  when ok[m]
+  leg cash from pot to landlord amount rent_amt
+
+ask a: flows(rent, 2026-01)
+ask b: flows(rent, 2026-03)
+ask c: bal(pot, 2026-03-31)
+ask ka: flows(rent, 2026-01) as known 2026-02-01
+ask kb: flows(rent, 2026-03) as known 2026-02-01
+ask kc: bal(pot, 2026-03-31) as known 2026-02-01
+ask kd: bal(pot, 2026-01-31) as known 2026-01-25
+ask ke: flows(rent, 2026-02) as known 2026-03-01
+ask kf: count(t in transfers over 2026-02 .. 2026-03) as known 2026-03-01
+ask kg: sum(t.cash.amount for t in transfers over 2026-01) as known 2026-02-01
+ask kh: observed(rent[2026-01]).cash.amount as known 2026-02-01
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  rent_amt = 100.00 PLN "s"
+  d5 = 5 "s"
+  ok[2026-01] = true assumed "jan is a guess" "ok jan"
+  ok[2026-02] = true "ok feb"
+  ok[2026-03] = true "ok mar"
+  ok[2026-04] = true "ok apr"
+  ok[2026-05] = true "ok may"
+  ok[2026-06] = true "ok jun"
+  opening[pot] = 9000.00 PLN at 2026-01-01 start "s"
+
+version jan
+  cite s
+  governs 2026-01
+  known 2026-01-21
+  covers pot
+  bank[a1] = (on: 2026-01-05, kind: transfers, leg cash from pot to landlord amount 100.00 PLN, fulfils: rent[2026-01]) "names jan"
+=== expect
+a: 100.00 PLN
+  cut 2026-05-20
+b: 100.00 PLN
+  unfulfilled: rent[2026-03]
+  cut 2026-05-20
+c: 8 700.00 PLN
+  unfulfilled: rent[2026-02]
+  unfulfilled: rent[2026-03]
+  cut 2026-05-20
+ka: 100.00 PLN
+  cut 2026-02-01
+kb: 100.00 PLN
+  cut 2026-02-01
+kc: 8 700.00 PLN
+  cut 2026-02-01
+kd: 8 900.00 PLN
+  cut 2026-01-25
+ke: 100.00 PLN
+  unfulfilled: rent[2026-02]
+  cut 2026-03-01
+kf: 2
+  unfulfilled: rent[2026-02]
+  cut 2026-03-01
+kg: 100.00 PLN
+  cut 2026-02-01
+kh: 100.00 PLN
+  cut 2026-02-01

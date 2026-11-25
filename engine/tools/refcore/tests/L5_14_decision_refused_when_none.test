@@ -1,0 +1,78 @@
+# tally 2.3.1 statement F (a), N4 (L §5.14, §8.4): a decision tuple whose `when` is refused at its point:
+# `m[k] == none` is refused. Before: false.
+=== b2_dec3_norow.tally
+model b2d
+  tally 2
+  on 2026-05-20
+  start 2026-01-01
+  end 2026-02-28
+
+source s "probe"
+unit PLN: currency minor 0.01
+index month = month 2026-01..2026-02
+place pot: accounts PLN lives 2026-01-01..
+place jar: accounts PLN lives 2026-01-01..
+place jar2: accounts PLN lives 2026-01-01..
+place landlord: outside lives 1900-01-01..
+input bank: observed
+input amt: money PLN
+input keep: money PLN
+input d5: int
+input ten: int
+input dz[m in month]: int
+
+move rent[m in month]: transfers
+  reads pot
+  before mid
+  on day_of(m, d5)
+  when ten / dz[m] > 0 and bal(pot) > 0.00 PLN
+  leg cash from pot to landlord amount amt
+
+move mid[m in month]: transfers
+  reads pot
+  before skim
+  on day_of(m, d5)
+  when bal(pot) > keep
+  leg cash from pot to jar2 amount amt
+
+move skim[m in month]: transfers
+  reads pot
+  on day_of(m, d5)
+  when bal(pot) > keep
+  leg cash from pot to jar amount bal(pot) - keep
+
+ask c: bal(pot, 2026-02-28)
+ask sk: flows(skim, 2026-01)
+ask sk2: flows(skim, 2026-02)
+ask md: flows(mid, 2026-01)
+ask fr: flows(rent, 2026-01-01..2026-02-28)
+ask j: bal(jar, 2026-02-28)
+ask kt: count(t in transfers over 2026-01)
+ask st: sum(t.cash.amount for t in transfers over 2026-01)
+ask fi: first(t in transfers over 2026-01) ties by t.day
+ask e: rent[2026-01] == none
+ask dy: rent[2026-01].day
+ask ck: bal(pot, 2026-02-28) as known 2026-03-01
+ask rs: residuals pot 2026-01
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  amt = 100.00 PLN "s"
+  keep = 500.00 PLN "s"
+  d5 = 5 "s"
+  ten = 10 "s"
+  dz[2026-01] = 0 "refused"
+  dz[2026-02] = 1 "s"
+  opening[pot] = 1000.00 PLN at 2026-01-01 start "s"
+  opening[jar] = 0.00 PLN at 2026-01-01 start "s"
+  opening[jar2] = 0.00 PLN at 2026-01-01 start "s"
+
+version q1
+  cite s
+  governs 2026-01-01..2026-03-31
+  known 2026-04-01
+=== expect e
+e: refused: RUN-DIV division by zero
+  cut 2026-05-20
