@@ -1,0 +1,48 @@
+# tally 2.3.1 N256.7, P44: the same through a keyed read, a refused side and a difference that is itself a `%`
+# sum: c2 `p = 10 %` beside a refused side, c3/c4 beside a hole, c1/c5/c6 `difference` with `%`. Before:
+# `0.1`, `-0.1`, `0.2`, `-0.2`.
+=== chkpct2.tally
+model check2
+  tally 2
+  on 2026-06-30
+  start 2026-01-01
+  end 2026-12-31
+
+source s "probe"
+index ks = [a, b]
+input p: num %
+input h[k in ks]: num %
+input xn: num %
+input ph: num %
+
+ask c1: check h[k] == p for k in ks
+ask c2: check xn + p == p
+ask c3: check p == ph
+ask c4: check h[a] == ph
+ask c5: check h[a] - p == p
+ask c6: check p == h[b]
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  p = 10 % "s"
+  h[a] = 10 % "s"
+  h[b] = 30 % "s"
+  xn = none "s"
+  ph = ?"which?" "s"
+=== expect
+c1 (k = a): ok
+  cut 2026-06-30
+c1 (k = b): differs: h[k] = 30 %, p = 10 %, difference 20 %
+  cut 2026-06-30
+c2: xn + p = refused: RUN-NONE xn is none here: arithmetic, p = 10 %
+  cut 2026-06-30
+c3: p = 10 %, ph = ?"which?" (ph)
+  cut 2026-06-30
+c4: h[a] = 10 %, ph = ?"which?" (ph)
+  cut 2026-06-30
+c5: differs: h[a] - p = 0 %, p = 10 %, difference -10 %
+  cut 2026-06-30
+c6: differs: p = 10 %, h[b] = 30 %, difference -20 %
+  cut 2026-06-30
