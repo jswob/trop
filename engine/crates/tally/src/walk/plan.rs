@@ -1891,6 +1891,25 @@ version jan
                 "{path}"
             );
         }
+        // after the run's end too (tally 2.3.1 rulings 23 (c)): June's plan instance, past
+        // an end of 30 April, is for a hole period, so a span holding its day is that hole;
+        // one that leaves the day out isn't
+        let late = text("06").replace("end 2026-06-30", "end 2026-04-30");
+        let ask = |span: &str| {
+            let t = late.replace("2026-01-01..2026-03-31, for", &format!("{span}, for"));
+            let files = [("first.tally", t.as_str())];
+            answer(&files, "ff").first().cloned().expect("a line")
+        };
+        assert_eq!(
+            ask("2026-01-01..2026-06-30"),
+            "ff: ?\"which period?\" (per[2026-06])",
+            "after the run's end"
+        );
+        assert_eq!(
+            ask("2026-01-01..2026-05-31"),
+            "ff: -100.00 PLN",
+            "a span that leaves June out"
+        );
     }
 
     #[test]

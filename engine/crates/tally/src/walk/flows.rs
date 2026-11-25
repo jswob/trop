@@ -423,8 +423,13 @@ impl Sums {
     /// The hole of entry `e`'s period under `, for k`, where its movement's period is a hole
     /// (L §5.14 l.1363, §8.1; tally 2.3.1 part 1's review B5).
     fn period_hole(&self, e: &Ent) -> Option<Hole> {
-        let keep = self.keep.as_ref()?;
-        keep.get(e.mv.as_ref()?)?.clone()
+        self.hole_of(e.mv.as_ref()?)
+    }
+
+    /// The hole of movement `id`'s period under `, for k`, where that period is a hole, in
+    /// the run's span or after it (L §5.14 l.1363, §8.1; tally 2.3.1 rulings 23 (c)).
+    fn hole_of(&self, id: &str) -> Option<Hole> {
+        self.keep.as_ref()?.get(id)?.clone()
     }
 
     /// Whether `, for k` leaves entry `e` out: a movement not for period k, or a reset (a pad's
@@ -538,6 +543,12 @@ impl Sums {
             self.met.merge(&i.coll);
             if let Some(err) = &i.err {
                 return Err(Stop::Refused(err.clone()));
+            }
+            // a period that is a hole reaches a `, for k` read after the run's end too
+            // (tally 2.3.1 rulings 23 (c))
+            if let Some(h) = self.hole_of(&i.id) {
+                self.holes.push(h);
+                continue;
             }
             if let Exists::Unknown(h) = &i.exists {
                 self.holes.push(h.clone());
