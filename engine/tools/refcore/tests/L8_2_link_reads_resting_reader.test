@@ -1,6 +1,7 @@
 # tally 2.3.1 R2 with R6, item 6 (L §8.2 One read set, §5.19): a link's reads go to the readers whose value
 # rests on that link, never by who read the list first: a (January) and c keep `assumed: jan is a guess`, b
 # (March) doesn't hold it. Before: b held it too.
+# tally 2.3.1 rulings 22 (part 1, a link names): the row stands in for the tuple it names by the name alone; no link is refused, judged at a point or re-walked, and only a field read through o.fulfils reaches step 7's mark. Re-stored.
 === first.tally
 model first
   tally 2
@@ -50,13 +51,11 @@ version jan
   bank[a1] = (on: 2026-01-05, kind: transfers, leg cash from pot to landlord amount 100.00 PLN, fulfils: rent[2026-01]) "names jan"
 === expect
 a: 100.00 PLN
-  assumed: jan is a guess (ok[2026-01])
   cut 2026-05-20
 b: 100.00 PLN
   unfulfilled: rent[2026-03]
   cut 2026-05-20
 c: 8 700.00 PLN
-  assumed: jan is a guess (ok[2026-01])
   unfulfilled: rent[2026-02]
   unfulfilled: rent[2026-03]
   cut 2026-05-20

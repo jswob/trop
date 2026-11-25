@@ -2,6 +2,7 @@
 # which fulfils topup, whose `when` reads konto: LOAD-READS at load, whatever the asks. Unchanged on refcore;
 # with it the mark is no longer made for a decision whose existence reads no running state (household X
 # loads again).
+# tally 2.3.1 rulings 22 (part 1, a link names): the row stands in for the tuple it names by the name alone; no link is refused, judged at a point or re-walked, and only a field read through o.fulfils reaches step 7's mark. Re-stored.
 === s7_lone.tally
 model dec_link
   tally 2
@@ -62,4 +63,20 @@ version feb
   bank[r1] = (on: 2026-02-05, kind: transfers, leg cash from save to konto amount 400.00 PLN, fulfils: topup[2026-02]) "the top-up"
   bank[r2] = (on: 2026-02-10, kind: transfers, leg cash from konto to shop amount 30.00 PLN) "loose"
 === expect
-refused: LOAD-READS pay reaches a running read or projection of topup without reads topup (s7_lone.tally:30)
+b: ?"pay[2026-01] on 2026-01-05 changed after it was paid (version feb); is back pay due, and when?" (pay[2026-01])
+  adjustment: pay[2026-01] by 30.00 PLN on 2026-03-01 (version feb), remaining 30.00 PLN
+  unfulfilled: pay[2026-03]
+  unfulfilled: topup[2026-01]
+  open: pay[2026-02]
+  cut 2026-04-20
+f: 400.00 PLN
+  unfulfilled: topup[2026-01]
+  open: pay[2026-02]
+  cut 2026-04-20
+fp: ?"pay[2026-01] on 2026-01-05 changed after it was paid (version feb); is back pay due, and when?" (pay[2026-01])
+  unfulfilled: pay[2026-04]
+  cut 2026-04-20
+loose: 30.00 PLN
+  cut 2026-04-20
+q: 400.00 PLN
+  cut 2026-04-20

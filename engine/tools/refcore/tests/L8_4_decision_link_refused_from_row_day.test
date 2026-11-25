@@ -1,6 +1,7 @@
 # tally 2.3.1 C-9 with L §8.4 l.2356 (G2's review finding 1; rulings 16 Q2): bank[r1] on 2026-02-03 fulfils
 # topup[2026-02], which its point (02-05) finds missing, so the link is refused and the row refuses konto from
 # its own day: b4, b6, b8 and b refused. Before: refused from the point (b4 900.00).
+# tally 2.3.1 rulings 22 (part 1, a link names): the row stands in for the tuple it names by the name alone; no link is refused, judged at a point or re-walked, and only a field read through o.fulfils reaches step 7's mark. Re-stored.
 === dl500early.tally
 model dl
   tally 2
@@ -68,61 +69,54 @@ version feb
   bank[r1] = (on: 2026-02-03, kind: transfers, leg cash from save to konto amount 400.00 PLN, fulfils: topup[2026-02]) "the top-up"
   bank[r2] = (on: 2026-02-10, kind: transfers, leg cash from konto to shop amount 30.00 PLN) "loose"
 === expect
-b: refused: RUN-RECORD observation bank[r1] fulfils topup[2026-02], which doesn't exist or doesn't touch its places
+b: 870.00 PLN
   unfulfilled: topup[2026-01]
   cut 2026-04-20
-b4: refused: RUN-RECORD observation bank[r1] fulfils topup[2026-02], which doesn't exist or doesn't touch its places
+b4: 900.00 PLN
   unfulfilled: topup[2026-01]
   cut 2026-04-20
-b6: refused: RUN-RECORD observation bank[r1] fulfils topup[2026-02], which doesn't exist or doesn't touch its places
+b6: 900.00 PLN
   unfulfilled: topup[2026-01]
   cut 2026-04-20
-b8: refused: RUN-RECORD observation bank[r1] fulfils topup[2026-02], which doesn't exist or doesn't touch its places
+b8: 900.00 PLN
   unfulfilled: topup[2026-01]
   cut 2026-04-20
 dy: refused: RUN-NONE topup[2026-02] doesn't exist: a field read of it
   cut 2026-04-20
-eb: refused: RUN-RECORD observation bank[r1] fulfils topup[2026-02], which doesn't exist or doesn't touch its places
-  [1] bl = refused: RUN-RECORD observation bank[r1] fulfils topup[2026-02], which doesn't exist or doesn't touch its places
+eb: 870.00 PLN
+  [1] bl = 870.00 PLN
       rule base: won
         [2] row v:de = 2026-03-31
             version v, source s, "probe", locator "s", governs always, known 2026-01-01
-        [3] bal(konto, 2026-03-31) = refused: RUN-RECORD observation bank[r1] fulfils topup[2026-02], which doesn't exist or doesn't touch its places
+        [3] bal(konto, 2026-03-31) = 870.00 PLN
+            balance of konto (PLN) at the end of 2026-03-31
+            from: opening v:opening[konto] = 100.00 PLN, 2026-01-01 start (version v, source s, locator "s")
+            2026-01-05:
+              topup[2026-01].cash (past): +400.00 PLN
+            2026-02-03:
+              bank[r1].cash (observed): +400.00 PLN
+            2026-02-10:
+              bank[r2].cash (observed): -30.00 PLN
   unfulfilled: topup[2026-01]
   cut 2026-04-20
-ef: refused: RUN-RECORD observation bank[r1] fulfils topup[2026-02], which doesn't exist or doesn't touch its places
-  [1] fl = refused: RUN-RECORD observation bank[r1] fulfils topup[2026-02], which doesn't exist or doesn't touch its places
+ef: 400.00 PLN
+  [1] fl = 400.00 PLN
       rule base: won
         [2] row v:fm = 2026-02
             version v, source s, "probe", locator "s", governs always, known 2026-01-01
         [3] row v:d5 = 5
             version v, source s, "probe", locator "s", governs always, known 2026-01-01
-        [4] running read bal(konto) = 100.00 PLN, the balance up to this point of 2026-01-05
-        [5] row v:lim = 500.00 PLN
-            version v, source s, "probe", locator "s", governs always, known 2026-01-01
-        [6] row v:amt = 400.00 PLN
-            version v, source s, "probe", locator "s", governs always, known 2026-01-01
-        [7] running read bal(konto) = 500.00 PLN, the balance up to this point of 2026-02-05
-  unfulfilled: topup[2026-01]
   cut 2026-04-20
-f: refused: RUN-RECORD observation bank[r1] fulfils topup[2026-02], which doesn't exist or doesn't touch its places
-  unfulfilled: topup[2026-01]
+f: 400.00 PLN
   cut 2026-04-20
-ful: refused: RUN-RECORD observation bank[r1] fulfils topup[2026-02], which doesn't exist or doesn't touch its places
-  unfulfilled: topup[2026-01]
+ful: 1
   cut 2026-04-20
 iof:
   bank[r1] (source s "probe", locator "the top-up")
-  v:amt (source s "probe", locator "s")
   v:d5 (source s "probe", locator "s")
   v:fm (source s "probe", locator "s")
-  v:lim (source s "probe", locator "s")
-  v:opening[konto] (source s "probe", locator "s")
-  unfulfilled: topup[2026-01]
   cut 2026-04-20
-loose: refused: RUN-RECORD observation bank[r1] fulfils topup[2026-02], which doesn't exist or doesn't touch its places
-  unfulfilled: topup[2026-01]
+loose: 30.00 PLN
   cut 2026-04-20
-ob: refused: RUN-RECORD observation bank[r1] fulfils topup[2026-02], which doesn't exist or doesn't touch its places
-  unfulfilled: topup[2026-01]
+ob: 400.00 PLN
   cut 2026-04-20

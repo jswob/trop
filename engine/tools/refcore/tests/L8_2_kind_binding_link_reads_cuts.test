@@ -1,5 +1,6 @@
 # tally 2.3.1 R2 item 6 (G2's review finding 4, `as known` cuts): kf, a count over February and March, holds no
 # January link read. Before: kf held `assumed: jan is a guess`.
+# tally 2.3.1 rulings 22 (part 1, a link names): the row stands in for the tuple it names by the name alone; no link is refused, judged at a point or re-walked, and only a field read through o.fulfils reaches step 7's mark. Re-stored.
 === first_cuts.tally
 model first
   tally 2
@@ -57,26 +58,21 @@ version jan
   bank[a1] = (on: 2026-01-05, kind: transfers, leg cash from pot to landlord amount 100.00 PLN, fulfils: rent[2026-01]) "names jan"
 === expect
 a: 100.00 PLN
-  assumed: jan is a guess (ok[2026-01])
   cut 2026-05-20
 b: 100.00 PLN
   unfulfilled: rent[2026-03]
   cut 2026-05-20
 c: 8 700.00 PLN
-  assumed: jan is a guess (ok[2026-01])
   unfulfilled: rent[2026-02]
   unfulfilled: rent[2026-03]
   cut 2026-05-20
 ka: 100.00 PLN
-  assumed: jan is a guess (ok[2026-01])
   cut 2026-02-01
 kb: 100.00 PLN
   cut 2026-02-01
 kc: 8 700.00 PLN
-  assumed: jan is a guess (ok[2026-01])
   cut 2026-02-01
 kd: 8 900.00 PLN
-  assumed: jan is a guess (ok[2026-01])
   cut 2026-01-25
 ke: 100.00 PLN
   unfulfilled: rent[2026-02]
@@ -85,8 +81,6 @@ kf: 2
   unfulfilled: rent[2026-02]
   cut 2026-03-01
 kg: 100.00 PLN
-  assumed: jan is a guess (ok[2026-01])
   cut 2026-02-01
 kh: 100.00 PLN
-  assumed: jan is a guess (ok[2026-01])
   cut 2026-02-01

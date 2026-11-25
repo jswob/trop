@@ -6,6 +6,7 @@
 # reads the link) and q_sw (flows over March, where the missing instance's day falls); before, q_obs RUN-NONE and
 # q_sw 0.00 PLN. W2b (G2's review finding 3): q_sw also lists March's `when` read, which decided sw[2026-03] doesn't
 # exist and so refused the link.
+# tally 2.3.1 rulings 22 (part 1, a link names): the row stands in for the tuple it names by the name alone; no link is refused, judged at a point or re-walked, and only a field read through o.fulfils reaches step 7's mark. Re-stored.
 === m.tally
 model nb3
   tally 2
@@ -66,15 +67,18 @@ version rd
   stated[konto] = 70.00 PLN at 2026-03-10 end "saldo"
 === expect
 q_konto: 70.00 PLN
-  anchor: konto 2026-03-10 end, stated 70.00 PLN, difference refused: RUN-RECORD observation bank[o1] fulfils sw[2026-03], which doesn't exist or doesn't touch its places
+  anchor: konto 2026-03-10 end, stated 70.00 PLN, difference -20.00 PLN
   cut 2026-06-30
 q_last: 70.00 PLN
   held: stated[konto] = 70.00 PLN (rd), read for 2026-03-31
   cut 2026-06-30
-q_led: refused: RUN-RECORD observation bank[o1] fulfils sw[2026-03], which doesn't exist or doesn't touch its places
-q_obs: refused: RUN-RECORD observation bank[o1] fulfils sw[2026-03], which doesn't exist or doesn't touch its places
-  held: stated[konto] = 100.00 PLN (rd0), read for 2026-03-01
+q_led: residuals konto 2026-03
+  2026-03 balance: model 90.00 PLN, observed 70.00 PLN, difference -20.00 PLN
+    balance konto 2026-03-10 end (anchored): booked 90.00 PLN, stated 70.00 PLN, gap -20.00 PLN
   cut 2026-06-30
-q_sw: refused: RUN-RECORD observation bank[o1] fulfils sw[2026-03], which doesn't exist or doesn't touch its places
-  held: stated[konto] = 100.00 PLN (rd0), read for 2026-02-01, 2026-03-01
+q_obs: 10.00 PLN
+  cut 2026-06-30
+q_sw: 10.00 PLN
+  held: stated[konto] = 100.00 PLN (rd0), read for 2026-02-01
+  held: stated[konto] = 70.00 PLN (rd), read for 2026-04-01
   cut 2026-06-30

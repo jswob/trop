@@ -142,9 +142,6 @@ class Checker:
     def edge(self, sc, target, rel='any'):
         r = sc.item
         self.edges.setdefault(r, {}).setdefault(target, set()).add(rel)
-        if getattr(sc, 'in_when', False) and r and r[0] == 'move':
-            # what a move's `when` reads, for step 7's existence mark (check3.check_moves_graph; tally 2.3.1 R6)
-            self.__dict__.setdefault('when_edges', {}).setdefault(r[1], set()).add(target)
         cap = getattr(self, '_kcap', None)
         if cap is not None:
             # a move's key: its reads with their relations, the binding's apart from its where's (L §4.3 R18)

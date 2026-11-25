@@ -2,7 +2,8 @@
 # RUN-KEY where the key is read, and a fulfils or a same side at a key the range doesn't hold names an instance that
 # doesn't exist, RUN-RECORD". pay is keyed by 1 .. cnt (cnt a row, 3): pay[5] names no instance, so the observation
 # that fulfils it is refused (L §5.19 RUN-RECORD), and the balance that books it. (Writer 6's whole-model LOAD-KEY at
-# run is not adopted, round 14's U-8.)
+# run is not adopted, round 14's U-8.) tally 2.3.1 rulings 22: a link names; the row is booked from its own fields and
+# the name the model doesn't hold is the residual ledger's to report, so q is the balance with the row (88.00 PLN).
 === m.tally
 model t
   tally 2
@@ -41,5 +42,5 @@ version st
 
 ask q: bal(konto, 2026-01-31)
 === expect
-q: refused: RUN-RECORD observation bank[r1] fulfils pay[5], which doesn't exist ...
+q: 88.00 PLN
 ...

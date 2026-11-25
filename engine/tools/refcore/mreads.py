@@ -399,55 +399,9 @@ def m_mv_field(self, n, env, ctx):
                     return a.mv()
             return NONE
         if isinstance(f, tuple):
-            mi = self.m.moves[f[1]]
-            if not mi.decision:
-                # the link reads that instance's existence alone, never the move's list or its amounts (L §5.14
-                # existence, §5.19; tally 2.3.1 R6: P22, P30)
-                env = self.link_tuple(mi, list(f[2]), ctx, traced=True)
-                if env is None:
-                    return NONE
-                if getattr(env, 'err', None) is not None and not isinstance(env, dict):
-                    # a link to a refused instance is refused with it (rulings 16 Q1)
-                    raise env.err
-                return Mv('%s[%s]' % (f[1], ', '.join(key_text(k) for k in f[2])) if f[2] else f[1])
-            env = self.link_tuple(mi, list(f[2]), ctx, traced=True)
-            if env is None:
-                return NONE
-            if getattr(env, 'err', None) is not None and not isinstance(env, dict):
-                raise env.err
-            iid = '%s[%s]' % (f[1], ', '.join(key_text(k) for k in f[2])) if f[2] else f[1]
-            if iid in self.run_cache.get(('deflinks', self.wkey(self.tctx(ctx))), ()):
-                # a decision's link its running `when` leaves to its walk point is read there (C-9): before that point
-                # another decision can't read it (RUN-ORDER, rulings 16 Q5); after it, the run decides
-                w = ctx.walk
-                inner = w is not None and ctx.wp is not None
-                if not inner:
-                    w = self.main_walk(ctx)
-                run, ww = None, w
-                while ww is not None and run is None:
-                    run = ww.decs.get(iid)
-                    ww = ww.base
-                ob, ww = None, w
-                while ww is not None and ob is None:
-                    ob = getattr(ww, 'order_bad', {}).get(iid)
-                    ww = ww.base
-                if ob is None and run is not None and getattr(run, 'err', None) is not None:
-                    ob = run.err
-                if ob is not None:
-                    # the instance the walk's order refused: its link is refused with it (rulings 15, 16 Q1)
-                    raise ob
-                if run is None and inner:
-                    a, b = sorted([getattr(w, 'cur_dec', None) or '?', mi.id])
-                    raise refuse('RUN-ORDER', 'decisions %s and %s read each other on %s' % (a, b, kday(ctx.wp)))
-                if run is not None and getattr(run, 'exist_coll', None) is not None:
-                    self.cur.merge(run.exist_coll)
-                bad = self.run_cache.get(('badlinks', self.wkey(ctx)), {}).get(iid)
-                if bad is not None:
-                    raise bad
-                if run is not None and (run.exists is False or getattr(run, 'status', None) == 'none'):
-                    return NONE
-            t = self.find_inst(mi, list(f[2]), ctx)
-            return t.mv() if t is not None else NONE
+            # the name: its move and keys, never the instance's existence (L §5.19; tally 2.3.1 rulings 22, P1-C6): a
+            # field read through it is a field read of the instance (§5.14), refused where it doesn't exist
+            return Mv('%s[%s]' % (f[1], ', '.join(key_text(k) for k in f[2])) if f[2] else f[1])
         return f
     if what == 'leg':
         for lg in src.legs:
@@ -2110,8 +2064,20 @@ def m_flows_move(self, n, sp, fk, env, ctx):
     u = None
     seen_units = set()
     counted = set()
+    # the rows that name a tuple of this move stand in for it by the name in every read over movements (L §5.19
+    # l.1718; tally 2.3.1 rulings 22, the critic's P1-C7): a tuple the model doesn't hold, one that is none here, or
+    # one whose day is a hole is counted by its rows, on their own days
+    named = {}
+    for tid, obs_ in self.link_targets(ctx).items():
+        f0 = obs_[0].fulfils
+        if f0[1] == mi.id and (not keys or tuple(vkey(k) for k in f0[2][:len(keys)]) == tuple(keys)):
+            named[tid] = obs_
+    by_rows = set(named) - set(i.id for i in insts)
     for i in insts:
         if keys and tuple(vkey(k) for k in i.keys[:len(keys)]) != tuple(keys):
+            continue
+        if i.id in named and (getattr(i, '_rawhole', False) or isinstance(i.day, Hole)) and i.err is None:
+            by_rows.add(i.id)
             continue
         if getattr(i, '_rawhole', False):
             if i.err is not None:
@@ -2134,6 +2100,9 @@ def m_flows_move(self, n, sp, fk, env, ctx):
                 self.stack.pop()
             if not (isinstance(i.day, datetime.date) and not sp.contains(i.day)):
                 self.cur.merge(c_st)
+        if st == 'none' and i.id in named:
+            by_rows.add(i.id)
+            continue
         if st in ('none', 'uncertain'):
             if st == 'none' and not (isinstance(i.day, datetime.date) and not sp.contains(i.day)):
                 # an observation fulfils it, so the link is refused: what rests on it is refused (L §8.4; tally 2.3.1
@@ -2265,6 +2234,35 @@ def m_flows_move(self, n, sp, fk, env, ctx):
             total = a.q if total is None else total + a.q
             u = unit_of_value(a)
             seen_units.add(u)
+    for tid in sorted(by_rows):
+        for o, others in once_obs(m, self.obs_links_for(tid, ctx), ctx):
+            for x in [o] + others:
+                if x.coll is not None:
+                    self.cur.merge(x.coll)
+            if fk is not None:
+                # the row is for the named tuple's period (L §5.14 `for k`)
+                fp = o.target.forp if o.target is not None else None
+                if isinstance(fp, Hole):
+                    holes.append(fp)
+                    continue
+                if fp is None or vkey(fp) != vkey(fk):
+                    continue
+            h = self.same_rows_hole(o, leg, ctx)
+            if h is not None:
+                holes.append(h)
+                continue
+            for lg in o.legs:
+                if leg is not None and lg.name != leg:
+                    continue
+                if not (isinstance(lg.day, datetime.date) and sp.contains(lg.day)):
+                    continue
+                a = lg.amount
+                if isinstance(a, Hole):
+                    holes.append(a)
+                    continue
+                total = a.q if total is None else total + a.q
+                u = unit_of_value(a)
+                seen_units.add(u)
     if mi.decision and self.trace_stack:
         # the runs of the walk this flows doesn't count are out of its read set: their traced reads go (L §8.2 One
         # read set: "nothing a list or a walk read for another reader"; tally 2.3.1 R2, P18)
@@ -2646,20 +2644,7 @@ def m_c_observed(self, n, env, ctx):
         return v
     mi = m.moves[a._r[1]]
     obs = self.obs_links_for(v.id, ctx)
-    if mi.decision and v.id in self.run_cache.get(('deflinks', self.wkey(self.tctx(ctx))), ()):
-        # a decision's link its running `when` leaves to its walk point is judged there (L §5.19, E §4.2 step 3;
-        # tally 2.3.1 R6, C-9), what decided its existence with it (G2's review finding 3)
-        w = self.main_walk(ctx)
-        run = w.decs.get(v.id) if w is not None else None
-        if run is not None and getattr(run, 'exist_coll', None) is not None:
-            self.cur.merge(run.exist_coll)
-    if mi.decision and mi.decl.when is not None and ctx.walk is None:
-        # an instance whose existence is refused (its `when` in a RUN-ORDER cycle at its point, Walk.refused_run) is
-        # refused with every read of it, `observed` too (R6, B5; x/dl_chk5 ob); a decision with no `when` exists
-        # whatever its run, and `observed` reads its rows
-        run = self.mv_record(v, ctx)
-        if getattr(run, 'status', None) == 'refused' and getattr(run, 'err', None) is not None:
-            raise run.err
+    # the rows that name it, by the name alone, whatever its existence (L §5.19; tally 2.3.1 rulings 22)
     bad = self.run_cache.get(('badlinks', self.wkey(ctx)), {}).get(v.id)
     if bad is not None:
         raise bad

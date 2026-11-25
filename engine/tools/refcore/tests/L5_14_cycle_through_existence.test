@@ -1,6 +1,7 @@
 # tally 2.3.1 R6, P32 kept (L §8.4 RUN-CYCLE `<m> reads its own instances`): loose[m] reads o.fulfils, the
 # link reads spend[m]'s existence, whose day reads loose[m]: RUN-CYCLE at every cell on the cycle (l24's April,
 # l4, f), named by the move. Before: l4 0.00 PLN.
+# tally 2.3.1 rulings 22 (part 1, a link names): the row stands in for the tuple it names by the name alone; no link is refused, judged at a point or re-walked, and only a field read through o.fulfils reaches step 7's mark. Re-stored.
 === e_selfcycle.tally
 model x1h
   tally 2
@@ -68,11 +69,11 @@ version apr
   bank[r0405] = (on: 2026-04-05, kind: transfers, leg cash from konto to shop amount 260.00 PLN, fulfils: spend[2026-02]) "names an earlier instance, read at K"
   bank[r0406] = (on: 2026-04-06, kind: transfers, leg cash from card to shop amount 30.00 PLN, fulfils: spend[2026-04]) "names its own reader"
 === expect
-f: refused: RUN-CYCLE spend reads its own instances
+f: 30.00 PLN
   cut 2026-04-20
 l24 (m = 2026-02): 0.00 PLN
   cut 2026-04-20
-l24 (m = 2026-04): refused: RUN-CYCLE spend reads its own instances
+l24 (m = 2026-04): 0.00 PLN
   cut 2026-04-20
-l4: refused: RUN-CYCLE spend reads its own instances
+l4: 0.00 PLN
   cut 2026-04-20
