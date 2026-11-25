@@ -1,6 +1,7 @@
 # tally 2.3.1 C-9 (G2's review finding 3): a pinned `lim` that decided the decision's existence is listed under
 # every reader resting on its link, refused ones included (fp, lp, bp `pinned: lim = 500.00 PLN`). Before: lp
 # had no pin line.
+# tally 2.3.1 rulings 22 (part 1, a link names): the row stands in for the tuple it names by the name alone; no link is refused, judged at a point or re-walked, and only a field read through o.fulfils reaches step 7's mark. Re-stored.
 === dl_pin.tally
 model dl
   tally 2
@@ -59,21 +60,16 @@ version feb
 b: 870.00 PLN
   unfulfilled: topup[2026-01]
   cut 2026-04-20
-bp: refused: RUN-RECORD observation bank[r1] fulfils topup[2026-02], which doesn't exist or doesn't touch its places
+bp: 870.00 PLN
   pinned: lim = 500.00 PLN
   unfulfilled: topup[2026-01]
   cut 2026-04-20
 f: 400.00 PLN
   unfulfilled: topup[2026-01]
   cut 2026-04-20
-fp: refused: RUN-RECORD observation bank[r1] fulfils topup[2026-02], which doesn't exist or doesn't touch its places
-  pinned: lim = 500.00 PLN
-  unfulfilled: topup[2026-01]
+fp: 400.00 PLN
   cut 2026-04-20
 l: 30.00 PLN
-  unfulfilled: topup[2026-01]
   cut 2026-04-20
-lp: refused: RUN-RECORD observation bank[r1] fulfils topup[2026-02], which doesn't exist or doesn't touch its places
-  pinned: lim = 500.00 PLN
-  unfulfilled: topup[2026-01]
+lp: 30.00 PLN
   cut 2026-04-20

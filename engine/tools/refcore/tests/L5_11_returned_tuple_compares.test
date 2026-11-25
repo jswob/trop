@@ -42,7 +42,7 @@ version ver
   best_k = k2 "s"
   best_j = j1 "s"
 === expect
-m1: 0.04 1/year
+m1: 0.04 /year
   cut 2026-10-18
 t1: false
   cut 2026-10-18

@@ -71,10 +71,6 @@ net_worth (d = 2026-06-30): 30 400 PLN
   unfulfilled: wage[2026-01]
   unfulfilled: wage[2026-02]
   held: fund_price[2026-06] = 120 PLN/fund_unit (home), read for 2026-06
-  held: pay_dom = 10 (home), read for 2026-04-01
-  held: pay_dom = 10 (home), read for 2026-05-01
-  held: pay_dom = 10 (home), read for 2026-06-01
-  held: salary = 5 000.00 PLN (home), read for 2026-04-01
-  held: salary = 5 000.00 PLN (home), read for 2026-05-01
-  held: salary = 5 000.00 PLN (home), read for 2026-06-01
+  held: pay_dom = 10 (home), read for 2026-04-01, 2026-05-01, 2026-06-01
+  held: salary = 5 000.00 PLN (home), read for 2026-04-01, 2026-05-01, 2026-06-01
   cut 2026-03-01

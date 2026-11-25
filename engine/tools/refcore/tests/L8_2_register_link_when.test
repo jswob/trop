@@ -3,6 +3,7 @@
 # whatever its evaluation read, through any chain (N-713), each `when` it tested" (L §8.2); "A link reads only what it
 # names: the existence of the instance, by its keys, `where` and `when`" (L §5.19). f judges the link first; q lists
 # the entry all the same (E §9 invariant 5: an answer doesn't depend on what else the run asks).
+# tally 2.3.1 rulings 22 (part 1, a link names): the row stands in for the tuple it names by the name alone; no link is refused, judged at a point or re-walked, and only a field read through o.fulfils reaches step 7's mark. Re-stored.
 === m.tally
 model m
   tally 2
@@ -57,12 +58,10 @@ version stmt
   bank_rows[r1] = (on: 2026-03-25, kind: transfers, leg cash from konto to us amount 12.00 PLN, fulfils: probe[2026-03]) "line 1"
 === expect f q
 f: 12.00 PLN
-  unfulfilled: adv_pay[2026-03]
   cut 2026-10-19
 q: 968.00 PLN
   unfulfilled: adv_pay[2026-01]
   unfulfilled: adv_pay[2026-02]
-  unfulfilled: adv_pay[2026-03]
   unfulfilled: probe[2026-01]
   unfulfilled: probe[2026-02]
   cut 2026-10-19

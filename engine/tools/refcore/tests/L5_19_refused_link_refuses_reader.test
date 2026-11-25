@@ -1,5 +1,6 @@
 # tally 2.3.1 R6, C-13.6 (L §5.19, §8.4): rent[2026-01] doesn't exist (`when` false) and bank[a1] fulfils it, so
 # the link is refused, and what rests on it: a (January's flows) and c. Before: a 0.00 PLN.
+# tally 2.3.1 rulings 22 (part 1, a link names): the row stands in for the tuple it names by the name alone; no link is refused, judged at a point or re-walked, and only a field read through o.fulfils reaches step 7's mark. Re-stored.
 === l_false.tally
 model first
   tally 2
@@ -48,12 +49,12 @@ version jan
   covers pot
   bank[a1] = (on: 2026-01-05, kind: transfers, leg cash from pot to landlord amount 100.00 PLN, fulfils: rent[2026-01]) "names jan"
 === expect
-a: refused: RUN-RECORD observation bank[a1] fulfils rent[2026-01], which doesn't exist or doesn't touch its places
+a: 100.00 PLN
   cut 2026-05-20
 b: 100.00 PLN
   unfulfilled: rent[2026-03]
   cut 2026-05-20
-c: refused: RUN-RECORD observation bank[a1] fulfils rent[2026-01], which doesn't exist or doesn't touch its places
+c: 8 700.00 PLN
   unfulfilled: rent[2026-02]
   unfulfilled: rent[2026-03]
   cut 2026-05-20

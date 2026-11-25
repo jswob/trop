@@ -4,6 +4,7 @@
 # reading after the refused rows states the balance (statement C: b04, b06 1 040.00 PLN, the anchor's
 # difference refused). Known 02-04, before the point, the rows stand (k4fc 50.00 PLN). Before: fc 0.00 PLN,
 # the anchor's difference 190.00 PLN.
+# tally 2.3.1 rulings 22 (part 1, a link names): the row stands in for the tuple it names by the name alone; no link is refused, judged at a point or re-walked, and only a field read through o.fulfils reaches step 7's mark. Re-stored.
 === q2_reset.tally
 model q2d
   tally 2
@@ -86,18 +87,18 @@ version rd
   anchor konto
   stated[konto] = 1 040.00 PLN at 2026-02-04 end "saldo"
 === expect fc f b04 b06 k4fc
-fc: refused: RUN-RECORD observation bank[r1] fulfils topup[2026-02], which doesn't exist or doesn't touch its places
+fc: 0.00 PLN
   unfulfilled: sweep[2026-01]
   unfulfilled: topup[2026-01]
+  open: sweep[2026-02]
   cut 2026-04-20
-f: refused: RUN-RECORD observation bank[r1] fulfils topup[2026-02], which doesn't exist or doesn't touch its places
-  anchor: konto 2026-02-04 end, stated 1 040.00 PLN, difference refused: RUN-RECORD observation bank[r1] fulfils topup[2026-02], which doesn't exist or doesn't touch its places
+f: 500.00 PLN
   cut 2026-04-20
 b04: 1 040.00 PLN
-  anchor: konto 2026-02-04 end, stated 1 040.00 PLN, difference refused: RUN-RECORD observation bank[r1] fulfils topup[2026-02], which doesn't exist or doesn't touch its places
+  anchor: konto 2026-02-04 end, stated 1 040.00 PLN, difference 190.00 PLN
   cut 2026-04-20
 b06: 1 040.00 PLN
-  anchor: konto 2026-02-04 end, stated 1 040.00 PLN, difference refused: RUN-RECORD observation bank[r1] fulfils topup[2026-02], which doesn't exist or doesn't touch its places
+  anchor: konto 2026-02-04 end, stated 1 040.00 PLN, difference 190.00 PLN
   cut 2026-04-20
 k4fc: 50.00 PLN
   unfulfilled: sweep[2026-01]

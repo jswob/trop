@@ -1,6 +1,7 @@
 # tally 2.3.1 R6, B5 (the lead's probes of G2's last fix): chk and topup read each other on 2026-02-05, so
 # topup[2026-02]'s existence is refused (RUN-ORDER), and every read of it with it: its flows, its day and
 # `observed`, though a row fulfils it. Before: ob 400.00 PLN, the row's amount.
+# tally 2.3.1 rulings 22 (part 1, a link names): the row stands in for the tuple it names by the name alone; no link is refused, judged at a point or re-walked, and only a field read through o.fulfils reaches step 7's mark. Re-stored.
 === dl_chk5.tally
 model dl
   tally 2
@@ -73,5 +74,5 @@ f: refused: RUN-ORDER decisions chk and topup read each other on 2026-02-05
   cut 2026-04-20
 dy: refused: RUN-ORDER decisions chk and topup read each other on 2026-02-05
   cut 2026-04-20
-ob: refused: RUN-ORDER decisions chk and topup read each other on 2026-02-05
+ob: 400.00 PLN
   cut 2026-04-20

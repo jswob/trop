@@ -1,0 +1,35 @@
+# tally 2.3.1 R3, P22 N3 (L §2.1 a fraction only in rows, §5.11 a pin is a row): `with pct = 1/3 %` is allowed
+# and read as that row (f1 1 PLN, its pinned: line 1/3 %). Before: LOAD-PARSE `a fraction is allowed only in
+# rows` for the whole text.
+=== n3.tally
+model w8
+  tally 2
+  on 2026-06-30
+  start 2026-01-01
+  end 2026-12-31
+
+source s "probe"
+unit PLN: currency minor 0.01
+index ks = [k1, k2]
+input r[k in ks]: rate
+input pct: num %
+input base: money PLN
+def fee: num PLN = base * pct
+
+ask f1: fee with pct = 1/3 %
+ask f2: fee
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  r[k1] = 2 %/year "s"
+  r[k2] = 4 %/year "s"
+  pct = 1 % "s"
+  base = 300.00 PLN "s"
+=== expect
+f1: 1 PLN
+  pinned: pct = 1/3 (0.333333333333333) %
+  cut 2026-06-30
+f2: 3 PLN
+  cut 2026-06-30

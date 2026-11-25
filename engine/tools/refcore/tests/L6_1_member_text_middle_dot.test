@@ -1,0 +1,52 @@
+# tally 2.3.1 R4, Q2.34, #238's gate review 5 (L §8.1, §2.4: a question and a text print as written): a member's
+# question, source and locator that hold `·` print it, run through the joint model (T's items/g5). Before: `.`,
+# refcore's joint names held with `·` inside and every one printed as `.`.
+=== options pin=bytes
+=== j5.tally
+model family
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+  use a = "m/m.tally" sha256 "fd050307e4d062e6692eba23640e4b9e87cb894ea08abe6fdcf57e9287625ae2"
+  note "T's joint model for #238's gate review 5 (invented): one member, pinned by its file bytes"
+
+ask x: a.twice
+=== m/m.tally
+model mem
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+  note "T's member for #238's gate review 5 (invented): a question text and a source that hold a middle dot"
+
+source card "T's card · page 2 (invented)"
+
+unit PLN: currency minor 0.01
+
+input pay: money PLN
+input fee: money PLN
+input spare: int
+
+def twice: money PLN = pay + pay
+def net: money PLN = fee - fee
+
+ask q: twice
+ask q_dot: net
+ask q_explain: explain twice
+
+version card_2026
+  cite card
+  governs always
+  known 2026-01-01
+  pay = 4 000.00 PLN "the card · line 3"
+  fee = ?"the fee · as the bank states it" "the card"
+=== expect a.q_dot a.q_explain
+a.q_dot: ?"the fee · as the bank states it" (fee)
+  cut 2026-03-01
+a.q_explain: 8 000.00 PLN
+  [1] twice = 8 000.00 PLN
+      rule base: won
+        [2] row card_2026:pay = 4 000.00 PLN
+            version card_2026, source card, "T's card · page 2 (invented)", locator "the card · line 3", governs always, known 2026-01-01
+  cut 2026-03-01

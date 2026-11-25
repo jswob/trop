@@ -142,9 +142,6 @@ class Checker:
     def edge(self, sc, target, rel='any'):
         r = sc.item
         self.edges.setdefault(r, {}).setdefault(target, set()).add(rel)
-        if getattr(sc, 'in_when', False) and r and r[0] == 'move':
-            # what a move's `when` reads, for step 7's existence mark (check3.check_moves_graph; tally 2.3.1 R6)
-            self.__dict__.setdefault('when_edges', {}).setdefault(r[1], set()).add(target)
         cap = getattr(self, '_kcap', None)
         if cap is not None:
             # a move's key: its reads with their relations, the binding's apart from its where's (L §4.3 R18)
@@ -823,8 +820,7 @@ class Checker:
         if node.k not in ('num', 'date', 'month', 'quarter') or (sign < 0 and node.k != 'num'):
             return False
         if node.k == 'num':
-            if node.get('frac'):
-                raise LoadError('LOAD-PARSE', 'cannot parse: a fraction is allowed only in rows', node.loc)
+            # a fraction too: a pin is a row (L §2.1 "only in rows", §5.11; tally 2.3.1 R3, P22 N3)
             self.lit_rule(sc, node, 'num', node.v * sign)
             lit = Node('num', loc=node.loc, **{a: b for a, b in node.__dict__.items() if a not in ('k', 'loc')})
             lit.v = node.v * sign
@@ -1756,10 +1752,14 @@ class Checker:
                 self.flex_to(f, T.pct())
 
     def flex_to(self, node, target):
-        """Give a bare figure (through brackets and a minus) the type it takes (L §7.1)."""
+        """Give a bare figure (through brackets, a minus and an if's branches) the type it takes (L §7.1; an if of
+        bare figures is one, tally 2.3.1 R4, P36: `if c then x else if d then 0 else 0` prints `0.00 PLN`)."""
         while node.k in ('paren', 'neg'):
             node = node.e
-        if node.k == 'num' and not node.unit:
+        if node.k == 'if':
+            self.flex_to(node.a, target)
+            self.flex_to(node.b, target)
+        elif node.k == 'num' and not node.unit:
             node._flexto = target
 
     def fx_check(self, xu, ru, loc, op):
@@ -2279,6 +2279,13 @@ class Checker:
             if p.kind == 'law':
                 sc2.lawpin = True
         self.pin_ties(n.pins, sc)
+        # two law pins, or two cut pins, in one as if are two pins of one cell (L §5.11 A pin is a row; tally 2.3.1
+        # R3, P22 N6), as on a line
+        for kind, cell in (('law', 'the law date'), ('known', 'the cut')):
+            same = ['%s %s' % (kind, _txt(p.value)) for p in n.pins if p.kind == kind]
+            if len(same) > 1:
+                raise LoadError('LOAD-OVERLAP', 'pins %s and %s of %s overlap at no keys' % (same[0], same[1], cell),
+                                n.loc)
         return self.tc(n.e, sc2, expect)
 
     def pin_ties(self, pins, sc):

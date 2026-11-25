@@ -1,6 +1,7 @@
 # tally 2.3.1 C-9 with L §8.2 l.2252 (G2's review finding 3): what topup[2026-02]'s `when` read at its point,
 # `ok[2026-02]` included, is its link's read set: f lists `assumed: feb guess` and inputs-of lists ok, in either
 # order of the `and`'s operands (da_runwhen gives the same). Before: no register line, ok not listed.
+# tally 2.3.1 rulings 22 (part 1, a link names): the row stands in for the tuple it names by the name alone; no link is refused, judged at a point or re-walked, and only a field read through o.fulfils reaches step 7's mark. Re-stored.
 === da_runwhen2.tally
 model da
   tally 2
@@ -74,10 +75,6 @@ iof:
   unfulfilled: topup[2026-01]
   cut 2026-04-20
 n: 1
-  assumed: feb guess (ok[2026-02])
-  unfulfilled: topup[2026-01]
   cut 2026-04-20
 ob: 400.00 PLN
-  assumed: feb guess (ok[2026-02])
-  unfulfilled: topup[2026-01]
   cut 2026-04-20
