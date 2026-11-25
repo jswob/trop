@@ -3919,11 +3919,12 @@ q_decide: (refused: RUN-ORDER decisions save and spend read each other on 2026-0
   assumed: the card names no holiday (holidays)
   cut 2026-03-01
 ,26:t221-g2/219-1-same-planned,7:t221-g2,3:run,29:engine/tests/m3/fixes/t221/s5,31:run hs_disagree.tally --ask amt,53:hs_disagree.tally	m3/fixes/t221/s5/hs_disagree.tally
-,1:0,160:amt: ?"in1 and in2 are one, but the amount of cash differs on 2026-03-05: 100.00 PLN (in1) and 120.00 PLN (in2)" (in1, in2)
+,1:0,169:amt: ?"in1 and in2 are one, but leg cash differs on 2026-03-05: 100.00 PLN (in1) and 120.00 PLN (in2)" (in1, in2)
   unfulfilled: in1
+  unfulfilled: in2
   cut 2026-06-10
 ,23:t221-g2/219-2-warn-legs,7:t221-g2,3:run,29:engine/tests/m3/fixes/t221/s5,21:run r3_disagree.tally,53:r3_disagree.tally	m3/fixes/t221/s5/r3_disagree.tally
-,1:0,713:a_before: (2 000.00 PLN, 0.00 PLN, 0, 0.00 PLN)
+,1:0,703:a_before: (2 000.00 PLN, 0.00 PLN, 0, 0.00 PLN)
   cut 2026-04-01
 b_on1: (1 050.00 PLN, 950.00 PLN, 1, 950.00 PLN)
   cut 2026-04-02
@@ -3933,7 +3934,7 @@ d_on2: (1 050.00 PLN, 900.00 PLN, 1, 900.00 PLN)
   cut 2026-04-05
 e_after: (1 050.00 PLN, 900.00 PLN, 1, 900.00 PLN)
   cut 2026-04-30
-f_amt: ?"bank[a2] and sbank[b1] are one, but the amount of cash differs on 2026-03-18: 950.00 PLN (bank[a2]) and 900.00 PLN (sbank[b1])" (bank[a2], sbank[b1])
+f_amt: ?"bank[a2] and sbank[b1] are one, but leg cash differs on 2026-03-18: 950.00 PLN (bank[a2]) and 900.00 PLN (sbank[b1])" (bank[a2], sbank[b1])
   cut 2026-04-30
 g_amt_mid: 950.00 PLN
   cut 2026-04-03
@@ -4525,12 +4526,12 @@ a8b: refused: RUN-PLACE pot is -240.00 PLN after the day's observations and plan
   pinned: amt2 = 300.00 PLN
   cut 2026-01-01
 ,28:t221-g2/rv2-b2-same-register,7:t221-g2,3:run,30:engine/tests/m3/fixes/t221/rv2,30:run b2.tally --ask s0 sp sq bp,36:b2.tally	m3/fixes/t221/rv2/b2.tally
-,1:0,422:s0: ?"in1 and in2 are one, but the amount of cash differs on 2026-03-05: 100.00 PLN (in1) and 120.00 PLN (in2)" (in1, in2)
+,1:0,402:s0: ?"in1 and in2 are one, but leg cash differs on 2026-03-05: 100.00 PLN (in1) and 120.00 PLN (in2)" (in1, in2)
   cut 2026-01-01
 sp: 100.00 PLN
   pinned: a2 = 100.00 PLN
   cut 2026-01-01
-sq: ?"in1 and in2 are one, but the amount of cash differs on 2026-03-05: 100.00 PLN (in1) and 130.00 PLN (in2)" (in1, in2)
+sq: ?"in1 and in2 are one, but leg cash differs on 2026-03-05: 100.00 PLN (in1) and 130.00 PLN (in2)" (in1, in2)
   pinned: a2 = 130.00 PLN
   cut 2026-01-01
 bp: 600.00 PLN
@@ -4631,21 +4632,23 @@ p3: 550.00 PLN
   pad: sav 2026-03-20 end, pads:rds:sav@2026-03-20 end of 50.00 PLN
   cut 2026-05-31
 ,25:t221-g2/rv2-n4-flows-same,7:t221-g2,3:run,30:engine/tests/m3/fixes/t221/rv2,24:run b2.tally --ask f1 f2,36:b2.tally	m3/fixes/t221/rv2/b2.tally
-,1:0,280:f1: ?"in1 and in2 are one, but the amount of cash differs on 2026-03-05: 100.00 PLN (in1) and 120.00 PLN (in2)" (in1, in2)
+,1:0,260:f1: ?"in1 and in2 are one, but leg cash differs on 2026-03-05: 100.00 PLN (in1) and 120.00 PLN (in2)" (in1, in2)
   cut 2026-01-01
-f2: ?"in1 and in2 are one, but the amount of cash differs on 2026-03-05: 100.00 PLN (in1) and 120.00 PLN (in2)" (in1, in2)
+f2: ?"in1 and in2 are one, but leg cash differs on 2026-03-05: 100.00 PLN (in1) and 120.00 PLN (in2)" (in1, in2)
   cut 2026-01-01
 ,25:t221-g2/rv2-n4-count-same,7:t221-g2,3:run,30:engine/tests/m3/fixes/t221/rv2,25:run h10.tally --ask c5 c9,38:h10.tally	m3/fixes/t221/rv2/h10.tally
-,1:0,364:c5: ?"in1 and in2 are one, but the day of cash differs on 2026-03-05: 2026-03-05 (in1) and 2026-03-09 (in2)" (in1, in2)
+,1:0,388:c5: ?"in1 and in2 are one, but leg cash differs on 2026-03-05: 2026-03-05 (in1) and 2026-03-09 (in2)" (in1, in2)
   pinned: d2 = 2026-03-09
   unfulfilled: in1
+  unfulfilled: in2
   cut 2026-06-10
-c9: ?"in1 and in2 are one, but the day of cash differs on 2026-03-05: 2026-03-05 (in1) and 2026-03-09 (in2)" (in1, in2)
+c9: ?"in1 and in2 are one, but leg cash differs on 2026-03-05: 2026-03-05 (in1) and 2026-03-09 (in2)" (in1, in2)
   pinned: d2 = 2026-03-09
   unfulfilled: in1
+  unfulfilled: in2
   cut 2026-06-10
 ,23:t221-g2/rv2-n6-two-legs,7:t221-g2,3:run,30:engine/tests/m3/fixes/t221/rv2,33:run h4.tally --ask blc fl amt fee,36:h4.tally	m3/fixes/t221/rv2/h4.tally
-,1:0,330:blc: 128.00 PLN
+,1:0,368:blc: 128.00 PLN
   unfulfilled: in2
   unfulfilled: in3
   cut 2026-06-10
@@ -4655,43 +4658,50 @@ fl: 128.00 PLN
   cut 2026-06-10
 amt: 130.00 PLN
   unfulfilled: in1
+  unfulfilled: in2
   unfulfilled: in3
   cut 2026-06-10
 fee: 2.00 PLN
   unfulfilled: in1
+  unfulfilled: in2
   unfulfilled: in3
   cut 2026-06-10
 warning: WARN-UNREAD input dn is read by nothing
 ,23:t221-g2/rv2-q3-per-fact,7:t221-g2,3:run,30:engine/tests/m3/fixes/t221/rv2,30:run h1.tally --ask dys fee amt,36:h1.tally	m3/fixes/t221/rv2/h1.tally
-,1:0,421:dys (m = in1): 2026-03-05
+,1:0,468:dys (m = in1): 2026-03-05
   unfulfilled: in1
+  unfulfilled: in2
   cut 2026-06-10
 dys (m = in3): 2026-03-20
   unfulfilled: in3
   cut 2026-06-10
 fee: 2.00 PLN
   unfulfilled: in1
+  unfulfilled: in2
   unfulfilled: in3
   cut 2026-06-10
-amt: ?"in1 and in2 are one, but the amount of cash differs on 2026-03-05: 100.00 PLN (in1) and 120.00 PLN (in2)" (in1, in2)
+amt: ?"in1 and in2 are one, but leg cash differs on 2026-03-05: 100.00 PLN (in1) and 120.00 PLN (in2)" (in1, in2)
   unfulfilled: in1
+  unfulfilled: in2
   unfulfilled: in3
   cut 2026-06-10
 warning: WARN-UNREAD input dn is read by nothing
 ,18:t221-g2/p42-leg-to,7:t221-g2,3:run,30:engine/tests/m3/fixes/t221/rv2,22:run h1.tally --ask tos,36:h1.tally	m3/fixes/t221/rv2/h1.tally
-,1:0,165:tos (m = in1): wallet
+,1:0,184:tos (m = in1): wallet
   unfulfilled: in1
+  unfulfilled: in2
   cut 2026-06-10
 tos (m = in3): wallet
   unfulfilled: in3
   cut 2026-06-10
 warning: WARN-UNREAD input dn is read by nothing
 ,21:t221-g2/p42-span-days,7:t221-g2,3:run,30:engine/tests/m3/fixes/t221/rv2,26:run h2.tally --ask fl1 cnt,36:h2.tally	m3/fixes/t221/rv2/h2.tally
-,1:0,163:fl1: 100.00 PLN
+,1:0,182:fl1: 100.00 PLN
   unfulfilled: in1
   cut 2026-06-10
 cnt: 2
   unfulfilled: in1
+  unfulfilled: in2
   unfulfilled: in3
   cut 2026-06-10
 warning: WARN-UNREAD input dn is read by nothing
@@ -4709,10 +4719,10 @@ fee_a2: 1.00 PLN
 fl_fee: 1.00 PLN
   cut 2026-01-01
 ,26:t221-g2/rv2f-f7-membership,7:t221-g2,3:run,33:engine/tests/m3/fixes/t221/rv2/fx,43:run s2_leg_reads.tally --ask cnt_d2 cnt_d2x,59:s2_leg_reads.tally	m3/fixes/t221/rv2/fx/s2_leg_reads.tally
-,1:0,221:cnt_d2: 1
+,1:0,214:cnt_d2: 1
   pinned: d2 = 2026-03-20
   cut 2026-01-01
-cnt_d2x: ?"in1 and in2 are one, but the day of cash differs on 2026-03-05: 2026-03-05 (in1) and 2026-04-20 (in2)" (in1, in2)
+cnt_d2x: ?"in1 and in2 are one, but leg cash differs on 2026-03-05: 2026-03-05 (in1) and 2026-04-20 (in2)" (in1, in2)
   pinned: d2 = 2026-04-20
   cut 2026-01-01
 ,26:t221-g2/rv2f-f8-false-when,7:t221-g2,3:run,33:engine/tests/m3/fixes/t221/rv2/fx,64:run r2_when_before.tally --ask t_before f_before t_fl f_fl f_flm,63:r2_when_before.tally	m3/fixes/t221/rv2/fx/r2_when_before.tally
@@ -4765,7 +4775,7 @@ p1: 600.00 PLN
   pinned: w = 2026-03-12
   cut 2026-04-10
 ,26:t221-g3/p45-same-day-names,7:t221-g3,3:run,30:engine/tests/m3/fixes/t221/rv2,23:run h10.tally --ask f2d,38:h10.tally	m3/fixes/t221/rv2/h10.tally
-,1:0,164:f2d: ?"in1 and in2 are one, but the day of cash differs on 2026-03-05: 2026-03-05 (in1) and 2026-03-09 (in2)" (in1, in2)
+,1:0,157:f2d: ?"in1 and in2 are one, but leg cash differs on 2026-03-05: 2026-03-05 (in1) and 2026-03-09 (in2)" (in1, in2)
   pinned: d2 = 2026-03-09
   cut 2026-06-10
 ,27:t221-rc/221-8-same-row-line,7:t221-rc,3:run,31:engine/tests/m3/fixes/t221/g3t2,15:run t2218.tally,43:t2218.tally	m3/fixes/t221/g3t2/t2218.tally
@@ -4778,13 +4788,13 @@ u2: refused: RUN-DOMAIN unit of 25 PLN^2: a plain number or a compound unit is a
 u3: refused: RUN-DOMAIN unit of 1: a plain number or a compound unit is a key of no unit kind
   cut 2026-03-01
 ,24:t221-g3/233-7-none-arith,7:t221-g3,3:run,31:engine/tests/m3/fixes/t221/g3t2,16:run n233_7.tally,45:n233_7.tally	m3/fixes/t221/g3t2/n233_7.tally
-,1:0,372:q_arith: refused: RUN-NONE fee[2026-02] is none here: arithmetic
+,1:0,373:q_arith: refused: RUN-NONE fee[2026-02] is none here: arithmetic
   cut 2026-06-10
-q_cmp: refused: RUN-NONE fee[2026-02] is none here: an ordering
+q_cmp: refused: RUN-NONE fee[2026-02] is none here: ordering
   cut 2026-06-10
 q_plain: 10.00 PLN
   cut 2026-06-10
-q_sum: refused: RUN-NONE a term of sum is none here
+q_sum: refused: RUN-NONE fee[2026-02] is none here: sum
   cut 2026-06-10
 warning: WARN-UNREAD place konto is read by nothing
 warning: WARN-UNREAD place world is read by nothing
@@ -4813,13 +4823,13 @@ m/m.tally	m3/fixes/t221/q10/m/m.tally
 ,24:t221-g3/rv3-n1-load-same,7:t221-g3,3:run,30:engine/tests/m3/fixes/t221/rv3,13:run ls1.tally,38:ls1.tally	m3/fixes/t221/rv3/ls1.tally
 ,1:1,133:refused: LOAD-SAME same pay = bank[r1]: an observed row and a planned instance of one model; state fulfils on the row (ls1.tally:24)
 ,25:t221-g3/rv3-n2-none-reads,7:t221-g3,3:run,30:engine/tests/m3/fixes/t221/rv3,12:run n2.tally,36:n2.tally	m3/fixes/t221/rv3/n2.tally
-,1:0,1787:o1 (k = k1): false
+,1:0,1780:o1 (k = k1): false
   cut 2026-06-10
-o1 (k = k2): refused: RUN-NONE rate[k2] is none here: an ordering
+o1 (k = k2): refused: RUN-NONE rate[k2] is none here: ordering
   cut 2026-06-10
 o10 (k = k1): 1
   cut 2026-06-10
-o10 (k = k2): refused: RUN-NONE a value is none here: abs
+o10 (k = k2): refused: RUN-NONE rate[k2] is none here: abs
   cut 2026-06-10
 o11 (k = k1): 1
   cut 2026-06-10
@@ -4837,7 +4847,7 @@ o14 (k = k1): -1
   cut 2026-06-10
 o14 (k = k2): refused: RUN-NONE rate[k2] is none here: arithmetic
   cut 2026-06-10
-o15: refused: RUN-NONE rate[k2] is none here: an ordering
+o15: refused: RUN-NONE rate[k2] is none here: ordering
   cut 2026-06-10
 o16 (k = k1): false
   cut 2026-06-10
@@ -4849,19 +4859,19 @@ o17 (k = k2): refused: RUN-NONE acct[k2] is none here: a membership test
   cut 2026-06-10
 o2 (k = k1): true
   cut 2026-06-10
-o2 (k = k2): refused: RUN-NONE rate[k2] is none here: an ordering
+o2 (k = k2): refused: RUN-NONE rate[k2] is none here: ordering
   cut 2026-06-10
 o3 (k = k1): true
   cut 2026-06-10
 o3 (k = k2): false
   cut 2026-06-10
-o4: refused: RUN-NONE a term of sum is none here
+o4: refused: RUN-NONE rate[k2] is none here: sum
   cut 2026-06-10
-o5: refused: RUN-NONE a term of max is none here
+o5: refused: RUN-NONE rate[k2] is none here: max
   cut 2026-06-10
 o6 (k = k1): 1
   cut 2026-06-10
-o6 (k = k2): refused: RUN-NONE a value is none here: min
+o6 (k = k2): refused: RUN-NONE rate[k2] is none here: min
   cut 2026-06-10
 o7 (k = k1): 1
   cut 2026-06-10
@@ -5051,13 +5061,13 @@ l_fee: ?"does zl happen?" (w_h)
 l_wal: ?"does zl happen?" (w_h)
   cut 2026-01-01
 ,33:t221-g2/mut-same-member-third-row,7:t221-g2,3:run,30:engine/tests/m3/fixes/t221/rv6,12:run sm.tally,36:sm.tally	m3/fixes/t221/rv6/sm.tally
-,1:0,652:c_both: 2
+,1:0,638:c_both: 2
   cut 2026-06-10
-c_one: ?"bank[r1] and bank[r2] are one, but the day of cash differs on 2026-03-05: 2026-03-05 (bank[r1]) and 2026-03-07 (bank[r2])" (bank[r1], bank[r2])
+c_one: ?"bank[r1] and bank[r2] are one, but leg cash differs on 2026-03-05: 2026-03-05 (bank[r1]) and 2026-03-07 (bank[r2])" (bank[r1], bank[r2])
   cut 2026-06-10
 f_one: ?"bank[r1] and bank[r2] are one, but leg cash differs on 2026-03-05, 2026-03-07: 100.00 PLN (bank[r1]) and 100.00 PLN (bank[r2])" (bank[r1], bank[r2])
   cut 2026-06-10
-s_one: ?"bank[r1] and bank[r2] are one, but the day of cash differs on 2026-03-05: 2026-03-05 (bank[r1]) and 2026-03-07 (bank[r2])" (bank[r1], bank[r2])
+s_one: ?"bank[r1] and bank[r2] are one, but leg cash differs on 2026-03-05: 2026-03-05 (bank[r1]) and 2026-03-07 (bank[r2])" (bank[r1], bank[r2])
   cut 2026-06-10
 warning: WARN-LEGS the two observations of bank[r1] disagree: bank[r1] (2026-03-05) and bank[r2] (2026-03-07)
 ,23:t23-g1/ledger-fulfilled,6:t23-g1,3:run,32:engine/tests/m3/fixes/t23/ledger,22:run l1_fulfilled.tally,58:l1_fulfilled.tally	m3/fixes/t23/ledger/l1_fulfilled.tally
@@ -5096,14 +5106,15 @@ r_p25: residuals konto 2026-03 .. 2026-04
   pinned: w = 2026-03-25
   cut 2026-06-10
 ,22:t23-g1/ledger-left-out,6:t23-g1,3:run,32:engine/tests/m3/fixes/t23/ledger,21:run l2_left_out.tally,56:l2_left_out.tally	m3/fixes/t23/ledger/l2_left_out.tally
-,1:0,1778:b_mar: 600.00 PLN
+,1:0,2428:b_mar: 600.00 PLN
   pad: konto 2026-03-31 end, pads:st:konto@2026-03-31 end of 0.00 PLN
   cut 2026-06-10
 r_both: residuals konto 2026-03 .. 2026-04
+  2026-03 move pw: model ?"date within window(2026-03-25, 2026-04-05) not precise enough for the day of pw" (w), observed 100.00 PLN, difference ?"date within window(2026-03-25, 2026-04-05) not precise enough for the day of pw" (w)
+    matched pw on 2026-03-30: model ?"date within window(2026-03-25, 2026-04-05) not precise enough for the day of pw" (w), observed 100.00 PLN, difference ?"date within window(2026-03-25, 2026-04-05) not precise enough for the day of pw" (w), timing +0 days
   2026-03 balance: model 600.00 PLN, observed 600.00 PLN, difference 0.00 PLN
     balance konto 2026-03-31 end (padded): booked 600.00 PLN, stated 600.00 PLN, gap 0.00 PLN
-  2026-03 move pw: model 100.00 PLN, observed 100.00 PLN, difference 0.00 PLN
-    matched pw on 2026-03-30: model 100.00 PLN, observed 100.00 PLN, difference 0.00 PLN, timing +0 days
+  unknown day: w
   cut 2026-06-10
 r_known: residuals konto 2026-03 .. 2026-04
   2026-03 balance: model 600.00 PLN, observed 600.00 PLN, difference 0.00 PLN
@@ -5112,10 +5123,11 @@ r_known: residuals konto 2026-03 .. 2026-04
     matched pw on 2026-03-30: model 100.00 PLN, observed 100.00 PLN, difference 0.00 PLN, timing +0 days
   cut 2026-04-15
 r_mar: residuals konto 2026-03
+  2026-03 move pw: model ?"date within window(2026-03-25, 2026-04-05) not precise enough for the day of pw" (w), observed 100.00 PLN, difference ?"date within window(2026-03-25, 2026-04-05) not precise enough for the day of pw" (w)
+    matched pw on 2026-03-30: model ?"date within window(2026-03-25, 2026-04-05) not precise enough for the day of pw" (w), observed 100.00 PLN, difference ?"date within window(2026-03-25, 2026-04-05) not precise enough for the day of pw" (w), timing +0 days
   2026-03 balance: model 600.00 PLN, observed 600.00 PLN, difference 0.00 PLN
     balance konto 2026-03-31 end (padded): booked 600.00 PLN, stated 600.00 PLN, gap 0.00 PLN
-  2026-03 move pw: model 100.00 PLN, observed 100.00 PLN, difference 0.00 PLN
-    matched pw on 2026-03-30: model 100.00 PLN, observed 100.00 PLN, difference 0.00 PLN, timing +0 days
+  unknown day: w
   cut 2026-06-10
 r_p25: residuals konto 2026-03 .. 2026-04
   2026-03 balance: model 600.00 PLN, observed 600.00 PLN, difference 0.00 PLN
@@ -5199,7 +5211,7 @@ n_mar: ?"date within window(2026-03-03, 2026-03-09) not precise enough for the d
   unknown day: di
   cut 2026-06-10
 ,22:t23-g1/same-end-differ,6:t23-g1,3:run,30:engine/tests/m3/fixes/t23/same,17:run se_w_ne.tally,46:se_w_ne.tally	m3/fixes/t23/same/se_w_ne.tally
-,1:0,1443:b_feb: ?"date within window(2026-03-03, 2026-03-09) not precise enough for the day of j1" (dj)
+,1:0,1461:b_feb: ?"date within window(2026-03-03, 2026-03-09) not precise enough for the day of j1" (dj)
   unknown day: dj
   cut 2026-06-10
 b_in: ?"date within window(2026-03-03, 2026-03-09) not precise enough for the day of j1" (dj)
@@ -5229,6 +5241,7 @@ f_mar: ?"date within window(2026-03-03, 2026-03-09) not precise enough for the d
   cut 2026-06-10
 n_mar: ?"date within window(2026-03-03, 2026-03-09) not precise enough for the day of j1" (dj)
   unknown day: dj
+  unfulfilled: j2
   cut 2026-06-10
 ,21:t23-g1/c4-adjustments,6:t23-g1,3:run,28:engine/tests/m3/fixes/t23/c4,14:run n1_q.tally,38:n1_q.tally	m3/fixes/t23/c4/n1_q.tally
 ,1:0,1105:adj: ?"date within window(2026-03-05, 2026-03-25) not precise enough for the day of pay" (w)

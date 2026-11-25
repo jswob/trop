@@ -17,7 +17,8 @@
 //! brought up to tally 2.3.1's stores at its second pin (#259: the `fixes-t231*` groups, and the
 //! spec groups its released holds shrank, one part each, every run answered by both, at 3e724a82),
 //! and at its sixth pin (ff4249e7: `fixes-t231rv3`, `t231p1`, `t231g58`; M3's runs 229, its
-//! `--ask` with no id a usage error, S12).
+//! `--ask` with no id a usage error, S12), and at its eighth pin (8e887b4a: `fixes-t231g3fix`,
+//! `t231p1fix`).
 //! A fence's equivalence test (R-130): it runs by default, outside `check quick`
 //! (`quick_leaves_out`).
 
@@ -579,8 +580,10 @@ mod tests {
                 "fixes-t231g1",
                 "fixes-t231g2",
                 "fixes-t231g34",
+                "fixes-t231g3fix",
                 "fixes-t231g58",
                 "fixes-t231p1",
+                "fixes-t231p1fix",
                 "fixes-t231rv1",
                 "fixes-t231rv2",
                 "fixes-t231rv3",
@@ -606,7 +609,6 @@ mod tests {
                 "spec-p12",
                 "spec-p21",
                 "spec-p22",
-                "spec-p26",
                 "spec-p31"
             ]
             .iter()
@@ -2206,6 +2208,30 @@ mod tests {
         group_holds(M4, "fixes-t231rv3", (1, 2), 341);
     }
 
+    /// `m4`'s group `fixes-t231g3fix`, part 1 of 2 (its vectors at 0 modulo 2).
+    #[test]
+    fn m4_narrow_m4_fixes_t231g3fix_part_1() {
+        group_holds(M4, "fixes-t231g3fix", (0, 2), 123);
+    }
+
+    /// `m4`'s group `fixes-t231g3fix`, part 2 of 2 (its vectors at 1 modulo 2).
+    #[test]
+    fn m4_narrow_m4_fixes_t231g3fix_part_2() {
+        group_holds(M4, "fixes-t231g3fix", (1, 2), 122);
+    }
+
+    /// `m4`'s group `fixes-t231p1fix`, part 1 of 2 (its vectors at 0 modulo 2).
+    #[test]
+    fn m4_narrow_m4_fixes_t231p1fix_part_1() {
+        group_holds(M4, "fixes-t231p1fix", (0, 2), 129);
+    }
+
+    /// `m4`'s group `fixes-t231p1fix`, part 2 of 2 (its vectors at 1 modulo 2).
+    #[test]
+    fn m4_narrow_m4_fixes_t231p1fix_part_2() {
+        group_holds(M4, "fixes-t231p1fix", (1, 2), 128);
+    }
+
     /// `m4_spec`'s group `spec-g1`, part 1 of 1 (its vectors at 0 modulo 1).
     #[test]
     fn m4_narrow_m4_spec_spec_g1_part_1() {
@@ -2254,16 +2280,10 @@ mod tests {
         group_holds(M4_SPEC, "spec-p22", (0, 1), 1);
     }
 
-    /// `m4_spec`'s group `spec-p26`, part 1 of 1 (its vectors at 0 modulo 1).
-    #[test]
-    fn m4_narrow_m4_spec_spec_p26_part_1() {
-        group_holds(M4_SPEC, "spec-p26", (0, 1), 4);
-    }
-
     /// `m4_spec`'s group `spec-p31`, part 1 of 1 (its vectors at 0 modulo 1).
     #[test]
     fn m4_narrow_m4_spec_spec_p31_part_1() {
-        group_holds(M4_SPEC, "spec-p31", (0, 1), 3);
+        group_holds(M4_SPEC, "spec-p31", (0, 1), 2);
     }
 
     /// `m4_spec`'s group `spec-gate`, part 1 of 1 (its vectors at 0 modulo 1).

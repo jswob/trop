@@ -1,0 +1,45 @@
+model b3x
+  tally 2
+  on 2026-10-18
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+unit PLN: currency minor 0.01
+index ks = [k1, k2, k3]
+input r[k in ks]: rate
+input r2[k in ks]: rate
+input rh[k in ks]: rate
+input m[k in ks]: money PLN
+input n[k in ks]: int
+input g[k in ks]: num %/year
+input b: bool
+input f: bool
+def mr: rate = mean(r[k] for k in ks)
+
+ask d25: min(r[k] for k in ks where f)
+
+version ver
+  cite s
+  governs always
+  known 2026-01-01
+  b = true "s"
+  f = false "s"
+  r[k1] = 2 %/year "s"
+  r[k2] = 4 %/year "s"
+  r[k3] = 7 %/year "s"
+  r2[k1] = 1 %/month "s"
+  r2[k2] = 2 %/month "s"
+  r2[k3] = 4 %/month "s"
+  rh[k1] = 1 %/year "s"
+  rh[k2] = ?"which rh?"
+  rh[k3] = 3 %/year "s"
+  m[k1] = 10.00 PLN "s"
+  m[k2] = 20.00 PLN "s"
+  m[k3] = 31.00 PLN "s"
+  n[k1] = 1 "s"
+  n[k2] = 2 "s"
+  n[k3] = 4 "s"
+  g[k1] = 1 %/year "s"
+  g[k2] = 2 %/year "s"
+  g[k3] = 4 %/year "s"

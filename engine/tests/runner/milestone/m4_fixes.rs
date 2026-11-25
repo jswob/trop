@@ -18,7 +18,7 @@ mod tests {
 
     /// The groups this target tests, one `#[test]` each: refcore's (`fixes-…`) and the
     /// spec's (`spec-…`).
-    const GROUPS: [&str; 43] = [
+    const GROUPS: [&str; 44] = [
         "fixes-g1",
         "fixes-g2",
         "fixes-g2fix",
@@ -45,8 +45,10 @@ mod tests {
         "fixes-t231g1",
         "fixes-t231g2",
         "fixes-t231g34",
+        "fixes-t231g3fix",
         "fixes-t231g58",
         "fixes-t231p1",
+        "fixes-t231p1fix",
         "fixes-t231rv1",
         "fixes-t231rv2",
         "fixes-t231rv3",
@@ -60,7 +62,6 @@ mod tests {
         "spec-p12",
         "spec-p21",
         "spec-p22",
-        "spec-p26",
         "spec-p31",
     ];
 
@@ -467,6 +468,26 @@ mod tests {
         group_holds(VECTORS, "fixes-t231g58");
     }
 
+    /// tally 2.3.1's G3 fix review on the eighth pin (`tmp/spec-2.3.1/inputs/review/g3fix/`,
+    /// `m4/fixes/t231g3fix/`, one text per ask): statement G, a pin read as its target's row
+    /// (rulings 24: its value typed at the target's type, a key at the target's index through
+    /// brackets, a sign and both arms of an `if`; `LOAD-KEY` off the grid, the row's words for
+    /// a wrong type), returned tuples as keys, a mean of rates, a date literal in a rule. Only
+    /// the asks both interpreters print alike, value asks only.
+    #[test]
+    fn m4_fixes_t231g3fix() {
+        group_holds(VECTORS, "fixes-t231g3fix");
+    }
+
+    /// tally 2.3.1's part-1 fix review on the eighth pin (`tmp/spec-2.3.1/inputs/review/
+    /// part1fix/`, `m4/fixes/t231p1fix/`): links, frozen in this round (#262, the user's P38):
+    /// the asks both interpreters print alike gate; those where they differ, or where either
+    /// departs from statement F, are held for #262 by name. Value asks only.
+    #[test]
+    fn m4_fixes_t231p1fix() {
+        group_holds(VECTORS, "fixes-t231p1fix");
+    }
+
     /// P12, the one statement for built-ins (`tmp/m4/auto-picks.md`; G1's fix review F1,
     /// `tmp/m4/review-g1fix.md`): refcore's bytes for each cell of `m4/fixes/p12/`'s
     /// `accrue`, `periodic`, `factor`, `round`, `dcf`, `add_business`, `last_business`,
@@ -562,17 +583,6 @@ mod tests {
     #[test]
     fn m4_fixes_spec_p22() {
         group_holds(SPEC, "spec-p22");
-    }
-
-    /// P26's answers (#245, pick P3): `RUN-NONE` in L §8.4's form names the read, `<x>[k] is
-    /// none here: <arithmetic, ordering, aggregate, …>`, the catalogue's words bare, in the seven
-    /// vectors G4's wording changed (`fixes/g1/a12_nonehole/q_arith2`, `fixes/p12/round`'s
-    /// `n_x__z_step`, `n_x__g_step`, and P12's answers `spec/p12/round/h_x__n_step`,
-    /// `h_step__n_x`, `h_mode__n_x`, `h_mode__n_step`, all held) and C3's four `items/none` asks;
-    /// written from build/m4's run (702bdcd3), which differs only in that line.
-    #[test]
-    fn m4_fixes_spec_p26() {
-        group_holds(SPEC, "spec-p26");
     }
 
     /// P31's answers (#255; P20, P22, P30): `explain` lists one read set (L §8.2), a refused

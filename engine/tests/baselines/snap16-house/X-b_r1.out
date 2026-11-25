@@ -3,7 +3,6 @@ konto_balance (d = 2026-10-31): (6 064.17 PLN, 6 064.17 PLN)
   anchor: konto 2026-09-30 end, stated 41 386.27 PLN, difference 32 097.23 PLN
   unfulfilled: client_pay[client_a, 2026-09]
   unfulfilled: costs_pay[2026-10]
-  unfulfilled: health_pay[2026-07]
   unfulfilled: invest[mak, 2026-10]
   unfulfilled: loan_instalment[laptop, 5]
   unfulfilled: rent_pay[2026-10]
