@@ -24,12 +24,20 @@ lines estimate the account's own two weekly meters (`/usage`), in points of that
 which this tool's figure isn't: the week meter, for every model, and the Fable meter, for
 Fable alone. Each sums each model's part times its factor in METERS, read on the account's
 meters (engine/PLAYBOOK.md, D10), and each line says so.
+
+When Orca answers (`orca account list --json`; `TALLY_ORCA` names another binary), a last
+line gives the two meters as Orca reads them, in whole points with the time Orca read
+them, and the same line is appended to `meters.log` beside the first ids file, so a run
+holds a reading at each measurement (the Orca study, 2026-11-25: they replace D10's
+screenshots). Nothing is printed when Orca doesn't answer.
 """
 
+import datetime
 import glob
 import json
 import os
 import re
+import subprocess
 import sys
 
 PER_PERCENT = 8.6e6
@@ -52,6 +60,7 @@ METERS = {
     "week meter": ({OPUS: 1.0, FABLE: 2.0, None: 1.0}, "three readings to 2026-11-22, Fable 1.7 to 2.2"),
     "Fable meter": ({FABLE: 4.2}, "one stretch, 2026-11-18"),
 }
+ORCA_TIMEOUT = 20
 UUID = re.compile(r"^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$")
 
 
@@ -127,6 +136,24 @@ def meters(calls):
     return lines
 
 
+def orca_meters():
+    """Orca's reading of the account's week and Fable meters, as a line, or None."""
+    try:
+        r = subprocess.run([os.environ.get("TALLY_ORCA") or "orca", "account", "list", "--json"], capture_output=True,
+                           text=True, timeout=ORCA_TIMEOUT, check=False)
+        if r.returncode != 0:
+            return None
+        claude = json.loads(r.stdout)["result"]["rateLimits"]["claude"]
+        week, fable = claude["weekly"]["usedPercent"], claude["fableWeekly"]["usedPercent"]
+        read = datetime.datetime.fromtimestamp(claude["updatedAt"] / 1000, datetime.timezone.utc)
+    except (OSError, ValueError, KeyError, TypeError, OverflowError, subprocess.TimeoutExpired):
+        return None
+    if not all(isinstance(v, (int, float)) for v in (week, fable)):
+        return None
+    return (f"Orca's meters, the account's: week {week:g} points, Fable {fable:g} points "
+            f"(read {read.strftime('%Y-%m-%dT%H:%M:%SZ')})")
+
+
 def calls_of(session, bases):
     calls = {}
     for b in bases:
@@ -174,6 +201,17 @@ def main(argv):
     print(f"all {len(sessions)} sessions: about {grand / PER_PERCENT:.2f} % of the week, the run's share")
     for line in meters(seen):
         print(line)
+    orca = orca_meters()
+    if orca:
+        print(orca)
+        logged = next((a for a in argv if os.path.isfile(a)), None)
+        if logged:
+            stamp = datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+            try:
+                with open(os.path.join(os.path.dirname(os.path.realpath(logged)), "meters.log"), "a", encoding="utf-8") as f:
+                    f.write(f"{stamp} {orca}\n")
+            except OSError:
+                pass
     return 0
 
 

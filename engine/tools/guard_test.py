@@ -1131,7 +1131,10 @@ def launch_usage_checks(root, expect, failures):
             f.writelines(json.dumps(x) + "\n" for x in lines + [{"type": "user"}])
     with open(ids, "w", encoding="utf-8") as f:
         f.write(f"{a} tests\n{a} tests\n{b} build\n")
-    r = subprocess.run([os.path.join(root, "engine/tools/usage"), ids, "--projects", projects], capture_output=True, text=True, check=False)
+    # no Orca for these runs, on a Mac where it answers: a missing binary (TALLY_ORCA)
+    no_orca = {**os.environ, "TALLY_ORCA": os.path.join(root, "no-such-orca")}
+    r = subprocess.run([os.path.join(root, "engine/tools/usage"), ids, "--projects", projects], capture_output=True, text=True,
+                       env=no_orca, check=False)
     expect("usage of a planted ids file", r.returncode, 0, r.stderr)
     # a: msg_1 (1000 + 1000 + 5*200 = 3000) and msg_2 (1.25*800 = 1000); b: msg_1 again, counted once
     # a line says how many of its calls an earlier line counted (the process step after tally
@@ -1145,7 +1148,8 @@ def launch_usage_checks(root, expect, failures):
     # a Fable session beside them counts at Fable's list price, in the week's share (the user,
     # 2026-11-15: the same weekly limit). msg_3 as Opus's tokens: 1 M + 5 * 0.2 M + 0.1 * 10 M =
     # 3 M, 0.35 %; at Fable's price 2 * 2 M + 1 M = 5 M, 0.58 %; 8 + 8 + 2 = $18.00
-    r = subprocess.run([os.path.join(root, "engine/tools/usage"), ids, c, "--projects", projects], capture_output=True, text=True, check=False)
+    r = subprocess.run([os.path.join(root, "engine/tools/usage"), ids, c, "--projects", projects], capture_output=True, text=True,
+                       env=no_orca, check=False)
     expect("usage of an ids file and a Fable session", r.returncode, 0, r.stderr)
     for says in (f"session {c}: 1 calls, 5.00 M weighted, about 0.58 % of the week", "by model:", f"  {opus}: 2 calls",
                  f"  {fable}: 1 calls, 5.00 M weighted, about 0.58 % of the week", "as Opus's tokens 0.35 %", "$18.00",
@@ -1164,6 +1168,28 @@ def launch_usage_checks(root, expect, failures):
                  "one stretch, 2026-11-18)"):
         if says not in tail:
             failures.append(f"usage: its last lines lack {says!r}: {tail}")
+    # Orca's two meter readings, last, and logged beside the ids file (the Orca study,
+    # 2026-11-25), from a fake `orca account list --json` of the shape Orca 1.4 prints
+    fake = os.path.join(root, "engine", "target", "orca-meters")
+    with open(fake, "w", encoding="utf-8") as f:
+        f.write("#!/usr/bin/env bash\n[ \"$1 $2 $3\" = 'account list --json' ] || exit 3\n"
+                "echo '{\"ok\": true, \"result\": {\"rateLimits\": {\"claude\": {\"weekly\": {\"usedPercent\": 59}, "
+                "\"fableWeekly\": {\"usedPercent\": 38}, \"updatedAt\": 1795628775248}}}}'\n")
+    os.chmod(fake, 0o755)
+    meters_log = os.path.join(os.path.dirname(ids), "meters.log")
+    r = subprocess.run([os.path.join(root, "engine/tools/usage"), ids, "--projects", projects], capture_output=True, text=True,
+                       env={**os.environ, "TALLY_ORCA": fake}, check=False)
+    expect("usage with Orca's meters", r.returncode, 0, r.stderr)
+    line = "Orca's meters, the account's: week 59 points, Fable 38 points (read 2026-11-25T17:46:15Z)"
+    if r.stdout.rstrip().splitlines()[-1:] != [line]:
+        failures.append(f"usage: its last line isn't Orca's reading: {r.stdout.strip()[-300:]}")
+    try:
+        with open(meters_log, encoding="utf-8") as f:
+            logged = f.read().splitlines()
+    except OSError:
+        logged = []
+    if len(logged) != 1 or not logged[0].endswith(" " + line):
+        failures.append(f"usage: meters.log beside the ids file doesn't hold the one reading: {logged}")
     timeline_checks(root, expect, failures)
 
 
@@ -1258,6 +1284,24 @@ def launch_orca_checks(root, prompt, launch, expect, failures):
             failures.append(f"launch --exec refuses {label}: stderr lacks {says!r}: {r.stderr.strip()[:200]}")
     r = launch("--exec", spec, role="build", extra=exec_env)
     expect("launch --exec refuses the build role", r.returncode, 1, r.stderr)
+    # the heavy-job count sees interactive sessions, which have no -p: by a job's title, or
+    # by an id of the ids file, but a coordinator's (stand-ins: `sleep` under a claude name)
+    lead_id, tests_id = "88888888-8888-4888-8888-888888888888", "99999999-9999-4999-8999-999999999999"
+    counted = os.path.join(run, "ids-heavy.txt")
+    with open(counted, "w", encoding="utf-8") as f:
+        f.write(f"{lead_id} lead coordinator claude-opus-5-5\n{tests_id} tests tests claude-opus-5-5\n")
+    names = ("claude --model m -n zz-heavy · builder · 7", f"claude --session-id {tests_id}", f"claude --session-id {lead_id}")
+    stand_ins = [subprocess.Popen(["bash", "-c", f"exec -a {shlex.quote(n)} sleep 60"]) for n in names]
+    try:
+        r = launch("tests", prompt, root, "--ids", counted, "--dry-run")
+    finally:
+        for p in stand_ins:
+            p.kill()
+            p.wait()
+    if "heavy jobs already run" not in r.stdout or "zz-heavy · builder · 7" not in r.stdout or tests_id not in r.stdout:
+        failures.append(f"launch: the heavy-job count misses an interactive session: {r.stdout.strip()[-400:]}")
+    if lead_id in r.stdout:
+        failures.append(f"launch: the heavy-job count counts a coordinator's own session: {r.stdout.strip()[-400:]}")
     # the Stop hook's turn line, in a role that has no check (the Orca study: the
     # coordinator's Monitor reads it), and a line that can't be written holds no turn
     turns = os.path.join(run, "turns.log")
