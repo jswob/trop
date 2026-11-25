@@ -11,6 +11,8 @@ extra refusals, the ConfigChange and Stop hooks, malformed input and a forced cr
 import concurrent.futures
 import json
 import os
+import re
+import shlex
 import shutil
 import subprocess
 import sys
@@ -29,6 +31,8 @@ BUILD = {"build", "rules", "unset", "lead"}
 EVERY = set(ROLES)
 MASTER = {"unset", "lead"}  # app work, which the master session is, and the lead, which writes like it (issue #18)
 LEAD = {"lead"}
+# the coordinators: they alone start sessions and run orca (R-81; the Orca study, 2026-11-25)
+COORDS = {"lead", "unset"}
 
 # path (relative to the throwaway root, or absolute) -> the roles that may write it
 EDITS = [
@@ -93,7 +97,7 @@ EDITS = [
     ("engine/RULEBOOK.md", RULES),
     ("engine/BUILDER.md", RULES),
     ("engine/rulebook.md", RULES),
-    (".claude/skills/design/SKILL.md", APP),
+    (".claude/skills/x/SKILL.md", APP),
     ("engine/crates/tally/build.rs", APP),
     ("engine/crates/tally-cli/build.rs", APP),
     (".claude/settings.local.json", APP),
@@ -101,8 +105,8 @@ EDITS = [
     (".claude/agents/x.md", APP),
     (".cargo/config.toml", APP),
     ("clippy.toml", APP),
-    ("package.json", APP),
-    ("apps/web/src/x.ts", APP),
+    ("README.md", APP),
+    ("notes/x.md", APP),
     ("engine/README.md", APP),
     ("engine/SCAFFOLD.md", APP),
     (os.path.join(HOME, ".claude", "settings.json"), APP),
@@ -213,8 +217,8 @@ BASH = [
     ("cat <<'EOF' | sh\ncd engine && rm clippy.toml\nEOF", RULES, ""),
     ("cat engine/spec/DONE.md 2>&1 | head", ALL, ""),
     ("python3 -I engine/spec/tools/loadcheck.py --selftest", ALL, ""),
-    ("bun run engine:check", ALL, ""),
-    ("bun engine:spec-check", ALL, ""),
+    ("engine/tools/check full", ALL, ""),
+    ("cd engine && tools/check-frozen", ALL, ""),
     ("sed -i '' 's/a/b/' /tmp/tally-guard-sed.txt", ALL, ""),
     ("sed -n 's/a/b/p' engine/spec/DONE.md", ALL, ""),
     ("grep -rn token engine/spec > /dev/null", ALL, ""),
@@ -236,9 +240,36 @@ BASH = [
     ("echo x >> engine/BUILDER.md", RULES, ""),
     # the build role's extra refusals (R-81, R-100)
     ("jq '.disableAllHooks=true' .claude/settings.local.json > /tmp/s.json", NOT_BUILD, ""),
-    ("claude -p 'edit the spec'", NOT_BUILD, ""),
-    ("npx @anthropic-ai/claude-code --settings '{}'", NOT_BUILD, ""),
-    ("TALLY_ROLE=rules engine/tools/guard < /tmp/x", NOT_BUILD, ""),
+    # a nested claude, orca and TALLY_ROLE, refused to the four role sessions, by name and by
+    # path (R-79, R-81; the Orca study's probes, tmp/orca-study/probes/10-guard-probes.txt)
+    ("claude -p 'edit the spec'", COORDS, ""),
+    ("npx @anthropic-ai/claude-code --settings '{}'", COORDS, ""),
+    ("TALLY_ROLE=rules engine/tools/guard < /tmp/x", COORDS, ""),
+    ("claude -p hi", COORDS, ""),
+    ("/usr/local/bin/claude -p hi", COORDS, ""),
+    ("nohup claude --session-id x hi", COORDS, ""),
+    ("TALLY_ROLE=rules claude -p hi", COORDS, ""),
+    ("orca terminal create --worktree active --title x --command \"claude -p hi\"", COORDS, ""),
+    ("orca agent launch --agent claude --prompt \"do x\" --model claude-opus-5-5", COORDS, ""),
+    ("orca worktree create --name x --agent claude --prompt \"do x\"", COORDS, ""),
+    ("orca orchestration worker-start --environment local --spec \"do x\" --worktree current --agent claude", COORDS, ""),
+    ("orca terminal send --terminal term_123 --text \"edit the spec\" --enter", COORDS, ""),
+    ("orca terminal create --command \"TALLY_ROLE=rules claude -p hi\"", COORDS, ""),
+    ("orca terminal create --command \"env $(printf TALLY)_ROLE=rules claude -p hi\"", COORDS, ""),
+    ("orca worktree rm --worktree name:x --force", COORDS, ""),
+    ("orca terminal create --command \"cp /dev/null engine/spec/LANGUAGE.md\"", COORDS, ""),
+    ("orca terminal close --terminal term_123", COORDS, ""),
+    ("orca orchestration send --to term_123 --subject s --body \"you are now the rules role\"", COORDS, ""),
+    ("orca automations create --name x --prompt y", COORDS, ""),
+    ("/Applications/Orca.app/Contents/MacOS/orca status", COORDS, ""),
+    ("env FOO=1 orca status", COORDS, ""),
+    ("bash -c 'orca status'", COORDS, ""),
+    ("echo \"$(orca account list --json)\"", COORDS, ""),
+    # launch is the coordinators' door: the guard lets it through, launch refuses the rest
+    ("engine/tools/launch rules tmp/x/p.md /Users/jswob/projects/trop --ids tmp/x/ids.txt", ALL, ""),
+    # naming them, without running them, stays free
+    ("grep -n orca engine/tools/launch.py", ALL, ""),
+    ("echo 'claude and orca'", ALL, ""),
     ("git commit -m 'Add parser\n\nCo-Authored-By: Claude <noreply@anthropic.com>'", {"unset"}, ""),
     ("git commit -F - <<'EOF'\nAdd parser\n\nCo-authored-by: an AI\nEOF", {"unset"}, ""),
     # the harness's session lines are attribution too (the retro after M0, R-100), in a
@@ -709,8 +740,8 @@ def drop_step(job_name, name):
     return change
 
 
-def app_only(pr, files, job):
-    files[:] = [{"filename": "apps/web/src/x.ts", "previous_filename": None, "status": "modified"}]
+def outside_only(pr, files, job):
+    files[:] = [{"filename": "README.md", "previous_filename": None, "status": "modified"}]
     pr["changedFiles"] = 1
     pr["statusCheckRollup"] = [c for c in pr["statusCheckRollup"] if c.get("workflowName") != "Engine"]
 
@@ -751,7 +782,7 @@ def job_field(job_name, key, value):
 # (label, a change to the recorded input, the words the refusal must hold, or None: it merges)
 MERGES = [
     ("the recorded PR", lambda *_: None, None),
-    ("an app-only PR without check full", app_only, None),
+    ("a PR outside the engine without check full", outside_only, None),
     ("a neutral and a skipped check", set_check("lint-and-typecheck", conclusion="SKIPPED"), None),
     ("Closes in lower case", field("body", "Some work.\n\ncloses #12"), None),
     ("commit-check skipped", set_step("check groups", "engine/tools/commit-check", "skipped"), None),
@@ -802,7 +833,7 @@ MERGES = [
     ("the old single check full only", old_check_full, "`check lint` didn't run"),
     ("commit-check failed", set_step("check groups", "engine/tools/commit-check", "failure"), "commit-check` ended failure"),
     ("files missing from GitHub's list", field("changedFiles", 4000), "can't be checked"),
-    ("an app-only PR changing the CI", both(app_only, touch(".github/workflows/engine.yml")), "walls"),
+    ("a PR outside the engine changing the CI", both(outside_only, touch(".github/workflows/engine.yml")), "walls"),
 ]
 for wall in ("engine/tools/guard.py", "engine/tools/guard", "engine/tools/merge-pr", "engine/tools/merge_pr.py",
              "engine/tools/worktree-done", "engine/tools/worktree_done.py", "engine/tools/check.py", "engine/tools/check",
@@ -1083,6 +1114,7 @@ def launch_usage_checks(root, expect, failures):
         expect(f"launch refuses {label}", r.returncode, 1, r.stderr)
         if says not in r.stderr:
             failures.append(f"launch refuses {label}: stderr lacks {says!r}: {r.stderr.strip()[:200]}")
+    launch_orca_checks(root, prompt, launch, expect, failures)
     # usage: two transcripts under a planted projects folder, one call in both
     projects = os.path.join(root, "engine", "target", "projects")
     a, b, c = "11111111-1111-4111-8111-111111111111", "22222222-2222-4222-8222-222222222222", "33333333-3333-4333-8333-333333333333"
@@ -1099,7 +1131,10 @@ def launch_usage_checks(root, expect, failures):
             f.writelines(json.dumps(x) + "\n" for x in lines + [{"type": "user"}])
     with open(ids, "w", encoding="utf-8") as f:
         f.write(f"{a} tests\n{a} tests\n{b} build\n")
-    r = subprocess.run([os.path.join(root, "engine/tools/usage"), ids, "--projects", projects], capture_output=True, text=True, check=False)
+    # no Orca for these runs, on a Mac where it answers: a missing binary (TALLY_ORCA)
+    no_orca = {**os.environ, "TALLY_ORCA": os.path.join(root, "no-such-orca")}
+    r = subprocess.run([os.path.join(root, "engine/tools/usage"), ids, "--projects", projects], capture_output=True, text=True,
+                       env=no_orca, check=False)
     expect("usage of a planted ids file", r.returncode, 0, r.stderr)
     # a: msg_1 (1000 + 1000 + 5*200 = 3000) and msg_2 (1.25*800 = 1000); b: msg_1 again, counted once
     # a line says how many of its calls an earlier line counted (the process step after tally
@@ -1113,7 +1148,8 @@ def launch_usage_checks(root, expect, failures):
     # a Fable session beside them counts at Fable's list price, in the week's share (the user,
     # 2026-11-15: the same weekly limit). msg_3 as Opus's tokens: 1 M + 5 * 0.2 M + 0.1 * 10 M =
     # 3 M, 0.35 %; at Fable's price 2 * 2 M + 1 M = 5 M, 0.58 %; 8 + 8 + 2 = $18.00
-    r = subprocess.run([os.path.join(root, "engine/tools/usage"), ids, c, "--projects", projects], capture_output=True, text=True, check=False)
+    r = subprocess.run([os.path.join(root, "engine/tools/usage"), ids, c, "--projects", projects], capture_output=True, text=True,
+                       env=no_orca, check=False)
     expect("usage of an ids file and a Fable session", r.returncode, 0, r.stderr)
     for says in (f"session {c}: 1 calls, 5.00 M weighted, about 0.58 % of the week", "by model:", f"  {opus}: 2 calls",
                  f"  {fable}: 1 calls, 5.00 M weighted, about 0.58 % of the week", "as Opus's tokens 0.35 %", "$18.00",
@@ -1132,7 +1168,152 @@ def launch_usage_checks(root, expect, failures):
                  "one stretch, 2026-11-18)"):
         if says not in tail:
             failures.append(f"usage: its last lines lack {says!r}: {tail}")
+    # Orca's two meter readings, last, and logged beside the ids file (the Orca study,
+    # 2026-11-25), from a fake `orca account list --json` of the shape Orca 1.4 prints
+    fake = os.path.join(root, "engine", "target", "orca-meters")
+    with open(fake, "w", encoding="utf-8") as f:
+        f.write("#!/usr/bin/env bash\n[ \"$1 $2 $3\" = 'account list --json' ] || exit 3\n"
+                "echo '{\"ok\": true, \"result\": {\"rateLimits\": {\"claude\": {\"weekly\": {\"usedPercent\": 59}, "
+                "\"fableWeekly\": {\"usedPercent\": 38}, \"updatedAt\": 1795628775248}}}}'\n")
+    os.chmod(fake, 0o755)
+    meters_log = os.path.join(os.path.dirname(ids), "meters.log")
+    r = subprocess.run([os.path.join(root, "engine/tools/usage"), ids, "--projects", projects], capture_output=True, text=True,
+                       env={**os.environ, "TALLY_ORCA": fake}, check=False)
+    expect("usage with Orca's meters", r.returncode, 0, r.stderr)
+    line = "Orca's meters, the account's: week 59 points, Fable 38 points (read 2026-11-25T17:46:15Z)"
+    if r.stdout.rstrip().splitlines()[-1:] != [line]:
+        failures.append(f"usage: its last line isn't Orca's reading: {r.stdout.strip()[-300:]}")
+    try:
+        with open(meters_log, encoding="utf-8") as f:
+            logged = f.read().splitlines()
+    except OSError:
+        logged = []
+    if len(logged) != 1 or not logged[0].endswith(" " + line):
+        failures.append(f"usage: meters.log beside the ids file doesn't hold the one reading: {logged}")
     timeline_checks(root, expect, failures)
+
+
+def launch_orca_checks(root, prompt, launch, expect, failures):
+    """launch's Orca form on a fake `orca` (the Orca study, 2026-11-25): the dry run, the
+    fall-back when `orca status` fails, the refusals, a real run that writes the spec, the
+    ids line with its title and the terminal's command, then `--exec` on that spec under a
+    fake `nice`, and its refusals; the Stop hook's turn line. No session is started."""
+    fakes = os.path.join(root, "engine", "target", "orca-fakes")
+    run = os.path.join(root, "tmp", "run-orca")
+    os.makedirs(fakes, exist_ok=True)
+    os.makedirs(run, exist_ok=True)
+    ids = os.path.join(run, "ids.txt")
+    seen = os.path.join(fakes, "orca-args.txt")
+    orca_ok, orca_down = os.path.join(fakes, "orca"), os.path.join(fakes, "orca-down")
+    with open(orca_ok, "w", encoding="utf-8") as f:
+        f.write("#!/usr/bin/env bash\n"
+                f"printf '%s\\n' \"$@\" > {shlex.quote(seen)}\n"
+                "case \"$1 $2\" in\n"
+                "  'status --json') echo '{\"ok\": true, \"result\": {\"app\": {\"running\": true}, \"runtime\": {\"reachable\": true}}}' ;;\n"
+                "  'terminal create') echo '{\"ok\": true, \"result\": {\"terminal\": {\"handle\": \"term_fake\"}}}' ;;\n"
+                "  *) exit 3 ;;\nesac\n")
+    with open(orca_down, "w", encoding="utf-8") as f:
+        f.write("#!/usr/bin/env bash\necho '{\"ok\": true, \"result\": {\"app\": {\"running\": false}, \"runtime\": {\"reachable\": false}}}'\n")
+    with open(os.path.join(fakes, "nice"), "w", encoding="utf-8") as f:
+        f.write("#!/usr/bin/env bash\nprintf 'argv:'; printf ' [%s]' \"$@\"; echo\n"
+                "env | grep -E '^(TALLY_ROLE|TALLY_TURN_LOG|CARGO_BUILD_JOBS|CARGO_INCREMENTAL)=' | sort\npwd\n")
+    for name in ("orca", "orca-down", "nice"):
+        os.chmod(os.path.join(fakes, name), 0o755)
+    r = launch("tests", prompt, root, "--ids", ids, "--dry-run", "--orca", extra={"TALLY_ORCA": orca_ok})
+    expect("launch --orca --dry-run", r.returncode, 0, r.stderr)
+    for says in (f"orca terminal create --worktree path:{os.path.realpath(root)}", "'run-orca · tests · 1'",
+                 "--exec <spec>", "TALLY_ROLE=tests", "TALLY_TURN_LOG=", "nice -n 10 claude --model claude-opus-5-5",
+                 "--effort xhigh", "--session-id", "dry run: nothing started"):
+        if says not in r.stdout:
+            failures.append(f"launch --orca --dry-run: lacks {says!r}: {r.stdout.strip()[:400]}")
+    if " -p " in r.stdout or os.path.exists(ids):
+        failures.append(f"launch --orca --dry-run: headless, or wrote the ids file: {r.stdout.strip()[:300]}")
+    for label, orca in (("Orca down", orca_down), ("no orca binary", os.path.join(fakes, "none"))):
+        r = launch("tests", prompt, root, "--ids", ids, "--dry-run", "--orca", extra={"TALLY_ORCA": orca})
+        expect(f"launch --orca --dry-run with {label}", r.returncode, 0, r.stderr)
+        if "`orca status` failed" not in r.stdout or "claude -p" not in r.stdout:
+            failures.append(f"launch --orca with {label}: doesn't fall back to the headless form: {r.stdout.strip()[:300]}")
+    for label, args, says in (("--orca with --max-usd", ("--orca", "--max-usd", "5"), "needs the headless form"),
+                              ("--orca with --plain", ("--orca", "--plain"), "name one")):
+        r = launch("tests", prompt, root, "--ids", ids, "--dry-run", *args, extra={"TALLY_ORCA": orca_ok})
+        expect(f"launch refuses {label}", r.returncode, 1, r.stderr)
+        if says not in r.stderr:
+            failures.append(f"launch refuses {label}: stderr lacks {says!r}: {r.stderr.strip()[:200]}")
+    r = launch("tests", prompt, root, "--ids", ids, "--orca", extra={"TALLY_ORCA": orca_ok})
+    expect("launch --orca on a fake orca", r.returncode, 0, r.stderr)
+    try:
+        answer = json.loads(r.stdout.strip().splitlines()[-1])
+        spec, sid = answer["spec"], answer["session_id"]
+    except (ValueError, KeyError, IndexError):
+        failures.append(f"launch --orca: its last line isn't the answer's JSON: {r.stdout.strip()[-300:]}")
+        return
+    if answer.get("terminal") != "term_fake" or answer.get("title") != "run-orca · tests · 1":
+        failures.append(f"launch --orca: the terminal or the title is off: {answer}")
+    with open(ids, encoding="utf-8") as f:
+        if f.read() != f"{sid} tests tests claude-opus-5-5 run-orca · tests · 1\n":
+            failures.append("launch --orca: the ids line isn't `<id> <role> <job> <model> <title>`")
+    with open(seen, encoding="utf-8") as f:
+        args = f.read().splitlines()
+    want = ["terminal", "create", "--worktree", f"path:{os.path.realpath(root)}", "--title", "run-orca · tests · 1", "--command"]
+    if args[:7] != want or not args[7:8] or not args[7].endswith(f"launch --exec {spec}") or args[8:] != ["--json"]:
+        failures.append(f"launch --orca: orca's arguments are off: {args}")
+    exec_env = {"PATH": fakes + os.pathsep + os.environ.get("PATH", ""), "CARGO_INCREMENTAL": "0"}
+    r = launch("--exec", spec, role="unset", extra=exec_env)
+    expect("launch --exec of its spec", r.returncode, 0, r.stderr)
+    for says in ("argv: [-n] [10] [claude] [--model] [claude-opus-5-5]",
+                 "[-n] [run-orca · tests · 1]", f"[--session-id] [{sid}] [You are T. Read the brief.",
+                 "TALLY_ROLE=tests", f"TALLY_TURN_LOG={os.path.join(os.path.realpath(run), 'turns.log')}",
+                 "CARGO_BUILD_JOBS=6", os.path.realpath(root)):
+        if says not in r.stdout:
+            failures.append(f"launch --exec: lacks {says!r}: {r.stdout.strip()[:400]}")
+    if "CARGO_INCREMENTAL" in r.stdout or "[-p]" in r.stdout:
+        failures.append(f"launch --exec: passes CARGO_INCREMENTAL, or runs headless: {r.stdout.strip()[:300]}")
+    forged = os.path.join(run, "out", "forged.spec.json")
+    with open(spec, encoding="utf-8") as f:
+        data = json.load(f)
+    for label, change, where, says in (
+            ("a spec outside a run's out/", None, os.path.join(root, "engine", "target", "x.spec.json"), "isn't a spec this tool writes"),
+            ("another command", {"argv": ["nice", "-n", "10", "bash", "-c", "x"]}, forged, "isn't a spec this tool writes"),
+            ("another variable", {"env": {**data["env"], "CLAUDE_CONFIG_DIR": "/tmp"}}, forged, "isn't a spec this tool writes"),
+            ("a role it doesn't know", {"env": {**data["env"], "TALLY_ROLE": "boss"}}, forged, "isn't a spec this tool writes")):
+        with open(where, "w", encoding="utf-8") as f:
+            json.dump({**data, **(change or {})}, f)
+        r = launch("--exec", where, role="unset", extra=exec_env)
+        expect(f"launch --exec refuses {label}", r.returncode, 1, r.stderr)
+        if says not in r.stderr:
+            failures.append(f"launch --exec refuses {label}: stderr lacks {says!r}: {r.stderr.strip()[:200]}")
+    r = launch("--exec", spec, role="build", extra=exec_env)
+    expect("launch --exec refuses the build role", r.returncode, 1, r.stderr)
+    # the heavy-job count sees interactive sessions, which have no -p: by a job's title, or
+    # by an id of the ids file, but a coordinator's (stand-ins: `sleep` under a claude name)
+    lead_id, tests_id = "88888888-8888-4888-8888-888888888888", "99999999-9999-4999-8999-999999999999"
+    counted = os.path.join(run, "ids-heavy.txt")
+    with open(counted, "w", encoding="utf-8") as f:
+        f.write(f"{lead_id} lead coordinator claude-opus-5-5\n{tests_id} tests tests claude-opus-5-5\n")
+    names = ("claude --model m -n zz-heavy · builder · 7", f"claude --session-id {tests_id}", f"claude --session-id {lead_id}")
+    stand_ins = [subprocess.Popen(["bash", "-c", f"exec -a {shlex.quote(n)} sleep 60"]) for n in names]
+    try:
+        r = launch("tests", prompt, root, "--ids", counted, "--dry-run")
+    finally:
+        for p in stand_ins:
+            p.kill()
+            p.wait()
+    if "heavy jobs already run" not in r.stdout or "zz-heavy · builder · 7" not in r.stdout or tests_id not in r.stdout:
+        failures.append(f"launch: the heavy-job count misses an interactive session: {r.stdout.strip()[-400:]}")
+    if lead_id in r.stdout:
+        failures.append(f"launch: the heavy-job count counts a coordinator's own session: {r.stdout.strip()[-400:]}")
+    # the Stop hook's turn line, in a role that has no check (the Orca study: the
+    # coordinator's Monitor reads it), and a line that can't be written holds no turn
+    turns = os.path.join(run, "turns.log")
+    stop = os.path.join(root, "engine", "tools", "stop-check")
+    for log, want in ((turns, True), (os.path.join(root, "no-such-folder", "turns.log"), False)):
+        env = {k: v for k, v in os.environ.items() if k != "TALLY_ROLE"} | {"TALLY_ROLE": "tests", "TALLY_TURN_LOG": log}
+        r = subprocess.run([stop], input=json.dumps({"session_id": sid}), capture_output=True, text=True, env=env, check=False)
+        expect(f"stop-check's turn line to {'a run' if want else 'a missing folder'}", r.returncode, 0, r.stderr)
+    with open(turns, encoding="utf-8") as f:
+        lines = f.read().splitlines()
+    if len(lines) != 1 or not re.fullmatch(rf"\d{{4}}-\d\d-\d\dT\d\d:\d\d:\d\dZ {sid} tests turn-end", lines[0]):
+        failures.append(f"stop-check: the turn log isn't one `<time> <id> <role> turn-end` line: {lines}")
 
 
 def timeline_checks(root, expect, failures):

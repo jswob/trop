@@ -6,13 +6,12 @@
 
 The builder edits the Cargo manifests, the lock and the engine's code, so the guard
 can't protect them. This checks what in them is a rule: the lint and profile tables,
-the pins, the root package.json's engine:* scripts, the members and their lints, no
+the pins, the members and their lints, no
 patches, build scripts or stray config files, the text the code may not hold, and no
 code in the kernel that runs at compile time (R-133: gate 8's coverage map can't see it).
 """
 
 import fnmatch
-import json
 import os
 import re
 import subprocess
@@ -89,19 +88,12 @@ def rel(path):
 
 def current_frozen():
     ws = load(os.path.join(ENGINE, "Cargo.toml"))
-    pkg = _package_json()
     deps = ws.get("workspace", {}).get("dependencies", {})
     return {
         "workspace-lints": ws.get("workspace", {}).get("lints", {}),
         "profile": ws.get("profile", {}),
         "pins": {name: deps.get(name) for name in PINNED},
-        "root-scripts": {k: v for k, v in sorted(pkg.get("scripts", {}).items()) if k.startswith("engine:")},
     }
-
-
-def _package_json():
-    with open(os.path.join(ROOT, "package.json"), encoding="utf-8") as f:
-        return json.load(f)
 
 
 def toml_value(v):
@@ -142,7 +134,7 @@ def write_frozen():
         "# a rule change's commit (R-112). Generated; don't edit by hand.",
         "",
     ]
-    for top in ("workspace-lints", "profile", "pins", "root-scripts"):
+    for top in ("workspace-lints", "profile", "pins"):
         toml_tables(top, data[top], out)
     with open(FROZEN, "w", encoding="utf-8") as f:
         f.write("\n".join(out).rstrip("\n") + "\n")
@@ -162,7 +154,6 @@ def check_frozen_tables(problems):
         "workspace-lints": "engine/Cargo.toml [workspace.lints]",
         "profile": "engine/Cargo.toml [profile.*]",
         "pins": "the four pins in engine/Cargo.toml [workspace.dependencies] (R-30, R-60)",
-        "root-scripts": "the root package.json's engine:* scripts",
     }
     for key, what in names.items():
         if frozen.get(key, {}) != now[key]:

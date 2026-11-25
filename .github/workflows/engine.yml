@@ -63,6 +63,18 @@ jobs:
         if: github.event_name == 'pull_request'
         with:
           fetch-depth: 0
+      # tmp/ is local scratch: nothing under it is ever tracked (the playbook's D16; ci.yml's
+      # step until the purge, 2026-11-25), whatever else the pull request changes; `engine
+      # gate` fails when this job does
+      - name: Nothing under tmp/ is tracked
+        if: github.event_name == 'pull_request'
+        run: |
+          tracked="$(git ls-files -- tmp)"
+          if [ -n "$tracked" ]; then
+            echo "::error::tmp/ is local scratch and is never tracked; untrack these:"
+            echo "$tracked" | head -20
+            exit 1
+          fi
       - name: The engine's files in the pull request's diff
         id: diff
         env:

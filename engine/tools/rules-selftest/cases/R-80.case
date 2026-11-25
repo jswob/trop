@@ -106,16 +106,6 @@ edition = "2024"
 --- run
 tools/check-rules
 
-case: root-script-edited
-tool: run
-expect: differs from the frozen copy (R-80)
---- replace ../package.json
-"engine:check": "cd engine && tools/check full",
---- with
-"engine:check": "cd engine && tools/check fast",
---- run
-tools/check-rules
-
 case: oracle-byte
 tool: run
 expect: refcore: refcore/HANDOVER.md changed

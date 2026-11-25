@@ -77,7 +77,7 @@ GIT_HOME = os.path.join(SCRATCH, "cargo-home")
 LOGS = os.path.join(SCRATCH, "logs")
 COPY_SKIP = {"target", "__pycache__", ".DS_Store", "corpus", "artifacts", "coverage", "mutants.out"}
 # the rule files outside engine/, the list check-frozen hashes (the seal's .ignore among them)
-OUTSIDE = ["package.json", *check.check_frozen.OUTSIDE]
+OUTSIDE = check.check_frozen.OUTSIDE
 COVERAGE_FILE = "crates/tally/src/zz_ban_coverage.rs"
 TOOL_NAMES = {"clippy", "clippy-tests", "rustdoc", "ast-grep", "deny", "deny-tally", "run"}
 BLOCKS = {"module", "write", "append", "replace", "delete", "fake", "fakefile", "fakebinary", "gitfake", "run"}

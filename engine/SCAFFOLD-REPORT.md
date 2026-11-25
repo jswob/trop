@@ -2,6 +2,8 @@
 
 For the clean-side lead's audit (phase-1 brief §9). The phase-1 lead built the scaffold on 2026-10-22 and 2026-10-23 in the worktree `trop-engine-scaffold`, on branch `engine-scaffold`, off `engine`. On 2026-10-23, at the user's request, `engine` (with the tags `tally-1.0` and `tally-1.0.1`) and `engine-scaffold` were pushed, and a pull request from `engine-scaffold` into `engine` was opened. `engine/SCAFFOLD.md` describes what is set up; this report gives the evidence.
 
+> **Since the purge (2026-11-25)** the repo holds the engine alone: the root `package.json` and its `engine:*` scripts, ESLint, Prettier and the toolkit are gone. The transcripts below are kept as they ran; `engine/SCAFFOLD.md` §2 gives the command each `bun engine:…` line stood for.
+
 ## 1. What was built
 
 - **The Cargo workspace:** `tally` (the library; a stub `parse` answering "not implemented"), `tally-cli` (`run(args, stdin) -> Output`, and the binary `tally`, the one file that does I/O), and `tally-runner` (T's test package, a stub test). The workspace pins the number stack and sha2, holds the lints, and holds the profiles. No engine logic.
