@@ -1679,6 +1679,10 @@ def m_flows_place(self, place, sp, env, ctx, fk=None):
         if fk is None or e.mv is None:
             return False
         fp = mv_for(e.mv)
+        if isinstance(fp, Hole):
+            # a movement for a hole period: whether it counts is that hole (L §8.1; tally 2.3.1 P32 B5)
+            holes.append(fp)
+            return True
         return fp is None or vkey(fp) != vkey(fk)
     last = sp.end - ONE_DAY if sp.end is not None else m.E
     w = ctx.walk
@@ -2148,6 +2152,10 @@ def m_flows_move(self, n, sp, fk, env, ctx):
                 d.window_text(), mi.id), i.id)]), d))
             continue
         if fk is not None and not isinstance(i.forp, Hole) and (i.forp is None or vkey(i.forp) != vkey(fk)):
+            continue
+        if fk is not None and isinstance(i.forp, Hole) and st == 'modelled':
+            # its rows are for the hole period: whether they count is that hole (L §8.1; tally 2.3.1 P32 N3)
+            holes.append(i.forp)
             continue
         counted.add(id(i))
         e1 = self.s1_refusal(i.id, ctx)
