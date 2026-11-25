@@ -204,7 +204,7 @@ pub mod eval {
     pub use state::{Ctx, Engine, Env, How, Rows};
     pub(crate) use state::{a_day, num_stop, past_days};
     pub(crate) use time_arith::{keys_differ, periods_of};
-    pub(crate) use timelines::{EarlyRow, combinations};
+    pub(crate) use timelines::combinations;
     pub(crate) use trace::{
         Balance as TracedBalance, Keep as TraceKeep, Kind as TraceKind, Part as TracePart,
         RuleLine, Snap, Trace, Walked,
@@ -268,7 +268,7 @@ pub mod walk {
         ALL, Change, Checkpoint, Ent, Group, Log, Progress, Projected, St, Taken, Today, Walk,
         WalkObs,
     };
-    pub use tuples::{Law, LinkVerdict};
+    pub use tuples::Law;
 }
 
 /// The book (E §5, §6.1, §6.3): observations the cut sees, the places versions cover and the

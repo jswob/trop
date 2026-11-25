@@ -273,6 +273,26 @@ impl Engine {
                 }
             }
         }
+        // a row that names a tuple is for the named tuple's period, read from its keys whether
+        // or not it exists (L §5.14 l.1363; tally 2.3.1 rulings 22 (1), the critic's P1-C6)
+        let named: Vec<(String, String, Vec<KeyVal>)> = self
+            .observations(m, ctx.cut)?
+            .iter()
+            .filter_map(|o| match &o.fulfils {
+                Some(crate::model::Fulfils::Instance(mid, keys)) => {
+                    Some((o.id.clone(), mid.clone(), keys.clone()))
+                }
+                Some(crate::model::Fulfils::Adjustment(..)) | None => None,
+            })
+            .collect();
+        for (id, mid, keys) in named {
+            let Some(mv) = m.moves.get(&mid) else {
+                continue;
+            };
+            if self.named_for(m, mv, &keys, ctx.cut)?.as_ref() == Some(k) {
+                out.insert(id);
+            }
+        }
         Ok(out)
     }
 

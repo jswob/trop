@@ -38,9 +38,6 @@ pub(super) struct Body {
     /// What reading each leg met, by the leg's name: a read of one leg of a movement stated
     /// `same` holds the other side's reads of that leg only (S3, P43 on #241).
     pub(super) leg_reads: BTreeMap<String, Collected>,
-    /// What reading its `when` met: a decision's at its walk point is what decided its
-    /// existence there, its link's read set (L §5.14 l.1362, §8.2 l.2252; tally 2.3.1 C-9).
-    pub(super) decided: Collected,
     /// What its evaluation met before its legs: what decided whether it exists and its day,
     /// never its amounts, a binding's member's read set (L §8.2 l.2252; tally 2.3.1 pick P16).
     pub(super) exist: Collected,
@@ -285,71 +282,6 @@ impl Engine {
         }
     }
 
-    /// What decided decision instance `tid`'s existence, where its link is judged at its walk
-    /// point and a traced read at the ask's cut reads the link: its `when` read again at its
-    /// point as it ran (the state just before its own booking), traced, kept nowhere, once per
-    /// explain, so the explanation lists what the read's register and `inputs-of` list (L §8.2
-    /// l.2252 One read set, E §10; tally 2.3.1 R2, C-9, rulings 18; G2's fix review G2).
-    ///
-    /// # Errors
-    ///
-    /// A load refusal met at run; `ENGINE-INVARIANT` for a run with no day.
-    pub(crate) fn trace_link_decided(
-        &mut self,
-        m: &Reality,
-        tid: &str,
-        ctx: Ctx,
-    ) -> Result<(), Stop> {
-        let judged_there = self.links_at_point.contains(&(ctx.cut, tid.to_owned()));
-        if ctx.at.is_some() || !self.tracing() || !judged_there {
-            return Ok(());
-        }
-        let Some(id) = self.main_walks.get(&ctx.cut).copied() else {
-            return Ok(());
-        };
-        let Some(run) = self.chain_run(id, tid)?.cloned() else {
-            return Ok(());
-        };
-        let Some(mv) = m.moves.get(&run.inst.move_id) else {
-            return Err(invariant("a run's move load didn't build"));
-        };
-        let Some(when) = &mv.decl.when else {
-            return Ok(());
-        };
-        if !run.ran || !self.trace_first_run(id, &format!("{tid} decided")) {
-            return Ok(());
-        }
-        let Some(Dated::Day(t)) = run.inst.day else {
-            return Err(invariant("a decision run with no day"));
-        };
-        let insts = self.move_instances(m, mv, ctx.cut)?;
-        let Some(inst) = insts.iter().find(|i| i.id == tid) else {
-            return Ok(());
-        };
-        let there = Ctx {
-            at: Some(WalkAt {
-                walk: id,
-                point: run.point.just_before(),
-            }),
-            ..self.timeline_ctx(None, t.min(ctx.cut))
-        };
-        let prev = self.enter_run(m, id, &run)?;
-        let outer = core::mem::replace(&mut self.rereading, true);
-        self.push();
-        self.trace_plan_open();
-        let read = self.ev(m, when, &inst.env, there.at_law(inst.law.day()));
-        let closed = self.trace_plan_close();
-        self.pop_alone();
-        self.rereading = outer;
-        self.leave_run(id, prev)?;
-        closed?;
-        match read {
-            Err(Stop::Refused(r)) if matches!(r.code(), Code::Load(_)) => Err(Stop::Refused(r)),
-            Ok(_) | Err(Stop::Refused(_)) => Ok(()),
-            Err(stop) => Err(stop),
-        }
-    }
-
     /// Run `run` of decision `mv` in walk `id`, its body read again at its point as it ran
     /// (its law date, the state just before its own booking, its own earlier observations
     /// left out), traced, kept nowhere: its `when`, legs and attributes print their reads,
@@ -412,14 +344,8 @@ impl Engine {
         if mv.decl.fulfils.is_some() {
             crate::book::settlement_move(m, mv)?;
         }
-        let mut decided = Collected::default();
         if let Some(when) = &mv.decl.when {
-            // read under its own register too, so a decision's link takes what decided it
-            self.push();
-            let read = self.ev(m, when, &inst.env, ctx);
-            decided = self.pop_alone();
-            self.absorb(&decided);
-            let w = read?;
+            let w = self.ev(m, when, &inst.env, ctx)?;
             if w == Value::None {
                 return Err(refuse(
                     Run::None,
@@ -435,7 +361,6 @@ impl Engine {
                         for_period: None,
                         fulfils: None,
                         leg_reads: BTreeMap::new(),
-                        decided,
                         exist: self.met_here(),
                     });
                 };
@@ -488,7 +413,6 @@ impl Engine {
             for_period,
             fulfils,
             leg_reads,
-            decided,
             exist,
         })
     }

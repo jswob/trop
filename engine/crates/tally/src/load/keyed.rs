@@ -602,7 +602,15 @@ impl Checker {
         (mut ty, mut done): (Ty, usize),
     ) -> Typed {
         for post in posts.get(done..).unwrap_or(&[]) {
-            let prefix = post_text(base, posts.get(..done).unwrap_or(&[]));
+            let before = posts.get(..done).unwrap_or(&[]);
+            // a field read through a row's `fulfils` is a field read of the instance it names
+            // (L §5.19 Links; tally 2.3.1 rulings 22 (6))
+            if let (Postfix::Field(_), [.., Postfix::Field(prev)]) = (post, before)
+                && prev == "fulfils"
+            {
+                self.graph.fulfils_fields.insert(scope.item.clone());
+            }
+            let prefix = post_text(base, before);
             match post {
                 Postfix::Keys(_) => {
                     return Err(refused(

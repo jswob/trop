@@ -51,23 +51,6 @@ impl Engine {
         self.list_read(m, mv, cut)
     }
 
-    /// A move's instances at cut `cut` for an existence read (`o.fulfils`): the list
-    /// [`Engine::move_instances`] makes, whose links' reads are each instance's own, so an
-    /// existence read takes none of them (refcore's `find_inst`, which reads no status).
-    /// L §5.19 Links, §8.2 One read set; E §4.1 step 3, §3.2 (P30; tally 2.3.1 R2, item 6).
-    ///
-    /// # Errors
-    ///
-    /// As [`Engine::move_instances`].
-    pub(crate) fn existence_list(
-        &mut self,
-        m: &Reality,
-        mv: &MoveInfo,
-        cut: Day,
-    ) -> Result<Rc<Vec<Inst>>, Stop> {
-        self.list_read(m, mv, cut)
-    }
-
     /// A move's list at cut `cut`: the kept list; else the list made, what it booked kept with
     /// it or, where it stops, taken back, so every later read of it meets the same stop
     /// whatever was read before. E §4.1, §9 item 5 (P40).
@@ -719,9 +702,9 @@ impl Engine {
         )))
     }
 
-    /// Opens the making of a list of move `mv`, counted where it is a plan: a decision's link
-    /// judged inside one is a plan reaching a running read (E §3.1 step 7; tally 2.3.1 R6,
-    /// C-9, P43).
+    /// Opens the making of a list of move `mv`, counted where it is a plan: a decision's
+    /// existence traced inside one is a plan reaching a running read (E §3.1 step 7; tally
+    /// 2.3.1 R6, P43).
     ///
     /// # Errors
     ///
@@ -1831,65 +1814,6 @@ version jan
 "#;
 
     #[test]
-    fn a_links_reads_go_only_to_the_reads_that_rest_on_it() {
-        // L §8.2 One read set, §5.19 Links (tally 2.3.1 R2, item 6): January's link reads its
-        // assumed `when`; March's flows doesn't count January, so it never reads that link,
-        // whichever read made rent's list first
-        let text = FIRST.replace("OK", "true assumed \"jan is a guess\" \"ok jan\"");
-        let files = [("first.tally", text.as_str())];
-        let assumed = "  assumed: jan is a guess (ok[2026-01])";
-        assert_eq!(
-            answer(&files, "a"),
-            ["a: 100.00 PLN", assumed, "  cut 2026-05-20"],
-            "January rests on its link"
-        );
-        assert_eq!(
-            answer(&files, "b"),
-            [
-                "b: 100.00 PLN",
-                "  unfulfilled: rent[2026-03]",
-                "  cut 2026-05-20"
-            ],
-            "March doesn't"
-        );
-        assert_eq!(
-            answer(&files, "c"),
-            [
-                "c: 8 700.00 PLN",
-                assumed,
-                "  unfulfilled: rent[2026-02]",
-                "  unfulfilled: rent[2026-03]",
-                "  cut 2026-05-20"
-            ],
-            "the balance books January's row"
-        );
-    }
-
-    #[test]
-    fn a_flows_that_rests_on_a_refused_link_is_refused() {
-        // L §5.19 Links, §8.4 (tally 2.3.1 R2, C-13.6): January's `when` is false, so its row
-        // fulfils nothing; January's flows would count that row for the instance
-        let text = FIRST.replace("OK", "false \"no jan\"");
-        let files = [("first.tally", text.as_str())];
-        let refused = "refused: RUN-RECORD observation bank[a1] fulfils rent[2026-01], which \
-                       doesn't exist or doesn't touch its places";
-        assert_eq!(
-            answer(&files, "a"),
-            [format!("a: {refused}"), "  cut 2026-05-20".to_owned()],
-            "January rests on the refused link"
-        );
-        assert_eq!(
-            answer(&files, "b"),
-            [
-                "b: 100.00 PLN",
-                "  unfulfilled: rent[2026-03]",
-                "  cut 2026-05-20"
-            ],
-            "March doesn't"
-        );
-    }
-
-    #[test]
     fn a_binding_over_the_kind_carries_no_link_read_of_an_instance_outside_its_span() {
         // L §8.2 l.2252 (tally 2.3.1 R2, item 6; G2's review B4): January's modelled instance
         // and its row lie outside March's span, so March's sum over the kind lists none of
@@ -1910,40 +1834,5 @@ version jan
             ],
             "March's sum doesn't rest on January's link"
         );
-    }
-
-    #[test]
-    fn a_link_to_a_refused_instance_is_refused_with_it_observed_too() {
-        // L §5.19 Links, §8.4 (tally 2.3.1 R2, rulings 16 Q1, G2's review B5): January's
-        // `when` is refused, so its instance is refused, and the row that fulfils it with it:
-        // its realised movement is refused, not none
-        let text = FIRST
-            .replace("OK", "true \"ok jan\"")
-            .replace("  when ok[m]", "  when ok[m] and d5 / dz[m] > 0")
-            .replace(
-                "input d5: int",
-                "input d5: int\n\ninput dz[m in month]: int",
-            )
-            .replace(
-                "  d5 = 5 \"s\"",
-                "  d5 = 5 \"s\"\n  dz[2026-01] = 0 \"s\"\n  dz[2026-02] = 1 \"s\"\n  \
-                 dz[2026-03] = 1 \"s\"\n  dz[2026-04] = 1 \"s\"\n  dz[2026-05] = 1 \"s\"\n  \
-                 dz[2026-06] = 1 \"s\"",
-            )
-            .replace(
-                "ask c:",
-                "ask ob: observed(rent[2026-01]).cash.amount\n\nask c:",
-            );
-        let files = [("first.tally", text.as_str())];
-        for ask in ["a", "ob"] {
-            assert_eq!(
-                answer(&files, ask),
-                [
-                    format!("{ask}: refused: RUN-DIV division by zero"),
-                    "  cut 2026-05-20".to_owned()
-                ],
-                "{ask}"
-            );
-        }
     }
 }

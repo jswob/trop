@@ -19,8 +19,7 @@
 use std::collections::{BTreeMap, BTreeSet};
 use std::rc::Rc;
 
-use super::context::{Layer, LayerData};
-use super::register::Collected;
+use super::context::Layer;
 use super::state::{Ctx, Engine, invariant};
 use crate::base::{Refusal, Warn};
 use crate::book::{Adjustment, Coverage, Linked, Measured, Obs};
@@ -81,8 +80,6 @@ pub(crate) struct Timeline {
     links: BTreeMap<(Day, String), Linked>,
     /// The links being judged.
     link_active: BTreeSet<(Day, String)>,
-    /// The decision instances whose links are judged at their walk point, per cut.
-    links_at_point: BTreeSet<(Day, String)>,
     /// The refusals of observations' records per cut.
     obs_errs: BTreeMap<(Day, String), Refusal>,
     /// The refusal each instance's realised movement rests on, per cut.
@@ -114,39 +111,6 @@ pub(crate) struct Timeline {
 
 /// The legs a walk refused, by (move, leg).
 pub(crate) type LegRefusals = BTreeMap<(String, String), Refusal>;
-
-/// A row dated before its decision's point whose link the point refused, on one timeline:
-/// its world and its walk's pins by what they hold, so an answer of the ask made again
-/// finds it whatever its layers' numbers; the refusal and the read set that refused it
-/// (L §8.4 l.2356; tally 2.3.1 rulings 19 C).
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub(crate) struct EarlyRow {
-    /// The timeline's world (L §6.4).
-    world: World,
-    /// What the timeline's pins hold (E §3.3).
-    pins: LayerData,
-    /// The cut whose walk refused it.
-    cut: Day,
-    /// The row.
-    row: String,
-    /// The refusal of its link.
-    err: Refusal,
-    /// The read set that refused it, which every reader of the row carries.
-    coll: Collected,
-    /// The decision instance its point found none, whose link it is; none where the run's
-    /// own refusal refused it.
-    none_of: Option<String>,
-}
-
-impl EarlyRow {
-    /// Whether `other` is the same row on the same timeline.
-    pub(crate) fn same_row(&self, other: &EarlyRow) -> bool {
-        self.world == other.world
-            && self.cut == other.cut
-            && self.row == other.row
-            && self.pins.same(&other.pins)
-    }
-}
 
 /// Every combination of positions in lists of `counts` options, the first list slowest
 /// (refcore's `combos`); `None` past `cap` combinations, counted as they are made, so a
@@ -245,92 +209,6 @@ impl Engine {
     #[must_use]
     pub(crate) fn timeline_key(&self) -> TimelineKey {
         self.timelines.now
-    }
-
-    /// The refusal of row `row` under cut `cut` and the read set that refused it, where an
-    /// earlier answer of the ask found the row dated before its decision's point and its link
-    /// refused there, on the timeline in force: the row refuses every place from its own day
-    /// on every timeline, the ask's, a pin's, an axis option's and a scenario's (L §8.4
-    /// l.2356; tally 2.3.1 rulings 16 Q2, rulings 19 C).
-    ///
-    /// # Errors
-    ///
-    /// `ENGINE-INVARIANT` for a timeline whose layer was freed.
-    pub(crate) fn early_row(
-        &self,
-        cut: Day,
-        row: &str,
-    ) -> Result<Option<(Refusal, Collected)>, Stop> {
-        if self.early_seed.is_empty() {
-            return Ok(None);
-        }
-        let pins = self.layer_data(self.timelines.now.pins)?;
-        Ok(self
-            .early_seed
-            .iter()
-            .find(|e| {
-                e.world == self.timelines.now.world
-                    && e.cut == cut
-                    && e.row == row
-                    && e.pins.same(pins)
-            })
-            .map(|e| (e.err.clone(), e.coll.clone())))
-    }
-
-    /// Whether refusal `r`, met by decision instance `tid`'s run under cut `cut`, is the one
-    /// an earlier answer of the ask gave a row of its own because its point found it none,
-    /// on the timeline in force: the row refuses from its day only because the instance
-    /// doesn't exist, so the instance is none still, and a field read of it `RUN-NONE` (L §5.14
-    /// An instance's existence is a cell, §8.4; E §4.2 step 3; tally 2.3.1 R6, rulings 16 Q2,
-    /// the lead's P15).
-    ///
-    /// # Errors
-    ///
-    /// `ENGINE-INVARIANT` for a timeline whose layer was freed.
-    pub(crate) fn none_by_own_row(&self, cut: Day, tid: &str, r: &Refusal) -> Result<bool, Stop> {
-        if self.early_seed.is_empty() {
-            return Ok(false);
-        }
-        let pins = self.layer_data(self.timelines.now.pins)?;
-        let world = self.timelines.now.world;
-        Ok(self.early_seed.iter().any(|e| {
-            e.world == world
-                && e.cut == cut
-                && e.none_of.as_deref() == Some(tid)
-                && e.err == *r
-                && e.pins.same(pins)
-        }))
-    }
-
-    /// Notes row `row` under cut `cut`, dated before its decision's point, its link refused
-    /// there by `err` on the read set `coll`, on the timeline in force, for the ask's next
-    /// answer; `none_of`, the instance, where its point found it none (L §8.4 l.2356; tally
-    /// 2.3.1 rulings 19 C, the lead's P15).
-    ///
-    /// # Errors
-    ///
-    /// `ENGINE-INVARIANT` for a timeline whose layer was freed.
-    pub(crate) fn note_early_row(
-        &mut self,
-        cut: Day,
-        row: &str,
-        err: &Refusal,
-        coll: &Collected,
-        none_of: Option<&str>,
-    ) -> Result<(), Stop> {
-        let found = EarlyRow {
-            world: self.timelines.now.world,
-            pins: self.layer_data(self.timelines.now.pins)?.clone(),
-            cut,
-            row: row.to_owned(),
-            err: err.clone(),
-            coll: coll.clone(),
-            none_of: none_of.map(str::to_owned),
-        };
-        if !self.early_found.iter().any(|e| e.same_row(&found)) {
-            self.early_found.push(found);
-        }
-        Ok(())
     }
 
     /// Enters the timeline of context `inside` for a scope: its world and the pins of its
@@ -578,7 +456,6 @@ impl Engine {
             covered: core::mem::take(&mut self.covered),
             links: core::mem::take(&mut self.links),
             link_active: core::mem::take(&mut self.link_active),
-            links_at_point: core::mem::take(&mut self.links_at_point),
             obs_errs: core::mem::take(&mut self.obs_errs),
             bad_links: core::mem::take(&mut self.bad_links),
             s1_links: core::mem::take(&mut self.s1_links),
@@ -612,7 +489,6 @@ impl Engine {
         self.covered = t.covered;
         self.links = t.links;
         self.link_active = t.link_active;
-        self.links_at_point = t.links_at_point;
         self.obs_errs = t.obs_errs;
         self.bad_links = t.bad_links;
         self.s1_links = t.s1_links;

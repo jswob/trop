@@ -777,12 +777,12 @@ fn move_reads(m: &Reality, graph: &Graph, id: &str, mv: &MoveInfo) -> Option<Str
     None
 }
 
-/// The first decision, by id, whose existence plan `id` reaches through a row's link: the
-/// plan, its day and the defs they read read rows of an observed input, by their id or
-/// bound, over every version's rows, and one of those rows names an instance of a marked
-/// decision in its `fulfils`. A row's record rests on its link, and that decision's link is
-/// judged at its walk point, so the plan reaches a running read (E §3.1 step 7, a decision's
-/// existence a mark; L §5.19 Links; tally 2.3.1 C-9, rulings 16 Q4, rulings 19 D).
+/// The first decision, by id, whose existence plan `id` reaches through a field read of a
+/// row's `fulfils`: the plan, its day and the defs they read read a field through `.fulfils`
+/// of rows of an observed input, by their id or bound, over every version's rows, and one of
+/// those rows names an instance of a marked decision. That read is a field read of the
+/// instance, whose existence reads a running read (E §3.1 step 7, a decision's existence a
+/// mark; L §5.19 Links; tally 2.3.1 rulings 19 D, rulings 22 (6)).
 fn reached_link(m: &Reality, graph: &Graph, id: &str) -> Option<String> {
     let rows = rows_read(graph, id);
     let mut named = BTreeSet::new();
@@ -803,9 +803,10 @@ fn reached_link(m: &Reality, graph: &Graph, id: &str) -> Option<String> {
         .map(str::to_owned)
 }
 
-/// The rows of each observed input plan `id`, its day and the defs they read read: those an
-/// item names by their id, `bank[r2]`, where it reads the input no other way, else every
-/// row (`None`) (E §3.1 step 7; tally 2.3.1 rulings 19 D: the mark is row-precise).
+/// The rows of each observed input plan `id`, its day and the defs they read read, where the
+/// item reading them reads a field through `.fulfils`: those an item names by their id,
+/// `bank[r2]`, where it reads the input no other way, else every row (`None`) (E §3.1 step
+/// 7; tally 2.3.1 rulings 19 D: the mark is row-precise; rulings 22 (6): for that read only).
 fn rows_read(graph: &Graph, id: &str) -> BTreeMap<String, Option<BTreeSet<String>>> {
     let mut rows: BTreeMap<String, Option<BTreeSet<String>>> = BTreeMap::new();
     let mut seen = BTreeSet::new();
@@ -822,6 +823,9 @@ fn rows_read(graph: &Graph, id: &str) -> BTreeMap<String, Option<BTreeSet<String
                 if carries_marks(target) {
                     stack.push(target.clone());
                 }
+                continue;
+            }
+            if !graph.fulfils_fields.contains(&next) {
                 continue;
             }
             let only_by_id = rels.iter().all(|rel| *rel == Rel::Any);

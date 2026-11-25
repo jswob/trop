@@ -771,10 +771,10 @@ impl Engine {
         }
     }
 
-    /// The refusal of movement `v` where it is a refused instance at the reader's cut, a
-    /// plan's or a decision's (its run's refusal); none for any other (L §5.14 An instance's
-    /// existence is a cell, §8.4; tally 2.3.1 R6, rulings 16 Q3 whole, rulings 18). A row's
-    /// `o.fulfils` naming one is refused with its link (rulings 16 Q1).
+    /// The refusal of movement `v` where it is a plan's refused instance at the reader's cut;
+    /// none for any other, a decision's too, whose run's refusal is its point's (L §5.14 An
+    /// instance's existence is a cell, §8.4; tally 2.3.1 R6, rulings 16 Q3; rulings 22
+    /// replaces rulings 18's reach to a decision).
     ///
     /// # Errors
     ///
@@ -788,7 +788,7 @@ impl Engine {
         let MvSrc::Inst(move_id, _) = &v.src else {
             return Ok(None);
         };
-        if m.moves.get(move_id).is_none() {
+        if m.moves.get(move_id).is_none_or(|mv| mv.decision) {
             return Ok(None);
         }
         Ok(match self.mv_record(m, v, ctx)? {
@@ -936,13 +936,6 @@ impl Engine {
                 }
             }
             Moving::Obs(o) => {
-                // its link not judged yet, its `fulfils` is read before its record's verdict
-                // (tally 2.3.1 rulings 16 Q5)
-                if name == "fulfils"
-                    && let Some(e) = self.fulfils_awaited(o, ctx)?
-                {
-                    return Err(Stop::Refused(e));
-                }
                 if let Some(e) = self.obs_err(m, o, ctx.cut)? {
                     return Err(Stop::Refused(e));
                 }
@@ -1235,23 +1228,6 @@ impl Engine {
         self.same_hole(m, row, &Fact::Day, cut)
     }
 
-    /// The refusal of a read of observation `o`'s `fulfils` inside a decision before the point
-    /// where the link of the instance it names is judged: `RUN-ORDER`, the reader and that
-    /// decision reading each other ([`Engine::link_awaited`]); none outside a decision, or
-    /// where the link is judged already (L §5.19 Links, §5.14.2 Cycles; E §4.2 step 3; tally
-    /// 2.3.1 rulings 16 Q5, pick P17).
-    ///
-    /// # Errors
-    ///
-    /// As [`Engine::link_awaited`].
-    fn fulfils_awaited(&self, o: &Obs, ctx: Ctx) -> Result<Option<Refusal>, Stop> {
-        let (Some(at), Some(Fulfils::Instance(mid, keys))) = (ctx.at, &o.fulfils) else {
-            return Ok(None);
-        };
-        let tid = super::observe::inst_id(mid, keys);
-        self.link_awaited(mid, &tid, at, ctx.cut)
-    }
-
     /// What a movement's `fulfils` names at the cut: the instance or the adjustment, or none
     /// (refcore's `mv_field`, `fulfils`). L §5.19, §5.14.3.
     fn fulfils_of(&mut self, m: &Reality, src: &Moving, cut: Day) -> Result<Value, Stop> {
@@ -1270,21 +1246,14 @@ impl Engine {
                     .find(|a| a.inst_id == iid && a.leg.name == leg && a.vids.contains(&vid))
                     .map_or(Value::None, |a| Moving::Adj(a).value()))
             }
-            Some(Fulfils::Instance(mid, keys)) => {
-                let mv = m
-                    .moves
-                    .get(&mid)
-                    .ok_or_else(|| invariant("a link to a move load didn't build"))?;
-                // the instance by its existence alone, never its amounts: a field read of it
-                // takes it again at the reader's cut (L §5.19 Links; P22)
-                // the plan's list it reads is no cause the walk's forms print: the link prints
-                // as the observation's row (E §10; P26)
-                let before = self.trace_walked();
-                let named = self.linked_instance(m, mv, &keys, cut);
-                self.trace_walked_back(before);
-                let named = named?;
-                Ok(named.map_or(Value::None, |r| Value::Mv(Box::new(r))))
-            }
+            // the name alone, its move and keys, never the instance's existence: a field read
+            // through it takes the instance again at the reader's cut, `RUN-NONE` where it
+            // doesn't exist (L §5.19 Links; tally 2.3.1 rulings 22 (1), (6))
+            Some(Fulfils::Instance(mid, keys)) => Ok(Value::Mv(Box::new(MvRef {
+                id: super::observe::inst_id(&mid, &keys),
+                day: None,
+                src: MvSrc::Inst(mid, keys),
+            }))),
         }
     }
 

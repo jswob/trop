@@ -32,8 +32,8 @@ use super::residuals::residual_result;
 use super::worlds::refused_line;
 use crate::base::{Code, Load, Place, Reach, Refusal, Req, Run, Warn};
 use crate::eval::{
-    Collected, Ctx, EarlyRow, Engine, Entries, Entry, Env, How, Item, Member, Memo, after_on,
-    names_in, num_stop, one_day, past_days, world_named,
+    Collected, Ctx, Engine, Entries, Entry, Env, How, Item, Member, Memo, after_on, names_in,
+    num_stop, one_day, past_days, world_named,
 };
 use crate::model::{Reality, Value};
 use crate::syntax::{
@@ -75,12 +75,6 @@ struct Seen {
     /// The run's register entries while this world's ask is answered, lent to each of its
     /// engines in turn (E §1; `eval/register.rs`).
     entries: Entries,
-    /// The rows dated before their decision's point whose link the point refused, each on its
-    /// timeline, refused from its own day in the ask's next answer (L §8.4; tally 2.3.1 C-9,
-    /// rulings 19 C).
-    early: Vec<EarlyRow>,
-    /// The rows of `early`'s kind the ask's engines found while it was answered.
-    early_found: Vec<EarlyRow>,
     /// The fault planted in the run while it waits for its day (INTERFACE §4).
     #[cfg(feature = "fault-injection")]
     plant: Option<crate::walk::Fault>,
@@ -524,8 +518,6 @@ impl World {
                 plans: how.plans,
                 side: None,
                 entries: Entries::default(),
-                early: Vec::new(),
-                early_found: Vec::new(),
                 #[cfg(feature = "fault-injection")]
                 plant: how.fault,
                 #[cfg(feature = "counters")]
@@ -562,27 +554,7 @@ impl World {
         if let Some(form) = unbuilt_at_run(m, ask) {
             return Err(Stop::NotBuilt(form));
         }
-        // a row dated before its decision's point is booked on its own day before the point
-        // judges its link; where the point refuses it, the row refuses every place from its
-        // day, so the ask is answered again with it refused from the start, what the earlier
-        // answer gathered put back; on every timeline, each round adds a row of one, so the
-        // rounds end (L §8.4 l.2356; tally 2.3.1 C-9; rulings 16 Q2, rulings 19 C)
-        loop {
-            let before = (self.seen.warnings.clone(), self.seen.booked.clone());
-            let lines = answer_one(m, ask, days, &mut self.seen);
-            let found = core::mem::take(&mut self.seen.early_found);
-            let mut new = Vec::new();
-            for row in found {
-                if !self.seen.early.iter().any(|seen| seen.same_row(&row)) {
-                    new.push(row);
-                }
-            }
-            if new.is_empty() {
-                return lines;
-            }
-            self.seen.early.extend(new);
-            (self.seen.warnings, self.seen.booked) = before;
-        }
+        answer_one(m, ask, days, &mut self.seen)
     }
 }
 
@@ -784,7 +756,6 @@ fn gather(seen: &mut Seen, engine: &mut Engine) {
     }
     seen.booked = engine.take_booked();
     seen.entries = engine.take_entries();
-    seen.early_found.append(&mut engine.early_found);
     #[cfg(feature = "fault-injection")]
     seen.plant.clone_from(&engine.plant);
     #[cfg(feature = "counters")]
@@ -1185,7 +1156,6 @@ fn ask_engine(cut: Day, (ask, env): (&Ask, &Env), days: Days, seen: &mut Seen) -
     engine.plan_reads = seen.plans;
     engine.booked = core::mem::take(&mut seen.booked);
     engine.entries = core::mem::take(&mut seen.entries);
-    engine.early_seed.clone_from(&seen.early);
     #[cfg(feature = "fault-injection")]
     engine.plant.clone_from(&seen.plant);
     engine

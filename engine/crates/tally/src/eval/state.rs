@@ -419,10 +419,6 @@ pub struct Engine {
     pub(super) reads: Vec<Open>,
     /// The cells being computed.
     pub(crate) active: BTreeSet<CellId>,
-    /// The cell the last `RUN-CYCLE` met returned to: still being computed where the refusal
-    /// reaches a read that began after it, so the cycle runs through that read (tally 2.3.1
-    /// R6, P32).
-    pub(crate) cycle_at: Option<CellId>,
     /// The collectors, the innermost last; never empty.
     pub(super) stack: Vec<Collected>,
     /// The def cells open now.
@@ -492,20 +488,11 @@ pub struct Engine {
     pub(crate) links: BTreeMap<(Day, String), Linked>,
     /// The links being judged (`RUN-CYCLE`).
     pub(crate) link_active: BTreeSet<(Day, String)>,
-    /// The decision instances whose links are judged at their walk point, per cut: their
-    /// `when` is a running read (L §5.19 Links; E §4.2 step 3; tally 2.3.1 R6, C-9).
-    pub(crate) links_at_point: BTreeSet<(Day, String)>,
-    /// How many plan lists are being made, any phase: a decision's link judged inside one
-    /// is a plan reaching a running read (E §3.1 step 7; tally 2.3.1 C-9, P43).
+    /// How many plan lists are being made, any phase: a decision's existence traced inside
+    /// one is a plan reaching a running read (E §3.1 step 7; tally 2.3.1 R6, P43).
     pub(crate) plans_making: usize,
     /// The refusals of observations' records, per cut, by observation (L §5.19 Links).
     pub(crate) obs_errs: BTreeMap<(Day, String), Refusal>,
-    /// The rows dated before their decision's point whose link an earlier answer of this ask
-    /// found refused there, each on its timeline, refused from its own day in every walk of
-    /// that timeline (L §8.4; tally 2.3.1 C-9, rulings 16 Q2, rulings 19 C).
-    pub(crate) early_seed: Vec<super::timelines::EarlyRow>,
-    /// The rows of [`Engine::early_seed`]'s kind this engine found, for the ask's next answer.
-    pub(crate) early_found: Vec<super::timelines::EarlyRow>,
     /// The refusal an instance's realised movement rests on, per cut, by instance: a record
     /// its link refused (refcore's `badlinks`; L §5.19, §8.4).
     pub(crate) bad_links: BTreeMap<(Day, String), Refusal>,
@@ -658,7 +645,6 @@ impl Engine {
             frames: Vec::new(),
             reads: Vec::new(),
             active: BTreeSet::new(),
-            cycle_at: None,
             stack: vec![Collected::default()],
             depth: 0,
             work: Vec::new(),
@@ -688,11 +674,8 @@ impl Engine {
             covered: BTreeMap::new(),
             links: BTreeMap::new(),
             link_active: BTreeSet::new(),
-            links_at_point: BTreeSet::new(),
             plans_making: 0,
             obs_errs: BTreeMap::new(),
-            early_seed: Vec::new(),
-            early_found: Vec::new(),
             bad_links: BTreeMap::new(),
             s1_links: BTreeMap::new(),
             s1_judged: BTreeSet::new(),

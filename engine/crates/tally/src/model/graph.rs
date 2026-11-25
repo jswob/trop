@@ -311,9 +311,13 @@ pub struct Graph {
     /// The rows of an observed input each item reads by their id, `bank[r2]`, by the input
     /// (L §5.19; tally 2.3.1 rulings 19 D: step 7's mark is row-precise).
     pub named_rows: BTreeMap<Node, BTreeMap<String, BTreeSet<String>>>,
-    /// The decisions whose existence reads a running read or a projection: their links are
-    /// judged at their walk point (E §3.1 step 7, §4.2 step 3; tally 2.3.1 C-9, rulings 19 D).
+    /// The decisions whose existence reads a running read or a projection: a field read of
+    /// one of their instances through a row's `fulfils` reaches it (E §3.1 step 7; tally
+    /// 2.3.1 rulings 19 D, rulings 22 (6)).
     pub marked: BTreeSet<String>,
+    /// The items that read a field through `.fulfils`, `o.fulfils.day`: a field read of the
+    /// instance the row names (L §5.19 Links; tally 2.3.1 rulings 22 (6)).
+    pub fulfils_fields: BTreeSet<Node>,
 }
 
 impl Graph {
