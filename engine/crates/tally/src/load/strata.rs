@@ -857,7 +857,7 @@ fn fulfils_readers(graph: &Graph) -> BTreeSet<Node> {
         let more: Vec<Node> = graph
             .key_passes
             .iter()
-            .filter(|(item, to)| !fields.contains(*item) && to.iter().any(|t| fields.contains(t)))
+            .filter(|(item, to)| !fields.contains(*item) && !to.is_disjoint(&fields))
             .map(|(item, _)| item.clone())
             .collect();
         if more.is_empty() {
@@ -869,7 +869,7 @@ fn fulfils_readers(graph: &Graph) -> BTreeSet<Node> {
     let keyed = graph.fulfils_keyed.iter();
     readers.extend(
         keyed
-            .filter(|(_, to)| to.iter().any(|t| fields.contains(t)))
+            .filter(|(_, to)| !to.is_disjoint(&fields))
             .map(|(item, _)| item.clone()),
     );
     readers
