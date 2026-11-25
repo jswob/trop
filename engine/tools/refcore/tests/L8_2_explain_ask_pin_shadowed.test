@@ -44,7 +44,7 @@ a: 14
             [11] outside the as if: 10
               [12] tot = 10, law date 2026-06-30
                   rule base: won
-                    [13] row v:r = 1
+                    [13] row v:r[*] = 1
                         version v, source card, "invented", governs 2026-01-01.., known 2026-01-01
   [14] outside the pins: 14
     [15] inner = 14, law date 2026-06-30
@@ -59,7 +59,7 @@ a: 14
             [21] outside the as if: 2
               [22] tot = 2, law date 2026-06-30
                   rule base: won
-                    (v:r: see [13])
+                    (v:r[*]: see [13])
   pinned: r[*] = 7
   law date 2026-06-30, cut 2026-06-30
 w: 10
@@ -68,11 +68,11 @@ w: 10
   [3] inside the pins: 10
     [4] tot = 10, law date 2026-06-30
         rule base: won
-          [5] row v:r = 1
+          [5] row v:r[*] = 1
               version v, source card, "invented", governs 2026-01-01.., known 2026-01-01
   [6] outside the pins: 2
     [7] tot = 2, law date 2026-06-30
         rule base: won
-          (v:r: see [5])
+          (v:r[*]: see [5])
   pinned: r[k1] = 9
   law date 2026-06-30, cut 2026-06-30

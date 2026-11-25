@@ -36,13 +36,13 @@ ask q5: explain payable[f1, 2016-04] law 2016-04-30
 q5: 400.00 PLN
   [1] payable[f1, 2016-04] = 400.00 PLN, law date 2016-04-01
       rule base: won
-        [2] row rm2015:entitled[f1] = 500.00 PLN
+        [2] row rm2015:entitled[f1, *] = 500.00 PLN
             version rm2015, source rm1238, "Rozporządzenie", locator "§ 1", governs 2015-11-01.., known 2015-09-07
-        [3] row rm2015:excess[f1] = 100.00 PLN
+        [3] row rm2015:excess[f1, *] = 100.00 PLN
             version rm2015, source rm1238, "Rozporządzenie", locator "§ 2", governs 2015-11-01.., known 2015-09-07
       rule small: not applicable
-        (rm2015:entitled[f1]: see [2])
-        (rm2015:excess[f1]: see [3])
+        (rm2015:entitled[f1, *]: see [2])
+        (rm2015:excess[f1, *]: see [3])
         [4] row rm2015:min_payment = 20.00 PLN
             version rm2015, source rm1238, "Rozporządzenie", locator "§ 3", governs 2015-11-01.., known 2015-09-07
   law date 2016-04-30, cut 2016-10-31

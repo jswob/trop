@@ -541,7 +541,8 @@ class Row:
                 parts.append('%s..%s' % (key_text(p[1]), key_text(p[2])))
             else:
                 parts.append(key_text(p[1]))
-        while parts and parts[-1] == '*':
+        # a `*` the text writes stays (`given h[*] = …`, L §2.5; tally 2.3.1 Q1.14); only unwritten trailing keys drop
+        while len(parts) > getattr(self, 'nwritten', 0) and parts[-1] == '*':
             parts.pop()
         return '[%s]' % ', '.join(parts) if parts else ''
 
