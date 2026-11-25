@@ -1316,7 +1316,8 @@ class Asker:
             for sid in sorted(rs.rows):
                 out.append('  %s' % rs.texts[sid])
         elif a.form == 'explain':
-            out.append('%s: %s' % (head, fmt_value(vals[0], ctx.partial)))
+            # its head in the item's declared type, as a plain ask's (L §2.4 Values; tally 2.3.1 R4, Q2.16)
+            out.append('%s: %s' % (head, fmt_value(vals[0], ctx.partial, self.etype(a, 0))))
             if a.path is not None:
                 # a path value: "the seed and path number, the samples it reached in canonical order" (E §10; the
                 # samples are the register's sample: lines)

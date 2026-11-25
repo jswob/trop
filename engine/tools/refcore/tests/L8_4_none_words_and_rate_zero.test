@@ -1,9 +1,8 @@
 # tally 2.3.1 R4, P31 (L §8.4's RUN-NONE row: the read and the built-in's name; ordering, aggregate's terms by the
 # built-in; L §2.4 l.342: a value of a unit prints with it, 0 included; Q2.16: a declared num % row in its
 # type): min, max, abs, age_months, sum and max over a none term name the read and the built-in, `<` is
-# `ordering` (n_*); r - r is 0 /year (q_r0); explain p's row is 1 % (e_p; its head still prints 0.01, for the
-# writer's next turn). Before: `a value is none here: min` (max, abs, age), `a term of sum is none here`, `an
-# ordering`, `0 1/year`, the row 0.01.
+# `ordering` (n_*); r - r is 0 /year (q_r0); explain p's head and row are 1 % (e_p). Before: `a value is none
+# here: min` (max, abs, age), `a term of sum is none here`, `an ordering`, `0 1/year`, the head and the row 0.01.
 === w9a.tally
 model w9a
   tally 2
@@ -47,7 +46,7 @@ version v
   tn[a] = 1 "s"
   tn[b] = none "s"
 === expect
-e_p: 0.01
+e_p: 1 %
   [1] row v:p = 1 %
       version v, source s, "probe", locator "s", governs always, known 2026-01-01
   cut 2026-06-30
