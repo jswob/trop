@@ -123,7 +123,7 @@ impl Checker {
         if tupled {
             env.extend(binds.iter().map(|b| (b.var.clone(), "$?".to_owned())));
         }
-        for (key, bind) in keys.iter().zip(binds).filter(|_| !tupled) {
+        for (pos, (key, bind)) in keys.iter().zip(binds).enumerate().filter(|_| !tupled) {
             let Key::Expr(kn) = key else {
                 return Err(refused(
                     Load::Parse,
@@ -132,7 +132,7 @@ impl Checker {
             };
             let lit = self.bind_key(m, scope, kn, bind, depth)?;
             if matches!(bind.domain, Domain::Kind(_)) {
-                self.kind_key(scope, kn, Node::new(node_kind, id));
+                self.kind_key(scope, kn, (Node::new(node_kind, id), pos));
             }
             let mut value = "$?".to_owned();
             if let Expr::Name(name) = kn
@@ -175,18 +175,19 @@ impl Checker {
     /// graph through this reader, so a key `o.fulfils` is noted for step 7's mark, and the
     /// reader's own key variable passes on what `target` reads of it (E §3.1 steps 5 and 7;
     /// tally 2.3.1 rulings 22 (6), part 1's review B1).
-    fn kind_key(&mut self, scope: &Scope, key: &Expr, target: Node) {
-        let by_item = if names_fulfils(key) {
-            &mut self.graph.fulfils_keyed
-        } else if matches!(bare(key), Expr::Name(var) if scope.keyvars.contains(var)) {
-            &mut self.graph.key_passes
-        } else {
+    fn kind_key(&mut self, scope: &Scope, key: &Expr, target: (Node, usize)) {
+        if names_fulfils(key) {
+            let keyed = self.graph.fulfils_keyed.entry(scope.item.clone());
+            keyed.or_insert_with(BTreeSet::new).insert(target);
             return;
-        };
-        by_item
-            .entry(scope.item.clone())
-            .or_insert_with(BTreeSet::new)
-            .insert(target);
+        }
+        // the reader's own key variable, at its position, passes on what `target` reads there
+        if let Expr::Name(var) = bare(key)
+            && let Some(own) = scope.keyvars.iter().position(|v| v == var)
+        {
+            let passes = self.graph.key_passes.entry((scope.item.clone(), own));
+            passes.or_insert_with(BTreeSet::new).insert(target);
+        }
     }
 
     /// Whether a read's one key is the tuple `argmin`, `argmax`, `first` or `last` returns over
@@ -712,14 +713,14 @@ impl Checker {
             self.narrow_used.insert(test);
         }
         if let Some(Expr::Name(var)) = base.map(bare)
-            && scope.keyvars.contains(var)
+            && let Some(pos) = scope.keyvars.iter().position(|v| v == var)
             && scope
                 .vars
                 .get(var)
                 .is_some_and(|v| matches!(v.dom, VarDom::Kind(_)))
         {
-            // a field of a key over a kind: whoever names the key reads it (E §3.1 step 5)
-            self.graph.key_fields.insert(scope.item.clone());
+            // a field of a key over a kind: whoever names that key reads it (E §3.1 step 5)
+            self.graph.key_fields.insert((scope.item.clone(), pos));
         }
         if let Ty::Key(kind) = t
             && self.reads_guarded_leg(m, kind, field)?

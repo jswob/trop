@@ -1599,5 +1599,48 @@ version feb
             none, "q: 400.00 PLN",
             "a keyed def reading no field: {none}"
         );
+        // rulings 23 (d): by key position; a def over two transfers reaches through the key
+        // `o.fulfils` binds only where it reads a field of that key
+        let two = "def f2[t in transfers, u in transfers]: money PLN\n  rule a = u.cash.amount\n\n";
+        let row = first(
+            two,
+            "sum(f2[o.fulfils, o] for o in bank over m where o.fulfils != none)",
+        );
+        assert_eq!(row, "q: 400.00 PLN", "the row's own field: {row}");
+        let inst = first(
+            two,
+            "sum(f2[o, o.fulfils] for o in bank over m where o.fulfils != none)",
+        );
+        assert!(inst.starts_with(refused), "the instance's field: {inst}");
+        // and a field read through `fulfils` is a read of the named move for `reads`: pay
+        // declaring `reads topup` loads, however the read is spelled
+        let reads = |defs: &str, body: &str| {
+            let plan = format!(
+                "{defs}def lo[m in month]: money PLN at start_of(m)\n  rule guessed = 0.00 PLN\n  \
+                 rule seen beats guessed = {body} when covered(konto, m)\n\nmove pay[m in \
+                 month]: transfers\n  reads topup\n  on day_of(m, d5)\n  leg cash from konto to \
+                 shop amount lo[fm]\n\nask q: amt\n\nask loose:"
+            );
+            let given = vec![Given {
+                path: "dec_s7r.tally".to_owned(),
+                bytes: Some(dated.replace("ask loose:", &plan).into_bytes()),
+            }];
+            let asks = Asks::Named(vec!["q".to_owned()]);
+            let answer = run(Files::new(given), &Request::new(asks)).expect("an answer");
+            answer.lines().first().cloned().expect("a line")
+        };
+        for (defs, body) in [
+            (
+                "",
+                "sum(o.fulfils.cash.amount for o in bank over m where o.fulfils != none)",
+            ),
+            (
+                "",
+                "sum((o.fulfils).cash.amount for o in bank over m where o.fulfils != none)",
+            ),
+            (passed, keyed),
+        ] {
+            assert_eq!(reads(defs, body), "q: 400.00 PLN", "reads topup: {body}");
+        }
     }
 }

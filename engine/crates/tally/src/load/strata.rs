@@ -744,11 +744,18 @@ fn move_reads(m: &Reality, graph: &Graph, id: &str, mv: &MoveInfo) -> Option<Str
         let name = target_name(target);
         format!("{id} reaches a running read or projection of {name} without reads {name}")
     };
+    // a field read through a row's `fulfils` is a read of the moves its rows name, for the
+    // mark and for `reads` alike (tally 2.3.1 rulings 23 (d))
+    let linked: Vec<Target> = linked_moves(m, graph, id)
+        .into_iter()
+        .map(Target::Move)
+        .collect();
+    let marked = |target: &Target| matches!(target, Target::Move(d) if graph.marked.contains(d));
     if !mv.decision {
         if let Some((_, target)) = reached.first() {
             return Some(without(target));
         }
-        return reached_link(m, graph, id).map(|d| without(&Target::Move(d)));
+        return linked.iter().find(|t| marked(t)).map(without);
     }
     if let Some((_, target)) = reached_marks(graph, &Node::new(NodeKind::MoveOn, id)).first() {
         return Some(format!(
@@ -762,13 +769,21 @@ fn move_reads(m: &Reality, graph: &Graph, id: &str, mv: &MoveInfo) -> Option<Str
     {
         return Some(without(target));
     }
+    if let Some(target) = linked
+        .iter()
+        .find(|t| marked(t) && !covers(m, &mv.read_targets, t))
+    {
+        return Some(without(target));
+    }
     if reached.iter().any(|(_, target)| *target == Target::Unknown) {
         return None;
     }
     for declared in &mv.read_targets {
         let read = reached
             .iter()
-            .any(|(_, target)| covers_one(m, declared, target));
+            .map(|(_, target)| target)
+            .chain(&linked)
+            .any(|target| covers_one(m, declared, target));
         if !read {
             let name = target_name(declared);
             return Some(format!("{id} declares reads {name} and never reads it"));
@@ -777,13 +792,14 @@ fn move_reads(m: &Reality, graph: &Graph, id: &str, mv: &MoveInfo) -> Option<Str
     None
 }
 
-/// The first decision, by id, whose existence plan `id` reaches through a field read of a
+/// The moves whose instances move `id` reaches through a field read of a
 /// row's `fulfils`: the plan, its day and the defs they read read a field through `.fulfils`
 /// of rows of an observed input, by their id or bound, over every version's rows, and one of
 /// those rows names an instance of a marked decision. That read is a field read of the
 /// instance, whose existence reads a running read (E §3.1 step 7, a decision's existence a
-/// mark; L §5.19 Links; tally 2.3.1 rulings 19 D, rulings 22 (6)).
-fn reached_link(m: &Reality, graph: &Graph, id: &str) -> Option<String> {
+/// mark; L §5.19 Links; tally 2.3.1 rulings 19 D, rulings 22 (6)). The moves those rows
+/// name, by id: each is read, for the mark and for `reads` alike (rulings 23 (d)).
+fn linked_moves(m: &Reality, graph: &Graph, id: &str) -> BTreeSet<String> {
     let rows = rows_read(graph, id);
     let mut named = BTreeSet::new();
     for (input, which) in &rows {
@@ -793,14 +809,11 @@ fn reached_link(m: &Reality, graph: &Graph, id: &str) -> Option<String> {
         for row in &info.observations {
             let read = which.as_ref().is_none_or(|by_id| by_id.contains(&row.key));
             if let (true, Some(Fulfils::Instance(d, _))) = (read, &row.fulfils) {
-                named.insert(d.as_str());
+                named.insert(d.clone());
             }
         }
     }
     named
-        .into_iter()
-        .find(|d| graph.marked.contains(*d))
-        .map(str::to_owned)
 }
 
 /// The rows of each observed input plan `id`, its day and the defs they read read, where the
@@ -852,13 +865,15 @@ fn rows_read(graph: &Graph, id: &str) -> BTreeMap<String, Option<BTreeSet<String
 /// gives an item keyed by a kind that reads a field of its key, itself or through the items it
 /// passes its key to (E §3.1 steps 5 and 7; tally 2.3.1 rulings 22 (6), part 1's review B1).
 fn fulfils_readers(graph: &Graph) -> BTreeSet<Node> {
+    // by key position: a def over two transfers that reads a field of one only reaches
+    // through that one (rulings 23 (d))
     let mut fields = graph.key_fields.clone();
     loop {
-        let more: Vec<Node> = graph
+        let more: Vec<(Node, usize)> = graph
             .key_passes
             .iter()
-            .filter(|(item, to)| !fields.contains(*item) && !to.is_disjoint(&fields))
-            .map(|(item, _)| item.clone())
+            .filter(|(own, to)| !fields.contains(*own) && !to.is_disjoint(&fields))
+            .map(|(own, _)| own.clone())
             .collect();
         if more.is_empty() {
             break;
