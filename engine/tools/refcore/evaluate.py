@@ -3892,7 +3892,21 @@ class Engine:
             if name == 'since':
                 return self.e_call_since(n, env, ctx)
             raise NotYet(name, n.loc)
-        return f(n, env, ctx)
+        try:
+            return f(n, env, ctx)
+        except Refusal as e:
+            # a built-in's none argument is named by its read and the built-in, the date and number built-ins too
+            # (L §8.4's RUN-NONE row; tally 2.3.1 P42, N256.8): the first argument that reads none
+            if e.code == 'RUN-NONE' and e.msg.startswith('a value is none here: ') and getattr(n, 'args', None):
+                for a in n.args:
+                    try:
+                        v = self.ev(a, env, ctx)
+                    except (TallyError, HoleSignal):
+                        continue
+                    if v is NONE:
+                        e.msg = '%s is none here: %s' % (env_txt(a, env), name)
+                        break
+            raise
 
     def args(self, n, env, ctx):
         return [self.ev(a, env, ctx) for a in n.args]

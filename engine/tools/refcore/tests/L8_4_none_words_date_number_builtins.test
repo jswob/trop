@@ -1,0 +1,132 @@
+# tally 2.3.1 P42, N256.8 (L §8.4's RUN-NONE row, `<x>[k] is none here: <the built-in's name ...>`): the date
+# and number built-ins name the read that gave none and the built-in: start_of, year_of, days_between,
+# add_days, add_months, overlap_days, weekday, is_business, pow, day_of, window, add_years (s01 to s11, s22,
+# s23). Before: `a value is none here: <name>`, add_months `an integer argument`.
+=== nonesw.tally
+model nonesw
+  tally 2
+  on 2026-06-30
+  start 2026-01-01
+  end 2026-12-31
+
+source s "probe"
+unit PLN: currency minor 0.01
+index ks = [a, b]
+input xn: num
+input xh: num
+input x1: num
+input dn: date
+input dh: date
+input d0: date
+input mn: month
+input kn: int
+input pn: money PLN
+input ph: money PLN
+input tn[k in ks]: num
+input th[k in ks]: num
+input cal: calendar
+input rn: rate
+
+ask s01: start_of(mn)
+ask s02: year_of(dn)
+ask s03: days_between(d0, dn)
+ask s04: add_days(dn, kn)
+ask s05: add_months(d0, kn)
+ask s06: age(dn, d0)
+ask s07: overlap_days(d0, dn, mn)
+ask s08: weekday(dn)
+ask s09: is_business(dn, cal)
+ask s10: pow(xn, kn)
+ask s11: day_of(mn, kn)
+ask s12: max(pn, ph)
+ask s13: min(ph, pn)
+ask s14: max(xh, xn, x1)
+ask s15: abs(xn) + xh
+ask s16: round(pn, ph, half-up)
+ask s17: sum(tn[k] + th[k] for k in ks)
+ask s18: mean(tn[k] for k in ks)
+ask s19: count(k in ks where tn[k] > x1)
+ask s20: xn + xh
+ask s21: xh + xn
+ask s22: window(d0, dn)
+ask s23: add_years(dn, kn)
+ask s24: periodic(rn, year, simple)
+ask s25: age_months(d0, dh) + age_months(d0, dn)
+ask s26: argmax(tn[k] for k in ks)
+ask s27: quantile(tn[k] for k in ks, xn)
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  xn = none "s"
+  xh = ?"which x?" "s"
+  x1 = 1 "s"
+  dn = none "s"
+  dh = ?"which d?" "s"
+  d0 = 2026-01-01 "s"
+  mn = none "s"
+  kn = none "s"
+  pn = none "s"
+  ph = ?"which p?" "s"
+  tn[a] = 1 "s"
+  tn[b] = none "s"
+  th[a] = ?"th a" "s"
+  th[b] = 2 "s"
+  cal = calendar(weekends [sat, sun], added []) "s"
+  rn = none "s"
+=== expect
+s01: refused: RUN-NONE mn is none here: start_of
+  cut 2026-06-30
+s02: refused: RUN-NONE dn is none here: year_of
+  cut 2026-06-30
+s03: refused: RUN-NONE dn is none here: days_between
+  cut 2026-06-30
+s04: refused: RUN-NONE dn is none here: add_days
+  cut 2026-06-30
+s05: refused: RUN-NONE kn is none here: add_months
+  cut 2026-06-30
+s06: refused: RUN-NONE dn is none here: age
+  cut 2026-06-30
+s07: refused: RUN-NONE dn is none here: overlap_days
+  cut 2026-06-30
+s08: refused: RUN-NONE dn is none here: weekday
+  cut 2026-06-30
+s09: refused: RUN-NONE dn is none here: is_business
+  cut 2026-06-30
+s10: refused: RUN-NONE xn is none here: pow
+  cut 2026-06-30
+s11: refused: RUN-NONE mn is none here: day_of
+  cut 2026-06-30
+s12: refused: RUN-NONE pn is none here: max
+  cut 2026-06-30
+s13: refused: RUN-NONE pn is none here: min
+  cut 2026-06-30
+s14: refused: RUN-NONE xn is none here: max
+  cut 2026-06-30
+s15: refused: RUN-NONE xn is none here: abs
+  cut 2026-06-30
+s16: refused: RUN-NONE pn is none here: round
+  cut 2026-06-30
+s17: refused: RUN-NONE tn[b] is none here: arithmetic
+  cut 2026-06-30
+s18: refused: RUN-NONE tn[b] is none here: mean
+  cut 2026-06-30
+s19: refused: RUN-NONE tn[b] is none here: ordering
+  cut 2026-06-30
+s20: refused: RUN-NONE xn is none here: arithmetic
+  cut 2026-06-30
+s21: refused: RUN-NONE xn is none here: arithmetic
+  cut 2026-06-30
+s22: refused: RUN-NONE dn is none here: window
+  cut 2026-06-30
+s23: refused: RUN-NONE dn is none here: add_years
+  cut 2026-06-30
+s24: refused: RUN-NONE rn is none here: periodic
+  cut 2026-06-30
+s25: refused: RUN-NONE dn is none here: age_months
+  cut 2026-06-30
+s26: refused: RUN-NONE tn[b] is none here: argmax
+  cut 2026-06-30
+s27: refused: RUN-NONE tn[b] is none here: quantile
+  cut 2026-06-30
