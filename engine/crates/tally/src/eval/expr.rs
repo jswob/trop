@@ -424,7 +424,7 @@ impl Engine {
 
     /// `if c then a else b` with hole condition `cond_hole`: both branches evaluated, the
     /// `if` a hole unless they are equal (refcore's `e_if`). L §5.11 Logic, §8.1.
-    fn choice_unknown(
+    pub(super) fn choice_unknown(
         &mut self,
         m: &Reality,
         (cond_hole, yes, no): (&Hole, &Expr, &Expr),

@@ -191,7 +191,9 @@ pub mod eval {
     pub(crate) use bindings::{names_in, order_text, reads_name, reads_var, written_bound};
     pub use context::Layer;
     pub(crate) use context::{GUARDED, UNSET_AXIS, world_named};
-    pub(crate) use convert::{ConvertFor, Converted, convert, convert_row, field_literal};
+    pub(crate) use convert::{
+        ConvertFor, Converted, convert, convert_row, field_literal, negated_literal, pin_row,
+    };
     pub(crate) use expr::{equal_sides, hole_of, resolved_sides};
     pub(crate) use extremes::min_max;
     pub(crate) use keys::{Given, thing_seen, to_key};

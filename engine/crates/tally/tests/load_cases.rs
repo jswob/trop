@@ -2268,13 +2268,14 @@ ask qt: taken[2026], rounded
                 )],
                 "LOAD-PRECISION 50.001 is finer than the minor unit (a.tally:73)",
             ),
-            // pin-fraction
+            // pin-fraction: a pin is a row, so a fraction is read as the row reads it
+            // (tally 2.3.1 statement G, P22 N3: refcore at the pin prints it)
             (
                 &[(
                     "ask qp: total with amt = 50",
                     "ask qp: total with amt = 1/2",
                 )],
-                "LOAD-PARSE cannot parse: a fraction is allowed only in rows (a.tally:73)",
+                "LOAD-PRECISION 1/2 terminates; write it as a decimal (a.tally:73)",
             ),
             // pin-law
             (

@@ -24,7 +24,7 @@ use crate::model::{
     currency_id, money_num, num_money,
 };
 use crate::num::Num;
-use crate::syntax::{Expr, Key, Lit, PRef, Pin, PinForm, Stop};
+use crate::syntax::{Expr, Key, Lit, PRef, Pin, PinForm, Stop, Value as Written};
 use crate::time::Day;
 
 impl Engine {
@@ -462,9 +462,17 @@ impl Engine {
             factor = percent_factor(ty.as_ref())?;
         }
         self.push();
-        let v = self.ev(m, written, env, ctx);
+        let read = match ty.as_ref() {
+            // a pin is a row: read by the row reader load read it by (tally 2.3.1 statement G)
+            Some(row_ty) if super::convert::pin_row(written, row_ty) => {
+                self.row_pinned(m, (id, written), (row_ty, &factor), env, ctx)
+            }
+            Some(_) | None => self
+                .ev(m, written, env, ctx)
+                .and_then(|v| pin_typed(m, written, v, (ty.as_ref(), &factor))),
+        };
         let met = self.pop_alone();
-        let value = pin_typed(m, written, v?, (ty.as_ref(), &factor))?;
+        let value = read?;
         let value = at_pin_keys(value, binds, &keys)?;
         if !plain_literal(m, written) {
             self.absorb(&met);
@@ -496,6 +504,85 @@ impl Engine {
             layer: 0,
             tied: None,
         }))
+    }
+
+    /// A pin's value read as its target's row at run: through brackets and signs, the arm its
+    /// `if`s' conditions take, read by the row reader load read it by at the target's type
+    /// `ty`, whose unit brings `factor`; a hole condition reads both arms, the hole unless they
+    /// agree (refcore's `pin_row`, `e_if`; tally 2.3.1 statement G). L §5.11 A pin is a row,
+    /// §5.11 Logic, §8.1.
+    fn row_pinned(
+        &mut self,
+        m: &Reality,
+        (id, written): (&str, &Expr),
+        (ty, factor): (&Ty, &Num),
+        env: &Env,
+        ctx: Ctx,
+    ) -> Result<Value, Stop> {
+        let mut node = written;
+        let mut negative = false;
+        loop {
+            if let Expr::Paren(inner) = node {
+                node = inner;
+            } else if let Expr::Neg(inner) = node {
+                negative = !negative;
+                node = inner;
+            } else if let Expr::If(parts, kept) = node {
+                let [cond, yes, no] = parts.as_ref();
+                match self.pin_condition(m, (cond, yes, no), kept, env, ctx)? {
+                    Ok(true) => node = yes,
+                    Ok(false) => node = no,
+                    Err(hole) => return Ok(hole),
+                }
+            } else if let Expr::Lit(lit) = node {
+                let row = if negative {
+                    super::convert::negated_literal(lit)?
+                } else {
+                    lit.clone()
+                };
+                let of = super::convert::ConvertFor {
+                    factor: factor.clone(),
+                    keys: Vec::new(),
+                };
+                return match super::convert::convert_read(m, &Written::Lit(row), ty, id, &of)? {
+                    super::convert::Converted::Value(v) => Ok(v),
+                    super::convert::Converted::Hole(_) => {
+                        Err(invariant("a pin's literal read as a stated hole"))
+                    }
+                };
+            } else {
+                return Err(invariant("a pin read as a row reached no literal"));
+            }
+        }
+    }
+
+    /// The arm a pin's `if` takes, `true` for its `then`: its condition `cond` read; a hole
+    /// condition reads both arms, `yes` and `no`, and takes `then` where they agree, the `if`
+    /// a hole otherwise (refcore's `e_if`). L §5.11 Logic, §8.1, §8.4.
+    fn pin_condition(
+        &mut self,
+        m: &Reality,
+        (cond, yes, no): (&Expr, &Expr, &Expr),
+        kept: &crate::syntax::LoadType,
+        env: &Env,
+        ctx: Ctx,
+    ) -> Result<Result<bool, Value>, Stop> {
+        let test = self.ev(m, cond, env, ctx)?;
+        if let Value::Bool(holds) = test {
+            return Ok(Ok(holds));
+        }
+        if test == Value::None {
+            // a condition, named by its read (L §8.4 `RUN-NONE`'s row)
+            return Err(super::bindings::none_here(m, cond, env, "a condition"));
+        }
+        let Value::Hole(hole) = test else {
+            return Err(super::state::not_typed());
+        };
+        let both = self.choice_unknown(m, (&hole, yes, no), kept, env, ctx)?;
+        if matches!(both, Value::Hole(_)) {
+            return Ok(Err(both));
+        }
+        Ok(Ok(true))
     }
 
     /// A pin's keys, every one written, as given in order; the first that is a hole makes
@@ -892,5 +979,114 @@ version v2
         ] {
             assert_eq!(ran(ask).first().map(String::as_str), Some(refusal), "{ask}");
         }
+    }
+
+    /// Keys of grids by 3 and of a stepped range, an int, a rate and a read over each grid
+    /// (the fix review's `b4c` and `n1b` texts, tally 2.3.1 statement G).
+    const PINROW: &str = r#"model pinrow
+  tally 2
+  on 2026-10-25
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+index qs = month 2026-01..2026-12 by 3
+index ys = year 2020..2030 by 3
+index tens = 10..50 by 10
+input qk: key qs
+input yk: key ys
+input tk: key tens
+input n: int
+input rr: rate
+input b: bool
+input vv[q in qs]: int
+input vy[y in ys]: int
+
+ASK
+
+version ver
+  cite s
+  governs always
+  known 2026-01-01
+  qk = 2026-04 "s"
+  yk = 2026 "s"
+  tk = 20 "s"
+  n = 3 "s"
+  rr = 5 %/year "s"
+  b = true "s"
+  vv[2026-04] = 2 "s"
+  vv[2026-10] = 3 "s"
+  vy[2026] = 26 "s"
+  vy[2029] = 29 "s"
+"#;
+
+    /// `PINROW` with `ask` in place of its ask, its lines.
+    fn row_ran(ask: &str) -> Vec<String> {
+        let given = vec![Given {
+            path: "pinrow.tally".to_owned(),
+            bytes: Some(PINROW.replace("ASK", ask).into_bytes()),
+        }];
+        run(Files::new(given), &Request::new(Asks::Every))
+            .expect("an answer")
+            .lines()
+            .to_vec()
+    }
+
+    #[test]
+    fn a_pin_is_refused_as_its_row_through_brackets_signs_and_arms() {
+        // L §5.11 A pin is a row, §2.5 Keys (statement G): the row's words, the value as the
+        // row prints it, an off-grid literal anywhere in it LOAD-KEY
+        for (ask, refusal) in [
+            ("ask a: n with n = (2.5)", "LOAD-UNIT 2.5 is not an int"),
+            ("ask a: n with n = -(2.5)", "LOAD-UNIT -2.5 is not an int"),
+            (
+                "ask a: yk with yk = 2028",
+                "LOAD-KEY 2028 is not a key of ys",
+            ),
+            (
+                "ask a: yk with yk = (2028)",
+                "LOAD-KEY 2028 is not a key of ys",
+            ),
+            (
+                "ask a: rr with rr = 5",
+                "LOAD-UNIT a rate states its period: 5",
+            ),
+            (
+                "ask a: tk with tk = -(10)",
+                "LOAD-KEY -10 is not a key of tens",
+            ),
+            (
+                "ask a: vv[qk] with qk = (2026-08)",
+                "LOAD-KEY 2026-08 is not a key of qs",
+            ),
+            (
+                "ask a: vv[qk] with qk = (if b then 2026-08 else 2026-10)",
+                "LOAD-KEY 2026-08 is not a key of qs",
+            ),
+        ] {
+            let line = format!("refused: {refusal} (pinrow.tally:20)");
+            assert_eq!(
+                row_ran(ask).first().map(String::as_str),
+                Some(line.as_str()),
+                "{ask}"
+            );
+        }
+    }
+
+    #[test]
+    fn an_on_grid_arm_pinned_is_its_key() {
+        // L §2.5 Keys, §5.11 (statement G): the arm the condition takes, read as its row
+        let lines = row_ran("ask a: vy[yk] with yk = (if b then 2029 else 2026)");
+        assert_eq!(
+            lines.get(..2),
+            Some(["a: 29".to_owned(), "  pinned: yk = 2029".to_owned()].as_slice()),
+            "a key of ys, not the int 2 029"
+        );
+        let month = row_ran("ask a: vv[qk] with qk = (if b then 2026-10 else 2026-07)");
+        assert_eq!(
+            month.first().map(String::as_str),
+            Some("a: 3"),
+            "a month arm"
+        );
     }
 }
