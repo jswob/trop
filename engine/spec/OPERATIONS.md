@@ -169,7 +169,7 @@ Each recipe is a few lines of Tally text or one command. Every example runs on t
   ```
 - **IMP-2, duplicates, corrections, card holds.** The key is the bank's row id, so a row already written isn't written again. A correction restates the key in a later version that also `covers` the place (`LOAD-COVERS` otherwise): `replace bank[r1] = (…)`; a row that never happened, or a hold that never booked, `replace bank[r2] = none`; a hold that books restates the hold's key.
 - **IMP-3, a statement's closing balance.** The `stated` reading. Every balance read after it prints `anchor: konto 2026-10-31 end, stated 7 900.00 PLN, difference 20.00 PLN`; `residuals` prints the same gap.
-- **IMP-4, match bank rows to planned movements.** The caller reads `residuals` (`expected but missing wage[2026-10, acme]`, `unexplained bank[r1]`) and the register's `open:` lines, and writes `fulfils` on the row: in the statement, or later by a `replace` of the row (IMP-2). The engine checks each link at the ask's cut (`RUN-RECORD`) and proposes none.
+- **IMP-4, match bank rows to planned movements.** The caller reads `residuals` (`unexplained bank[r1]`) and the register's `open:` lines, and writes `fulfils` on the row: in the statement or a later `replace` (IMP-2). The engine checks each link in `residuals` and proposes none; a run with no `residuals` ask is silent on a dead link.
 
 ### 3.6 Law
 
