@@ -249,6 +249,13 @@ impl Engine {
                 return Err(Stop::Refused(e));
             }
             if i.status == Status::Modelled {
+                // what decided a decision exists at its point rests under the rows that stand
+                // in for it (refcore's `flows_move`; L §8.2 One read set; G2's review B3)
+                if mv.decision
+                    && let Some(ex) = &i.exist_coll
+                {
+                    acc.met.merge(ex);
+                }
                 self.count_standing_in(m, i, leg, ctx.cut, acc)?;
                 continue;
             }
