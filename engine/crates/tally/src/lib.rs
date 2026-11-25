@@ -43,6 +43,7 @@ pub mod base {
     mod table;
 
     pub use code::{Code, Hole, Load, Req, Run, Warn};
+    pub(crate) use refusal::dotted;
     pub use refusal::{Place, Reach, Refusal};
     pub use symbol::{Internal, Interner, Symbol};
     pub use table::Table;
