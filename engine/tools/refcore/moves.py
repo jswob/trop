@@ -1541,7 +1541,28 @@ def same_obs_differ(a, others, leg=None, m=None, fact=None):
     for g in a.legs:
         if leg is not None and g.name != leg:
             continue
-        mem = [(a, g)] + [(b, h) for b in others for h in b.legs if h.name == g.name]
+        # legs pair by name, then by order among the unpaired; a leg with no partner is HOLE-SAME, its missing side
+        # none (tally 2.3.1 rulings 25, P42 B2 and note 5, P43)
+        mem = [(a, g)]
+        for b in others:
+            hs = [h for h in b.legs if h.name == g.name]
+            if not hs:
+                a_un = [x for x in a.legs if not any(y.name == x.name for y in b.legs)]
+                b_un = [y for y in b.legs if not any(x.name == y.name for x in a.legs)]
+                ku = next((j for j, x in enumerate(a_un) if x is g), None)
+                hs = b_un[ku:ku + 1] if ku is not None else []
+                if not hs and b.legs:
+                    hs = [None]
+            mem.extend((b, h) for h in hs)
+        if len(mem) < 2:
+            continue
+        if any(h is None for o, h in mem) and fact != 'day':
+            d = day_text(g.day if isinstance(g.day, datetime.date) else a.day)
+            q = '%s are one, but %s differs on %s: %s' % (
+                and_list(shown(o.id) for o, h in mem), 'leg %s' % g.name, d,
+                and_list('%s (%s)' % ('none' if h is None else fmt(h.amount), shown(o.id)) for o, h in mem))
+            return Hole([(q, ', '.join(shown(o.id) for o, h in mem))])
+        mem = [(o, h) for o, h in mem if h is not None]
         if len(mem) < 2:
             continue
         mem.sort(key=lambda t: id_order(m, t[0].id) if m is not None else shown(t[0].id))

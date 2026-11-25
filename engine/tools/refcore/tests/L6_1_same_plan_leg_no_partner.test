@@ -1,0 +1,49 @@
+# tally 2.3.1 rulings 25, P42 B2: the same for two planned movements stated same. Before: b 898.00.
+=== same_plan.tally
+model same_plan
+  tally 2
+  on 2026-06-10
+  start 2026-01-01
+  end 2026-12-31
+
+source s "probe"
+unit PLN: currency minor 0.01
+kind paid: event certain
+  leg cash: PLN
+  leg fee: PLN
+kind cpaid: event certain
+  leg pay: PLN
+place wallet: accounts PLN lives 2025-01-01..
+place shop: accounts PLN lives 2025-01-01..
+place bank: outside lives 1900-01-01..
+input a: money PLN
+input f: money PLN
+input d1: date
+
+move p1: paid
+  on d1
+  leg cash from wallet to shop amount a
+  leg fee from wallet to bank amount f
+move p2: cpaid
+  on d1
+  leg pay from wallet to shop amount a
+
+ask b: bal(wallet, 2026-03-31)
+ask c: bal(shop, 2026-03-31)
+ask fl: flows(wallet, 2026-03)
+
+version v
+  cite s
+  governs always
+  known 2025-12-01
+  opening[wallet] = 1 000.00 PLN at 2026-01-01 start "s"
+  opening[shop] = 0.00 PLN at 2026-01-01 start "s"
+  a = 100.00 PLN "s"
+  f = 2.00 PLN "s"
+  d1 = 2026-03-05 "s"
+  same p1 = p2
+=== expect b
+b: ?"p1 and p2 are one, but leg fee differs on 2026-03-05: 2.00 PLN (p1) and none (p2)" (p1, p2)
+  unfulfilled: p1
+  unfulfilled: p2
+  cut 2026-06-10

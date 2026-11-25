@@ -1,0 +1,58 @@
+# tally 2.3.1 rulings 25, note 5: bank (cash, fee) and card (charge, cash), equal amounts and places: cash pairs
+# by name, fee with charge by order: no question. Before: two spurious HOLE-SAME questions at konto.
+=== same_names.tally
+model same_names
+  tally 2
+  on 2026-05-20
+  start 2026-01-01
+  end 2026-03-31
+
+source s "probe"
+unit PLN: currency minor 0.01
+kind paid: event certain
+  leg cash: PLN
+  leg fee: PLN
+kind cpaid: event certain
+  leg charge: PLN
+  leg cash: PLN
+kind tpaid: event certain
+  leg pay: PLN
+place konto: accounts PLN lives 2026-01-01..
+place karta: accounts PLN lives 2026-01-01..
+place bankfee: outside lives 1900-01-01..
+input bank: observed
+input card: observed
+input third: observed
+
+ask b: bal(konto, 2026-03-31)
+ask c2: bal(karta, 2026-03-31)
+ask fe: flows(konto, 2026-01)
+ask ob: bank[a1].fee.amount
+ask oc: card[b1].charge.amount
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  opening[konto] = 1 000.00 PLN at 2026-01-01 start "s"
+  opening[karta] = 1 000.00 PLN at 2026-01-01 start "s"
+
+version q1
+  cite s
+  governs 2026-01-01..2026-03-31
+  known 2026-04-01
+  covers konto, karta
+  bank[a1] = (on: 2026-01-07, kind: paid, leg cash from konto to karta amount 100.00 PLN, leg fee from konto to bankfee amount 2.00 PLN) "bank"
+  card[b1] = (on: 2026-01-07, kind: cpaid, leg charge from konto to bankfee amount 2.00 PLN, leg cash from konto to karta amount 100.00 PLN) "card"
+  same card[b1] = bank[a1]
+=== expect
+b: 898.00 PLN
+  cut 2026-05-20
+c2: 1 100.00 PLN
+  cut 2026-05-20
+fe: -102.00 PLN
+  cut 2026-05-20
+ob: 2.00 PLN
+  cut 2026-05-20
+oc: 2.00 PLN
+  cut 2026-05-20
