@@ -9367,3 +9367,78 @@ No stored `%` or one-day-window answer moved in the gating stores.
 - `check quick`: below, after this entry's commit.
 
 **Waiting for T.**
+
+## 2026-11-25 tally 2.3.1 G2, the review's fixes on part 1 (issue #259)
+
+The ninth G2 brief: the five blocking findings of part 1's review (`tmp/spec-2.3.1/inputs/review-part1.md`, probes in `inputs/review/part1/`), ruled by the lead (P32). The fixes sit on G5's printer (f06dd646 to eba7acc1), whose printer and `held:` code I left alone. Each fix has its own commit and a unit test written first. Before each commit I swept the review's probes, the critic's and the earlier G2 reviews' (`tmp/spec-2.3.1/g2/p1/sw.sh`, value lines; `res6.sh`, every `residuals` ask whole, against pin 6). Every value line that moved is in its finding's class.
+
+- **Commits:**
+  - 40e0121b `fix(walk)` B2: a row stands in for a refused instance it names;
+  - cf01eb8c `fix(walk)` B3: a decision with a hole day a row names isn't booked;
+  - bf1f91f1 `fix(walk)` B5: flows for a period over a hole period is that hole;
+  - 40cafbae `fix(load)` B1: step 7's reach finds a fulfils field read however spelled;
+  - a4e3853d `fix(book)` B4: a row's instance is matched in every ledger it may touch;
+  - 7603f3cf `refactor(load)`: B1's sets by `is_disjoint`, for `check commit`'s exceptions step; no value moves.
+
+**Each finding, its mechanism and its probe's lines now:**
+
+- **B1** (`load/keyed.rs`, `load/strata.rs`). A bracketed `(o.fulfils)` base marks the reader, as the chain form does. A def keyed by a kind and read at a `.fulfils` key reaches through its reader, by E §3.1 step 5. It does so where that def reads a field of its key, itself or down the defs it passes its key to (`fulfils_keyed`, `key_fields`, `key_passes`). One that reads no field of its key loads.
+  - `m2_paren` and `m2_keyed`, with `m3_paren_val` and `m3_paren_val_false`, refuse every ask: `LOAD-READS rest reaches a running read or projection of topup without reads topup`, as `m1_mark` does.
+- **B2** (`walk/plan.rs`, `walk/order.rs`). A refused plan instance a row names is modelled, and so is a refused decision run with rows. Field reads keep the refusal.
+  - `x1_refused`: `c 790.00`, `fp -110.00`, `fr 210.00`, `fj 110.00`, `kt 2`, `st 110.00`, `fi bank[a1]` (PLN); `dy` and `e` print `RUN-DIV`.
+  - `x2_refused_dec`: `fr 210.00`, `kt 2`, `st 110.00`, `fi bank[a1]`.
+  - The same class moved `x/lf_whenref` `a` and `c`, `g2fix/b5_plan` `a1` and `c`, and `g2rest/t/q1_plan_k` `kb` and `kf`, each from `RUN-DIV` to a number.
+- **B3** (`walk/plan.rs`, `walk/agenda.rs`). A decision tuple with a hole day that a row names is modelled, not booked as a hole movement.
+  - `d3_holeday`: `b 0.00`, `sk 700.00`, `md 100.00`, `j2 200.00` PLN; `fk` and `bk` stay the hole.
+- **B5** (`walk/flows.rs`). Under `, for k`, each movement is kept with its period's hole: a row's named tuple's, a plan instance's or a run's. An entry of one makes `flows` that hole.
+  - `f2_for_hole` and `f2_for_hole_nolink`: `ff`, `ffw` and `ffp` print `?"which period is february's rent for?" (per[2026-02])`.
+- **B4** (`book/ledger.rs`). The ledger of x takes an instance, plan or decision, that touches x or that a row at x fulfils. The instance must be on a covered day or fulfilled by any row. Every row that fulfils it is on its line, with no flow into x where the row touches none. A hole day is the last such row's.
+  - `r1_notouch_known_cov` `rs` matches `rent[2026-01]` on 2026-01-05 and `rent[2026-02]` on 2026-02-05: model −100.00, observed 0.00, difference 100.00 PLN. Its `rs2` prints model 0.00, observed −110.00 and −120.00 PLN.
+  - `r1_notouch_known` prints the same lines.
+  - In `r1_notouch_ledger` and `h1_hole_notouch` `rs`, the hole-day instance is matched on 2026-01-07, no longer under `?`.
+
+**Lines that moved away from pin 6, by finding.** Refcore at ffebad27 prints the old line on each of these, so each is the writer's (W9):
+
+- **B1:** the four texts above, which pin 6 loads.
+- **B2:** the `x1_refused` and `x2_refused_dec` (and `_late`) lines above, and the class's `lf_whenref`, `b5_plan` and `q1_plan_k` lines.
+- **B3:** the `d3_holeday` lines.
+- **B5:** `f2_for_hole` and `f2_for_hole_nolink`, where pin 6 prints 0.00 and −100.00 and counts the row in every period (N3).
+- **B4:** the `residuals` lines above, and five more ledgers:
+  - `d2_three` and `d1_point` `rs` add `matched topup[2026-02]` (an uncovered day a row fulfils);
+  - `d1_point_bad` `rs` adds model 0.00, observed 400.00 PLN;
+  - `x/nb3_at` `q_led` adds `matched sw[2026-03]` (model 0.00, observed −10.00 PLN);
+  - `u1_unc_notouch` `rs` adds `partly fulfilled refund[2026-01]` (observed 0.00 of 300.00 PLN at pot; an uncertain kind's observations there sum to less);
+  - `x2_refused_dec` and `x2_refused_dec_late` `rs` refuse `RUN-DIV`: the run a row fulfils is now on the ledger, and its amounts are its refusal, as the plan twin `x1_refused`'s `rs` was before this turn. B2's statement lists no ledger read; this is for the fix review.
+- **Not B4:** `s1_same_differ` `rv`'s `?` line differs from pin 6 as before. It is the refused `same` pair, N2, which goes to #260. B4 adds rows to `last_fulfilled` and doesn't make a `?` line.
+
+**What `check commit` shows red:** 443 ids (`tmp/spec-2.3.1/g2/red-p1c.txt`, from `tests-p1c.log`). They are all of G5's 435, none gone, and **8 new**, each in its finding's class:
+
+- **B2 (6):** each from a refusal to the row's value:
+  - `fixes/gate8/linkdiv` (`q_fl` 12.00 PLN);
+  - `fixes/t231rv2/b3_whenref_az/f` (400.00 PLN) and `/iof` (its source is now the row, `bank[r1]`);
+  - `fixes/t231rv2/b5_plan/a1` and `/c`;
+  - `fixes/t231rv2/b6_row/f`: topup's existence, refused through pay's read of a none row, now stands in by `bank[r1]`, 400.00 PLN.
+- **B4 (2):** `fixes/gate8/m2_g4_p_both_konto` and `_amt` gain the line of an instance a row fulfils (`move save`).
+- **The other lists:** of my 99 (`red-e.txt`), 68 are in the 435 and still red, and 31 were already green before G5's entry. Of G3's 111 (`g3/red-fix.txt`), 71 and 40. Nothing in either list changed this turn.
+
+**Lines out and in:** +448 −47 in `engine/crates` over 9 files:
+- B2 +45 −4;
+- B3 +43 −4;
+- B5 +85 −16;
+- B1 +136 −2;
+- B4 +143 −25;
+- the refactor +2 −2.
+
+**STOP-REPORTs:** none new. G5's (R4's rows) stays open.
+
+**Exceptions:** delta 0. I restructured the two report-only flags (`long-chain-review` in `ledger.rs`, `nested-closure-review` in `strata.rs`) and wrote no exception.
+
+**Mutants:** none run.
+
+**Usage:** about 5.53 % of the week by `engine/tools/usage tmp/spec-2.3.1/g2-ids.txt` before this entry, about 1.1 points this turn.
+
+**Checks:**
+- `check commit: red at tests, stopped after 10 of 24 steps (147s)`, red only on the 443 ids above (76 of 1583 test targets, all T's);
+- `check quick`: green at each fix's commit; the last run follows this entry's commit.
+
+**Next:** the fix review of this G2 fix. The writer's W9 takes B1 to B5 into refcore with G5's rows, N1 and N3 among them.
