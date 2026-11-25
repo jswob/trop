@@ -3849,7 +3849,9 @@ class Engine:
                 acc = arith('+', acc, t, n.arg._t, n.arg._t, n.arg._t)
             # the enclosure rides with the value (L §7.3 The error bound)
             nn = Num(len(terms), (), isint=True)
-            return Num(acc.q / len(terms), acc.u, enc=enc_arith('/', acc, nn, 1) if acc.enc is not None else None)
+            # mean keeps its terms' unit, a rate's class included (L §5.11, §3.3; tally 2.3.1 S17, P22 B3)
+            return Num(acc.q / len(terms), acc.u, enc=enc_arith('/', acc, nn, 1) if acc.enc is not None else None,
+                       rate=all(getattr(t, 'rate', False) for t in terms))
         q = self.ev(n.q, env, ctx)
         self.level_none(q, n, env)
         if isinstance(q, Hole):

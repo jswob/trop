@@ -820,8 +820,7 @@ class Checker:
         if node.k not in ('num', 'date', 'month', 'quarter') or (sign < 0 and node.k != 'num'):
             return False
         if node.k == 'num':
-            if node.get('frac'):
-                raise LoadError('LOAD-PARSE', 'cannot parse: a fraction is allowed only in rows', node.loc)
+            # a fraction too: a pin is a row (L §2.1 "only in rows", §5.11; tally 2.3.1 R3, P22 N3)
             self.lit_rule(sc, node, 'num', node.v * sign)
             lit = Node('num', loc=node.loc, **{a: b for a, b in node.__dict__.items() if a not in ('k', 'loc')})
             lit.v = node.v * sign
@@ -2280,6 +2279,13 @@ class Checker:
             if p.kind == 'law':
                 sc2.lawpin = True
         self.pin_ties(n.pins, sc)
+        # two law pins, or two cut pins, in one as if are two pins of one cell (L §5.11 A pin is a row; tally 2.3.1
+        # R3, P22 N6), as on a line
+        for kind, cell in (('law', 'the law date'), ('known', 'the cut')):
+            same = ['%s %s' % (kind, _txt(p.value)) for p in n.pins if p.kind == kind]
+            if len(same) > 1:
+                raise LoadError('LOAD-OVERLAP', 'pins %s and %s of %s overlap at no keys' % (same[0], same[1], cell),
+                                n.loc)
         return self.tc(n.e, sc2, expect)
 
     def pin_ties(self, pins, sc):
