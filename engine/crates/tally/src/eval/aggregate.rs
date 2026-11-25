@@ -910,11 +910,12 @@ pub(super) fn window_term_hole(w: &Window, word: &str) -> Hole {
 }
 
 /// The refusal of a term of aggregate `word` that is `none`: its term as written, each
-/// variable by its value, `rate[k2] is none here: an aggregate`; a bare key, never `none`,
-/// keeps refcore's line. L §8.4 `RUN-NONE`'s row, §5.11 (pick P3).
+/// variable by its value, and the built-in's name, `rate[k2] is none here: sum`; a bare key,
+/// never `none`, keeps refcore's line. L §8.4 `RUN-NONE`'s row (tally 2.3.1 R4, P31), §5.11
+/// (pick P3).
 fn none_term(m: &Reality, term: Option<&Expr>, env: &Env, word: &str) -> Stop {
     match term {
-        Some(e) => none_here(m, e, env, "aggregate"),
+        Some(e) => none_here(m, e, env, word),
         None => refuse(Run::None, format!("a term of {word} is none here")),
     }
 }

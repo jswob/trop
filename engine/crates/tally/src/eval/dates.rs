@@ -160,6 +160,11 @@ impl Engine {
             return hole_of(&[a.as_hole(), b.as_hole()]);
         }
         let name = call.name.as_str();
+        if matches!(name, "age" | "age_months") {
+            // the read and the built-in's name (L §8.4 `RUN-NONE`'s row; tally 2.3.1 R4, P31)
+            named_none(m, call, (0, &a), env)?;
+            named_none(m, call, (1, &b), env)?;
+        }
         let first = date_or_window(a, name)?;
         if matches!(name, "add_days" | "add_months" | "add_years") {
             return moved_by(m, name, first, &b);

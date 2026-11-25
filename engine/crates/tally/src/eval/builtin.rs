@@ -215,11 +215,19 @@ impl Engine {
         let snap = self.trace_snap();
         let vals = self.args(m, call, env, ctx)?;
         let holes: Vec<Option<&crate::hole::Hole>> = vals.iter().map(Value::as_hole).collect();
-        if let Some(i) = vals.iter().position(|v| *v == Value::None) {
-            return Err(none_arg(m, call, i, env, "ordering"));
-        }
+        let none_at = vals.iter().position(|v| *v == Value::None);
         if holes.iter().any(Option::is_some) {
+            // a refusal outranks a hole: a none beside a hole is refused unnamed (refcore's
+            // `hole_args` with its `strict`)
+            if none_at.is_some() {
+                let text = format!("a value is none here: {}", call.name);
+                return Err(refuse(Run::None, text));
+            }
             return hole_of(&holes);
+        }
+        if let Some(i) = none_at {
+            // the read and the built-in's name (L §8.4 `RUN-NONE`'s row; tally 2.3.1 R4, P31)
+            return Err(none_arg(m, call, i, env, &call.name));
         }
         if vals.is_empty() {
             return Err(arity());
@@ -337,9 +345,8 @@ impl Engine {
         if let Value::Hole(_) = v {
             return Ok(v);
         }
-        if v == Value::None {
-            return Err(none_arg(m, call, 0, env, "arithmetic"));
-        }
+        // the read and the built-in's name (L §8.4 `RUN-NONE`'s row; tally 2.3.1 R4, P31)
+        named_none(m, call, (0, &v), env)?;
         // off the list: a ranged date is the hole (L §4.4)
         if let Some(hole) = unlisted(&[&v], "abs") {
             return Ok(Value::Hole(hole));
@@ -1010,6 +1017,9 @@ input kn: int
 input mn: month
 input md: rounding
 input cal: calendar
+input xn: num
+input x1: num
+input tn[k in ks]: num
 
 ask c_if: if ok[b] then d0 else d1
 ask c_and: ok[a] and ok[b]
@@ -1022,6 +1032,13 @@ ask c_dcf: dcf(d0, dn, act365)
 ask c_rnd: round(p, p, md)
 ask c_bus: add_business(d0, kn, cal)
 ask c_lst: last_business(mn, kn, cal)
+ask c_min: min(xn, x1)
+ask c_max: max(x1, xn)
+ask c_abs: abs(xn)
+ask c_age: age_months(d0, dn)
+ask c_sum: sum(tn[k] for k in ks)
+ask c_agm: max(tn[k] for k in ks)
+ask c_lt: xn < x1
 
 version v
   cite s
@@ -1041,13 +1058,18 @@ version v
   mn = 2026-03 "s"
   md = none "s"
   cal = calendar(weekends [sat, sun], added []) "s"
+  xn = none "s"
+  x1 = 1 "s"
+  tn[a] = 1 "s"
+  tn[b] = none "s"
 "#;
 
     #[test]
     fn none_is_refused_by_its_read_and_its_use() {
-        // L §8.4 `RUN-NONE`'s row (tally 2.3.1 R4, Q2.37, N256.8, Q1.13): `if`, `and`, `or`
-        // and `not` are a condition, a membership test is one, a built-in names itself, and
-        // each names the read that gave none
+        // L §8.4 `RUN-NONE`'s row (tally 2.3.1 R4, Q2.37, N256.8, Q1.13, P31): `if`, `and`,
+        // `or` and `not` are a condition, a membership test is one, `<` an ordering, a
+        // built-in and an aggregate's term name the built-in, and each names the read that
+        // gave none
         let given = vec![Given {
             path: "none.tally".to_owned(),
             bytes: Some(NONE_WORDS.as_bytes().to_vec()),
@@ -1062,18 +1084,25 @@ version v
         assert_eq!(
             lines,
             [
+                "c_abs: refused: RUN-NONE xn is none here: abs",
                 "c_acc (k = a): 5 PLN",
                 "c_acc (k = b): refused: RUN-NONE r[b] is none here: accrue",
+                "c_age: refused: RUN-NONE dn is none here: age_months",
+                "c_agm: refused: RUN-NONE tn[b] is none here: max",
                 "c_and: refused: RUN-NONE ok[b] is none here: a condition",
                 "c_bus: refused: RUN-NONE kn is none here: add_business",
                 "c_dcf: refused: RUN-NONE dn is none here: dcf",
                 "c_if: refused: RUN-NONE ok[b] is none here: a condition",
                 "c_in: refused: RUN-NONE st[b] is none here: a membership test",
                 "c_lst: refused: RUN-NONE kn is none here: last_business",
+                "c_lt: refused: RUN-NONE xn is none here: ordering",
+                "c_max: refused: RUN-NONE xn is none here: max",
+                "c_min: refused: RUN-NONE xn is none here: min",
                 "c_not: refused: RUN-NONE ok[b] is none here: a condition",
                 "c_or: refused: RUN-NONE ok[b] is none here: a condition",
                 "c_per: refused: RUN-NONE r[b] is none here: periodic",
                 "c_rnd: refused: RUN-NONE md is none here: round",
+                "c_sum: refused: RUN-NONE tn[b] is none here: sum",
             ],
             "refcore's bytes"
         );

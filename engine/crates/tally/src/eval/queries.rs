@@ -58,7 +58,9 @@ impl Engine {
                 continue;
             }
             if t == Value::None {
-                return Err(refuse(Run::None, format!("a term of {word} is none here")));
+                // the term as written and the built-in's name (L §8.4 `RUN-NONE`'s row; tally
+                // 2.3.1 R4, P31)
+                return Err(super::bindings::none_here(m, &query.arg, &member.env, word));
             }
             if let Value::Window(w) = &t {
                 // a ranged date is no term's one value: the hole, as `sum`'s
