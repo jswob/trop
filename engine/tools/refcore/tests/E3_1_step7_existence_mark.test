@@ -1,6 +1,7 @@
 # tally 2.3.1 R6, P43 kept for a plan (E §3.1 step 7: a decision's existence is a running read): the plan rest's
 # amount reads ln, which reads the rows' fulfils, and bank[r1] fulfils the decision topup: LOAD-READS. Before:
 # LOAD-READS too, for the link's `when` read outside the walk (`bal(konto) with no day outside a decision`).
+# tally 2.3.1 rulings 22 (part 1, a link names): the row stands in for the tuple it names by the name alone; no link is refused, judged at a point or re-walked, and only a field read through o.fulfils reaches step 7's mark. Re-stored.
 === exist_mark.tally
 model dec_link
   tally 2
@@ -56,4 +57,20 @@ version feb
   bank[r1] = (on: 2026-02-05, kind: transfers, leg cash from save to konto amount 400.00 PLN, fulfils: topup[2026-02]) "the top-up"
   bank[r2] = (on: 2026-02-10, kind: transfers, leg cash from konto to shop amount 30.00 PLN) "loose"
 === expect
-refused: LOAD-READS rest reaches a running read or projection of topup without reads topup (exist_mark.tally:22)
+b: 470.00 PLN
+  unfulfilled: rest[2026-01]
+  unfulfilled: rest[2026-03]
+  unfulfilled: topup[2026-01]
+  unfulfilled: topup[2026-03]
+  open: rest[2026-02]
+  cut 2026-04-20
+f: 400.00 PLN
+  unfulfilled: rest[2026-01]
+  unfulfilled: topup[2026-01]
+  open: rest[2026-02]
+  cut 2026-04-20
+g: 0.00 PLN
+  open: rest[2026-02]
+  cut 2026-04-20
+loose: 30.00 PLN
+  cut 2026-04-20

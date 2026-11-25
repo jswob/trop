@@ -1,0 +1,98 @@
+# tally 2.3.1 rulings 22 (6; L §5.19 l.1718: an observation that fulfils a hole movement stands in for it in every
+# read over movements; a field read of the instance stays the plan's): fr 330.00 PLN, ff9 110.00 PLN, counted by
+# the rows on their own days; dy and am2 stay the holes. The critic's P1-C7. Before: fr and ff9 the day's hole.
+=== h1_hole.tally
+model h1
+  tally 2
+  on 2026-05-20
+  start 2026-01-01
+  end 2026-06-30
+
+source s "invented values"
+unit PLN: currency minor 0.01
+index month = month 2026-01..2026-03
+kind rents: transfers
+place pot: accounts PLN lives 2026-01-01..
+place pot2: accounts PLN lives 2026-01-01..
+place landlord: outside lives 1900-01-01..
+place world2: outside lives 1900-01-01..
+input bank: observed
+input rent_amt[m in month]: money PLN
+input per[m in month]: month
+input d5[m in month]: int
+
+move rent[m in month]: rents
+  on day_of(m, d5[m])
+  at start_of(m)
+  for per[m]
+  leg cash from pot to landlord amount rent_amt[m]
+
+ask c: bal(pot, 2026-03-31)
+ask c2: bal(pot2, 2026-03-31)
+ask dy: rent[2026-01].day
+ask am: rent[2026-01].cash.amount
+ask am2: rent[2026-02].cash.amount
+ask fr: flows(rent, 2026-01-01..2026-03-31)
+ask ff: flows(pot, 2026-01-01..2026-03-31, for 2026-01)
+ask ff9: flows(rent, 2026-01-01..2026-03-31, for 2025-12)
+ask kr: count(t in rents over 2026-01-01..2026-03-31)
+ask kt: count(t in transfers over 2026-01-01..2026-03-31)
+ask ob: observed(rent[2026-02]).cash.amount
+ask rs: residuals pot 2026-01-01..2026-03-31
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  rent_amt[2026-01] = 100.00 PLN "s"
+  rent_amt[2026-02] = ?"how much was february's rent?" "s"
+  rent_amt[2026-03] = 100.00 PLN "s"
+  d5[2026-01] = ?"which day was january's rent paid?" "s"
+  d5[2026-02] = 5 "s"
+  d5[2026-03] = 5 "s"
+  per[2026-01] = 2025-12 "s"
+  per[2026-02] = 2026-01 "s"
+  per[2026-03] = 2026-02 "s"
+  opening[pot] = 9000.00 PLN at 2026-01-01 start "s"
+  opening[pot2] = 500.00 PLN at 2026-01-01 start "s"
+
+version q1
+  cite s
+  governs 2026-01-01..2026-03-31
+  known 2026-04-01
+  covers pot2
+  bank[a1] = (on: 2026-01-07, kind: transfers, leg cash from pot to landlord amount 110.00 PLN, fulfils: rent[2026-01]) "jan"
+  bank[a2] = (on: 2026-02-09, kind: transfers, leg cash from pot to landlord amount 120.00 PLN, fulfils: rent[2026-02]) "feb"
+=== expect
+am: 100.00 PLN
+  cut 2026-05-20
+am2: ?"how much was february's rent?" (rent_amt[2026-02])
+  cut 2026-05-20
+c: 8 670.00 PLN
+  unfulfilled: rent[2026-03]
+  cut 2026-05-20
+c2: 500.00 PLN
+  cut 2026-05-20
+dy: ?"which day was january's rent paid?" (d5[2026-01])
+  cut 2026-05-20
+ff: -120.00 PLN
+  cut 2026-05-20
+ff9: 110.00 PLN
+  cut 2026-05-20
+fr: 330.00 PLN
+  unfulfilled: rent[2026-03]
+  cut 2026-05-20
+kr: 1
+  unfulfilled: rent[2026-03]
+  cut 2026-05-20
+kt: 3
+  unfulfilled: rent[2026-03]
+  cut 2026-05-20
+ob: 120.00 PLN
+  cut 2026-05-20
+rs: residuals pot 2026-01-01 .. 2026-03-31
+  2026-02 move rent: model ?"how much was february's rent?" (rent_amt[2026-02]), observed -120.00 PLN, difference ?"how much was february's rent?" (rent_amt[2026-02])
+    matched rent[2026-02] on 2026-02-05: model ?"how much was february's rent?" (rent_amt[2026-02]), observed -120.00 PLN, difference ?"how much was february's rent?" (rent_amt[2026-02]), timing +4 days
+  2026-01 move rent: model -100.00 PLN, observed -110.00 PLN, difference -10.00 PLN
+    matched rent[2026-01] on 2026-01-07: model -100.00 PLN, observed -110.00 PLN, difference -10.00 PLN, timing +0 days
+  cut 2026-05-20

@@ -214,10 +214,6 @@ class Walk:
         self.K = tctx.cut
         self.start = start
         self.end = end
-        # rows a later point refuses, which a decision walked between read: found (new), and refused from their day
-        # in the walk taken again (in; refuse_links, m_main_walk; rulings 16 Q2's second half)
-        self.prebad_new = {}
-        self.prebad_in = dict(getattr(base, 'prebad_in', None) or {})
         self.base = base
         self.point = point          # the base point a projection starts after
         self.leftout = leftout
@@ -1091,56 +1087,6 @@ class Walk:
             place, err, i = obj
             self.add(place, '*', Ent(key, 'bad', err=err, mv=i))
 
-    def refuse_links(self, run, err, key, t):
-        """The links of the rows that fulfil a decision instance its point finds missing (err None: RUN-RECORD) or
-        refused (err, its refusal): each row refused, from its own day (L §5.19, §8.4 l.2356; tally 2.3.1 C-9, rulings
-        16 Q1, Q2)."""
-        eng = self.eng
-        for o in run.obs:
-            e = err or refuse('RUN-RECORD', 'observation %s fulfils %s, which doesn\'t exist or doesn\'t touch its '
-                                            'places' % (o.id, run.id))
-            if o.err is None:
-                o.err = e
-            eng.run_cache.setdefault(('badlinks', eng.wkey(self.tctx)), {}).setdefault(run.id, e)
-            for lg in o.legs:
-                if not isinstance(lg.day, datetime.date) or lg.day == t:
-                    self.leg_bad(o, lg, e, key)
-                elif lg.day < t:
-                    # booked on its own day before the point: refused from that day (G2's review finding 1)
-                    self.bad_from(o, lg, e)
-                    # a decision walked between its day and the point read it as booked: the walk is taken again
-                    # with the row refused from its day, as that decision must read it (rulings 16 Q2's second half;
-                    # m_main_walk)
-                    rk = (lg.day.toordinal(),)
-                    if any(r is not run and getattr(r, 'ran', False) and getattr(r, 'point', None) is not None and
-                           rk <= tuple(r.point[:1]) and tuple(r.point) < tuple(key) and
-                           any(isinstance(p, Thing) and p.name in (getattr(r, 'read_places', None) or ())
-                               for p in (lg.frm, lg.to))
-                           for r in list(self.decs.values())):
-                        self.prebad_new[(o.id, lg.name)] = e
-                # one dated after the point is booked on its own day, refused (o.err)
-        run.obs = []
-
-    def bad_from(self, o, lg, err):
-        """An observed leg already booked on its day, whose link a later walk point refuses: its places refused from
-        its own entry on (L §8.4 l.2356 "refuses every place from its day"; tally 2.3.1 C-9, G2's review finding 1).
-        The entries after it are re-applied; a decision walked between its day and the point read it as booked."""
-        for p in (lg.frm, lg.to):
-            if not isinstance(p, Thing):
-                continue
-            u = lg.unit or (self.m.place_unit(self.m.things[p.name]) if p.name in self.m.things else None)
-            log = self.log(p.name, u or '*')
-            pos = next((i + 1 for i, x in enumerate(log.ents) if x.mv is o), None)
-            if pos is None:
-                pos = bisect.bisect_left(log.keys, (lg.day.toordinal(),))
-            k = log.keys[pos - 1] if pos and log.keys[pos - 1][0] == lg.day.toordinal() else \
-                (lg.day.toordinal(), 0, 0, '', 0)
-            log.ents.insert(pos, Ent(k, 'bad', err=err, mv=o))
-            log.keys.insert(pos, k)
-            for i in range(pos, len(log.ents)):
-                prev = log.ents[i - 1].st if i else self.default(p.name, u or '*')
-                log.ents[i].st = apply(prev, log.ents[i], i)
-
     def leg_bad(self, mv, lg, err, key, kind='bad'):
         """A refused leg refuses its places from key; a leg whose amount is refused has no unit of its own, so it is
         kept at its place's unit, where the place's next reading ends it (tally 2.1.8 R11), or at every unit of a
@@ -1642,19 +1588,10 @@ class Walk:
         d = lg.day
         if not d < self.K:
             return
-        e = self.prebad_in.get((o.id, lg.name))
-        if e is not None:
-            # a row a later point refuses, read refused from its day by every decision walked after it (rulings 16
-            # Q2's second half; refuse_links)
-            if o.err is None:
-                o.err = e
-            self.leg_bad(o, lg, e, key)
-            return
-        if o.err is None and o.target is not None and o.target.decision and day_lo(o.target.day) is not None and \
-                d == day_lo(o.target.day):
-            # one that fulfils a decision instance dated its day is booked at the instance's point; every other on
-            # its own day, one dated before or after the instance it fulfils included (E §4.2 step 1, L §5.19); a
-            # refused one (its link refused, RUN-RECORD) on its own day, where it refuses its places' balances
+        dd = getattr(o.target, 'day', None) if o.err is None and o.target is not None and o.target.decision else None
+        if dd is not None and day_lo(dd) is not None and d == day_lo(dd):
+            # one that names a decision's tuple dated its day is booked at that tuple's point, whether or not the
+            # tuple exists there; every other on its own day (E §4.2 step 1, L §5.19; tally 2.3.1 rulings 22, P1-C1)
             return
         self.book_obs_now(o, lg, key)
 
@@ -2226,9 +2163,14 @@ class Walk:
         # what this decision books at its point from here is one group for the sign rule (L §5.10 point 2)
         self.grp_legs = {}
         run.obs = eng.obs_links_for(inst.id, self.tctx)
-        if run.err is not None and run.obs:
-            # a refused run refuses its rows' links with its own refusal (rulings 15, 16 Q1)
-            self.refuse_links(run, run.err, key, t)
+        if run.obs and (run.err is not None or run.exists is False):
+            # the rows that name its tuple stand in for it by the name, booked at this point from their own fields,
+            # whether or not the tuple exists or is refused here: the instance is never booked (L §5.19, E §4.2 steps
+            # 1 and 3; tally 2.3.1 rulings 22, the critic's P1-C1)
+            run.status = 'none' if run.exists is False else run.status
+            self.book_own_obs(run, key)
+            self.same_release(run, key)
+            return run
         if run.err is not None:
             known = [lg for lg in run.legs if isinstance(lg.frm, Thing) or isinstance(lg.to, Thing)]
             if known:
@@ -2241,12 +2183,6 @@ class Walk:
             return run
         if run.exists is False:
             run.status = 'none'
-            if run.obs:
-                # a row fulfils a decision instance its walk point finds missing: the link is refused there, and so
-                # is what rests on it (L §5.19, §8.4; tally 2.3.1 R6, C-9)
-                self.refuse_links(run, None, key, t)
-                self.same_release(run, key)
-                return run
             self.book_own_obs(run, key)
             self.same_release(run, key)
             return run
@@ -2396,9 +2332,6 @@ def m_main_walk(self, ctx):
     self.walks[wk] = w
     c = _coll()
     self.stack.append(c)
-    # where a walk taken again (below) drops the first walk's trace: the walk read is the last one's (E §10)
-    top = self.trace_stack[-1] if self.trace_stack else None
-    n0 = len(top.children) if top is not None else 0
     w.running = True
     try:
         w.prepare()
@@ -2410,33 +2343,6 @@ def m_main_walk(self, ctx):
     finally:
         w.running = False
         self.stack.pop()
-    for _ in range(8):
-        # rulings 16 Q2's second half: a decision walked between a row's day and the point that refuses its link
-        # reads the row refused from its day, so the walk is taken again with those rows refused (refuse_links)
-        new = dict((k, v) for k, v in w.prebad_new.items() if k not in w.prebad_in)
-        if not new:
-            break
-        for x in w.warnings:
-            if x not in self.walk_warnings:
-                self.walk_warnings.append(x)
-        pin = dict(w.prebad_in)
-        pin.update(new)
-        if top is not None:
-            del top.children[n0:]
-        w = Walk(self, tctx, m.S, m.E)
-        w.prebad_in = pin
-        self.walks[wk] = w
-        self.stack.append(c)
-        w.running = True
-        try:
-            w.prepare()
-            w.run_to(m.E)
-        except TallyError as e:
-            w.failed = e
-            raise
-        finally:
-            w.running = False
-            self.stack.pop()
     for x in w.warnings:
         if x not in self.walk_warnings:
             self.walk_warnings.append(x)

@@ -1,0 +1,79 @@
+# tally 2.3.1 rulings 22 (2; L §5.19, E §4.2 steps 1 and 3): a row that names a decision's tuple dated its own
+# day is booked at that tuple's point, whether or not the tuple exists there: topup's `when` is false at its
+# point, and sk, j and b are the good link's (d1_point: 200.00, 200.00, 500.00), never the unlinked twin's.
+# The critic's P1-C1. Before: b, bs and f RUN-RECORD.
+=== d1_point_bad.tally
+model d1
+  tally 2
+  on 2026-04-20
+  start 2026-01-01
+  end 2026-03-31
+
+source s "probe"
+unit PLN: currency minor 0.01
+index month = month 2026-02..2026-02
+place konto: accounts PLN lives 2026-01-01..
+place save: accounts PLN lives 2026-01-01..
+place jar: accounts PLN lives 2026-01-01..
+input bank: observed
+input lim: money PLN
+input amt: money PLN
+input keep: money PLN
+input d5: int
+input de: date
+
+move skim[m in month]: transfers
+  reads konto
+  before topup
+  on day_of(m, d5)
+  when bal(konto) > keep
+  leg cash from konto to jar amount bal(konto) - keep
+
+move topup[m in month]: transfers
+  reads konto
+  on day_of(m, d5)
+  when bal(konto) < lim
+  leg cash from save to konto amount amt
+
+ask sk: flows(skim, 2026-02)
+ask f: flows(topup, 2026-02)
+ask b: bal(konto, de)
+ask j: bal(jar, de)
+ask bs: bal(save, de)
+ask rs: residuals konto 2026-02
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  opening[konto] = 300.00 PLN at 2026-01-01 start "s"
+  opening[save] = 5 000.00 PLN at 2026-01-01 start "s"
+  opening[jar] = 0.00 PLN at 2026-01-01 start "s"
+  lim = 50.00 PLN "s"
+  amt = 400.00 PLN "s"
+  keep = 100.00 PLN "s"
+  d5 = 5 "s"
+  de = 2026-03-31 "s"
+
+version feb
+  cite s
+  governs 2026-02
+  known 2026-03-01
+  covers save
+  bank[r1] = (on: 2026-02-05, kind: transfers, leg cash from save to konto amount 400.00 PLN, fulfils: topup[2026-02]) "same day"
+=== expect
+b: 500.00 PLN
+  unfulfilled: skim[2026-02]
+  cut 2026-04-20
+bs: 4 600.00 PLN
+  cut 2026-04-20
+f: 400.00 PLN
+  cut 2026-04-20
+j: 200.00 PLN
+  unfulfilled: skim[2026-02]
+  cut 2026-04-20
+rs: residuals konto 2026-02
+  cut 2026-04-20
+sk: 200.00 PLN
+  unfulfilled: skim[2026-02]
+  cut 2026-04-20

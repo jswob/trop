@@ -1,0 +1,95 @@
+# tally 2.3.1 R4, N256.7, Q2.9 (L §2.4 Values: a declared item prints in its declared type, an expression in
+# its value's unit, `%` kept by +, -, abs, min, max and if where every operand has it): q_chk's side p is a
+# declared `num %`, `p = 10 %`; `n + p` and the difference are expressions with a plain operand, 0.2 and -0.1;
+# dn is a `num` def of p (d1 0.1), dp a `num %` def of n (d2 10 %), equal (q_chk2 ok); q_chk3's side dp prints
+# `dp = 10 %`. The expressions are a guard (the critic's pct: q_pp 20 %, q_sub 0, a1 0 %, a6 0, q_ifh 10 % on a
+# hole condition). Before: q_chk printed `p = 0.1`, q_chk3 `dp = 0.1`.
+=== pct.tally
+model pct
+  tally 2
+  on 2026-06-30
+  start 2026-01-01
+  end 2026-12-31
+
+source s "probe"
+unit PLN: currency minor 0.01
+input p: num %
+input n: num
+input two: int
+input c: bool
+input ck: bool
+
+def dn: num = p
+def dp: num % = n
+
+ask q_pp: p + p
+ask q_p2: p * two
+ask q_pd: p / two
+ask q_neg: -p
+ask q_abs: abs(p)
+ask q_min: min(p, n)
+ask q_ifh: if c then p else n
+ask q_sub: n - p
+ask q_chk: check p == n + p
+ask q_chk2: check dn == dp
+ask q_chk3: check dp == n + n
+ask a1: p - p
+ask a2: p + p - p
+ask a3: if ck then p else p - p
+ask a4: max(p, p - p)
+ask a5: p - p + p
+ask a6: p * 0
+ask a7: p + n - n
+ask d1: dn
+ask d2: dp
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  p = 10 % "s"
+  n = 0.1 "s"
+  two = 2 "s"
+  c = ?"which branch?" "s"
+  ck = true "s"
+=== expect
+a1: 0 %
+  cut 2026-06-30
+a2: 10 %
+  cut 2026-06-30
+a3: 10 %
+  cut 2026-06-30
+a4: 10 %
+  cut 2026-06-30
+a5: 10 %
+  cut 2026-06-30
+a6: 0
+  cut 2026-06-30
+a7: 0.1
+  cut 2026-06-30
+d1: 0.1
+  cut 2026-06-30
+d2: 10 %
+  cut 2026-06-30
+q_abs: 10 %
+  cut 2026-06-30
+q_chk: differs: p = 10 %, n + p = 0.2, difference -0.1
+  cut 2026-06-30
+q_chk2: ok
+  cut 2026-06-30
+q_chk3: differs: dp = 10 %, n + n = 0.2, difference -0.1
+  cut 2026-06-30
+q_ifh: 10 %
+  cut 2026-06-30
+q_min: 10 %
+  cut 2026-06-30
+q_neg: -10 %
+  cut 2026-06-30
+q_p2: 0.2
+  cut 2026-06-30
+q_pd: 0.05
+  cut 2026-06-30
+q_pp: 20 %
+  cut 2026-06-30
+q_sub: 0
+  cut 2026-06-30

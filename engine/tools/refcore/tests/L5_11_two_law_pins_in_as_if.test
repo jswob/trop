@@ -1,0 +1,31 @@
+# tally 2.3.1 R3, P22 N6 (L §5.11 A pin is a row: two pins of one cell overlap): two `law` pins in one as if
+# are LOAD-OVERLAP, as two on a line are (W3). Before: the last one won (l1 3 PLN, both pinned: lines).
+=== n6.tally
+model w8
+  tally 2
+  on 2026-06-30
+  start 2026-01-01
+  end 2026-12-31
+
+source s "probe"
+unit PLN: currency minor 0.01
+index ks = [k1, k2]
+input r[k in ks]: rate
+input pct: num %
+input base: money PLN
+def fee: num PLN = base * pct
+
+ask f2: fee
+ask l1: fee as if {law 2026-02-01, law 2026-03-01}
+ask l2: fee as if {law 2026-02-01}
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  r[k1] = 2 %/year "s"
+  r[k2] = 4 %/year "s"
+  pct = 1 % "s"
+  base = 300.00 PLN "s"
+=== expect
+refused: LOAD-OVERLAP pins law 2026-02-01 and law 2026-03-01 of the law date overlap at no keys (n6.tally:16)

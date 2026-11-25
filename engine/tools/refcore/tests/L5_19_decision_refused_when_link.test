@@ -1,6 +1,7 @@
 # tally 2.3.1 rulings 16 Q1 (a decision's form; G2's review finding 5): topup[2026-02]'s `when` is refused, so
 # its run is, and bank[r1]'s link with it: ob (observed), ful (`o.fulfils == topup[fm]`) and loose refused.
 # Before: ob 400.00 PLN, ful 1, loose 30.00 PLN.
+# tally 2.3.1 rulings 22 (part 1, a link names): the row stands in for the tuple it names by the name alone; no link is refused, judged at a point or re-walked, and only a field read through o.fulfils reaches step 7's mark. Re-stored.
 === dl_whenref.tally
 model dl
   tally 2
@@ -88,14 +89,14 @@ ef: refused: RUN-DIV division by zero
   cut 2026-04-20
 f: refused: RUN-DIV division by zero
   cut 2026-04-20
-ful: refused: RUN-DIV division by zero
+ful: 1
   cut 2026-04-20
 iof:
   v:d5 (source s "probe", locator "s")
   v:fm (source s "probe", locator "s")
   v:opening[konto] (source s "probe", locator "s")
   cut 2026-04-20
-loose: refused: RUN-DIV division by zero
+loose: 30.00 PLN
   cut 2026-04-20
-ob: refused: RUN-DIV division by zero
+ob: 400.00 PLN
   cut 2026-04-20

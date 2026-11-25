@@ -4,6 +4,7 @@
 # bank2[o2] fulfils own[2026-03], whose `where` is refused, so its link is refused with it and ln's sum over
 # `o.fulfils == none` with it (rulings 16 Q1 whole, 18, over 15's back-pay hole; re-stored at W2c). Before
 # (W2): the whole text LOAD-READS `own reaches … dd`.
+# tally 2.3.1 rulings 22 (part 1, a link names): the row stands in for the tuple it names by the name alone; no link is refused, judged at a point or re-walked, and only a field read through o.fulfils reaches step 7's mark. Re-stored.
 === c4_when.tally
 model c4_when
   tally 2
@@ -184,7 +185,7 @@ ask en: explain ln[2026-02]
 
 ask ed: explain dl[2026-02]
 === expect qo emx exm edw qdw
-qo: refused: RUN-DIV division by zero
+qo: ?"own[2026-02] on 2026-02-05 changed after it was paid (version febk); is back pay due, and when?" (own[2026-02])
   unfulfilled: own[2026-02]
   cut 2026-04-20
 emx: refused: RUN-ORDER decisions dd and dr read each other on 2026-02-05
@@ -193,59 +194,57 @@ emx: refused: RUN-ORDER decisions dd and dr read each other on 2026-02-05
         [2] dl[2026-02] = 0.00 PLN, law date 2026-02-01
             rule guessed: beaten by seen
             rule seen: won
-              [3] row v:d5 = 5
-                  version v, source s, "probe", locator "s", governs always, known 2026-01-01
-              [4] row v:ok[2026-02] = true
-                  version v, source s, "probe", locator "s", governs always, known 2026-01-01
-        [5] row v:ten = 10
+        [3] row v:ten = 10
             version v, source s, "probe", locator "s", governs always, known 2026-01-01
-        [6] row v:dz[2026-01] = 1
+        [4] row v:dz[2026-01] = 1
             version v, source s, "probe", locator "s", governs always, known 2026-01-01
-        [7] row v:dz[2026-02] = 1
+        [5] row v:dz[2026-02] = 1
             version v, source s, "probe", locator "s", governs always, known 2026-01-01
-        [8] row v:dz[2026-03] = 0
+        [6] row v:dz[2026-03] = 0
             version v, source s, "probe", locator "refused: a division by zero", governs always, known 2026-01-01
-        [9] row v:dz[2026-04] = 1
+        [7] row v:dz[2026-04] = 1
             version v, source s, "probe", locator "s", governs always, known 2026-01-01
-        [10] row v:dz[2026-05] = 1
+        [8] row v:dz[2026-05] = 1
             version v, source s, "probe", locator "s", governs always, known 2026-01-01
-        (v:d5: see [3])
-        [11] row v:ok2[2026-01] = true
+        [9] row v:d5 = 5
+            version v, source s, "probe", locator "s", governs always, known 2026-01-01
+        [10] row v:ok2[2026-01] = true
             version v, source s, "probe", governs always, known 2026-01-01
-        [12] row v:amt = 10.00 PLN
+        [11] row v:amt = 10.00 PLN
             version v, source s, "probe", locator "s", governs always, known 2026-01-01
-        [13] ln[2026-01] = 1.00 PLN, law date 2026-01-01
+        [12] ln[2026-01] = 1.00 PLN, law date 2026-01-01
             rule guessed: won
-              [14] row v:guess = 1.00 PLN
+              [13] row v:guess = 1.00 PLN
                   version v, source s, "probe", locator "s", governs always, known 2026-01-01
             rule seen: not applicable
-        [15] row v:ok2[2026-02] = true
+        [14] row v:ok2[2026-02] = true
             version v, source s, "probe", locator "s", governs always, known 2026-01-01
-        [16] ln[2026-02] = 1.00 PLN, law date 2026-02-01
+        [15] ln[2026-02] = 1.00 PLN, law date 2026-02-01
             rule guessed: won
-              (v:guess: see [14])
+              (v:guess: see [13])
             rule seen: not applicable
-        [17] row v:ok2[2026-03] = true
+        [16] row v:ok2[2026-03] = true
             version v, source s, "probe", locator "s", governs always, known 2026-01-01
-        [18] ln[2026-03] = 1.00 PLN, law date 2026-03-01
+        [17] ln[2026-03] = 1.00 PLN, law date 2026-03-01
             rule guessed: won
-              (v:guess: see [14])
+              (v:guess: see [13])
             rule seen: not applicable
-        [19] row v:ok2[2026-04] = true
+        [18] row v:ok2[2026-04] = true
             version v, source s, "probe", locator "s", governs always, known 2026-01-01
-        [20] ln[2026-04] = 1.00 PLN, law date 2026-04-01
+        [19] ln[2026-04] = 1.00 PLN, law date 2026-04-01
             rule guessed: won
-              (v:guess: see [14])
+              (v:guess: see [13])
             rule seen: not applicable
-        [21] row v:ok2[2026-05] = true
+        [20] row v:ok2[2026-05] = true
             version v, source s, "probe", locator "s", governs always, known 2026-01-01
-        [22] ln[2026-05] = 1.00 PLN, law date 2026-05-01
+        [21] ln[2026-05] = 1.00 PLN, law date 2026-05-01
             rule guessed: won
-              (v:guess: see [14])
+              (v:guess: see [13])
             rule seen: not applicable
-        [23] row v:ok[2026-01] = true
+        [22] row v:ok[2026-01] = true
             version v, source s, "probe", governs always, known 2026-01-01
-        (v:ok[2026-02]: see [4])
+        [23] row v:ok[2026-02] = true
+            version v, source s, "probe", locator "s", governs always, known 2026-01-01
         [24] row v:ok[2026-03] = true
             version v, source s, "probe", locator "s", governs always, known 2026-01-01
         [25] row v:ok[2026-04] = true
@@ -256,22 +255,22 @@ emx: refused: RUN-ORDER decisions dd and dr read each other on 2026-02-05
             version v, source s, "probe", locator "s", governs always, known 2026-01-01
         [28] loose[2026-01] = 1.00 PLN, law date 2026-01-01
             rule guessed: won
-              (v:guess: see [14])
+              (v:guess: see [13])
             rule seen: not applicable
-        [29] loose[2026-02] = refused: RUN-DIV division by zero, law date 2026-02-01
+        [29] loose[2026-02] = 0.00 PLN, law date 2026-02-01
             rule guessed: beaten by seen
             rule seen: won
         [30] loose[2026-03] = 1.00 PLN, law date 2026-03-01
             rule guessed: won
-              (v:guess: see [14])
+              (v:guess: see [13])
             rule seen: not applicable
         [31] loose[2026-04] = 1.00 PLN, law date 2026-04-01
             rule guessed: won
-              (v:guess: see [14])
+              (v:guess: see [13])
             rule seen: not applicable
         [32] loose[2026-05] = 1.00 PLN, law date 2026-05-01
             rule guessed: won
-              (v:guess: see [14])
+              (v:guess: see [13])
             rule seen: not applicable
         [33] running read bal(konto) = 0.00 PLN, the balance up to this point of 2026-01-05
         [34] row v:lim = -100 000.00 PLN
@@ -343,7 +342,7 @@ exm: refused: RUN-ORDER decisions dd and dr read each other on 2026-02-05
             rule guessed: won
               (v:guess: see [12])
             rule seen: not applicable
-        [28] loose[2026-02] = refused: RUN-DIV division by zero, law date 2026-02-01
+        [28] loose[2026-02] = 0.00 PLN, law date 2026-02-01
             rule guessed: beaten by seen
             rule seen: won
         [29] loose[2026-03] = 1.00 PLN, law date 2026-03-01
@@ -362,91 +361,10 @@ exm: refused: RUN-ORDER decisions dd and dr read each other on 2026-02-05
         [33] row v:lim = -100 000.00 PLN
             version v, source s, "probe", locator "s", governs always, known 2026-01-01
   cut 2026-04-20
-edw: refused: RUN-ORDER decisions dd and dr read each other on 2026-02-05
-  [1] dw[2026-02] = refused: RUN-ORDER decisions dd and dr read each other on 2026-02-05, law date 2026-02-01
+edw: 0.00 PLN
+  [1] dw[2026-02] = 0.00 PLN, law date 2026-02-01
       rule guessed: beaten by seen
       rule seen: won
-        [2] row v:d5 = 5
-            version v, source s, "probe", locator "s", governs always, known 2026-01-01
-        [3] row v:ten = 10
-            version v, source s, "probe", locator "s", governs always, known 2026-01-01
-        [4] row v:dz[2026-01] = 1
-            version v, source s, "probe", locator "s", governs always, known 2026-01-01
-        [5] row v:dz[2026-02] = 1
-            version v, source s, "probe", locator "s", governs always, known 2026-01-01
-        [6] row v:dz[2026-03] = 0
-            version v, source s, "probe", locator "refused: a division by zero", governs always, known 2026-01-01
-        [7] row v:dz[2026-04] = 1
-            version v, source s, "probe", locator "s", governs always, known 2026-01-01
-        [8] row v:dz[2026-05] = 1
-            version v, source s, "probe", locator "s", governs always, known 2026-01-01
-        [9] row v:ok2[2026-01] = true
-            version v, source s, "probe", governs always, known 2026-01-01
-        [10] row v:amt = 10.00 PLN
-            version v, source s, "probe", locator "s", governs always, known 2026-01-01
-        [11] ln[2026-01] = 1.00 PLN, law date 2026-01-01
-            rule guessed: won
-              [12] row v:guess = 1.00 PLN
-                  version v, source s, "probe", locator "s", governs always, known 2026-01-01
-            rule seen: not applicable
-        [13] row v:ok2[2026-02] = true
-            version v, source s, "probe", locator "s", governs always, known 2026-01-01
-        [14] ln[2026-02] = 1.00 PLN, law date 2026-02-01
-            rule guessed: won
-              (v:guess: see [12])
-            rule seen: not applicable
-        [15] row v:ok2[2026-03] = true
-            version v, source s, "probe", locator "s", governs always, known 2026-01-01
-        [16] ln[2026-03] = 1.00 PLN, law date 2026-03-01
-            rule guessed: won
-              (v:guess: see [12])
-            rule seen: not applicable
-        [17] row v:ok2[2026-04] = true
-            version v, source s, "probe", locator "s", governs always, known 2026-01-01
-        [18] ln[2026-04] = 1.00 PLN, law date 2026-04-01
-            rule guessed: won
-              (v:guess: see [12])
-            rule seen: not applicable
-        [19] row v:ok2[2026-05] = true
-            version v, source s, "probe", locator "s", governs always, known 2026-01-01
-        [20] ln[2026-05] = 1.00 PLN, law date 2026-05-01
-            rule guessed: won
-              (v:guess: see [12])
-            rule seen: not applicable
-        [21] row v:ok[2026-01] = true
-            version v, source s, "probe", governs always, known 2026-01-01
-        [22] row v:ok[2026-02] = true
-            version v, source s, "probe", locator "s", governs always, known 2026-01-01
-        [23] row v:ok[2026-03] = true
-            version v, source s, "probe", locator "s", governs always, known 2026-01-01
-        [24] row v:ok[2026-04] = true
-            version v, source s, "probe", locator "s", governs always, known 2026-01-01
-        [25] row v:ok[2026-05] = true
-            version v, source s, "probe", locator "s", governs always, known 2026-01-01
-        [26] row v:d20 = 20
-            version v, source s, "probe", locator "s", governs always, known 2026-01-01
-        [27] loose[2026-01] = 1.00 PLN, law date 2026-01-01
-            rule guessed: won
-              (v:guess: see [12])
-            rule seen: not applicable
-        [28] loose[2026-02] = refused: RUN-DIV division by zero, law date 2026-02-01
-            rule guessed: beaten by seen
-            rule seen: won
-        [29] loose[2026-03] = 1.00 PLN, law date 2026-03-01
-            rule guessed: won
-              (v:guess: see [12])
-            rule seen: not applicable
-        [30] loose[2026-04] = 1.00 PLN, law date 2026-04-01
-            rule guessed: won
-              (v:guess: see [12])
-            rule seen: not applicable
-        [31] loose[2026-05] = 1.00 PLN, law date 2026-05-01
-            rule guessed: won
-              (v:guess: see [12])
-            rule seen: not applicable
-        [32] running read bal(konto) = 0.00 PLN, the balance up to this point of 2026-01-05
-        [33] row v:lim = -100 000.00 PLN
-            version v, source s, "probe", locator "s", governs always, known 2026-01-01
   cut 2026-04-20
-qdw: refused: RUN-ORDER decisions dd and dr read each other on 2026-02-05
+qdw: 0.00 PLN
   cut 2026-04-20

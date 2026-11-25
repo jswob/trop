@@ -53,9 +53,7 @@ a: 2 030.00 PLN + 1 × ?"gift in march" (gift[2026-03])
   held: gift[2026-04] = 10.00 PLN (v), read for 2026-04
   held: owed[2026-03] = 500.00 PLN (v), read for 2026-03
   held: owed[2026-04] = 500.00 PLN (v), read for 2026-04
-  held: repay_dom = 1 (v), read for 2026-02-01
-  held: repay_dom = 1 (v), read for 2026-03-01
-  held: repay_dom = 1 (v), read for 2026-04-01
+  held: repay_dom = 1 (v), read for 2026-02-01, 2026-03-01, 2026-04-01
   cut 2026-01-01
 b: 3 030.00 PLN + 1 × ?"gift in march" (gift[2026-03])
   uncertain: repay[2026-01]
@@ -68,23 +66,17 @@ b: 3 030.00 PLN + 1 × ?"gift in march" (gift[2026-03])
   held: owed[2026-02] = 500.00 PLN (v), read for 2026-02
   held: owed[2026-03] = 500.00 PLN (v), read for 2026-03
   held: owed[2026-04] = 500.00 PLN (v), read for 2026-04
-  held: repay_dom = 1 (v), read for 2026-02-01
-  held: repay_dom = 1 (v), read for 2026-03-01
-  held: repay_dom = 1 (v), read for 2026-04-01
+  held: repay_dom = 1 (v), read for 2026-02-01, 2026-03-01, 2026-04-01
   cut 2026-01-01
 c: ?"gift in march" (gift[2026-03])
   held: gift[2026-02] = 10.00 PLN (v), read for 2026-02
   held: gift[2026-03] = ?"gift in march" (gift[2026-03]) (v), read for 2026-03
   held: gift[2026-04] = 10.00 PLN (v), read for 2026-04
-  held: repay_dom = 1 (v), read for 2026-02-01
-  held: repay_dom = 1 (v), read for 2026-03-01
-  held: repay_dom = 1 (v), read for 2026-04-01
+  held: repay_dom = 1 (v), read for 2026-02-01, 2026-03-01, 2026-04-01
   cut 2026-01-01
 d: 1 030.00 PLN + 1 × ?"gift in march" (gift[2026-03])
   held: gift[2026-02] = 10.00 PLN (v), read for 2026-02
   held: gift[2026-03] = ?"gift in march" (gift[2026-03]) (v), read for 2026-03
   held: gift[2026-04] = 10.00 PLN (v), read for 2026-04
-  held: repay_dom = 1 (v), read for 2026-02-01
-  held: repay_dom = 1 (v), read for 2026-03-01
-  held: repay_dom = 1 (v), read for 2026-04-01
+  held: repay_dom = 1 (v), read for 2026-02-01, 2026-03-01, 2026-04-01
   cut 2026-01-01

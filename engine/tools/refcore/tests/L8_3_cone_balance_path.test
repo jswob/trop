@@ -41,13 +41,7 @@ b1: 6 996.54 PLN
   sample: spend[2026-01] = 965.618882207 PLN (u = 0.36549414668207040019051907997482686596413259394466876983642578125 (0.36549414668207))
   sample: spend[2026-02] = 931.864817338 PLN (u = 0.24782444851197167414477533220473759456581319682300090789794921875 (0.247824448511972))
   sample: spend[2026-03] = 1 105.98326716 PLN (u = 0.85538963483034448682007684638950451017080922611057758331298828125 (0.855389634830344))
-  held: spend_dom = 15 (v), read for 2026-02-01
-  held: spend_dom = 15 (v), read for 2026-03-01
-  held: spend_dom = 15 (v), read for 2026-04-01
-  held: spend_mu = 1 000.00 PLN (v), read for 2026-02-01
-  held: spend_mu = 1 000.00 PLN (v), read for 2026-03-01
-  held: spend_mu = 1 000.00 PLN (v), read for 2026-04-01
-  held: spend_sd = 100.00 PLN (v), read for 2026-02-01
-  held: spend_sd = 100.00 PLN (v), read for 2026-03-01
-  held: spend_sd = 100.00 PLN (v), read for 2026-04-01
+  held: spend_dom = 15 (v), read for 2026-02-01, 2026-03-01, 2026-04-01
+  held: spend_mu = 1 000.00 PLN (v), read for 2026-02-01, 2026-03-01, 2026-04-01
+  held: spend_sd = 100.00 PLN (v), read for 2026-02-01, 2026-03-01, 2026-04-01
   cut 2026-01-01
