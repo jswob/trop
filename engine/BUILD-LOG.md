@@ -9625,3 +9625,72 @@ The 47 by cause:
 - the last `check quick` follows this entry's commit.
 
 **Next:** T's re-run of the 47 on pin 7, then G5's review.
+
+## 2026-11-25 tally 2.3.1 G3, the last fix: statement G (issue #259)
+
+The builder's turn on statement G (`inputs/rulings.md` item 24, pick P37): the fix review's BF1 and BF2 (`inputs/review-g3fix.md`) and its note 2. The range is 48d6aa2d..ab3b9173. Before each commit I swept every probe text of G3's two reviews (`review/g3/{min,p}`, `review/g3fix/*/`, 521 texts) against refcore at the branch's pin, copied to `tmp/spec-2.3.1/g3/g/ref/`, and against the base. Every moved line is G's. I left links, the printer and pins 6 and 7's forms alone.
+
+**Commits** (none pushed):
+- d9f33cd2 `fix(load): a pin is read by its target's row reader` (BF1, BF2)
+- ab3b9173 `fix(load): a year reached through an if's arms in a rule is a date` (note 2)
+
+**The one path.** `set_pin` now has one path, `pin_value`. It replaces `pin_key`, `pin_literal`'s use there, `row_refusal` and the literal half of `typed_pin`:
+- A pin whose every leaf, through brackets, a sign and both arms of an `if`, is a figure (or a date, month or quarter with no sign over it) is read by `eval::convert`, load's own row reader. This is `eval::pin_row`. Each literal is read at the target's type and index in the text's order, and each `if`'s condition is typed as `conditional` types it.
+- The run (`row_pinned`) takes the arm the conditions pick and reads it by the same reader. A hole condition reads both arms, as `e_if` does.
+- Any other value is typed and assigned as before.
+- Left out of the row path, as refcore's `pin_row` leaves them: a record, a distribution, an undeclared type, and a unit keyed by `$v`, whose row needs its keys' units.
+- `pin_literal` stays only for sample pins and `exact.rs`.
+- A fraction pinned is now read as its row (P22 N3). Refcore at the pin agrees: `1/2` on money is `LOAD-PRECISION 1/2 terminates; write it as a decimal`. Our own `tests/load_cases.rs` pin-fraction case moved to that line.
+- A date literal pinned in a rule is now read as its row, with no date rule, as in refcore's `pin_row`. No probe moved by it.
+
+**Each probe's line now** (`g3/g/out/g2/`):
+- **Off-grid, LOAD-KEY:**
+  - `b4c/b4_h5`: `LOAD-KEY 2026-08 is not a key of qs (b4_h5.tally:31)`, refcore's (was `h5: 3`).
+  - `b4c/b4_h4`: `LOAD-KEY 2026-08 is not a key of qs (…:31)` (was `h4: 3`); refcore still says RUN-KEY, the writer's to mend.
+  - `min/key_pin_paren`: `LOAD-KEY 2028 is not a key of ys (…:11)`, refcore's (was `k6: 2 028`).
+  - `n1b/n1_k3`: `LOAD-KEY -10 is not a key of tens (…:31)`, refcore's.
+  - `n1b/n1_k6` and `k7` are refcore's too.
+  - `b4c/b4_h7` (`yk = (if b then 2028 else 2029)`): `LOAD-KEY 2028 is not a key of ys`. Refcore prints `the pin of yk is year4, not a key of ys`. It is G's clause, but not among the writer's three, so it is for the writer.
+- **Wrong type, the row's words:**
+  - `min/n1_paren_int`: `LOAD-UNIT 2.5 is not an int (…:10)`;
+  - `min/n1_signed_int`: `LOAD-UNIT -2.5 is not an int`;
+  - `min/n1_year_pin`: `LOAD-KEY 2028 is not a key of ys (…:11)`;
+  - `n1/n1_p16`: `LOAD-UNIT a rate states its period: 5 (…:25)`;
+  - `n1/n1_p2` and `p3` are the same.
+  - All are refcore's bytes.
+- **On-grid, loads:**
+  - `b4c/b4_h8`: `h8: 29`, `pinned: yk = 2029` (was `RUN-KEY 2 029 is outside ys`).
+  - `b4/b4_f27`: `f27: 3`, `pinned: qk = 2026-07`, unchanged.
+  - Refcore refuses both, and the writer mends them.
+- **In a rule, LOAD-LITERAL:** `rule/r4`, `r7`, `r10`: `LOAD-LITERAL a date in a rule; make it a version (…:29)`, refcore's (were `z1: false`). `r8` already was. A year reached through brackets or arms beside a year key takes the date rule at the comparison's scope, as the bare one does through its year entry.
+- **Fractions:** `g3/p/r3f_f1`, `f2`, `f4` (`ratio = 1/3`) answer `1/3 (0.333333333333333)`, refcore's (were `LOAD-PARSE … only in rows`).
+- **Still different from refcore:** 19 texts (37 at the base):
+  - G's forms where refcore lags: `b4_h4`, `h7`, `h8`, `f27`, `b4c/b4__all`.
+  - The rest predate this turn: refcore's internal `tupitem` (`b1_a19`, `b1__all`, `b1__rev`, `b2_c10`, `b2__all`, `tup_t10`), N2 (`r3p_p16`), N4 (`mn_a4`), N5 (`mn_a12`, `b3_d23`), note 4 (`b4_f34`), N9's `(file:line)` (`r5e_e18`, `r5g_g5`) and #261 (`q26`).
+
+**`check commit`'s red ids** (`tmp/spec-2.3.1/g3/g/red-G.txt`, from `tests.log`; counted as G5's last entry counts, the two CLI usage ids left out): 186.
+- The last entry's 191, less 5 now green, all G's: `m4/fixes/g2fix/p5_b4`, `p7_yk_out`, `r3_y4_dk`, `r3_y4_mk` and `m1/fixes/g13/r_s_model_with_r_s_k20`. T's stores held the row's words (`2040 is not a key of ys`, `3.00 USD and money PLN have different units`), which the engine now prints.
+- None new. The red tests are T's stored answers alone: 41 of 1601 targets, all in `tally-runner`. The 3 new unit tests and our own `load_cases` pass.
+
+**Size** (`git diff --shortstat 48d6aa2d HEAD -- engine/crates`): 7 files, +358 −122.
+
+| Commit | Lines (in, out) |
+|---|---|
+| d9f33cd2 | +333 −122 (tests 110) |
+| ab3b9173 | +25 −0 (tests 20) |
+
+- **Kernel files touched:** none. The changes are in `load/pins.rs`, `load/compare.rs`, `eval/convert.rs`, `eval/pins.rs`, `eval/expr.rs` (`choice_unknown` shared) and `lib.rs`.
+- **Unit tests** (3 new):
+  - `eval/pins.rs` `a_pin_is_refused_as_its_row_through_brackets_signs_and_arms` (8 pins) and `an_on_grid_arm_pinned_is_its_key`;
+  - `load/compare.rs` `a_year_reached_through_brackets_or_arms_in_a_rule_is_a_date`.
+- **Fences:** no edit to a fence or its twin.
+- **Exceptions:** +0. `exceptions --check`: 6; report-only hits 8.
+- **Mutants:** none proved. Sites for T:
+  - `pin_row`'s `dated && !signed` and its type exclusions;
+  - `row_pin`'s `negative` flip;
+  - `pin_condition`'s agreeing arms;
+  - `period_literal`'s year rule.
+- **STOP-REPORTs:** none new.
+- **For the writer** (refcore at the branch's pin, beside its three lines of G): `b4_h7`'s off-grid arm, which G makes `LOAD-KEY 2028 is not a key of ys`.
+- **check quick:** green, 11 steps.
+- **check commit:** red at tests, stopped after 10 of 24 steps (113 s), red only on T's stored answers: the 186 ids above.
