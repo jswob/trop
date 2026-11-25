@@ -9517,3 +9517,111 @@ The tenth and last G2 brief: statement F (rulings 23, P34), after the part-1 fix
 - `check quick`: green at each commit; the last run follows this entry's commit.
 
 **Next:** the lead's own probes of statement F against refcore at pin 7 and the spec. This is G2's last fix.
+
+## 2026-11-25 tally 2.3.1 G5, the second turn: the landed text where refcore lagged (issue #259)
+
+G5's STOP-REPORT was ruled (pick P31): the text is clear and refcore was wrong. W9 mended refcore, and pin 7 is in the build (cbc06772). This turn builds the five rows to pin 7's bytes, each its own commit, a unit test first.
+
+**Commits:**
+
+| Commit | Row | Lines (in, out) |
+|---|---|---|
+| 4a77e092 `fix(ask): explain prints a declared num % row and head in its type` | Q2.16 | +83 −4 |
+| 147a4bc6 `fix(load): a row's keys print as written, a written * kept` | Q1.14 | +60 −20 |
+| c97116af `fix(eval): RUN-NONE names min, max, abs, age and an aggregate's term` | l.2366's row, the rest | +50 −13 |
+| 8a5beb06 `fix(book): HOLE-SAME names the leg, its days and each row once` | N245.3, N245.20, N245.18 | +220 −30 |
+| — | a rate's zero | none: `r - r` already prints `0 /year`, as refcore's L8_4 case |
+
+**Each row's probe line against refcore pin 7's** (W9's cases split in `tmp/spec-2.3.1/g5/t7/`; `pair.sh`, the same bytes):
+- **Q2.16:** `L8_4_none_words_and_rate_zero` `e_p`: `e_p: 1 %`, its row `[1] row v:p = 1 %`.
+- **Q1.14:** `L5_11_given_star_as_written`: `row v1:paint[*]`.
+- **RUN-NONE:** `L8_4` `xn is none here: min` / `max` / `abs`; `dn is none here: age_months`; `tn[b] is none here: sum`; `xn is none here: ordering`.
+- **N245.3:** `L8_1_same_days_merged` `fs`, `ob`: `leg cash differs on 2026-01-07, 2026-01-08`.
+- **N245.20:** `L8_1_same_one_form_per_leg` `b`, `fl`, `ob`, `sf`: `leg fee differs on 2026-01-07`.
+- **N245.18:** `L8_1_same_leg_names_differ` `b`, `fl`: two questions on konto, `100.00 PLN (bank[a1]) and 110.00 PLN (card[b1])` and `2.00 PLN (bank[a1]) and 3.00 PLN (card[b1])`; `c2` one question on karta.
+
+**N245.18's code:**
+- `same_end` looks for a same-named leg among all of the other member's legs, as refcore's `consol` does.
+- Where the other member has none, it takes that member's k-th leg at the place, where k is the mover's leg's position among its own legs there (`at_place`).
+- `touching` now takes the chosen legs.
+- A mover's leg with no end at its own place is `ENGINE-INVARIANT`. No vector reaches it.
+
+**The sweep** (every text under `tmp/spec-2.3.1/inputs/`, the engine before and after each commit, every moved text against refcore at pin 7):
+- Q2.16 and Q1.14: 5 texts moved.
+- RUN-NONE: 13 texts moved.
+- `same`: 37 texts moved.
+
+Every moved line moves to refcore's bytes, except where the text differed before and still differs:
+- **`m4/review/g6c/p/p07_same`:** refcore refuses there with `ENGINE-INVARIANT a booked plan amount changed …`. The engine's line only took the form `leg cash differs`.
+- **`spec-2.2.1/review/g3/agent/day/d5`:** refcore prints a hole day as Python's `Hole([('d1?', 'd1')])`. The engine prints `?"d1?" (d1)`, as before. Only the form `leg cash` moved.
+
+**Differences that were there before and haven't moved** (already listed in the first turn):
+- `i01_none_age` `g3`: the engine prints `never in age_months` where refcore prints `never in age`;
+- `m_misc` `r14`: the engine prints `never and never compared` where refcore prints `never`;
+- `g01_pins` and `b6_keyed`: REFCORE-NOT-YET (Q2.5).
+
+**Unit tests:**
+- `ask/explain.rs` `a_declared_items_head_and_rows_print_in_its_type`;
+- `model/key.rs` `a_written_star_prints_as_written`;
+- `eval/builtin.rs` `none_is_refused_by_its_read_and_its_use`, extended to `min`, `max`, `abs`, `age_months`, `sum` and the ordering;
+- `book/same_booking.rs` `sides_whose_leg_names_differ_pair_their_legs_by_order` (sm18) and `an_amount_that_differs_names_the_leg_and_both_days` (s1_same cut down; refcore gives the same line).
+
+**The builder's integration tests moved to pin 7's forms:**
+- `read_cases.rs`: `row v1:paint[*]`;
+- `load_cases.rs`: `overlap at [q1, *] and [*, t1]`;
+- `group4_cases.rs` s6: `leg cash differs`.
+
+**`check commit`'s red ids** (`tmp/spec-2.3.1/g5/red-F.txt`, 191, from `tests-F.log`):
+- G2's way of counting: `red.py` leaves out the two CLI usage ids `fixture/base/no-path` and `run/ask-empty`. They are red in G2's `tests-f.log` too, and nothing under `tally-cli/src` or `tests/m3` changed since.
+- **The 144 of G2's last entry:** all still red, none gone.
+- **47 new** (`new-F47-by-cause.txt`). Each is a stored answer of T's on refcore before pin 7, and each red line is the form W9 mended. Sample checks against pin 7 match the engine byte for byte: `q_arith2`, `q_abs`, `q_min`, `q_sum`, and the sweep's `p_both_konto_amt`, `paper-probes/agg__same` and `fx__same`.
+
+The 47 by cause:
+- **A row's written `*` (Q1.14), 19:**
+  - `fixes/g11/` `ai2_m_with_ai2_infl8_e_known`, `_lawed`, `_rent_s`, `_shift`
+  - `fixes/g12/` `pm6_` and `pm9_`: `remeasure_hole_legs`, `remeasure_hole_when`, `remeasure_refused`, `remeasure_refused_booking`, `remeasure_refused_leg_hole_when`, `remeasure_refused_when` (each `_<name>_<name>`)
+  - `r7/` `p45_fanout_pin_both_lines`, `p45_fanout_pin_one_line`, `t_f4_views`
+- **`HOLE-SAME` in the leg's form, both days (N245.3, N245.20), 24:**
+  - `fixes/g4/adj_amt`
+  - `fixes/gate8/` `m2_d512_day_rows`, `m2_d512_link_same`, `m2_d512_two_groups`, `m2_g4_b3_onefulfils`, `m2_g4_g3_amt`, `m2_g4_l_s_amt`, `m2_g4_s_amt`, `m2_g4_s_day`, `m2_rt_l5_19_same_rows_disagree_flows_hole`, `m2_rt_l5_19_same_rows_one_fulfils_hole`
+  - `fixes/t231g1/same2/dy`
+  - `paper/agg__same/` `b`, `c`; `paper/fx__same/` `b`, `c`
+  - `records/same-differs`
+  - `s6/hole_same_order_class`
+  - `t221-g2/` `219-2-warn-legs`, `mut-same-member-third-row`, `rv2-b2-same-register`, `rv2-n4-flows-same`, `rv2f-f7-membership`
+  - `t221-g3/p45-same-day-names`
+- **`RUN-NONE`'s built-in names (l.2366's row), 4:**
+  - `spec/p26/g1/a12_nonehole/q_arith2`: `a value is none here: max`, a hole beside the none;
+  - `spec/p26/items/none/` `q_abs`, `q_min`, `q_sum`.
+- **Outside these classes:** none.
+- **The red tests:** 43 of 1598, all in `tally-runner` (T's).
+
+**For T:** the 47 above re-run on pin 7.
+
+**Size** (`git diff --shortstat cbc06772 HEAD -- engine/crates`): 16 files, +413 −67.
+
+**Fences:** no fence module or twin edited. The fences' suites are green inside `check commit`'s tests step.
+
+**STOP-REPORTs:** none new. G5's (R4's rows) is answered by pick P31 and this turn.
+
+**Exceptions:** delta 0. `exceptions --check`: 6, report-only 8, as before. I restructured three report-only flags in `same_booking.rs` as I wrote it, and wrote no exception:
+- a nested closure;
+- a named lifetime;
+- a silent default `unwrap_or(0)`, now the invariant.
+
+**Mutants:** none proved. Sites for T:
+- `same_end`'s `k` and its `skip(k).take(1)`;
+- `at_place`'s `from || to`;
+- `sides_differ`'s empty-days fallback;
+- `written_pattern_text`'s `parts.len() > written`;
+- `extreme`'s `none_at` beside a hole.
+
+**Usage:** about 1.25 % of the week by `engine/tools/usage tmp/spec-2.3.1/g5-ids.txt` before this entry, about 0.15 points this turn past the first turn's 1.10.
+
+**Checks:**
+- `check commit: red at tests, stopped after 10 of 24 steps (152s)`, red only on T's stored answers: the 191 ids above (43 of 1598 test targets, all T's);
+- `check quick: green, 11 steps (45s)` at 8a5beb06's tree;
+- `check step release-binary: green, 1 step (100s)`;
+- the last `check quick` follows this entry's commit.
+
+**Next:** T's re-run of the 47 on pin 7, then G5's review.
