@@ -1,0 +1,64 @@
+# tally 2.3.1 N245.3 (L §8.1: a hole carries every question): bank[a1] on 2026-01-07 and card[b1] on 2026-01-08
+# are one and disagree on the amount: flows of the move (fs) and the observed amount (ob) name both days, merged
+# as a list. Before: `differs on 2026-01-07` alone, `the amount of cash`.
+=== s1_same.tally
+model s1
+  tally 2
+  on 2026-05-20
+  start 2026-01-01
+  end 2026-03-31
+
+source s "probe"
+unit PLN: currency minor 0.01
+index month = month 2026-01..2026-02
+place konto: accounts PLN lives 2026-01-01..
+place sav: accounts PLN lives 2026-01-01..
+input bank: observed
+input card: observed
+input d5[m in month]: int
+input amt: money PLN
+
+move save[m in month]: transfers
+  on day_of(m, d5[m])
+  leg cash from konto to sav amount amt
+
+ask k: bal(konto, 2026-03-31)
+ask sv: bal(sav, 2026-03-31)
+ask fs: flows(save, 2026-01-01..2026-03-31)
+ask ob: observed(save[2026-01]).cash.amount
+ask n: count(o in bank over 2026-01-01..2026-03-31 where o.fulfils == save[2026-01])
+ask n2: count(o in card over 2026-01-01..2026-03-31 where o.fulfils == save[2026-01])
+ask rk: residuals konto 2026-01-01..2026-03-31
+ask rv: residuals sav 2026-01-01..2026-03-31
+ask kt: count(t in transfers over 2026-01-01..2026-03-31)
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  d5[2026-01] = ?"jan day?" "s"
+  d5[2026-02] = 5 "s"
+  opening[konto] = 1000.00 PLN at 2026-01-01 start "s"
+  opening[sav] = 0.00 PLN at 2026-01-01 start "s"
+  amt = 100.00 PLN "s"
+
+version q1
+  cite s
+  governs 2026-01-01..2026-03-31
+  known 2026-04-01
+  covers konto
+  bank[a1] = (on: 2026-01-07, kind: transfers, leg cash from konto to sav amount 100.00 PLN, fulfils: save[2026-01]) "jan"
+
+version q2
+  cite s
+  governs 2026-01-01..2026-03-31
+  known 2026-04-01
+  covers sav
+  card[b1] = (on: 2026-01-08, kind: transfers, leg cash from konto to sav amount 110.00 PLN) "jan, the other side"
+  same card[b1] = bank[a1]
+=== expect fs ob
+fs: ?"bank[a1] and card[b1] are one, but leg cash differs on 2026-01-07, 2026-01-08: 100.00 PLN (bank[a1]) and 110.00 PLN (card[b1])" (bank[a1], card[b1])
+  open: save[2026-02]
+  cut 2026-05-20
+ob: ?"bank[a1] and card[b1] are one, but leg cash differs on 2026-01-07, 2026-01-08: 100.00 PLN (bank[a1]) and 110.00 PLN (card[b1])" (bank[a1], card[b1])
+  cut 2026-05-20

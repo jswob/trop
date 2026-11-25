@@ -73,11 +73,11 @@ p6 (p = ania): ?"x1 and x2 are one, but leg cash differs on 2026-03-05, 2026-03-
 p6 (p = tomek): ?"x1 and x2 are one, but leg cash differs on 2026-03-05, 2026-03-07: 100.00 PLN (x1) and 100.00 PLN (x2)" (x1, x2)
   unfulfilled: x1
   cut 2026-06-10
-p8 (p = ania): ?"acc: 100.00 PLN may be ania's: x1 and x2 are one, but the day of cash differs on 2026-03-05: 2026-03-05 (x1) and 2026-03-07 (x2)" (acc)
+p8 (p = ania): ?"acc: 100.00 PLN may be ania's: x1 and x2 are one, but leg cash differs on 2026-03-05: 2026-03-05 (x1) and 2026-03-07 (x2)" (acc)
   unfulfilled: x1
   unfulfilled: x2
   cut 2026-06-10
-p8 (p = tomek): ?"acc: 100.00 PLN may be tomek's: x1 and x2 are one, but the day of cash differs on 2026-03-05: 2026-03-05 (x1) and 2026-03-07 (x2)" (acc)
+p8 (p = tomek): ?"acc: 100.00 PLN may be tomek's: x1 and x2 are one, but leg cash differs on 2026-03-05: 2026-03-05 (x1) and 2026-03-07 (x2)" (acc)
   unfulfilled: x1
   unfulfilled: x2
   cut 2026-06-10

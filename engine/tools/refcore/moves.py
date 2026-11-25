@@ -1545,12 +1545,14 @@ def same_obs_differ(a, others, leg=None, m=None, fact=None):
         if len(mem) < 2:
             continue
         mem.sort(key=lambda t: id_order(m, t[0].id) if m is not None else shown(t[0].id))
-        for what, get in (('the amount of %s' % g.name, lambda h: h.amount), ('the day of %s' % g.name,
-                                                                                lambda h: h.day)):
-            if fact is not None and not what.startswith('the %s ' % fact):
+        # one form for a leg's disagreement, the leg's, whichever fact and reader (L §8.1 HOLE-SAME; tally 2.3.1
+        # N245.20: a balance and a sum print one question), once per fact (P36, Q3)
+        what = 'leg %s' % g.name
+        for fk, get in (('amount', lambda h: h.amount), ('day', lambda h: h.day)):
+            if fact is not None and fk != fact:
                 continue
             xs = [get(h) for o, h in mem]
-            day = what.startswith('the day ')
+            day = fk == 'day'
             if any(isinstance(x, Hole) for x in xs):
                 if day:
                     # a side whose day is a hole: the read carries that hole's question (P43 S1 a)
@@ -1577,7 +1579,10 @@ def same_obs_differ(a, others, leg=None, m=None, fact=None):
             else:
                 if len(set(vkey(x) for x in xs)) == 1:
                     continue
-                d = day_text(g.day if isinstance(g.day, datetime.date) else a.day)
+                # every side's day, merged as a list (tally 2.3.1 N245.3: L §8.1, a hole carries every question)
+                ds = sorted(set(h.day if isinstance(h.day, datetime.date) else o.day for o, h in mem
+                                if isinstance(h.day, datetime.date) or isinstance(o.day, datetime.date)))
+                d = ', '.join(str(day_text(x)) for x in ds) if ds else day_text(a.day)
             # L §8.1 HOLE-SAME, the rows in the order of their ids, each of a larger class named (tally 2.1.8 S6)
             q = '%s are one, but %s differs on %s: %s' % (
                 and_list(shown(o.id) for o, h in mem), what, d,
