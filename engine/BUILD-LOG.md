@@ -9781,3 +9781,78 @@ Items 1, 4 and 6 share one commit, against the brief's one commit an item: they 
 - the last `check quick` follows this entry's commit.
 
 **Next:** the lead's probes of this fix (P39). Item 5 (`num %/year`) waits for the lead: a builder turn, or #260.
+
+## 2026-11-25 tally 2.3.1 G5, the round's last engine commits (issue #259)
+
+T's fifth re-run, on the eighth pin, is in the build (de4030b0). This turn takes T's last red ids that the engine owns. It is the round's last engine commit (R-77: it follows T's logged-red commit 8b2a4816).
+
+**Commits:**
+
+| Commit | Item | Lines (in, out) |
+|---|---|---|
+| b75de583 `fix(ask): a joint line keeps a written · inside its quoted texts` | 2, `q_dot` (Q2.34) | +39 −3 |
+| 59cce863 `fix(ask): a command with no path or no ask id is a usage error` | 3, S12's two CLI rows | +35 −17 |
+
+**Each item's line now:**
+
+1. **`fixes/g5/p6_unc`: not changed, a STOP-REPORT below.**
+   - The engine's `c1`, `count(x in promises over 2026-02) with uncertain`, lists `held: repay_dom = 1 (v), read for 2026-02-01`. Refcore at pin 8 also lists `held: owed[2026-02] = 500.00 PLN (v), read for 2026-02`.
+   - This is not the `held:` merge (`merged_held` merges what it is given). The engine never reads `owed[2026-02]` for a count.
+   - The id has been red all round: it is among G2's 144, my 191 and 187, and G3's 186.
+2. **`items/g5/q_dot`: green.** `a.q_dot: ?"the fee · as the bank states it" (fee)`.
+   - The cause: a joint model's lines turned every `·` into `.` (`api.rs` `joint_lines`, `Refusal::shown`). `·` is the members' internal separator, so a `·` the text writes went too.
+   - Now `base::dotted` turns it into `.` outside the line's quoted texts only. Names never hold a `·`, and every written text prints in quotes.
+3. **`fixture/base/no-path` and `run/ask-empty`: green.**
+   - `check` with no path, and `run … --ask` with no ask id, are usage errors: exit 2 with the usage text (O §2, "a missing operand").
+   - `reprint` and `run` with no path likewise.
+4. **Statement G's five** (`g13 k20` and the four `g2fix` rows): none is red at this tree. They are green on G3's last fix.
+
+**Unit tests:**
+- `base/refusal.rs` `a_written_middle_dot_prints_as_written`;
+- `tally-cli` `anything_else_is_a_usage_error`, with five missing-operand cases.
+
+**`check commit`'s red ids** (`tmp/spec-2.3.1/g5/red-J.txt`, 10), by holder:
+- **M5b (T holds), 6:** `fixes/t231rv2/f10_two_day_parts/` `b4`, `b6`, `b8`, `e8`, `k8`, `p6` (not implemented).
+- **#261 (T holds), 1:** `later/inputs_of_balance`, the listing-only line `card_2026:late` against the engine's `card_2026:opening[konto]`.
+  - `held.tsv` holds it under the target `m1_fixes`, but the vector runs in `m1_checks_g11`. For T: the hold's target.
+- **P42's forms, the writer's W13, 2:** refcore at pin 8 still prints the unnamed form, and the engine prints L §8.4's form:
+  - `fixes/g1/a12_nonehole/q_arith2`: `pn is none here: max`, against refcore's `a value is none here: max`;
+  - `fixes/p12/is_business/h_cal__n_d`: `d_n is none here: is_business`.
+- **The STOP-REPORT below, 1:** `fixes/g5/p6_unc`.
+- **None else.** The red tests are 6 runner targets, all T's.
+
+**The round's engine size** (`git diff --shortstat 25a5a63d..HEAD -- engine/crates`): 67 files, +6 681 −1 198.
+
+**Exceptions:**
+- Over the round: delta 0. `engine/EXCEPTIONS.lock` is unchanged since 25a5a63d; `exceptions --check` gives 6, report-only 8.
+- This turn: 0.
+
+**Fences:** none edited. **Mutants:** none run this round (P39). Sites for T:
+- `dotted`'s quote and escape states;
+- `parse`'s `paths.is_empty()`;
+- `run_line`'s `after_ask && asks.is_empty()`.
+
+**Usage:** about 1.75 % of the week by `engine/tools/usage tmp/spec-2.3.1/g5-ids.txt` before this entry, about 0.2 points this turn.
+
+**Checks:**
+- `check commit: red at tests, stopped after 10 of 24 steps (107s)`, red only on the 10 ids above;
+- `check quick: green` at 59cce863's tree;
+- the last `check quick` follows this entry's commit.
+
+**Next:** the round's close. The lead rules this STOP-REPORT, and T holds or re-stores `p6_unc` and the two P42 rows.
+
+## STOP-REPORT 2026-11-25: `fixes/g5/p6_unc`, an uncertain instance's amount that a count doesn't sum
+
+- **Smallest input:** `fixes/g5/p6_unc` (`tests/m2/vectors.refcore`). `move repay[m in months]: promises` (an `event uncertain` kind) `on day_of(m, repay_dom)`, `leg cash … amount owed[m]`, with `owed = 500.00 PLN` and `repay_dom = 1` from `version v`, `governs 2026..`. The ask is `c1: count(x in promises over 2026-02) with uncertain`, at cut 2026-01-01.
+- **The engine:** `c1: 1`, `uncertain: repay[2026-02]`, `held: repay_dom = 1 (v), read for 2026-02-01`.
+- **The test (refcore at pin 8):** the same, plus `held: owed[2026-02] = 500.00 PLN (v), read for 2026-02`.
+- **What I think is wrong: the test (refcore).**
+  - L §8.2 One read set (l.2251) says a read over movements holds, for each movement, "what decided whether it counts and how much: its existence …, the amounts it sums".
+  - A `count` sums no amount, and `repay`'s existence doesn't read `owed`. So `owed[2026-02]` is no read of `c1`.
+  - The engine's `member_reads` builds this as decided at tally 2.3.1 Q1.10, pick P16: "its amounts only where a field read sums them".
+  - With a field read that sums (`… where x.cash.amount > 0 PLN`, or `c4`'s `sum`), both interpreters print the `owed` line alike.
+  - The brief names R4's `held:` merge. The merge isn't involved: the engine never reads the row.
+- **What I tried:** the probe above, with and without the amount read; the `held:` merge code; the spec's row.
+- **What I did not do:** change the code. Listing the uncertain instance's full reads would contradict l.2251 and P16 for every count.
+
+**STOP-REPORTs open:** this one.
