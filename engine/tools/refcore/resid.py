@@ -213,6 +213,14 @@ def m_residuals(self, place, span, by, ctx, unit=None):
                 raise i.err
             model.append(i)
     w = self.main_walk(ctx)
+    for mi in self.m.moves.values():
+        if not mi.decision:
+            continue
+        for i in self.decision_instances(mi, ctx):
+            if i.err is not None and day_lo(i.day) is None and i.id in ful_at:
+                # a refused instance a row at x fulfils, its day refused too: the refusal refuses the ledger whole
+                # (L §8.4; tally 2.3.1 P33, statement F (a))
+                raise i.err
     for iid in sorted(w.decs):
         run = w.decs[iid]
         dd = day_lo(run.day)

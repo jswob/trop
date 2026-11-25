@@ -2424,6 +2424,18 @@ class Engine:
             if src is not None and getattr(src, 'err', None) is not None and \
                     getattr(src, 'exists', True) is not False:
                 raise src.err
+            # the existence test is `m[k] == none` with `none` written: a name compared with a row's link is no read of
+            # the instance (L §5.19 l.1713; tally 2.3.1 P30, statement F (a))
+            lit = getattr(n.l if a is NONE else n.r, 'k', None) == 'none'
+            if lit and src is not None and getattr(src, 'decision', False) and ctx.walk is None and src.err is None:
+                # a decision tuple's existence is its run's (its `when` read at its point): its refusal as it stands
+                # (L §5.14, §8.4; tally 2.3.1 statement F (a), N4)
+                run = self.mv_record(x, ctx)
+                if run is not None and getattr(run, 'err', None) is not None:
+                    raise run.err
+            if lit and src is not None and isinstance(getattr(src, 'exists', None), Hole):
+                # its existence a hole: the test is that hole (L §5.14; tally 2.3.1 statement F (a), N5)
+                return Hole(src.exists.qs)
         if n.op not in ('==', '!=') and (a is NONE or b is NONE):
             # an ordering names the read that gave none (L §8.4's row; P48, N2)
             raise refuse('RUN-NONE', '%s is none here: ordering' % env_txt(n.l if a is NONE else n.r, env))

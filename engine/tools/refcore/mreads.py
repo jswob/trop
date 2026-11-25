@@ -376,6 +376,10 @@ def m_mv_field(self, n, env, ctx):
         else:
             # per fact (tally 2.2.1 P36, Q3): the leg's amount and its day, each its own hole where the rows differ
             sh = (self.same_rows_hole(src, name, ctx, 'amount'), self.same_rows_hole(src, name, ctx, 'day'))
+    if what == 'day' and isinstance(src, Inst) and isinstance(src.exists, Hole):
+        # an existence that is a hole: a field read of the instance is that hole (L §5.14; tally 2.3.1 statement F
+        # (a), N5)
+        return Hole(src.exists.qs)
     if what == 'day':
         if isinstance(src, Inst) and (src.exists is False or getattr(src, 'status', None) == 'none'):
             # `.day` included (L §5.14 existence; tally 2.3.1 R6, gate review 8); an instance a later version made
@@ -1778,7 +1782,11 @@ def m_flows_post_e(self, w, place, sp, last, env, ctx, fk, totals, holes):
     a hole movement, HOLE-POSTRUN, since its amount reads a walk that doesn't hold its day (L §8.1)."""
     from .evaluate import HoleSignal
     for i in w.post_e:
-        if fk is not None and (mv_for(i) is None or vkey(mv_for(i)) != vkey(fk)):
+        fp = mv_for(i) if fk is not None else None
+        # a hole period reaches a `, for k` read after the run's end too: whether it counts is that hole (L §8.1;
+        # tally 2.3.1 statement F (c), gap 1)
+        fh = fp if isinstance(fp, Hole) else None
+        if fk is not None and fh is None and (fp is None or vkey(fp) != vkey(fk)):
             continue
         if i.decision:
             if not sp.contains(i.day):
@@ -1792,7 +1800,7 @@ def m_flows_post_e(self, w, place, sp, last, env, ctx, fk, totals, holes):
             except (TallyError, HoleSignal):
                 ps = {None}
             if place in ps or None in ps:
-                holes.append(Hole([('after the run\'s end', i.id)]))
+                holes.append(fh if fh is not None else Hole([('after the run\'s end', i.id)]))
             continue
         for lg in i.legs or ():
             lo, hi = day_lo(lg.day), day_hi(lg.day)
@@ -1805,6 +1813,9 @@ def m_flows_post_e(self, w, place, sp, last, env, ctx, fk, totals, holes):
                 raise i.err
             if i.coll is not None:
                 self.cur.merge(i.coll)
+            if fh is not None:
+                holes.append(fh)
+                continue
             if isinstance(i.exists, Hole):
                 holes.append(i.exists)
                 continue

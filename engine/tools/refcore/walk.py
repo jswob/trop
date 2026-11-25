@@ -641,6 +641,9 @@ class Walk:
                     # (E §7 step 1; moves.eval_inst, W8-SEEN)
                     self.dec_bad(i, K_before(S), i.err, ctx)
                 elif i.err is not None:
+                    if eng.status(i, ctx) == 'modelled':
+                        # a refused day a row's tuple has: the row stands in by the name alone (statement F (b))
+                        continue
                     self.at(K_before(S), 'global_bad', i.err)
         # adjustments: HOLE-CHANGED and remainders (E §5 step 5)
         if not self.proj:

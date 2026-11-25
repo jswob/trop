@@ -1,0 +1,62 @@
+# tally 2.3.1 statement F (b), gap 3 (L §5.19 l.1713, §8.4): rent's decision tuple for 2026-01 has a refused day
+# (day_of(m, d5 / dz[m]), dz 0) and bank[a1] names it: the row stands in by the name, c 790.00, fp -110.00,
+# f 110.00, kt 1; the instance's own reads, e and dy, are refused. Before: c and fp refused.
+=== b3_refday_min.tally
+model b3r
+  tally 2
+  on 2026-05-20
+  start 2026-01-01
+  end 2026-02-28
+
+source s "probe"
+unit PLN: currency minor 0.01
+index month = month 2026-01..2026-02
+place pot: accounts PLN lives 2026-01-01..
+place landlord: outside lives 1900-01-01..
+input bank: observed
+input amt: money PLN
+input d5: int
+input dz[m in month]: int
+
+move rent[m in month]: transfers
+  reads pot
+  on day_of(m, d5 / dz[m])
+  when bal(pot) > 0.00 PLN
+  leg cash from pot to landlord amount amt
+
+ask c: bal(pot, 2026-02-28)
+ask f: flows(rent, 2026-01)
+ask fp: flows(pot, 2026-01)
+ask kt: count(t in transfers over 2026-01)
+ask e: rent[2026-01] == none
+ask dy: rent[2026-01].day
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  amt = 100.00 PLN "s"
+  d5 = 5 "s"
+  dz[2026-01] = 0 "refused"
+  dz[2026-02] = 1 "s"
+  opening[pot] = 1000.00 PLN at 2026-01-01 start "s"
+
+version q1
+  cite s
+  governs 2026-01-01..2026-02-28
+  known 2026-03-01
+  bank[a1] = (on: 2026-01-07, kind: transfers, leg cash from pot to landlord amount 110.00 PLN, fulfils: rent[2026-01]) "jan"
+=== expect
+c: 790.00 PLN
+  unfulfilled: rent[2026-02]
+  cut 2026-05-20
+dy: refused: RUN-DIV division by zero
+  cut 2026-05-20
+e: refused: RUN-DIV division by zero
+  cut 2026-05-20
+f: 110.00 PLN
+  cut 2026-05-20
+fp: -110.00 PLN
+  cut 2026-05-20
+kt: 1
+  cut 2026-05-20
