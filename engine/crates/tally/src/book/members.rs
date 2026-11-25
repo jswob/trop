@@ -1802,7 +1802,7 @@ fn in_order(movements: Vec<Moving>) -> Result<Vec<Moving>, Stop> {
 /// Instance `i`'s existence cell where it is no plain value: `Err` its refusal, else the hole
 /// of an existence that is one; none where it exists or doesn't (L §5.14 An instance's
 /// existence is a cell, §8.4; tally 2.3.1 rulings 23 (a)).
-fn cell_of(i: &Inst) -> Result<Option<Hole>, Stop> {
+pub(super) fn cell_of(i: &Inst) -> Result<Option<Hole>, Stop> {
     if let Some(e) = &i.err {
         return Err(Stop::Refused(e.clone()));
     }

@@ -18,6 +18,7 @@ use std::collections::{BTreeMap, BTreeSet};
 
 use super::adjust::Adjustment;
 use super::ledger_order::{Group, GroupKey, abs, fig_add, fig_sub, grouped, month_group};
+use super::members::cell_of;
 use super::observe::{Obs, inst_id};
 use super::reading::{Seen, booked_amount, reading_rank, readings};
 use crate::base::{Load, Refusal};
@@ -660,7 +661,7 @@ fn instance_line(
     let Some(day) = inst.day.as_ref().and_then(Dated::day) else {
         return Err(invariant("a ledger instance with no day"));
     };
-    let mdl = flow_into(&inst.legs, &lines.of)?;
+    let mdl = model_of(inst, &lines.of)?;
     let os = fulfilling.of(&inst.id);
     lines.seen.extend(os.iter().map(|o| o.id.clone()));
     let group = move_group(m, lines, day, &inst.move_id, os)?;
@@ -815,7 +816,7 @@ fn undated_line(
     inst: &Inst,
     fulfilling: &Fulfilling,
 ) -> Result<(), Stop> {
-    let mdl = flow_into(&inst.legs, &lines.of)?;
+    let mdl = model_of(inst, &lines.of)?;
     let os = fulfilling.of(&inst.id);
     if let Some(day) = os.iter().map(|o| o.day).max() {
         lines.seen.extend(os.iter().map(|o| o.id.clone()));
@@ -1028,6 +1029,18 @@ fn signed(q: &Num, way: Way) -> Result<Num, Stop> {
 /// E §6.3.
 fn at_place(lg: &LegVal, place: &str) -> bool {
     lg.to.place() == Some(place) || lg.from.place() == Some(place)
+}
+
+/// Instance `inst`'s model in the ledger: where it touches the place and its existence is
+/// no plain value, that cell, the hole or its refusal, which refuses the ledger whole; else
+/// its flow into the place (E §6.3; L §8.4; tally 2.3.1 rulings 23 (a), P33).
+fn model_of(inst: &Inst, of: &Of) -> Result<Fig, Stop> {
+    if of.touches(&inst.legs)
+        && let Some(h) = cell_of(inst)?
+    {
+        return Ok(Fig::Hole(h));
+    }
+    flow_into(&inst.legs, of)
 }
 
 /// A movement's flow into the ledger's place, signed: in +, out −; the holes of the amounts
@@ -1302,6 +1315,42 @@ ask r_apr: residuals konto 2026-04
             far_lines(hole, "save", "s_mar"),
             save("2026-03-30", "+0 days"),
             "a hole day, save"
+        );
+    }
+
+    #[test]
+    fn the_ledger_carries_an_instances_existence_cell_as_it_stands() {
+        // E §6.3, L §5.14 An instance's existence is a cell (tally 2.3.1 rulings 23 (a)): the
+        // ledger reads the instance; pw's existence is a hole, so its line's model is that
+        // hole, while the balance reads the row by the name alone
+        let text = FULFILLED
+            .replace("DAY", "2026-03-05")
+            .replace("  on w\n", "  on w\n  when ok\n")
+            .replace("input w: date", "input w: date\n\ninput ok: bool")
+            .replace(
+                "  w = 2026-03-05 \"its day\"",
+                "  w = 2026-03-05 \"its day\"\n  ok = ?\"ok?\" \"s\"",
+            );
+        let given = vec![Given {
+            path: "cell.tally".to_owned(),
+            bytes: Some(text.into_bytes()),
+        }];
+        let request = Request::new(Asks::Named(vec!["r_mar".to_owned()]));
+        let lines = run(Files::new(given), &request)
+            .expect("an answer")
+            .lines()
+            .to_vec();
+        let matched = "    matched pw on 2026-03-05: model ?\"ok?\" (ok), observed 100.00 PLN, \
+                       difference ?\"ok?\" (ok), timing +25 days";
+        assert!(
+            lines.iter().any(|l| l == matched),
+            "the model is the existence's hole: {lines:?}"
+        );
+        let balance = "    balance konto 2026-03-31 end (padded): booked 600.00 PLN, stated \
+                       600.00 PLN, gap 0.00 PLN";
+        assert!(
+            lines.iter().any(|l| l == balance),
+            "the balance reads the row: {lines:?}"
         );
     }
 }
