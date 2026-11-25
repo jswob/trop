@@ -9115,3 +9115,84 @@ The builder's turn on G3's review (`tmp/spec-2.3.1/inputs/review-g3.md`): B1 to 
   - a mean of rates prints in the rates' unit (`/year`), and `periodic` takes it;
   - two `law` or two `known` pins in one `as if` are LOAD-OVERLAP (N6).
 - **check quick:** green, 11 steps.
+
+## 2026-11-25 tally 2.3.1 G2, links by part 1 (issue #259)
+
+The eighth G2 brief: links follow the exist study's part 1 in the critic's repaired form (rulings 22, P23 to P25), with the lead's two facts of the same day (`LOAD-LEG`; P27, a `where`-false decision tuple has no point). Swept against refcore at the spec writer's ffebad27 (pin 6, part 1 built, extracted read-only under `tmp/spec-2.3.1/g2/pin6/`), not only against the statement.
+
+- **The paused edit: dropped.** It renamed `obs_links_for`'s re-entry cycle message and stopped `judged` swallowing cycles. Both paths go with part 1.
+- **Commits:**
+  - 4ed8131a `feat(book)`: (1) to (6), and the removals;
+  - 070f1744 `fix(walk)`: a counted modelled decision's `flows` lists what decided it exists (`exist_coll`), as refcore's `flows_move` does.
+
+**The statement, each sentence with one mechanism and a probe's line now** (the engine equals pin 6 on each):
+
+1. **By the name.** `judge_links` keeps every row that names the tuple, minus S1's and the unjoined rows (`fulfils_differ`, `unjoined`, L l.1728). It reads nothing of the instance, and `o.fulfils` is the name (`MvSrc::Inst`, compared by id). In `flows` of a move, a named tuple the list lacks, one that is none, or one whose day is a hole is counted by its rows, each on its own day (`named_tuples`, `count_by_rows`; P1-C7). A row is for the named tuple's `for` (`named_for`, in `flows` of a move and of a place; P1-C6).
+   - `critic-part1/h1_hole`: `fr: 330.00 PLN`, `ff9: 110.00 PLN`, `ff: -120.00 PLN`.
+   - `f1_for`: `ff: -120.00 PLN`.
+   - `exist-study/p1_badlink`: `a: 100.00 PLN`, `ob: 100.00 PLN`, `n: 1`, `dy: refused: RUN-NONE rent[2026-01] doesn't exist: a field read of it`.
+2. **The point.** `decision_fulfilled` (cbb928dc's booking) is unchanged; a `where`-false tuple isn't in the decision's list, so its row books in the first batch (P27). A run at the point that is refused or none and that rows name books only those rows, with no refusal (refcore's `run_one`; P1-C1).
+   - `d1_point_bad`: `sk: 200.00 PLN`, `b: 500.00 PLN`, `f: 400.00 PLN`.
+   - `review/g2rest/t/dl_whenref_k`: `b`, `kb: 870.00 PLN`.
+3. **A dead name** refuses and warns nothing. `x/dl_whenref` `ful: 1`.
+   - Rulings 16 Q3 stays for a plan's refused `m[k]` compared with `none` only. Rulings 18's reach to a decision's run and to a comparison with another movement is gone with ruling 22 (`refused_movement`, `comparison`).
+   - `g2fix/q3_cmp` is pin 6's on every ask.
+4. **Adjustments:** no change. `a1_adj*` are pin 6's bytes.
+5. **`LOAD-LEG`** (`load/overlap.rs`, `legs_named`): a standing row whose kind declares legs but not one of the named move's. `l1_lacks`: `refused: LOAD-LEG observation bank[a1] fulfils rent[2026-01] and lacks its leg fee (l1_lacks.tally:46)`.
+6. **The field read.** Load notes an item that reads a field through `.fulfils` (`Graph::fulfils_fields`, `post_rest`). Step 7's row-precise reach (`reached_link`, `rows_read`) counts only those items.
+   - `m1_mark`: `refused: LOAD-READS rest reaches a running read or projection of topup without reads topup (m1_mark.tally:22)`.
+   - `exist_mark`'s `o.fulfils == none` form loads. The rewritten unit test checks both.
+
+**Removed** (by function):
+- `link_tuple`, `link_tuple_read`, `link_places`, `LinkVerdict`, `link_verdict`;
+- the run's place and leg judgments, `states_leg`, `record`;
+- statement C: `EarlyRow`, `early_row`, `note_early_row`, `none_by_own_row`, `early_seed`/`early_found`, and the answer's re-walk loop;
+- links at the point: `links_at_point`, `unlink_at_point`, `unlink_run`, `Unlinked`, `link_reads_at_point`, `trace_link_decided`, `Body.decided`, and `judged`'s main walk;
+- Q5: `link_awaited`, `fulfils_awaited`;
+- C-13.6: `refused_link` and `count_move`'s two checks;
+- `obs_links_for`'s plan-making refusal;
+- the existence readers `o.fulfils` used: `linked_instance`, `through_existence`, `linked_read`, `linked_refused`, `linked_day`, `existence_list`, `cycle_at`;
+- 13 unit tests; one, step 7's, rewritten.
+
+`plans_making` stays, for `trace_existence`.
+
+**Lines** (`git diff --shortstat 1c5d42b3 HEAD -- engine/crates`): 20 files, +309 −1470. 4ed8131a is +303 −1471 and 070f1744 is +7.
+
+**The sweep** (`p1/vs6.sh`): every ask alone, whole bytes, against pin 6, over the critic's 25 texts, the study's probes, and `review/g2*`, `g3` (429 texts):
+- **Value lines differ only on:**
+  - G3's `p/` set (`mn_a4`, `mn_a12`, `r3f_f1`, `r3f_f2`, `r3f_f4`, `r3p_p16`, `r5e_e18`, `r5g_g5`, `tup_t9`, `tup_t10`, `tup_t13`): none is a link, and the fraction and tuple-print lines look like pin 6's other changes;
+  - 26 asks `explain <rule def>`, `tally run: not implemented` (`g2rest/ex/wf_*`, `t/wf_x`): the reviewer's run at 3e51d647 printed the same.
+- **Listing-only differences:** 105 texts. Two are part 1's: `d1_point` `f` (refcore lists `unfulfilled: skim[2026-02]`) and `p4_whynot` (the `assumed:` line of `dy` and `ex`, and `explain fa`'s rows [5] to [10]). The rest are the listing class under #261 (P19).
+- **Not done:** pin 6 refuses `o.fulfils == none` where the named instance is a refused plan instance. Its `_LinkTarget` reads `err`. The engine doesn't (Q3 is kept to a written `m[k]`, and the name reads no existence). No probe or vector meets it; it is for the writer and the lead.
+
+**`check commit`:** red at tests, 43 of 1575 test targets; **263 red vector ids**:
+- **77** are this turn's baseline of 79. Two went green: `fixes/p40/c2_link/qd`, `c4_when/qd`.
+- Of the 77, 68 are on my 99 and 71 on G3's 111, with the causes those entries give.
+- **186 are new.** None is in `t-link-class.txt` (those 691 asks aren't stored). Each is T's stored answer from before part 1, and the engine prints pin 6's bytes on all of them:
+  - 156 whole answers checked against pin 6, the ask alone or in its `__` order (`p1/reds6.sh`, `multi6.sh`, on copies);
+  - `b1_scen`, `b6_scen` (8) and `gate8/linkdiv2`: the same, on copies;
+  - `kernel/g10/observe`: the same `LOAD-LEG` (so too `g12/pb_g10_observe_observe`, `pp_proj_*`, `pp4_proj_*`, `gate8/m2_rt_l5_19_fulfils_lacks_leg`);
+  - the rest, by their stored line: `g12/*ledger_ledger`, `g12/v_mvq`, `g10/ledger`, `g4/nb3_at`, `gate8/m2_rt_*` (a dead link's `RUN-RECORD`); `g4/nb3_atT` (a `held:` line); `t221-gd/208-4-count` (S1 reached once both links stand); `t23-g1/ledger-left-out`, `ledger-never` (a window-day tuple a row names, P1-C7); `I:X:konto_balance@b_r1` (a listing line).
+- **By the stored line, of the 186:**
+  - 97: "doesn't exist or doesn't touch its places";
+  - 53 other: mostly a refused named instance's `RUN-DIV`, which the link no longer reads; the rest are listing or hole lines;
+  - 29: `LOAD-READS` (statement D's mark, now only a field read);
+  - 5: "lacks its leg" (now `LOAD-LEG`);
+  - 1: Q5's `RUN-ORDER`;
+  - 1: S1.
+  - T re-stores them from pin 6.
+
+**Exceptions:** +0. `exceptions --check`: 6; report-only 8, as before (a nested closure and a long chain in the new code were restructured).
+
+**Mutants:** none proved. Sites for T:
+- `count_by_rows`'s `for` arms;
+- `named_tuples`' key prefix;
+- `book_run`'s refused-with-rows branch;
+- `legs_named`'s legless-kind skip;
+- `rows_read`'s `fulfils_fields` filter;
+- `refused_movement`'s decision skip;
+- `comparison`'s `none` side.
+
+**STOP-REPORTs:** none new. Q2.6 and Q2.29 stay open.
+
+**check quick:** green, 11 steps.
