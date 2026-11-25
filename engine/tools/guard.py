@@ -74,7 +74,7 @@ RULE_GLOBS = [
     "engine/crates/*/benches/*",
     ".github/workflows/engine.yml",
     ".claude/settings.json",
-    # the builder's instructions (D6-3, F-23); the rest of .claude/ is the toolkit's
+    # the builder's instructions (D6-3, F-23)
     "engine/CLAUDE.md",
     ".claude/skills/engine-rust/*",
     # the coordinator's procedure (the retro after M0, decision 4)

@@ -17,7 +17,6 @@ Worktrees live in `~/projects/trop-worktrees/<branch, with / as ->`, never in a 
 git fetch origin
 git worktree add ~/projects/trop-worktrees/build-m1 -b build/m1 origin/master
 cp -c -R engine/target ~/projects/trop-worktrees/build-m1/engine/target   # APFS clone: no copy cost
-ln -s "$PWD/node_modules" ~/projects/trop-worktrees/build-m1/node_modules
 git -C ~/projects/trop-worktrees/build-m1 push -u origin build/m1
 ```
 

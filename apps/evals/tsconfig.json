@@ -1,9 +1,0 @@
-{
-	"extends": "@jswob/style-guide/typescript/base",
-	"compilerOptions": {
-		"noEmit": true,
-		"types": ["node"]
-	},
-	"include": ["."],
-	"exclude": ["node_modules", ".runs", ".promptfoo"]
-}

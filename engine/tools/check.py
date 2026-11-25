@@ -556,12 +556,12 @@ SELFTEST_VERSIONS = [*GUARD_TEST_VERSIONS, ["rustc", "-vV"], ["cargo", "-V"], ["
                      ["rustfmt", "--version"], ["rustdoc", "-V"], ["cargo", "deny", "--version"],
                      ["cargo", "nextest", "--version"], ["ast-grep", "--version"]]
 # beyond the rule files: the manifests and lock, the module list the ban coverage plants
-# into, the spec's and the oracle's checksums (the copy's pin), and the root package.json
-# the copy holds; the cases' own targets are added from the case files
+# into, and the spec's and the oracle's checksums (the copy's pin); the cases' own targets
+# are added from the case files
 SELFTEST_FILES = ["engine/Cargo.lock", "engine/Cargo.toml", "engine/crates/tally/Cargo.toml",
                   "engine/crates/tally-cli/Cargo.toml", "engine/tests/runner/Cargo.toml",
                   "engine/crates/tally/src/lib.rs", "engine/spec/VERSION", "engine/spec/SHA256SUMS",
-                  "engine/tools/SHA256SUMS", "package.json"]
+                  "engine/tools/SHA256SUMS"]
 PLANTS = re.compile(r"^--- (?:replace|append|delete|write) (\S+)", re.M)
 
 

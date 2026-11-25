@@ -181,7 +181,7 @@ A **run** is one coordinator, one pull request: a milestone (M2), a spec round (
 - **Pick:** one session, one role, one branch, one pull request into `master`. Sessions push and open pull requests; the user merges; Claude tags after the merge. Merge commits, never a squash or a rebase. A dependent pull request is stacked: built on its parent, base `master`, its body starting "Stacked on #X: merge that first". A wrong commit already pushed gets a new branch, not a force-push. Nothing under `tmp/` is tracked. No AI attribution anywhere. One `Closes #n` per line.
 - **Decided:** the user, 2026-10-31 ("I could do merging but you should create tags") and 2026-11-01: "Instead of merging PR's on your own just make sure they are green and stack the ones that depnd on others."
 - **Why, the newest lessons:** in M2, T pushed a commit whose scope `commit-check` refuses, then one with a 73-character subject, because its check ran through a pipe that hid the exit code (picks P56, P64). Read a check's own exit code. In 2.1.8 the local spec tag, one for every worktree, moved while T worked elsewhere and turned T's check-frozen red for a night: move it only between turns. And `commit-check` wants an engine commit after T's last logged-red commit, so a round where the two work side by side ends on the builder's closing commit (#208).
-- **Enforced:** the guard (R-132, and `commit-check` before every push, R-100); `merge-pr`; `worktree-done`; CI's job that fails on a tracked `tmp/` file.
+- **Enforced:** the guard (R-132, and `commit-check` before every push, R-100); `merge-pr`; `worktree-done`; `engine.yml`'s `changes` job, which fails on a tracked `tmp/` file (in `ci.yml` until the purge, 2026-11-25).
 
 ### D17. Hand-offs and compaction
 

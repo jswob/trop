@@ -1,6 +1,6 @@
 # Tally engine
 
-Tally is a language for a household's money and the law that governs it, plus the engine that runs it: a standalone Rust library and binary, input to output. It is built and proven here before the app, the store or an MCP server uses it. Nothing in `apps/` or `packages/` imports it.
+Tally is a language for a household's money and the law that governs it, plus the engine that runs it: a standalone Rust library and binary, input to output. It is built and proven here, in a repo of its own, before an app, a store or an MCP server uses it.
 
 ## `spec/`: tally 2.1
 

@@ -93,7 +93,7 @@ EDITS = [
     ("engine/RULEBOOK.md", RULES),
     ("engine/BUILDER.md", RULES),
     ("engine/rulebook.md", RULES),
-    (".claude/skills/design/SKILL.md", APP),
+    (".claude/skills/x/SKILL.md", APP),
     ("engine/crates/tally/build.rs", APP),
     ("engine/crates/tally-cli/build.rs", APP),
     (".claude/settings.local.json", APP),
@@ -101,8 +101,8 @@ EDITS = [
     (".claude/agents/x.md", APP),
     (".cargo/config.toml", APP),
     ("clippy.toml", APP),
-    ("package.json", APP),
-    ("apps/web/src/x.ts", APP),
+    ("README.md", APP),
+    ("notes/x.md", APP),
     ("engine/README.md", APP),
     ("engine/SCAFFOLD.md", APP),
     (os.path.join(HOME, ".claude", "settings.json"), APP),
@@ -213,8 +213,8 @@ BASH = [
     ("cat <<'EOF' | sh\ncd engine && rm clippy.toml\nEOF", RULES, ""),
     ("cat engine/spec/DONE.md 2>&1 | head", ALL, ""),
     ("python3 -I engine/spec/tools/loadcheck.py --selftest", ALL, ""),
-    ("bun run engine:check", ALL, ""),
-    ("bun engine:spec-check", ALL, ""),
+    ("engine/tools/check full", ALL, ""),
+    ("cd engine && tools/check-frozen", ALL, ""),
     ("sed -i '' 's/a/b/' /tmp/tally-guard-sed.txt", ALL, ""),
     ("sed -n 's/a/b/p' engine/spec/DONE.md", ALL, ""),
     ("grep -rn token engine/spec > /dev/null", ALL, ""),
@@ -709,8 +709,8 @@ def drop_step(job_name, name):
     return change
 
 
-def app_only(pr, files, job):
-    files[:] = [{"filename": "apps/web/src/x.ts", "previous_filename": None, "status": "modified"}]
+def outside_only(pr, files, job):
+    files[:] = [{"filename": "README.md", "previous_filename": None, "status": "modified"}]
     pr["changedFiles"] = 1
     pr["statusCheckRollup"] = [c for c in pr["statusCheckRollup"] if c.get("workflowName") != "Engine"]
 
@@ -751,7 +751,7 @@ def job_field(job_name, key, value):
 # (label, a change to the recorded input, the words the refusal must hold, or None: it merges)
 MERGES = [
     ("the recorded PR", lambda *_: None, None),
-    ("an app-only PR without check full", app_only, None),
+    ("a PR outside the engine without check full", outside_only, None),
     ("a neutral and a skipped check", set_check("lint-and-typecheck", conclusion="SKIPPED"), None),
     ("Closes in lower case", field("body", "Some work.\n\ncloses #12"), None),
     ("commit-check skipped", set_step("check groups", "engine/tools/commit-check", "skipped"), None),
@@ -802,7 +802,7 @@ MERGES = [
     ("the old single check full only", old_check_full, "`check lint` didn't run"),
     ("commit-check failed", set_step("check groups", "engine/tools/commit-check", "failure"), "commit-check` ended failure"),
     ("files missing from GitHub's list", field("changedFiles", 4000), "can't be checked"),
-    ("an app-only PR changing the CI", both(app_only, touch(".github/workflows/engine.yml")), "walls"),
+    ("a PR outside the engine changing the CI", both(outside_only, touch(".github/workflows/engine.yml")), "walls"),
 ]
 for wall in ("engine/tools/guard.py", "engine/tools/guard", "engine/tools/merge-pr", "engine/tools/merge_pr.py",
              "engine/tools/worktree-done", "engine/tools/worktree_done.py", "engine/tools/check.py", "engine/tools/check",
