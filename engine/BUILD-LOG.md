@@ -9442,3 +9442,78 @@ The ninth G2 brief: the five blocking findings of part 1's review (`tmp/spec-2.3
 - `check quick`: green at each fix's commit; the last run follows this entry's commit.
 
 **Next:** the fix review of this G2 fix. The writer's W9 takes B1 to B5 into refcore with G5's rows, N1 and N3 among them.
+
+## 2026-11-25 tally 2.3.1 G2, the last fix: statement F (issue #259)
+
+The tenth and last G2 brief: statement F (rulings 23, P34), after the part-1 fix review (`tmp/spec-2.3.1/inputs/review-part1fix.md`, probes in `inputs/review/part1fix/`). "An instance's own state reaches only reads of the instance; a row that fulfils it reads only the instance's name and its `for`." It sits on the lead's merge of T's re-run on pin 6 (8d45e4e1). Built from the statement, not refcore: pin 7 is being mended beside this. Before each commit I swept `part1fix/` (with `b2_sc/`), `part1/`, the critic's and the earlier G2 reviews' probes (`g2/p1/sw2.sh`, value lines; `res7.sh`, every `residuals` ask whole). Every moved line is in its clause's class below.
+
+**Commits, a clause each, one mechanism each:**
+- 76fe1d0a `fix(walk)` (c): `unbooked`, the after-run count, reads the period's hole from the same `, for k` set as the log's entries (`hole_of`).
+- 4afab399 `fix(load)` (d): one set, `linked_moves`, gives the moves a move's rows name, for the mark and for `reads`. The keyed reach goes by key position (`fulfils_keyed`, `key_fields`, `key_passes` carry positions).
+- 7281c6ba `fix(book)` (a): one reading, `cell_of`, of the existence cell, a hole or a refusal, for `m[k] == none` (`existence_cell`, now every move and the hole) and for field reads (`mv_field`).
+- 3e8c545f `fix(walk)` (b): a dayless instance (a hole day or a refused one) that a row stands in for is one case each in the decision agenda (never booked) and in `flows` of a move (counted by its rows).
+- 6f2f596a `fix(book)` (a), the ledger: an instance's model at a place it touches is `cell_of`'s cell.
+
+**Each clause with its probes' lines now** (`part1fix/` unless named):
+
+- **(a) The reads of the instance:**
+  - N4: `e` is `refused: RUN-DIV` in `b2_dec_cov`, `b2_dec3`, `b2_dec3_norow`, `b3_refday`, `b3_refday_min` and `part1/x2_refused_dec`. It was `false`.
+  - N5: `b2_mix` and `b2_mix_noa2` `dy2`, `e2` print `?"feb divisor?" (dz[2026-02])`, and `part1/x3_hole_when` `dy`, `e` print `?"jan divisor?"`. They were a day and `false`. In `x3_hole_when` `rs`, the matched line's model is that hole.
+  - A refusal still refuses the ledger whole: `x1_refused`, `x2_refused_dec`, `b2_mix` `rs`.
+- **(b) Readers of a row:**
+  - `b3_refday_min`: `c 790.00`, `fp -110.00`, `f 110.00`, `kt 1`; `e` and `dy` refuse `RUN-DIV`.
+  - `b3_refday_plan`: `f 110.00`.
+  - `b3_refday`: `sk 700.00`, `md 100.00`, `f 400.00`, `b 0.00`, `j2 200.00`, as `d3_holeday` prints.
+- **(c) The row's period:** `b5_poste` `fa`, `fb` and `fc` print `?"which period is may's rent for?" (per[2026-05])`. They were −200.00, −200.00 and −100.00. `fw`, whose span leaves May out, stays −100.00.
+- **(d) Step 7 and `reads`:**
+  - `b1_two_row`: `g 0.00`, `b 470.00`, `f 400.00` PLN, refcore's; `b1_two_inst` stays `LOAD-READS`.
+  - `b1_reads`, `b1_reads_plain`, `b1_reads_paren`, `b1_reads_pass` load. At run, `g`, `b`, `f` refuse `RUN-ORDER decisions rest and topup read each other`: topup's `when` reads `bal(konto)`, which rest moves, on the same day. That is the order refusal for two decisions that read each other, outside F's clause, so I record it for the lead's probes.
+
+**Lines that moved beyond F's named probes, each in a clause's class:**
+- **(a), `none == m[k]`:** a row whose `fulfils` is none, compared with `m[k]`, reads the instance's existence. This is rulings 16 Q3's refusal, now for holes and decisions too.
+  - `x/dl_whenref`, `g2fix/b3_whenref_az` and `g2rest/t/dl_whenref_k` `ful`: `RUN-DIV`.
+  - `g2rest/t/q1_plan` and `q1_plan_k` `s0`, `ks0`: the hole `?"mar dz"`.
+  - `x/dl_chk5` `ful` and `cyc_link` `eq` print `RUN-ORDER`: topup's main-walk run is refused there.
+- **(a), a hole existence:** `x/dl_limhole` `dy` and `ful`; `g2rest/t/c_order` `e7` and `hd_false_nowhere` `e`, whose existence is the day's hole; `b2_mix_noa2` `fi`, whose `ties by t.day` reads the day of an instance with a hole existence that no row names.
+- **(b):** `g2rest/t/c_order` `f1`, `f2`, `f3`, `f6`, `f7` and `hd_false` `f` print 100.00 PLN, where a named instance refused on a hole day refused every span.
+
+**What `check commit` shows red:** 144 ids (`tmp/spec-2.3.1/g2/red-f.txt`, from `tests-f.log`). Against the 443: 387 are gone and 56 still red, and 88 aren't in the 443. Since that list, the lead merged T's re-run on pin 6 (0ac4c5cd: 820 new vectors, the stores re-run on refcore at ffebad27), so I sort the 144 by T's re-run as well:
+
+- **41 are on T's `Logged-Red:` list** and still red. They are F's classes and T's held ones:
+  - F's classes: `t231rv3` `c_order` `f*`, `wr_dh_*` and `wt_dh_nr` `f`/`fj`, `dl_whenref_k`, `hd_false/f`, `cyc_link_runwhen/eq`;
+  - the `unfulfilled: topup[2026-01]` and `pinned:` listing lines of `q5_*_500/dy` and `p15_*`;
+  - `t231p1/d1_point` and `d1_point_bad` `rs` (B4);
+  - and `t23-g1/ledger-*`, `items/g5/q_dot`, `t221-gd/208-4-count`, `g6cfix/x1b_when/n`, `gate8/m2_g6_kbs2`.
+- **51 are in the 443 and not logged**, each in its earlier class:
+  - last turn's B2/B4 ids: `linkdiv`, `b3_whenref_az`, `b5_plan`, `b6_row`, `m2_g4_p_both_konto*`;
+  - card listing order (`g11`, `gate8/m2_g2_f18*`, `r7/t_f18`, `later/inputs_of_balance`);
+  - the `LOAD-KEY` words (`g2fix/p5_b4`, `p7_yk_out`, `r3_y4_*`);
+  - `t231g2/selfread`'s `RUN-CYCLE`;
+  - `f10_two_day_parts`, not built;
+  - the `g12` `unfulfilled:` listings;
+  - `c4_when`'s explain listing (`edw`, `epo`, `en…`, `qn…`; #261);
+  - and the rest of G5's classes.
+- **52 are in neither:** new vectors T stored at pin 6 that turn red here.
+  - 50 are F's: (a) `t231rv3/wh_*` and `wt_*` `d` and `e` (holes), `c_order/e7`, `hd_false_nowhere/e`, `q1_plan*` `s0`/`ks0`, `q5_same_k_nowhen/ful`; (b) `wr_*` and `w*_nr` `b`/`f`/`k`, `q1_plan_k` `kb`/`kf` (the row's values where a refused `where` or key refused them).
+  - 2 are `p40/c4_when` `ept` and `epf`, listing-only (`ept: 0.00 PLN` as stored). The engine lists `row v:d5` and `v:ok[2026-02]` under the pins, as `c4_when`'s held rows `en`, `ez` and `ed` do (#261). I didn't find which clause moved them.
+
+**Lines out and in:** +335 −66 in `engine/crates` over 11 files:
+- (c) +32 −2;
+- (d) +98 −37;
+- (a) +90 −18;
+- (b) +64 −7;
+- (a)'s ledger +52 −3.
+
+**STOP-REPORTs:** none new. G5's (R4's rows) stays open.
+
+**Exceptions:** delta 0 (`check commit`'s exceptions step green).
+
+**Mutants:** none run.
+
+**Usage:** about 5.91 % of the week by `engine/tools/usage tmp/spec-2.3.1/g2-ids.txt` before this entry, about 0.35 points this turn.
+
+**Checks:**
+- `check commit: red at tests, stopped after 10 of 24 steps (113s)`, red only on the 144 ids above (29 of 1594 test targets, all T's);
+- `check quick`: green at each commit; the last run follows this entry's commit.
+
+**Next:** the lead's own probes of statement F against refcore at pin 7 and the spec. This is G2's last fix.
