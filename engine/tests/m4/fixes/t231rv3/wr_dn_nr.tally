@@ -1,0 +1,76 @@
+model ex
+  tally 2
+  on 2026-05-20
+  start 2026-01-01
+  end 2026-05-31
+
+source s "invented values"
+unit PLN: currency minor 0.01
+index month = month 2026-01..2026-05
+place pot: accounts PLN lives 2026-01-01..
+place landlord: outside lives 1900-01-01..
+input bank: observed
+input amt: money PLN
+input ten: int
+input dz[m in month]: int
+input dd[m in month]: int
+input dn[m in month]: bool
+input wr[m in month]: bool
+input ok[m in month]: bool
+
+move rent[m in month where ten / dz[m] > 0]: transfers
+  on if dn[m] then none else day_of(m, dd[m])
+  when if wr[m] then ok[m + 12] else ok[m]
+  leg cash from pot to landlord amount amt
+
+def ob[m in month]: money PLN = observed(rent[m]).cash.amount
+ask ob2: observed(rent[2026-02]).cash.amount
+ask f: flows(rent, 2026-02)
+ask fj: flows(rent, 2026-01)
+ask n: count(r in bank over 2026-02 where r.fulfils == none)
+ask e: rent[2026-02] == none
+ask d: rent[2026-02].day
+ask b: bal(pot, 2026-03-31)
+ask k: count(t in transfers over 2026-02)
+ask x: explain ob[2026-02]
+ask i: inputs-of ob[2026-02]
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  amt = 100.00 PLN "s"
+  ten = 10 "s"
+  opening[pot] = 9000.00 PLN at 2026-01-01 start "s"
+  dz[2026-01] = 1 "z"
+  dz[2026-02] = 0 "z"
+  dz[2026-03] = 1 "z"
+  dz[2026-04] = 1 "z"
+  dz[2026-05] = 1 "z"
+  dd[2026-01] = 5 "d"
+  dd[2026-02] = 5 "d"
+  dd[2026-03] = 5 "d"
+  dd[2026-04] = 5 "d"
+  dd[2026-05] = 5 "d"
+  dn[2026-01] = false "n"
+  dn[2026-02] = true "n"
+  dn[2026-03] = false "n"
+  dn[2026-04] = false "n"
+  dn[2026-05] = false "n"
+  wr[2026-01] = false "w"
+  wr[2026-02] = true "w"
+  wr[2026-03] = false "w"
+  wr[2026-04] = false "w"
+  wr[2026-05] = false "w"
+  ok[2026-01] = true "o"
+  ok[2026-02] = true "o"
+  ok[2026-03] = true "o"
+  ok[2026-04] = true "o"
+  ok[2026-05] = true "o"
+
+version rows
+  cite s
+  governs 2026-01..2026-02
+  known 2026-03-01
+  bank[r1] = (on: 2026-01-05, kind: transfers, leg cash from pot to landlord amount 100.00 PLN, fulfils: rent[2026-01]) "r1"
+  bank[r2] = (on: 2026-02-05, kind: transfers, leg cash from pot to landlord amount 100.00 PLN, fulfils: rent[2026-02]) "r2"

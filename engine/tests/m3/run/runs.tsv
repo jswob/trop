@@ -1,7 +1,7 @@
 id	cwd	args	extra	rule
 run/twice	m3/run	run ../check/model.tally two.tally --ask q_b q_b	-	E §1, OPERATIONS §7: an id asked twice is answered twice, in the request's order
 run/order	m3/run	run ../check/model.tally two.tally --ask q_b q_a	-	E §1: the results in the request's order, not the files'
-run/ask-empty	m3/run	run ../check/model.tally two.tally --ask	-	OPERATIONS §2.1: --ask with no id after it asks every ask, as with none
+run/ask-empty	m3/run	run ../check/model.tally two.tally --ask	-	usage
 run/cuts	m3/run	run ../check/model.tally two.tally --ask q_k1 q_k2	-	E §1, L §7.5: each ask its own clock K in one run
 run/unnamed	m3/run	run ../check/model.tally two.tally --ask q_a	unnamed.tally	E §1: a file the request doesn't name is not read
 run/dir	m3/run	run ../check/model.tally d/ --ask q_d	d/notes.txt	L §6.1: under a directory given, only .tally files are read

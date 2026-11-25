@@ -1,0 +1,50 @@
+model cl
+  tally 2
+  on 2026-04-20
+  start 2026-01-01
+  end 2026-03-31
+
+source s "probe"
+unit PLN: currency minor 0.01
+index month = month 2026-01..2026-03
+place konto: accounts PLN lives 2026-01-01..
+place save: accounts PLN lives 2026-01-01..
+place shop: outside lives 1900-01-01..
+input bank: observed
+input amt: money PLN
+input d5: int
+input zz: int
+
+move topup[m in month]: transfers
+  reads save
+  on day_of(m, d5)
+  leg cash from save to konto amount amt / zz + 0 * bal(save)
+
+move chk[m in month]: transfers
+  reads konto
+  on day_of(m, d5)
+  leg cash from save to shop amount 0 * bal(konto)
+  after topup
+
+ask ob: observed(topup[2026-02]).cash.amount
+ask dy: topup[2026-02].day
+ask eq: topup[2026-02] == none
+ask ful: count(o in bank over 2026-02 where o.fulfils == topup[2026-02])
+ask loose: sum(o.cash.amount for o in bank over 2026-02 where o.fulfils == none)
+ask ft: flows(topup, 2026-02)
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  opening[konto] = 100.00 PLN at 2026-01-01 start "s"
+  opening[save] = 5 000.00 PLN at 2026-01-01 start "s"
+  amt = 400.00 PLN "s"
+  d5 = 5 "s"
+  zz = 0 "s"
+
+version feb
+  cite s
+  governs 2026-02
+  known 2026-03-01
+  bank[r1] = (on: 2026-02-05, kind: transfers, leg cash from save to konto amount 400.00 PLN, fulfils: topup[2026-02]) "the top-up"

@@ -38,18 +38,12 @@ e_ded (y = 2027) [c25 = *]: 1 000 PLN
   held: window_yrs = 5 (pit_2018_2244), read for 2027-01-01
   law date 2026-10-18, cut 2026-10-18
 e_ded (y = 2028) [c25 = *]: 1 000 PLN
-  held: half_share = 0.5 (pit_2018_2244), read for 2027-01-01
-  held: half_share = 0.5 (pit_2018_2244), read for 2028-01-01
-  held: window_yrs = 5 (pit_2018_2244), read for 2027-01-01
-  held: window_yrs = 5 (pit_2018_2244), read for 2028-01-01
+  held: half_share = 0.5 (pit_2018_2244), read for 2027-01-01, 2028-01-01
+  held: window_yrs = 5 (pit_2018_2244), read for 2027-01-01, 2028-01-01
   law date 2026-10-18, cut 2026-10-18
 e_ded (y = 2029) [c25 = *]: 1 000 PLN
-  held: half_share = 0.5 (pit_2018_2244), read for 2027-01-01
-  held: half_share = 0.5 (pit_2018_2244), read for 2028-01-01
-  held: half_share = 0.5 (pit_2018_2244), read for 2029-01-01
-  held: window_yrs = 5 (pit_2018_2244), read for 2027-01-01
-  held: window_yrs = 5 (pit_2018_2244), read for 2028-01-01
-  held: window_yrs = 5 (pit_2018_2244), read for 2029-01-01
+  held: half_share = 0.5 (pit_2018_2244), read for 2027-01-01, 2028-01-01, 2029-01-01
+  held: window_yrs = 5 (pit_2018_2244), read for 2027-01-01, 2028-01-01, 2029-01-01
   law date 2026-10-18, cut 2026-10-18
 e_left (y = 2025) [c25 = *]: 4 000 PLN
   law date 2026-10-18, cut 2026-10-18
@@ -60,18 +54,12 @@ e_left (y = 2027) [c25 = *]: 2 000 PLN
   held: window_yrs = 5 (pit_2018_2244), read for 2027-01-01
   law date 2026-10-18, cut 2026-10-18
 e_left (y = 2028) [c25 = *]: 1 000 PLN
-  held: half_share = 0.5 (pit_2018_2244), read for 2027-01-01
-  held: half_share = 0.5 (pit_2018_2244), read for 2028-01-01
-  held: window_yrs = 5 (pit_2018_2244), read for 2027-01-01
-  held: window_yrs = 5 (pit_2018_2244), read for 2028-01-01
+  held: half_share = 0.5 (pit_2018_2244), read for 2027-01-01, 2028-01-01
+  held: window_yrs = 5 (pit_2018_2244), read for 2027-01-01, 2028-01-01
   law date 2026-10-18, cut 2026-10-18
 e_left (y = 2029) [c25 = *]: 0 PLN
-  held: half_share = 0.5 (pit_2018_2244), read for 2027-01-01
-  held: half_share = 0.5 (pit_2018_2244), read for 2028-01-01
-  held: half_share = 0.5 (pit_2018_2244), read for 2029-01-01
-  held: window_yrs = 5 (pit_2018_2244), read for 2027-01-01
-  held: window_yrs = 5 (pit_2018_2244), read for 2028-01-01
-  held: window_yrs = 5 (pit_2018_2244), read for 2029-01-01
+  held: half_share = 0.5 (pit_2018_2244), read for 2027-01-01, 2028-01-01, 2029-01-01
+  held: window_yrs = 5 (pit_2018_2244), read for 2027-01-01, 2028-01-01, 2029-01-01
   law date 2026-10-18, cut 2026-10-18
 e_taxable (y = 2025) [c25 = *]: 0 PLN
   law date 2026-10-18, cut 2026-10-18
@@ -82,18 +70,12 @@ e_taxable (y = 2027) [c25 = *]: 0 PLN
   held: window_yrs = 5 (pit_2018_2244), read for 2027-01-01
   law date 2026-10-18, cut 2026-10-18
 e_taxable (y = 2028) [c25 = *]: 300 PLN
-  held: half_share = 0.5 (pit_2018_2244), read for 2027-01-01
-  held: half_share = 0.5 (pit_2018_2244), read for 2028-01-01
-  held: window_yrs = 5 (pit_2018_2244), read for 2027-01-01
-  held: window_yrs = 5 (pit_2018_2244), read for 2028-01-01
+  held: half_share = 0.5 (pit_2018_2244), read for 2027-01-01, 2028-01-01
+  held: window_yrs = 5 (pit_2018_2244), read for 2027-01-01, 2028-01-01
   law date 2026-10-18, cut 2026-10-18
 e_taxable (y = 2029) [c25 = *]: 1 100 PLN
-  held: half_share = 0.5 (pit_2018_2244), read for 2027-01-01
-  held: half_share = 0.5 (pit_2018_2244), read for 2028-01-01
-  held: half_share = 0.5 (pit_2018_2244), read for 2029-01-01
-  held: window_yrs = 5 (pit_2018_2244), read for 2027-01-01
-  held: window_yrs = 5 (pit_2018_2244), read for 2028-01-01
-  held: window_yrs = 5 (pit_2018_2244), read for 2029-01-01
+  held: half_share = 0.5 (pit_2018_2244), read for 2027-01-01, 2028-01-01, 2029-01-01
+  held: window_yrs = 5 (pit_2018_2244), read for 2027-01-01, 2028-01-01, 2029-01-01
   law date 2026-10-18, cut 2026-10-18
 f_ded (y = 2025) [c25 = *]: 0 PLN
   law date 2026-10-18, cut 2026-10-18
@@ -104,8 +86,7 @@ f_ded (y = 2027) [c25 = *]: 0 PLN
   law date 2026-10-18, cut 2026-10-18
 f_ded (y = 2028) [c25 = *]: 2 500 PLN
   held: half_share = 0.5 (pit_2018_2244), read for 2028-01-01
-  held: window_yrs = 5 (pit_2018_2244), read for 2027-01-01
-  held: window_yrs = 5 (pit_2018_2244), read for 2028-01-01
+  held: window_yrs = 5 (pit_2018_2244), read for 2027-01-01, 2028-01-01
   law date 2026-10-18, cut 2026-10-18
 f_left (y = 2025) [c25 = *]: 5 000 PLN
   law date 2026-10-18, cut 2026-10-18
@@ -116,8 +97,7 @@ f_left (y = 2027) [c25 = *]: 2 500 PLN
   law date 2026-10-18, cut 2026-10-18
 f_left (y = 2028) [c25 = *]: 0 PLN
   held: half_share = 0.5 (pit_2018_2244), read for 2028-01-01
-  held: window_yrs = 5 (pit_2018_2244), read for 2027-01-01
-  held: window_yrs = 5 (pit_2018_2244), read for 2028-01-01
+  held: window_yrs = 5 (pit_2018_2244), read for 2027-01-01, 2028-01-01
   law date 2026-10-18, cut 2026-10-18
 f_taxable (y = 2025) [c25 = *]: 0 PLN
   law date 2026-10-18, cut 2026-10-18
@@ -128,8 +108,7 @@ f_taxable (y = 2027) [c25 = *]: 2 100 PLN
   law date 2026-10-18, cut 2026-10-18
 f_taxable (y = 2028) [c25 = *]: 4 200 PLN
   held: half_share = 0.5 (pit_2018_2244), read for 2028-01-01
-  held: window_yrs = 5 (pit_2018_2244), read for 2027-01-01
-  held: window_yrs = 5 (pit_2018_2244), read for 2028-01-01
+  held: window_yrs = 5 (pit_2018_2244), read for 2027-01-01, 2028-01-01
   law date 2026-10-18, cut 2026-10-18
 g_ded (y = 2025) [c25 = *]: 5 000 000 PLN
   law date 2026-10-18, cut 2026-10-18

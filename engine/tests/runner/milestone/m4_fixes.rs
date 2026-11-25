@@ -18,7 +18,7 @@ mod tests {
 
     /// The groups this target tests, one `#[test]` each: refcore's (`fixes-…`) and the
     /// spec's (`spec-…`).
-    const GROUPS: [&str; 40] = [
+    const GROUPS: [&str; 43] = [
         "fixes-g1",
         "fixes-g2",
         "fixes-g2fix",
@@ -45,8 +45,11 @@ mod tests {
         "fixes-t231g1",
         "fixes-t231g2",
         "fixes-t231g34",
+        "fixes-t231g58",
+        "fixes-t231p1",
         "fixes-t231rv1",
         "fixes-t231rv2",
+        "fixes-t231rv3",
         "fixes-traced",
         "spec-g1",
         "spec-g2",
@@ -427,6 +430,41 @@ mod tests {
     #[test]
     fn m4_fixes_t231rv2() {
         group_holds(VECTORS, "fixes-t231rv2");
+    }
+
+    /// tally 2.3.1's G2 rest review (`tmp/spec-2.3.1/inputs/review-g2rest.md`), its probes on
+    /// the sixth pin (`m4/fixes/t231rv3/`): links by part 1 (rulings 22, the user's P23 to P27:
+    /// a row stands in for the instance its `fulfils` names, by the name alone; a decision's
+    /// own-day row at its point; a dead link in the residual ledger alone), on the forms the
+    /// review built for statements C to E (`q1_plan*`, `q5_*`, `c_order`, `dl_whenref_k`,
+    /// `p15_axis`, `wt_*`). Value asks only (rulings 21); left out, refcore lagging the review's
+    /// B1, B2, N4, N6 then (`hd_false*`, `cyc_link`, `*_nowhen`, `p16_*`).
+    #[test]
+    fn m4_fixes_t231rv3() {
+        group_holds(VECTORS, "fixes-t231rv3");
+    }
+
+    /// tally 2.3.1's part 1 (rulings 22), the critic's probes (`tmp/spec-2.3.1/inputs/
+    /// critic-part1.md`, `m4/fixes/t231p1/`): a decision's own-day row at its point, the link
+    /// good or dead (`d1_point*`); a dead link's numbers (`p1_badlink`); a missing leg refused
+    /// at load, `LOAD-LEG` (`l1_lacks`); a row's period from its named tuple (`f1_for`); a hole
+    /// instance its rows fulfil (`h1_hole`); a link to an adjustment, §5.14.3's (`a1_adj`); a
+    /// field read through `o.fulfils` (`o1_fields`); step 7's reach through that read
+    /// (`m1_mark*`). Value asks only (rulings 21).
+    #[test]
+    fn m4_fixes_t231p1() {
+        group_holds(VECTORS, "fixes-t231p1");
+    }
+
+    /// tally 2.3.1's groups 5 and 8 on the sixth pin, refcore's bytes from the writer's new
+    /// tests (`m4/fixes/t231g58/`): R4, one printer (`held:` once per row and keys read,
+    /// `heldruns`; a check's sides in their declared type, `pct`; `RUN-NONE` naming its read,
+    /// `nonewords`; a one-day window and a tuple, `win1`; a bare 0 in a nested `if`,
+    /// `p36_t1`); W8, a mean of rates is a rate (`b3`), a fraction pin is a row (`n3`), two law
+    /// pins in one `as if` overlap (`n6`). Value and `held:` asks (rulings 21, P24).
+    #[test]
+    fn m4_fixes_t231g58() {
+        group_holds(VECTORS, "fixes-t231g58");
     }
 
     /// P12, the one statement for built-ins (`tmp/m4/auto-picks.md`; G1's fix review F1,

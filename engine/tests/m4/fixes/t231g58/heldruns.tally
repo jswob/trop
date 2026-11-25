@@ -1,0 +1,38 @@
+model m
+  tally 2
+  on 2026-01-31
+  start 2026-01-01
+  end 2026-01-31
+
+source s "s"
+
+unit PLN: currency minor 0.01
+
+place konto: accounts PLN lives 2026-01-01..
+place shop: outside lives 1900-01-01..
+
+index wk = day 2026-01-05..2026-01-11
+index regions = [pl, de]
+
+input fee: money PLN
+input d0: date
+input dx: date
+input rd[r in regions]: date reading
+
+move pay[d in wk where d != dx and last(rd[pl], d) == d0 and last(rd[de], d) == d0]: transfers
+  on d
+  at d
+  leg cash from konto to shop amount fee
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  fee = 10.00 PLN
+  d0 = 2026-01-02
+  dx = 2026-01-08
+  rd[pl] = 2026-01-02 at 2026-01-01
+  rd[de] = 2026-01-02 at 2026-01-01
+  opening[konto] = 100.00 PLN at 2026-01-01 start "w"
+
+ask q: bal(konto, 2026-01-31)
