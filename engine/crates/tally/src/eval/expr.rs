@@ -324,6 +324,11 @@ impl Engine {
                 if let Some(lit) = year_literal(e, &v)? {
                     return Ok(Given::Literal(lit));
                 }
+                // a key that is none names its read (L §8.4 `RUN-NONE`'s row; tally 2.3.1
+                // P42, the review's note 6)
+                if v == Value::None {
+                    return Err(super::bindings::none_here(m, e, env, "a key"));
+                }
                 Ok(Given::Value(v))
             }
         }

@@ -67,7 +67,7 @@ impl Engine {
         ctx: Ctx,
     ) -> Result<Value, Stop> {
         let [v] = self
-            .args(m, call, env, ctx)?
+            .args_named(m, call, env, ctx)?
             .try_into()
             .map_err(|_| arity())?;
         if let Value::Hole(_) = v {
@@ -106,7 +106,7 @@ impl Engine {
         ctx: Ctx,
     ) -> Result<Value, Stop> {
         let [a, b] = self
-            .args(m, call, env, ctx)?
+            .args_named(m, call, env, ctx)?
             .try_into()
             .map_err(|_| arity())?;
         if a.as_hole().is_some() || b.as_hole().is_some() {
@@ -153,7 +153,7 @@ impl Engine {
         ctx: Ctx,
     ) -> Result<Value, Stop> {
         let [a, b] = self
-            .args(m, call, env, ctx)?
+            .args_named(m, call, env, ctx)?
             .try_into()
             .map_err(|_| arity())?;
         if a.as_hole().is_some() || b.as_hole().is_some() {
@@ -191,7 +191,7 @@ impl Engine {
         ctx: Ctx,
     ) -> Result<Value, Stop> {
         let [a, b, k] = self
-            .args(m, call, env, ctx)?
+            .args_named(m, call, env, ctx)?
             .try_into()
             .map_err(|_| arity())?;
         if let Some(h) = crate::hole::spread(&[a.as_hole(), b.as_hole(), k.as_hole()]) {
@@ -217,7 +217,7 @@ impl Engine {
         ctx: Ctx,
     ) -> Result<Value, Stop> {
         let [d] = self
-            .args(m, call, env, ctx)?
+            .args_named(m, call, env, ctx)?
             .try_into()
             .map_err(|_| arity())?;
         if let Value::Hole(_) = d {

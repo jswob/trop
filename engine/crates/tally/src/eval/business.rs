@@ -79,6 +79,8 @@ impl Engine {
     ) -> Result<Value, Stop> {
         let cal = call.args.last().ok_or_else(arity)?;
         let d = self.ev(m, call.args.first().ok_or_else(arity)?, env, ctx)?;
+        // its read and the built-in (L §8.4 `RUN-NONE`'s row; tally 2.3.1 N256.8)
+        named_none(m, call, (0, &d), env)?;
         if let Value::Hole(_) = d {
             return Ok(d);
         }
