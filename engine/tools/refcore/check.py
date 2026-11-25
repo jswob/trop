@@ -1414,7 +1414,7 @@ class Checker:
             # read at the law date, though the calendar is read at each day asked
             ksc = sc.child()
             ksc.readmode = None
-        for kn, b in zip(keys, binds):
+        for kpos, (kn, b) in enumerate(zip(keys, binds)):
             if kn.k == 'star':
                 raise LoadError('LOAD-PARSE', 'cannot parse: * stands only in a pin', kn.loc)
             c = self.key_pos(kn, b.dom, ksc)
@@ -1425,7 +1425,13 @@ class Checker:
             if kind == 'def' and kb.k == 'field' and kb.name == 'fulfils':
                 # a def keyed by an `o.fulfils`: its field reads of the key are reads through the fulfils (E §3.1
                 # steps 5, 7; tally 2.3.1 P32 B1, m2_keyed), marked in check_moves_graph
-                self.__dict__.setdefault('fulfils_keyed', set()).add((sc.item, info.id))
+                self.__dict__.setdefault('fulfils_keyed', set()).add((sc.item, info.id, kpos))
+            elif kind == 'def' and kb.k == 'name' and sc.item is not None and sc.item[0] == 'def' and \
+                    kb.id in sc.keyvars:
+                # a def's key passed on as another def's key: a field read there is a read of this key (E §3.1 step 5;
+                # tally 2.3.1 statement F (d))
+                self.__dict__.setdefault('key_passes', set()).add(
+                    ((sc.item[1], sc.keyvars.index(kb.id)), (info.id, kpos)))
             if c[0] == 'lit':
                 env[b.var] = key_text(c[1])
             elif kn.k == 'name' and kn.id in sc.vars:
