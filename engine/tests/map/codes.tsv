@@ -214,6 +214,7 @@ LOAD-ORDER	L §8.3	M0	… read each other with no before or after	2	M0	codes/m0/
 LOAD-ORDER	L §8.3	M0	<a> before <b> contradicts a read of <b>'s legs	2	M0	codes/m0/basic/order-legs
 LOAD-ORDER	L §8.3	M0	<a> before <m>: <m> is a plan or an observation	1	M0	codes/m0/basic/order-plan
 LOAD-ORDER	L §8.3	M0	<a> before <a>: a move isn't ordered against itself	1	M0	codes/m0/basic/order-self
+LOAD-ORDER	L §8.3	M0	<a> before … <a>: written orders form a cycle	0	-	-
 LOAD-PRICE	L §8.3	M0	*	13	M0	codes/m0/basic/price
 LOAD-PRICE	L §8.3	M0	value(<x>) in <CUR> holds units in <u> and states no by	3	M0	codes/m0/basic/price-by
 LOAD-PRICE	L §8.3	M0	asset <x> names no price input	1	M0	codes/m0/basic/price
@@ -275,7 +276,7 @@ LOAD-MISSING	L §8.3	M0	missing(<r>): <r> is not a read of an input	1	M0	codes/m
 LOAD-ORIENT	L §8.3	M0	*	1	M0	codes/m0/basic/orient
 LOAD-ORIENT	L §8.3	M0	ask <q> reaches crps or pdf without orient	1	M0	codes/m0/basic/orient
 RUN-NONE	L §8.4	S	*	33	S	kernel/g12/members
-RUN-NONE	L §8.4	S	<x>[k] is none here: <the built-in's name; arithmetic, ordering, a condition, a membership test, aggregate, a place, a quantity, a field read of it, the level of quantile>	4	M1	codes/m1/rules/none
+RUN-NONE	L §8.4	S	<x>[k] is none here: <the built-in's name; arithmetic, ordering, a condition, a membership test, a place, a quantity, a field read of it, the level of quantile>	4	M1	codes/m1/rules/none
 RUN-NONE	L §8.4	S	never in <a use>	17	S	kernel/g12/members
 RUN-NONE	L §8.4	S	<m>[k] doesn't exist: a field read of it	10	M1	m1/fixes/g12/r_p_mr2_q4
 RUN-NONE	L §8.4	S	?	2	M1	m1/fixes/g3/f2_where_none_ties_a

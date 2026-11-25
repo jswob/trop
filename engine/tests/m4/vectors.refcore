@@ -199768,11 +199768,11 @@ version card_2026
   known 2026-01-01
   pay = 4 000.00 PLN "the card · line 3"
   fee = ?"the fee · as the bank states it" "the card"
-,,1:0,274:a.q_explain: 8 000.00 PLN
+,,1:0,276:a.q_explain: 8 000.00 PLN
   [1] twice = 8 000.00 PLN
       rule base: won
         [2] row card_2026:pay = 4 000.00 PLN
-            version card_2026, source card, "T's card . page 2 (invented)", locator "the card . line 3", governs always, known 2026-01-01
+            version card_2026, source card, "T's card · page 2 (invented)", locator "the card · line 3", governs always, known 2026-01-01
   cut 2026-03-01
 ,12:items/g7/run,13:items-backlog,42:run j7.tally --ask a.q a.q_aa a.q_zulu_own,1290:8:j7.tally,279:model fam7
   tally 2
@@ -200896,7 +200896,7 @@ version v
   r = 10 %/year "s"
   d0 = 2026-01-01 "s"
   d1 = 2027-01-01 "s"
-,,1:0,120:q_arith2: refused: RUN-NONE a value is none here: max
+,,1:0,115:q_arith2: refused: RUN-NONE pn is none here: max
   cut 2026-10-25
 warning: WARN-UNREAD input p0 is read by nothing
 ,27:fixes/g1/a12_nonehole/q_acc,8:fixes-g1,34:run a12_nonehole.tally --ask q_acc,652:18:a12_nonehole.tally,625:model a12
@@ -222353,7 +222353,7 @@ version v
   d_n = none "s"
   d_ok = 2026-03-06 "s"
   d_v = never "s"
-,,1:0,81:h_cal__n_d: refused: RUN-NONE a value is none here: is_business
+,,1:0,77:h_cal__n_d: refused: RUN-NONE d_n is none here: is_business
   cut 2026-10-25
 ,32:fixes/p12/is_business/h_cal__v_d,9:fixes-p12,38:run is_business.tally --ask h_cal__v_d,773:17:is_business.tally,747:model p12_is_business
   tally 2
@@ -392019,4 +392019,1617 @@ version v
   opening[pot] = 1000.00 PLN at 2026-01-01 start "s"
 ,,1:0,33:fw: -100.00 PLN
   cut 2026-02-20
+,20:fixes/t231g58/sm18/b,13:fixes-t231g58,22:run sm18.tally --ask b,1245:10:sm18.tally,1225:model sm18
+  tally 2
+  on 2026-05-20
+  start 2026-01-01
+  end 2026-03-31
+
+source s "probe"
+unit PLN: currency minor 0.01
+kind paid: event certain
+  leg cash: PLN
+  leg fee: PLN
+kind cpaid: event certain
+  leg pay: PLN
+  leg charge: PLN
+place konto: accounts PLN lives 2026-01-01..
+place karta: accounts PLN lives 2026-01-01..
+place bankfee: outside lives 1900-01-01..
+input bank: observed
+input card: observed
+
+ask b: bal(konto, 2026-03-31)
+ask sf: sum(t.fee.amount for t in paid over 2026-01)
+ask ob: bank[a1].fee.amount
+ask fl: flows(konto, 2026-01)
+ask c2: bal(karta, 2026-03-31)
+ask oc: card[b1].charge.amount
+ask fk: flows(karta, 2026-01)
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  opening[konto] = 1 000.00 PLN at 2026-01-01 start "s"
+  opening[karta] = 1 000.00 PLN at 2026-01-01 start "s"
+
+version q1
+  cite s
+  governs 2026-01-01..2026-03-31
+  known 2026-04-01
+  covers konto, karta
+  bank[a1] = (on: 2026-01-07, kind: paid, leg cash from konto to karta amount 100.00 PLN, leg fee from konto to bankfee amount 2.00 PLN) "bank"
+  card[b1] = (on: 2026-01-07, kind: cpaid, leg pay from konto to karta amount 110.00 PLN, leg charge from konto to bankfee amount 3.00 PLN) "card"
+  same card[b1] = bank[a1]
+,,1:0,310:b: ?"bank[a1] and card[b1] are one, but the leg at konto differs on 2026-01-07: 100.00 PLN (bank[a1]) and 110.00 PLN (card[b1])" (bank[a1], card[b1]) ?"bank[a1] and card[b1] are one, but the leg at konto differs on 2026-01-07: 2.00 PLN (bank[a1]) and 3.00 PLN (card[b1])" (bank[a1], card[b1])
+  cut 2026-05-20
+,21:fixes/t231g58/sm18/sf,13:fixes-t231g58,23:run sm18.tally --ask sf,1245:10:sm18.tally,1225:model sm18
+  tally 2
+  on 2026-05-20
+  start 2026-01-01
+  end 2026-03-31
+
+source s "probe"
+unit PLN: currency minor 0.01
+kind paid: event certain
+  leg cash: PLN
+  leg fee: PLN
+kind cpaid: event certain
+  leg pay: PLN
+  leg charge: PLN
+place konto: accounts PLN lives 2026-01-01..
+place karta: accounts PLN lives 2026-01-01..
+place bankfee: outside lives 1900-01-01..
+input bank: observed
+input card: observed
+
+ask b: bal(konto, 2026-03-31)
+ask sf: sum(t.fee.amount for t in paid over 2026-01)
+ask ob: bank[a1].fee.amount
+ask fl: flows(konto, 2026-01)
+ask c2: bal(karta, 2026-03-31)
+ask oc: card[b1].charge.amount
+ask fk: flows(karta, 2026-01)
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  opening[konto] = 1 000.00 PLN at 2026-01-01 start "s"
+  opening[karta] = 1 000.00 PLN at 2026-01-01 start "s"
+
+version q1
+  cite s
+  governs 2026-01-01..2026-03-31
+  known 2026-04-01
+  covers konto, karta
+  bank[a1] = (on: 2026-01-07, kind: paid, leg cash from konto to karta amount 100.00 PLN, leg fee from konto to bankfee amount 2.00 PLN) "bank"
+  card[b1] = (on: 2026-01-07, kind: cpaid, leg pay from konto to karta amount 110.00 PLN, leg charge from konto to bankfee amount 3.00 PLN) "card"
+  same card[b1] = bank[a1]
+,,1:0,283:sf: ?"bank[a1] and card[b1] are one, but leg fee differs on 2026-01-07: 2.00 PLN (bank[a1]) and 3.00 PLN (card[b1])" (bank[a1], card[b1]) ?"bank[a1] and card[b1] are one, but the kind differs on 2026-01-07: paid (bank[a1]) and cpaid (card[b1])" (bank[a1], card[b1])
+  cut 2026-05-20
+,21:fixes/t231g58/sm18/ob,13:fixes-t231g58,23:run sm18.tally --ask ob,1245:10:sm18.tally,1225:model sm18
+  tally 2
+  on 2026-05-20
+  start 2026-01-01
+  end 2026-03-31
+
+source s "probe"
+unit PLN: currency minor 0.01
+kind paid: event certain
+  leg cash: PLN
+  leg fee: PLN
+kind cpaid: event certain
+  leg pay: PLN
+  leg charge: PLN
+place konto: accounts PLN lives 2026-01-01..
+place karta: accounts PLN lives 2026-01-01..
+place bankfee: outside lives 1900-01-01..
+input bank: observed
+input card: observed
+
+ask b: bal(konto, 2026-03-31)
+ask sf: sum(t.fee.amount for t in paid over 2026-01)
+ask ob: bank[a1].fee.amount
+ask fl: flows(konto, 2026-01)
+ask c2: bal(karta, 2026-03-31)
+ask oc: card[b1].charge.amount
+ask fk: flows(karta, 2026-01)
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  opening[konto] = 1 000.00 PLN at 2026-01-01 start "s"
+  opening[karta] = 1 000.00 PLN at 2026-01-01 start "s"
+
+version q1
+  cite s
+  governs 2026-01-01..2026-03-31
+  known 2026-04-01
+  covers konto, karta
+  bank[a1] = (on: 2026-01-07, kind: paid, leg cash from konto to karta amount 100.00 PLN, leg fee from konto to bankfee amount 2.00 PLN) "bank"
+  card[b1] = (on: 2026-01-07, kind: cpaid, leg pay from konto to karta amount 110.00 PLN, leg charge from konto to bankfee amount 3.00 PLN) "card"
+  same card[b1] = bank[a1]
+,,1:0,155:ob: ?"bank[a1] and card[b1] are one, but leg fee differs on 2026-01-07: 2.00 PLN (bank[a1]) and 3.00 PLN (card[b1])" (bank[a1], card[b1])
+  cut 2026-05-20
+,21:fixes/t231g58/sm18/fl,13:fixes-t231g58,23:run sm18.tally --ask fl,1245:10:sm18.tally,1225:model sm18
+  tally 2
+  on 2026-05-20
+  start 2026-01-01
+  end 2026-03-31
+
+source s "probe"
+unit PLN: currency minor 0.01
+kind paid: event certain
+  leg cash: PLN
+  leg fee: PLN
+kind cpaid: event certain
+  leg pay: PLN
+  leg charge: PLN
+place konto: accounts PLN lives 2026-01-01..
+place karta: accounts PLN lives 2026-01-01..
+place bankfee: outside lives 1900-01-01..
+input bank: observed
+input card: observed
+
+ask b: bal(konto, 2026-03-31)
+ask sf: sum(t.fee.amount for t in paid over 2026-01)
+ask ob: bank[a1].fee.amount
+ask fl: flows(konto, 2026-01)
+ask c2: bal(karta, 2026-03-31)
+ask oc: card[b1].charge.amount
+ask fk: flows(karta, 2026-01)
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  opening[konto] = 1 000.00 PLN at 2026-01-01 start "s"
+  opening[karta] = 1 000.00 PLN at 2026-01-01 start "s"
+
+version q1
+  cite s
+  governs 2026-01-01..2026-03-31
+  known 2026-04-01
+  covers konto, karta
+  bank[a1] = (on: 2026-01-07, kind: paid, leg cash from konto to karta amount 100.00 PLN, leg fee from konto to bankfee amount 2.00 PLN) "bank"
+  card[b1] = (on: 2026-01-07, kind: cpaid, leg pay from konto to karta amount 110.00 PLN, leg charge from konto to bankfee amount 3.00 PLN) "card"
+  same card[b1] = bank[a1]
+,,1:0,311:fl: ?"bank[a1] and card[b1] are one, but the leg at konto differs on 2026-01-07: 100.00 PLN (bank[a1]) and 110.00 PLN (card[b1])" (bank[a1], card[b1]) ?"bank[a1] and card[b1] are one, but the leg at konto differs on 2026-01-07: 2.00 PLN (bank[a1]) and 3.00 PLN (card[b1])" (bank[a1], card[b1])
+  cut 2026-05-20
+,21:fixes/t231g58/sm18/c2,13:fixes-t231g58,23:run sm18.tally --ask c2,1245:10:sm18.tally,1225:model sm18
+  tally 2
+  on 2026-05-20
+  start 2026-01-01
+  end 2026-03-31
+
+source s "probe"
+unit PLN: currency minor 0.01
+kind paid: event certain
+  leg cash: PLN
+  leg fee: PLN
+kind cpaid: event certain
+  leg pay: PLN
+  leg charge: PLN
+place konto: accounts PLN lives 2026-01-01..
+place karta: accounts PLN lives 2026-01-01..
+place bankfee: outside lives 1900-01-01..
+input bank: observed
+input card: observed
+
+ask b: bal(konto, 2026-03-31)
+ask sf: sum(t.fee.amount for t in paid over 2026-01)
+ask ob: bank[a1].fee.amount
+ask fl: flows(konto, 2026-01)
+ask c2: bal(karta, 2026-03-31)
+ask oc: card[b1].charge.amount
+ask fk: flows(karta, 2026-01)
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  opening[konto] = 1 000.00 PLN at 2026-01-01 start "s"
+  opening[karta] = 1 000.00 PLN at 2026-01-01 start "s"
+
+version q1
+  cite s
+  governs 2026-01-01..2026-03-31
+  known 2026-04-01
+  covers konto, karta
+  bank[a1] = (on: 2026-01-07, kind: paid, leg cash from konto to karta amount 100.00 PLN, leg fee from konto to bankfee amount 2.00 PLN) "bank"
+  card[b1] = (on: 2026-01-07, kind: cpaid, leg pay from konto to karta amount 110.00 PLN, leg charge from konto to bankfee amount 3.00 PLN) "card"
+  same card[b1] = bank[a1]
+,,1:0,168:c2: ?"bank[a1] and card[b1] are one, but the leg at karta differs on 2026-01-07: 100.00 PLN (bank[a1]) and 110.00 PLN (card[b1])" (bank[a1], card[b1])
+  cut 2026-05-20
+,21:fixes/t231g58/sm18/oc,13:fixes-t231g58,23:run sm18.tally --ask oc,1245:10:sm18.tally,1225:model sm18
+  tally 2
+  on 2026-05-20
+  start 2026-01-01
+  end 2026-03-31
+
+source s "probe"
+unit PLN: currency minor 0.01
+kind paid: event certain
+  leg cash: PLN
+  leg fee: PLN
+kind cpaid: event certain
+  leg pay: PLN
+  leg charge: PLN
+place konto: accounts PLN lives 2026-01-01..
+place karta: accounts PLN lives 2026-01-01..
+place bankfee: outside lives 1900-01-01..
+input bank: observed
+input card: observed
+
+ask b: bal(konto, 2026-03-31)
+ask sf: sum(t.fee.amount for t in paid over 2026-01)
+ask ob: bank[a1].fee.amount
+ask fl: flows(konto, 2026-01)
+ask c2: bal(karta, 2026-03-31)
+ask oc: card[b1].charge.amount
+ask fk: flows(karta, 2026-01)
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  opening[konto] = 1 000.00 PLN at 2026-01-01 start "s"
+  opening[karta] = 1 000.00 PLN at 2026-01-01 start "s"
+
+version q1
+  cite s
+  governs 2026-01-01..2026-03-31
+  known 2026-04-01
+  covers konto, karta
+  bank[a1] = (on: 2026-01-07, kind: paid, leg cash from konto to karta amount 100.00 PLN, leg fee from konto to bankfee amount 2.00 PLN) "bank"
+  card[b1] = (on: 2026-01-07, kind: cpaid, leg pay from konto to karta amount 110.00 PLN, leg charge from konto to bankfee amount 3.00 PLN) "card"
+  same card[b1] = bank[a1]
+,,1:0,158:oc: ?"bank[a1] and card[b1] are one, but leg charge differs on 2026-01-07: 2.00 PLN (bank[a1]) and 3.00 PLN (card[b1])" (bank[a1], card[b1])
+  cut 2026-05-20
+,21:fixes/t231g58/sm18/fk,13:fixes-t231g58,23:run sm18.tally --ask fk,1245:10:sm18.tally,1225:model sm18
+  tally 2
+  on 2026-05-20
+  start 2026-01-01
+  end 2026-03-31
+
+source s "probe"
+unit PLN: currency minor 0.01
+kind paid: event certain
+  leg cash: PLN
+  leg fee: PLN
+kind cpaid: event certain
+  leg pay: PLN
+  leg charge: PLN
+place konto: accounts PLN lives 2026-01-01..
+place karta: accounts PLN lives 2026-01-01..
+place bankfee: outside lives 1900-01-01..
+input bank: observed
+input card: observed
+
+ask b: bal(konto, 2026-03-31)
+ask sf: sum(t.fee.amount for t in paid over 2026-01)
+ask ob: bank[a1].fee.amount
+ask fl: flows(konto, 2026-01)
+ask c2: bal(karta, 2026-03-31)
+ask oc: card[b1].charge.amount
+ask fk: flows(karta, 2026-01)
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  opening[konto] = 1 000.00 PLN at 2026-01-01 start "s"
+  opening[karta] = 1 000.00 PLN at 2026-01-01 start "s"
+
+version q1
+  cite s
+  governs 2026-01-01..2026-03-31
+  known 2026-04-01
+  covers konto, karta
+  bank[a1] = (on: 2026-01-07, kind: paid, leg cash from konto to karta amount 100.00 PLN, leg fee from konto to bankfee amount 2.00 PLN) "bank"
+  card[b1] = (on: 2026-01-07, kind: cpaid, leg pay from konto to karta amount 110.00 PLN, leg charge from konto to bankfee amount 3.00 PLN) "card"
+  same card[b1] = bank[a1]
+,,1:0,168:fk: ?"bank[a1] and card[b1] are one, but the leg at karta differs on 2026-01-07: 100.00 PLN (bank[a1]) and 110.00 PLN (card[b1])" (bank[a1], card[b1])
+  cut 2026-05-20
+,19:fixes/t231g58/sm3/b,13:fixes-t231g58,21:run sm3.tally --ask b,1486:9:sm3.tally,1468:model sm3
+  tally 2
+  on 2026-05-20
+  start 2026-01-01
+  end 2026-03-31
+
+source s "probe"
+unit PLN: currency minor 0.01
+kind paid: event certain
+  leg cash: PLN
+  leg fee: PLN
+kind tpaid: event certain
+  leg x: PLN
+  leg y: PLN
+kind cpaid: event certain
+  leg pay: PLN
+  leg charge: PLN
+place konto: accounts PLN lives 2026-01-01..
+place karta: accounts PLN lives 2026-01-01..
+place bankfee: outside lives 1900-01-01..
+input bank: observed
+input card: observed
+input third: observed
+
+ask b: bal(konto, 2026-03-31)
+ask sf: sum(t.fee.amount for t in paid over 2026-01)
+ask ob: bank[a1].fee.amount
+ask fl: flows(konto, 2026-01)
+ask c2: bal(karta, 2026-03-31)
+ask oc: card[b1].charge.amount
+ask fk: flows(karta, 2026-01)
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  opening[konto] = 1 000.00 PLN at 2026-01-01 start "s"
+  opening[karta] = 1 000.00 PLN at 2026-01-01 start "s"
+
+version q1
+  cite s
+  governs 2026-01-01..2026-03-31
+  known 2026-04-01
+  covers konto, karta
+  bank[a1] = (on: 2026-01-07, kind: paid, leg cash from konto to karta amount 100.00 PLN, leg fee from konto to bankfee amount 2.00 PLN) "bank"
+  card[b1] = (on: 2026-01-07, kind: cpaid, leg pay from konto to karta amount 110.00 PLN, leg charge from konto to bankfee amount 3.00 PLN) "card"
+  third[c1] = (on: 2026-01-08, kind: tpaid, leg x from konto to karta amount 100.00 PLN, leg y from konto to bankfee amount 2.00 PLN) "third"
+  same card[b1] = bank[a1]
+  same third[c1] = bank[a1]
+,,1:0,424:b: ?"bank[a1], card[b1] and third[c1] are one, but the leg at konto differs on 2026-01-07, 2026-01-08: 100.00 PLN (bank[a1]), 110.00 PLN (card[b1]) and 100.00 PLN (third[c1])" (bank[a1], card[b1], third[c1]) ?"bank[a1], card[b1] and third[c1] are one, but the leg at konto differs on 2026-01-07, 2026-01-08: 2.00 PLN (bank[a1]), 3.00 PLN (card[b1]) and 2.00 PLN (third[c1])" (bank[a1], card[b1], third[c1])
+  cut 2026-05-20
+,20:fixes/t231g58/sm3/sf,13:fixes-t231g58,22:run sm3.tally --ask sf,1486:9:sm3.tally,1468:model sm3
+  tally 2
+  on 2026-05-20
+  start 2026-01-01
+  end 2026-03-31
+
+source s "probe"
+unit PLN: currency minor 0.01
+kind paid: event certain
+  leg cash: PLN
+  leg fee: PLN
+kind tpaid: event certain
+  leg x: PLN
+  leg y: PLN
+kind cpaid: event certain
+  leg pay: PLN
+  leg charge: PLN
+place konto: accounts PLN lives 2026-01-01..
+place karta: accounts PLN lives 2026-01-01..
+place bankfee: outside lives 1900-01-01..
+input bank: observed
+input card: observed
+input third: observed
+
+ask b: bal(konto, 2026-03-31)
+ask sf: sum(t.fee.amount for t in paid over 2026-01)
+ask ob: bank[a1].fee.amount
+ask fl: flows(konto, 2026-01)
+ask c2: bal(karta, 2026-03-31)
+ask oc: card[b1].charge.amount
+ask fk: flows(karta, 2026-01)
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  opening[konto] = 1 000.00 PLN at 2026-01-01 start "s"
+  opening[karta] = 1 000.00 PLN at 2026-01-01 start "s"
+
+version q1
+  cite s
+  governs 2026-01-01..2026-03-31
+  known 2026-04-01
+  covers konto, karta
+  bank[a1] = (on: 2026-01-07, kind: paid, leg cash from konto to karta amount 100.00 PLN, leg fee from konto to bankfee amount 2.00 PLN) "bank"
+  card[b1] = (on: 2026-01-07, kind: cpaid, leg pay from konto to karta amount 110.00 PLN, leg charge from konto to bankfee amount 3.00 PLN) "card"
+  third[c1] = (on: 2026-01-08, kind: tpaid, leg x from konto to karta amount 100.00 PLN, leg y from konto to bankfee amount 2.00 PLN) "third"
+  same card[b1] = bank[a1]
+  same third[c1] = bank[a1]
+,,1:0,380:sf: ?"bank[a1], card[b1] and third[c1] are one, but leg fee differs on 2026-01-07, 2026-01-08: 2.00 PLN (bank[a1]), 3.00 PLN (card[b1]) and 2.00 PLN (third[c1])" (bank[a1], card[b1], third[c1]) ?"bank[a1], card[b1] and third[c1] are one, but the kind differs on 2026-01-07: paid (bank[a1]), cpaid (card[b1]) and tpaid (third[c1])" (bank[a1], card[b1], third[c1])
+  cut 2026-05-20
+,20:fixes/t231g58/sm3/ob,13:fixes-t231g58,22:run sm3.tally --ask ob,1486:9:sm3.tally,1468:model sm3
+  tally 2
+  on 2026-05-20
+  start 2026-01-01
+  end 2026-03-31
+
+source s "probe"
+unit PLN: currency minor 0.01
+kind paid: event certain
+  leg cash: PLN
+  leg fee: PLN
+kind tpaid: event certain
+  leg x: PLN
+  leg y: PLN
+kind cpaid: event certain
+  leg pay: PLN
+  leg charge: PLN
+place konto: accounts PLN lives 2026-01-01..
+place karta: accounts PLN lives 2026-01-01..
+place bankfee: outside lives 1900-01-01..
+input bank: observed
+input card: observed
+input third: observed
+
+ask b: bal(konto, 2026-03-31)
+ask sf: sum(t.fee.amount for t in paid over 2026-01)
+ask ob: bank[a1].fee.amount
+ask fl: flows(konto, 2026-01)
+ask c2: bal(karta, 2026-03-31)
+ask oc: card[b1].charge.amount
+ask fk: flows(karta, 2026-01)
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  opening[konto] = 1 000.00 PLN at 2026-01-01 start "s"
+  opening[karta] = 1 000.00 PLN at 2026-01-01 start "s"
+
+version q1
+  cite s
+  governs 2026-01-01..2026-03-31
+  known 2026-04-01
+  covers konto, karta
+  bank[a1] = (on: 2026-01-07, kind: paid, leg cash from konto to karta amount 100.00 PLN, leg fee from konto to bankfee amount 2.00 PLN) "bank"
+  card[b1] = (on: 2026-01-07, kind: cpaid, leg pay from konto to karta amount 110.00 PLN, leg charge from konto to bankfee amount 3.00 PLN) "card"
+  third[c1] = (on: 2026-01-08, kind: tpaid, leg x from konto to karta amount 100.00 PLN, leg y from konto to bankfee amount 2.00 PLN) "third"
+  same card[b1] = bank[a1]
+  same third[c1] = bank[a1]
+,,1:0,211:ob: ?"bank[a1], card[b1] and third[c1] are one, but leg fee differs on 2026-01-07, 2026-01-08: 2.00 PLN (bank[a1]), 3.00 PLN (card[b1]) and 2.00 PLN (third[c1])" (bank[a1], card[b1], third[c1])
+  cut 2026-05-20
+,20:fixes/t231g58/sm3/fl,13:fixes-t231g58,22:run sm3.tally --ask fl,1486:9:sm3.tally,1468:model sm3
+  tally 2
+  on 2026-05-20
+  start 2026-01-01
+  end 2026-03-31
+
+source s "probe"
+unit PLN: currency minor 0.01
+kind paid: event certain
+  leg cash: PLN
+  leg fee: PLN
+kind tpaid: event certain
+  leg x: PLN
+  leg y: PLN
+kind cpaid: event certain
+  leg pay: PLN
+  leg charge: PLN
+place konto: accounts PLN lives 2026-01-01..
+place karta: accounts PLN lives 2026-01-01..
+place bankfee: outside lives 1900-01-01..
+input bank: observed
+input card: observed
+input third: observed
+
+ask b: bal(konto, 2026-03-31)
+ask sf: sum(t.fee.amount for t in paid over 2026-01)
+ask ob: bank[a1].fee.amount
+ask fl: flows(konto, 2026-01)
+ask c2: bal(karta, 2026-03-31)
+ask oc: card[b1].charge.amount
+ask fk: flows(karta, 2026-01)
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  opening[konto] = 1 000.00 PLN at 2026-01-01 start "s"
+  opening[karta] = 1 000.00 PLN at 2026-01-01 start "s"
+
+version q1
+  cite s
+  governs 2026-01-01..2026-03-31
+  known 2026-04-01
+  covers konto, karta
+  bank[a1] = (on: 2026-01-07, kind: paid, leg cash from konto to karta amount 100.00 PLN, leg fee from konto to bankfee amount 2.00 PLN) "bank"
+  card[b1] = (on: 2026-01-07, kind: cpaid, leg pay from konto to karta amount 110.00 PLN, leg charge from konto to bankfee amount 3.00 PLN) "card"
+  third[c1] = (on: 2026-01-08, kind: tpaid, leg x from konto to karta amount 100.00 PLN, leg y from konto to bankfee amount 2.00 PLN) "third"
+  same card[b1] = bank[a1]
+  same third[c1] = bank[a1]
+,,1:0,425:fl: ?"bank[a1], card[b1] and third[c1] are one, but the leg at konto differs on 2026-01-07, 2026-01-08: 100.00 PLN (bank[a1]), 110.00 PLN (card[b1]) and 100.00 PLN (third[c1])" (bank[a1], card[b1], third[c1]) ?"bank[a1], card[b1] and third[c1] are one, but the leg at konto differs on 2026-01-07, 2026-01-08: 2.00 PLN (bank[a1]), 3.00 PLN (card[b1]) and 2.00 PLN (third[c1])" (bank[a1], card[b1], third[c1])
+  cut 2026-05-20
+,20:fixes/t231g58/sm3/c2,13:fixes-t231g58,22:run sm3.tally --ask c2,1486:9:sm3.tally,1468:model sm3
+  tally 2
+  on 2026-05-20
+  start 2026-01-01
+  end 2026-03-31
+
+source s "probe"
+unit PLN: currency minor 0.01
+kind paid: event certain
+  leg cash: PLN
+  leg fee: PLN
+kind tpaid: event certain
+  leg x: PLN
+  leg y: PLN
+kind cpaid: event certain
+  leg pay: PLN
+  leg charge: PLN
+place konto: accounts PLN lives 2026-01-01..
+place karta: accounts PLN lives 2026-01-01..
+place bankfee: outside lives 1900-01-01..
+input bank: observed
+input card: observed
+input third: observed
+
+ask b: bal(konto, 2026-03-31)
+ask sf: sum(t.fee.amount for t in paid over 2026-01)
+ask ob: bank[a1].fee.amount
+ask fl: flows(konto, 2026-01)
+ask c2: bal(karta, 2026-03-31)
+ask oc: card[b1].charge.amount
+ask fk: flows(karta, 2026-01)
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  opening[konto] = 1 000.00 PLN at 2026-01-01 start "s"
+  opening[karta] = 1 000.00 PLN at 2026-01-01 start "s"
+
+version q1
+  cite s
+  governs 2026-01-01..2026-03-31
+  known 2026-04-01
+  covers konto, karta
+  bank[a1] = (on: 2026-01-07, kind: paid, leg cash from konto to karta amount 100.00 PLN, leg fee from konto to bankfee amount 2.00 PLN) "bank"
+  card[b1] = (on: 2026-01-07, kind: cpaid, leg pay from konto to karta amount 110.00 PLN, leg charge from konto to bankfee amount 3.00 PLN) "card"
+  third[c1] = (on: 2026-01-08, kind: tpaid, leg x from konto to karta amount 100.00 PLN, leg y from konto to bankfee amount 2.00 PLN) "third"
+  same card[b1] = bank[a1]
+  same third[c1] = bank[a1]
+,,1:0,226:c2: ?"bank[a1], card[b1] and third[c1] are one, but the leg at karta differs on 2026-01-07, 2026-01-08: 100.00 PLN (bank[a1]), 110.00 PLN (card[b1]) and 100.00 PLN (third[c1])" (bank[a1], card[b1], third[c1])
+  cut 2026-05-20
+,20:fixes/t231g58/sm3/oc,13:fixes-t231g58,22:run sm3.tally --ask oc,1486:9:sm3.tally,1468:model sm3
+  tally 2
+  on 2026-05-20
+  start 2026-01-01
+  end 2026-03-31
+
+source s "probe"
+unit PLN: currency minor 0.01
+kind paid: event certain
+  leg cash: PLN
+  leg fee: PLN
+kind tpaid: event certain
+  leg x: PLN
+  leg y: PLN
+kind cpaid: event certain
+  leg pay: PLN
+  leg charge: PLN
+place konto: accounts PLN lives 2026-01-01..
+place karta: accounts PLN lives 2026-01-01..
+place bankfee: outside lives 1900-01-01..
+input bank: observed
+input card: observed
+input third: observed
+
+ask b: bal(konto, 2026-03-31)
+ask sf: sum(t.fee.amount for t in paid over 2026-01)
+ask ob: bank[a1].fee.amount
+ask fl: flows(konto, 2026-01)
+ask c2: bal(karta, 2026-03-31)
+ask oc: card[b1].charge.amount
+ask fk: flows(karta, 2026-01)
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  opening[konto] = 1 000.00 PLN at 2026-01-01 start "s"
+  opening[karta] = 1 000.00 PLN at 2026-01-01 start "s"
+
+version q1
+  cite s
+  governs 2026-01-01..2026-03-31
+  known 2026-04-01
+  covers konto, karta
+  bank[a1] = (on: 2026-01-07, kind: paid, leg cash from konto to karta amount 100.00 PLN, leg fee from konto to bankfee amount 2.00 PLN) "bank"
+  card[b1] = (on: 2026-01-07, kind: cpaid, leg pay from konto to karta amount 110.00 PLN, leg charge from konto to bankfee amount 3.00 PLN) "card"
+  third[c1] = (on: 2026-01-08, kind: tpaid, leg x from konto to karta amount 100.00 PLN, leg y from konto to bankfee amount 2.00 PLN) "third"
+  same card[b1] = bank[a1]
+  same third[c1] = bank[a1]
+,,1:0,214:oc: ?"bank[a1], card[b1] and third[c1] are one, but leg charge differs on 2026-01-07, 2026-01-08: 2.00 PLN (bank[a1]), 3.00 PLN (card[b1]) and 2.00 PLN (third[c1])" (bank[a1], card[b1], third[c1])
+  cut 2026-05-20
+,20:fixes/t231g58/sm3/fk,13:fixes-t231g58,22:run sm3.tally --ask fk,1486:9:sm3.tally,1468:model sm3
+  tally 2
+  on 2026-05-20
+  start 2026-01-01
+  end 2026-03-31
+
+source s "probe"
+unit PLN: currency minor 0.01
+kind paid: event certain
+  leg cash: PLN
+  leg fee: PLN
+kind tpaid: event certain
+  leg x: PLN
+  leg y: PLN
+kind cpaid: event certain
+  leg pay: PLN
+  leg charge: PLN
+place konto: accounts PLN lives 2026-01-01..
+place karta: accounts PLN lives 2026-01-01..
+place bankfee: outside lives 1900-01-01..
+input bank: observed
+input card: observed
+input third: observed
+
+ask b: bal(konto, 2026-03-31)
+ask sf: sum(t.fee.amount for t in paid over 2026-01)
+ask ob: bank[a1].fee.amount
+ask fl: flows(konto, 2026-01)
+ask c2: bal(karta, 2026-03-31)
+ask oc: card[b1].charge.amount
+ask fk: flows(karta, 2026-01)
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  opening[konto] = 1 000.00 PLN at 2026-01-01 start "s"
+  opening[karta] = 1 000.00 PLN at 2026-01-01 start "s"
+
+version q1
+  cite s
+  governs 2026-01-01..2026-03-31
+  known 2026-04-01
+  covers konto, karta
+  bank[a1] = (on: 2026-01-07, kind: paid, leg cash from konto to karta amount 100.00 PLN, leg fee from konto to bankfee amount 2.00 PLN) "bank"
+  card[b1] = (on: 2026-01-07, kind: cpaid, leg pay from konto to karta amount 110.00 PLN, leg charge from konto to bankfee amount 3.00 PLN) "card"
+  third[c1] = (on: 2026-01-08, kind: tpaid, leg x from konto to karta amount 100.00 PLN, leg y from konto to bankfee amount 2.00 PLN) "third"
+  same card[b1] = bank[a1]
+  same third[c1] = bank[a1]
+,,1:0,226:fk: ?"bank[a1], card[b1] and third[c1] are one, but the leg at karta differs on 2026-01-07, 2026-01-08: 100.00 PLN (bank[a1]), 110.00 PLN (card[b1]) and 100.00 PLN (third[c1])" (bank[a1], card[b1], third[c1])
+  cut 2026-05-20
+,21:fixes/t231g58/same3/b,13:fixes-t231g58,23:run same3.tally --ask b,1163:11:same3.tally,1142:model same3
+  tally 2
+  on 2026-05-20
+  start 2026-01-01
+  end 2026-03-31
+
+source s "probe"
+unit PLN: currency minor 0.01
+place konto: accounts PLN lives 2026-01-01..
+place sav: accounts PLN lives 2026-01-01..
+input bank: observed
+input card: observed
+input third: observed
+
+ask b: bal(konto, 2026-03-31)
+ask sv: bal(sav, 2026-03-31)
+ask fl: flows(konto, 2026-01)
+ask oa: bank[a1].cash.amount
+ask oc: third[c1].cash.amount
+ask od: third[c1].day
+ask sm: sum(t.cash.amount for t in transfers over 2026-01)
+ask n: count(t in transfers over 2026-01)
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  opening[konto] = 1000.00 PLN at 2026-01-01 start "s"
+  opening[sav] = 0.00 PLN at 2026-01-01 start "s"
+
+version q1
+  cite s
+  governs 2026-01-01..2026-03-31
+  known 2026-04-01
+  covers konto
+  bank[a1] = (on: 2026-01-07, kind: transfers, leg cash from konto to sav amount 100.00 PLN) "a"
+  card[b1] = (on: 2026-01-08, kind: transfers, leg cash from konto to sav amount 100.00 PLN) "b"
+  third[c1] = (on: 2026-01-09, kind: transfers, leg cash from konto to sav amount 120.00 PLN) "c"
+  same card[b1] = bank[a1]
+  same third[c1] = card[b1]
+,,1:0,561:b: ?"bank[a1], card[b1] and third[c1] are one, but leg cash differs on 2026-01-07, 2026-01-08, 2026-01-09: 100.00 PLN (bank[a1]), 100.00 PLN (card[b1]) and 120.00 PLN (third[c1])" (bank[a1], card[b1], third[c1])
+  cut 2026-05-20
+warning: WARN-LEGS the two observations of bank[a1] disagree: bank[a1] (100.00 PLN) and third[c1] (120.00 PLN)
+warning: WARN-LEGS the two observations of bank[a1] disagree: bank[a1] (2026-01-07) and card[b1] (2026-01-08)
+warning: WARN-LEGS the two observations of bank[a1] disagree: card[b1] (100.00 PLN) and third[c1] (120.00 PLN)
+,22:fixes/t231g58/same3/sv,13:fixes-t231g58,24:run same3.tally --ask sv,1163:11:same3.tally,1142:model same3
+  tally 2
+  on 2026-05-20
+  start 2026-01-01
+  end 2026-03-31
+
+source s "probe"
+unit PLN: currency minor 0.01
+place konto: accounts PLN lives 2026-01-01..
+place sav: accounts PLN lives 2026-01-01..
+input bank: observed
+input card: observed
+input third: observed
+
+ask b: bal(konto, 2026-03-31)
+ask sv: bal(sav, 2026-03-31)
+ask fl: flows(konto, 2026-01)
+ask oa: bank[a1].cash.amount
+ask oc: third[c1].cash.amount
+ask od: third[c1].day
+ask sm: sum(t.cash.amount for t in transfers over 2026-01)
+ask n: count(t in transfers over 2026-01)
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  opening[konto] = 1000.00 PLN at 2026-01-01 start "s"
+  opening[sav] = 0.00 PLN at 2026-01-01 start "s"
+
+version q1
+  cite s
+  governs 2026-01-01..2026-03-31
+  known 2026-04-01
+  covers konto
+  bank[a1] = (on: 2026-01-07, kind: transfers, leg cash from konto to sav amount 100.00 PLN) "a"
+  card[b1] = (on: 2026-01-08, kind: transfers, leg cash from konto to sav amount 100.00 PLN) "b"
+  third[c1] = (on: 2026-01-09, kind: transfers, leg cash from konto to sav amount 120.00 PLN) "c"
+  same card[b1] = bank[a1]
+  same third[c1] = card[b1]
+,,1:0,562:sv: ?"bank[a1], card[b1] and third[c1] are one, but leg cash differs on 2026-01-07, 2026-01-08, 2026-01-09: 100.00 PLN (bank[a1]), 100.00 PLN (card[b1]) and 120.00 PLN (third[c1])" (bank[a1], card[b1], third[c1])
+  cut 2026-05-20
+warning: WARN-LEGS the two observations of bank[a1] disagree: bank[a1] (100.00 PLN) and third[c1] (120.00 PLN)
+warning: WARN-LEGS the two observations of bank[a1] disagree: bank[a1] (2026-01-07) and card[b1] (2026-01-08)
+warning: WARN-LEGS the two observations of bank[a1] disagree: card[b1] (100.00 PLN) and third[c1] (120.00 PLN)
+,22:fixes/t231g58/same3/fl,13:fixes-t231g58,24:run same3.tally --ask fl,1163:11:same3.tally,1142:model same3
+  tally 2
+  on 2026-05-20
+  start 2026-01-01
+  end 2026-03-31
+
+source s "probe"
+unit PLN: currency minor 0.01
+place konto: accounts PLN lives 2026-01-01..
+place sav: accounts PLN lives 2026-01-01..
+input bank: observed
+input card: observed
+input third: observed
+
+ask b: bal(konto, 2026-03-31)
+ask sv: bal(sav, 2026-03-31)
+ask fl: flows(konto, 2026-01)
+ask oa: bank[a1].cash.amount
+ask oc: third[c1].cash.amount
+ask od: third[c1].day
+ask sm: sum(t.cash.amount for t in transfers over 2026-01)
+ask n: count(t in transfers over 2026-01)
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  opening[konto] = 1000.00 PLN at 2026-01-01 start "s"
+  opening[sav] = 0.00 PLN at 2026-01-01 start "s"
+
+version q1
+  cite s
+  governs 2026-01-01..2026-03-31
+  known 2026-04-01
+  covers konto
+  bank[a1] = (on: 2026-01-07, kind: transfers, leg cash from konto to sav amount 100.00 PLN) "a"
+  card[b1] = (on: 2026-01-08, kind: transfers, leg cash from konto to sav amount 100.00 PLN) "b"
+  third[c1] = (on: 2026-01-09, kind: transfers, leg cash from konto to sav amount 120.00 PLN) "c"
+  same card[b1] = bank[a1]
+  same third[c1] = card[b1]
+,,1:0,562:fl: ?"bank[a1], card[b1] and third[c1] are one, but leg cash differs on 2026-01-07, 2026-01-08, 2026-01-09: 100.00 PLN (bank[a1]), 100.00 PLN (card[b1]) and 120.00 PLN (third[c1])" (bank[a1], card[b1], third[c1])
+  cut 2026-05-20
+warning: WARN-LEGS the two observations of bank[a1] disagree: bank[a1] (100.00 PLN) and third[c1] (120.00 PLN)
+warning: WARN-LEGS the two observations of bank[a1] disagree: bank[a1] (2026-01-07) and card[b1] (2026-01-08)
+warning: WARN-LEGS the two observations of bank[a1] disagree: card[b1] (100.00 PLN) and third[c1] (120.00 PLN)
+,22:fixes/t231g58/same3/oa,13:fixes-t231g58,24:run same3.tally --ask oa,1163:11:same3.tally,1142:model same3
+  tally 2
+  on 2026-05-20
+  start 2026-01-01
+  end 2026-03-31
+
+source s "probe"
+unit PLN: currency minor 0.01
+place konto: accounts PLN lives 2026-01-01..
+place sav: accounts PLN lives 2026-01-01..
+input bank: observed
+input card: observed
+input third: observed
+
+ask b: bal(konto, 2026-03-31)
+ask sv: bal(sav, 2026-03-31)
+ask fl: flows(konto, 2026-01)
+ask oa: bank[a1].cash.amount
+ask oc: third[c1].cash.amount
+ask od: third[c1].day
+ask sm: sum(t.cash.amount for t in transfers over 2026-01)
+ask n: count(t in transfers over 2026-01)
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  opening[konto] = 1000.00 PLN at 2026-01-01 start "s"
+  opening[sav] = 0.00 PLN at 2026-01-01 start "s"
+
+version q1
+  cite s
+  governs 2026-01-01..2026-03-31
+  known 2026-04-01
+  covers konto
+  bank[a1] = (on: 2026-01-07, kind: transfers, leg cash from konto to sav amount 100.00 PLN) "a"
+  card[b1] = (on: 2026-01-08, kind: transfers, leg cash from konto to sav amount 100.00 PLN) "b"
+  third[c1] = (on: 2026-01-09, kind: transfers, leg cash from konto to sav amount 120.00 PLN) "c"
+  same card[b1] = bank[a1]
+  same third[c1] = card[b1]
+,,1:0,562:oa: ?"bank[a1], card[b1] and third[c1] are one, but leg cash differs on 2026-01-07, 2026-01-08, 2026-01-09: 100.00 PLN (bank[a1]), 100.00 PLN (card[b1]) and 120.00 PLN (third[c1])" (bank[a1], card[b1], third[c1])
+  cut 2026-05-20
+warning: WARN-LEGS the two observations of bank[a1] disagree: bank[a1] (100.00 PLN) and third[c1] (120.00 PLN)
+warning: WARN-LEGS the two observations of bank[a1] disagree: bank[a1] (2026-01-07) and card[b1] (2026-01-08)
+warning: WARN-LEGS the two observations of bank[a1] disagree: card[b1] (100.00 PLN) and third[c1] (120.00 PLN)
+,22:fixes/t231g58/same3/oc,13:fixes-t231g58,24:run same3.tally --ask oc,1163:11:same3.tally,1142:model same3
+  tally 2
+  on 2026-05-20
+  start 2026-01-01
+  end 2026-03-31
+
+source s "probe"
+unit PLN: currency minor 0.01
+place konto: accounts PLN lives 2026-01-01..
+place sav: accounts PLN lives 2026-01-01..
+input bank: observed
+input card: observed
+input third: observed
+
+ask b: bal(konto, 2026-03-31)
+ask sv: bal(sav, 2026-03-31)
+ask fl: flows(konto, 2026-01)
+ask oa: bank[a1].cash.amount
+ask oc: third[c1].cash.amount
+ask od: third[c1].day
+ask sm: sum(t.cash.amount for t in transfers over 2026-01)
+ask n: count(t in transfers over 2026-01)
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  opening[konto] = 1000.00 PLN at 2026-01-01 start "s"
+  opening[sav] = 0.00 PLN at 2026-01-01 start "s"
+
+version q1
+  cite s
+  governs 2026-01-01..2026-03-31
+  known 2026-04-01
+  covers konto
+  bank[a1] = (on: 2026-01-07, kind: transfers, leg cash from konto to sav amount 100.00 PLN) "a"
+  card[b1] = (on: 2026-01-08, kind: transfers, leg cash from konto to sav amount 100.00 PLN) "b"
+  third[c1] = (on: 2026-01-09, kind: transfers, leg cash from konto to sav amount 120.00 PLN) "c"
+  same card[b1] = bank[a1]
+  same third[c1] = card[b1]
+,,1:0,562:oc: ?"bank[a1], card[b1] and third[c1] are one, but leg cash differs on 2026-01-07, 2026-01-08, 2026-01-09: 100.00 PLN (bank[a1]), 100.00 PLN (card[b1]) and 120.00 PLN (third[c1])" (bank[a1], card[b1], third[c1])
+  cut 2026-05-20
+warning: WARN-LEGS the two observations of bank[a1] disagree: bank[a1] (100.00 PLN) and third[c1] (120.00 PLN)
+warning: WARN-LEGS the two observations of bank[a1] disagree: bank[a1] (2026-01-07) and card[b1] (2026-01-08)
+warning: WARN-LEGS the two observations of bank[a1] disagree: card[b1] (100.00 PLN) and third[c1] (120.00 PLN)
+,22:fixes/t231g58/same3/od,13:fixes-t231g58,24:run same3.tally --ask od,1163:11:same3.tally,1142:model same3
+  tally 2
+  on 2026-05-20
+  start 2026-01-01
+  end 2026-03-31
+
+source s "probe"
+unit PLN: currency minor 0.01
+place konto: accounts PLN lives 2026-01-01..
+place sav: accounts PLN lives 2026-01-01..
+input bank: observed
+input card: observed
+input third: observed
+
+ask b: bal(konto, 2026-03-31)
+ask sv: bal(sav, 2026-03-31)
+ask fl: flows(konto, 2026-01)
+ask oa: bank[a1].cash.amount
+ask oc: third[c1].cash.amount
+ask od: third[c1].day
+ask sm: sum(t.cash.amount for t in transfers over 2026-01)
+ask n: count(t in transfers over 2026-01)
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  opening[konto] = 1000.00 PLN at 2026-01-01 start "s"
+  opening[sav] = 0.00 PLN at 2026-01-01 start "s"
+
+version q1
+  cite s
+  governs 2026-01-01..2026-03-31
+  known 2026-04-01
+  covers konto
+  bank[a1] = (on: 2026-01-07, kind: transfers, leg cash from konto to sav amount 100.00 PLN) "a"
+  card[b1] = (on: 2026-01-08, kind: transfers, leg cash from konto to sav amount 100.00 PLN) "b"
+  third[c1] = (on: 2026-01-09, kind: transfers, leg cash from konto to sav amount 120.00 PLN) "c"
+  same card[b1] = bank[a1]
+  same third[c1] = card[b1]
+,,1:0,206:od: ?"bank[a1], card[b1] and third[c1] are one, but leg cash differs on 2026-01-07: 2026-01-07 (bank[a1]), 2026-01-08 (card[b1]) and 2026-01-09 (third[c1])" (bank[a1], card[b1], third[c1])
+  cut 2026-05-20
+,22:fixes/t231g58/same3/sm,13:fixes-t231g58,24:run same3.tally --ask sm,1163:11:same3.tally,1142:model same3
+  tally 2
+  on 2026-05-20
+  start 2026-01-01
+  end 2026-03-31
+
+source s "probe"
+unit PLN: currency minor 0.01
+place konto: accounts PLN lives 2026-01-01..
+place sav: accounts PLN lives 2026-01-01..
+input bank: observed
+input card: observed
+input third: observed
+
+ask b: bal(konto, 2026-03-31)
+ask sv: bal(sav, 2026-03-31)
+ask fl: flows(konto, 2026-01)
+ask oa: bank[a1].cash.amount
+ask oc: third[c1].cash.amount
+ask od: third[c1].day
+ask sm: sum(t.cash.amount for t in transfers over 2026-01)
+ask n: count(t in transfers over 2026-01)
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  opening[konto] = 1000.00 PLN at 2026-01-01 start "s"
+  opening[sav] = 0.00 PLN at 2026-01-01 start "s"
+
+version q1
+  cite s
+  governs 2026-01-01..2026-03-31
+  known 2026-04-01
+  covers konto
+  bank[a1] = (on: 2026-01-07, kind: transfers, leg cash from konto to sav amount 100.00 PLN) "a"
+  card[b1] = (on: 2026-01-08, kind: transfers, leg cash from konto to sav amount 100.00 PLN) "b"
+  third[c1] = (on: 2026-01-09, kind: transfers, leg cash from konto to sav amount 120.00 PLN) "c"
+  same card[b1] = bank[a1]
+  same third[c1] = card[b1]
+,,1:0,562:sm: ?"bank[a1], card[b1] and third[c1] are one, but leg cash differs on 2026-01-07, 2026-01-08, 2026-01-09: 100.00 PLN (bank[a1]), 100.00 PLN (card[b1]) and 120.00 PLN (third[c1])" (bank[a1], card[b1], third[c1])
+  cut 2026-05-20
+warning: WARN-LEGS the two observations of bank[a1] disagree: bank[a1] (100.00 PLN) and third[c1] (120.00 PLN)
+warning: WARN-LEGS the two observations of bank[a1] disagree: bank[a1] (2026-01-07) and card[b1] (2026-01-08)
+warning: WARN-LEGS the two observations of bank[a1] disagree: card[b1] (100.00 PLN) and third[c1] (120.00 PLN)
+,21:fixes/t231g58/same3/n,13:fixes-t231g58,23:run same3.tally --ask n,1163:11:same3.tally,1142:model same3
+  tally 2
+  on 2026-05-20
+  start 2026-01-01
+  end 2026-03-31
+
+source s "probe"
+unit PLN: currency minor 0.01
+place konto: accounts PLN lives 2026-01-01..
+place sav: accounts PLN lives 2026-01-01..
+input bank: observed
+input card: observed
+input third: observed
+
+ask b: bal(konto, 2026-03-31)
+ask sv: bal(sav, 2026-03-31)
+ask fl: flows(konto, 2026-01)
+ask oa: bank[a1].cash.amount
+ask oc: third[c1].cash.amount
+ask od: third[c1].day
+ask sm: sum(t.cash.amount for t in transfers over 2026-01)
+ask n: count(t in transfers over 2026-01)
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  opening[konto] = 1000.00 PLN at 2026-01-01 start "s"
+  opening[sav] = 0.00 PLN at 2026-01-01 start "s"
+
+version q1
+  cite s
+  governs 2026-01-01..2026-03-31
+  known 2026-04-01
+  covers konto
+  bank[a1] = (on: 2026-01-07, kind: transfers, leg cash from konto to sav amount 100.00 PLN) "a"
+  card[b1] = (on: 2026-01-08, kind: transfers, leg cash from konto to sav amount 100.00 PLN) "b"
+  third[c1] = (on: 2026-01-09, kind: transfers, leg cash from konto to sav amount 120.00 PLN) "c"
+  same card[b1] = bank[a1]
+  same third[c1] = card[b1]
+,,1:0,22:n: 1
+  cut 2026-05-20
+,24:fixes/t231g58/p07_same/a,13:fixes-t231g58,26:run p07_same.tally --ask a,2826:14:p07_same.tally,2802:model p7
+  tally 2
+  on 2026-05-20
+  start 2026-01-01
+  end 2026-06-30
+
+source s "invented values"
+
+unit PLN: currency minor 0.01
+
+index month = month 2026-01..2026-06
+
+place konto: accounts PLN lives 2026-01-01..
+
+place pot: accounts PLN lives 2026-01-01..
+
+place landlord: outside lives 1900-01-01..
+
+place shop: outside lives 1900-01-01..
+
+input bank: observed
+
+input rent_amt[m in month]: money PLN
+
+input rent_day[m in month]: date
+
+input share: num
+
+input skip_m: month
+
+input top_dom: int
+
+input fee_day[m in month]: date
+
+move rent[m in month]: transfers
+  on rent_day[m]
+  at start_of(m)
+  when m != skip_m
+  leg cash from pot to landlord amount rent_amt[m]
+
+move top[m in month]: transfers
+  on day_of(m, top_dom)
+  at start_of(m)
+  leg cash from konto to shop amount round(flows(rent, m) * share, minor(PLN), half-up)
+
+move fee[m in month]: transfers
+  on fee_day[m]
+  at start_of(m)
+  leg cash from pot to landlord amount rent_amt[m]
+
+move top3[m in month]: transfers
+  on day_of(m, top_dom)
+  at start_of(m)
+  leg cash from konto to shop amount flows(fee, m)
+
+move top2[m in month]: transfers
+  on day_of(m, top_dom)
+  at start_of(m)
+  leg cash from konto to shop amount flows(rent[m].cash, m .. (m + 1))
+
+ask a: flows(top, m) for m in [2026-01, 2026-02, 2026-03, 2026-04, 2026-05, 2026-06]
+
+ask b: flows(top2, m) for m in [2026-01, 2026-02, 2026-03, 2026-04, 2026-05]
+
+ask c: flows(top3, m) for m in [2026-01, 2026-02, 2026-03, 2026-04, 2026-05]
+
+ask c2: flows(fee, m) for m in [2026-01, 2026-02, 2026-03, 2026-04]
+
+ask k: bal(konto, 2026-05-19)
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  share = 0.1 "s"
+  skip_m = 2026-03 "s"
+  top_dom = 20 "s"
+  rent_amt[2026-01] = 900.00 PLN "s"
+  rent_amt[2026-02] = -5.00 PLN "refused"
+  rent_amt[2026-03] = 910.00 PLN "s"
+  rent_amt[2026-04] = 920.00 PLN "s"
+  rent_amt[2026-06] = 940.00 PLN "s"
+  rent_day[2026-01] = 2026-01-31 "last day"
+  rent_day[2026-02] = 2026-03-01 "next month's first day"
+  rent_day[2026-03] = 2026-03-20 "when false"
+  rent_day[2026-04] = 2025-12-31 "before the run"
+  rent_day[2026-05] = 2026-05-01 "amount a hole"
+  rent_day[2026-06] = 2026-07-01 "after the run"
+  fee_day[2026-01] = 2026-02-02 "s"
+  fee_day[2026-02] = 2026-02-27 "s"
+  fee_day[2026-03] = 2026-03-03 "s"
+  fee_day[2026-04] = 2026-04-04 "s"
+  fee_day[2026-05] = 2026-05-05 "s"
+  fee_day[2026-06] = 2026-06-06 "s"
+  opening[konto] = 5000.00 PLN at 2026-01-01 start "s"
+  opening[pot] = 9000.00 PLN at 2026-01-01 start "s"
+
+version feb
+  cite s
+  governs 2026-01
+  known 2026-02-21
+  covers pot
+  bank[x1] = (on: 2026-01-31, kind: transfers, leg cash from pot to landlord amount 901.00 PLN, fulfils: rent[2026-01]) "names jan"
+
+version sm
+  cite s
+  known 2026-01-02
+  same rent[2026-01] = fee[2026-01]
+  same rent[2026-04] = fee[2026-04]
+,,1:0,1170:a (m = 2026-01): refused: ENGINE-INVARIANT a booked plan amount changed: top[2026-01] booked at 2026-01-20 differs between the cuts 2026-01-20 and 2026-05-20 (E §9 invariant 5)
+  cut 2026-05-20
+a (m = 2026-02): refused: ENGINE-INVARIANT a booked plan amount changed: top[2026-01] booked at 2026-01-20 differs between the cuts 2026-01-20 and 2026-05-20 (E §9 invariant 5)
+  cut 2026-05-20
+a (m = 2026-03): refused: ENGINE-INVARIANT a booked plan amount changed: top[2026-01] booked at 2026-01-20 differs between the cuts 2026-01-20 and 2026-05-20 (E §9 invariant 5)
+  cut 2026-05-20
+a (m = 2026-04): refused: ENGINE-INVARIANT a booked plan amount changed: top[2026-01] booked at 2026-01-20 differs between the cuts 2026-01-20 and 2026-05-20 (E §9 invariant 5)
+  cut 2026-05-20
+a (m = 2026-05): refused: ENGINE-INVARIANT a booked plan amount changed: top[2026-01] booked at 2026-01-20 differs between the cuts 2026-01-20 and 2026-05-20 (E §9 invariant 5)
+  cut 2026-05-20
+a (m = 2026-06): refused: ENGINE-INVARIANT a booked plan amount changed: top[2026-01] booked at 2026-01-20 differs between the cuts 2026-01-20 and 2026-05-20 (E §9 invariant 5)
+  cut 2026-05-20
+,24:fixes/t231g58/p07_same/b,13:fixes-t231g58,26:run p07_same.tally --ask b,2826:14:p07_same.tally,2802:model p7
+  tally 2
+  on 2026-05-20
+  start 2026-01-01
+  end 2026-06-30
+
+source s "invented values"
+
+unit PLN: currency minor 0.01
+
+index month = month 2026-01..2026-06
+
+place konto: accounts PLN lives 2026-01-01..
+
+place pot: accounts PLN lives 2026-01-01..
+
+place landlord: outside lives 1900-01-01..
+
+place shop: outside lives 1900-01-01..
+
+input bank: observed
+
+input rent_amt[m in month]: money PLN
+
+input rent_day[m in month]: date
+
+input share: num
+
+input skip_m: month
+
+input top_dom: int
+
+input fee_day[m in month]: date
+
+move rent[m in month]: transfers
+  on rent_day[m]
+  at start_of(m)
+  when m != skip_m
+  leg cash from pot to landlord amount rent_amt[m]
+
+move top[m in month]: transfers
+  on day_of(m, top_dom)
+  at start_of(m)
+  leg cash from konto to shop amount round(flows(rent, m) * share, minor(PLN), half-up)
+
+move fee[m in month]: transfers
+  on fee_day[m]
+  at start_of(m)
+  leg cash from pot to landlord amount rent_amt[m]
+
+move top3[m in month]: transfers
+  on day_of(m, top_dom)
+  at start_of(m)
+  leg cash from konto to shop amount flows(fee, m)
+
+move top2[m in month]: transfers
+  on day_of(m, top_dom)
+  at start_of(m)
+  leg cash from konto to shop amount flows(rent[m].cash, m .. (m + 1))
+
+ask a: flows(top, m) for m in [2026-01, 2026-02, 2026-03, 2026-04, 2026-05, 2026-06]
+
+ask b: flows(top2, m) for m in [2026-01, 2026-02, 2026-03, 2026-04, 2026-05]
+
+ask c: flows(top3, m) for m in [2026-01, 2026-02, 2026-03, 2026-04, 2026-05]
+
+ask c2: flows(fee, m) for m in [2026-01, 2026-02, 2026-03, 2026-04]
+
+ask k: bal(konto, 2026-05-19)
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  share = 0.1 "s"
+  skip_m = 2026-03 "s"
+  top_dom = 20 "s"
+  rent_amt[2026-01] = 900.00 PLN "s"
+  rent_amt[2026-02] = -5.00 PLN "refused"
+  rent_amt[2026-03] = 910.00 PLN "s"
+  rent_amt[2026-04] = 920.00 PLN "s"
+  rent_amt[2026-06] = 940.00 PLN "s"
+  rent_day[2026-01] = 2026-01-31 "last day"
+  rent_day[2026-02] = 2026-03-01 "next month's first day"
+  rent_day[2026-03] = 2026-03-20 "when false"
+  rent_day[2026-04] = 2025-12-31 "before the run"
+  rent_day[2026-05] = 2026-05-01 "amount a hole"
+  rent_day[2026-06] = 2026-07-01 "after the run"
+  fee_day[2026-01] = 2026-02-02 "s"
+  fee_day[2026-02] = 2026-02-27 "s"
+  fee_day[2026-03] = 2026-03-03 "s"
+  fee_day[2026-04] = 2026-04-04 "s"
+  fee_day[2026-05] = 2026-05-05 "s"
+  fee_day[2026-06] = 2026-06-06 "s"
+  opening[konto] = 5000.00 PLN at 2026-01-01 start "s"
+  opening[pot] = 9000.00 PLN at 2026-01-01 start "s"
+
+version feb
+  cite s
+  governs 2026-01
+  known 2026-02-21
+  covers pot
+  bank[x1] = (on: 2026-01-31, kind: transfers, leg cash from pot to landlord amount 901.00 PLN, fulfils: rent[2026-01]) "names jan"
+
+version sm
+  cite s
+  known 2026-01-02
+  same rent[2026-01] = fee[2026-01]
+  same rent[2026-04] = fee[2026-04]
+,,1:0,980:b (m = 2026-01): refused: ENGINE-INVARIANT a booked plan amount changed: top2[2026-01] booked at 2026-01-20 differs between the cuts 2026-01-20 and 2026-05-20 (E §9 invariant 5)
+  cut 2026-05-20
+b (m = 2026-02): refused: ENGINE-INVARIANT a booked plan amount changed: top2[2026-01] booked at 2026-01-20 differs between the cuts 2026-01-20 and 2026-05-20 (E §9 invariant 5)
+  cut 2026-05-20
+b (m = 2026-03): refused: ENGINE-INVARIANT a booked plan amount changed: top2[2026-01] booked at 2026-01-20 differs between the cuts 2026-01-20 and 2026-05-20 (E §9 invariant 5)
+  cut 2026-05-20
+b (m = 2026-04): refused: ENGINE-INVARIANT a booked plan amount changed: top2[2026-01] booked at 2026-01-20 differs between the cuts 2026-01-20 and 2026-05-20 (E §9 invariant 5)
+  cut 2026-05-20
+b (m = 2026-05): refused: ENGINE-INVARIANT a booked plan amount changed: top2[2026-01] booked at 2026-01-20 differs between the cuts 2026-01-20 and 2026-05-20 (E §9 invariant 5)
+  cut 2026-05-20
+,24:fixes/t231g58/p07_same/c,13:fixes-t231g58,26:run p07_same.tally --ask c,2826:14:p07_same.tally,2802:model p7
+  tally 2
+  on 2026-05-20
+  start 2026-01-01
+  end 2026-06-30
+
+source s "invented values"
+
+unit PLN: currency minor 0.01
+
+index month = month 2026-01..2026-06
+
+place konto: accounts PLN lives 2026-01-01..
+
+place pot: accounts PLN lives 2026-01-01..
+
+place landlord: outside lives 1900-01-01..
+
+place shop: outside lives 1900-01-01..
+
+input bank: observed
+
+input rent_amt[m in month]: money PLN
+
+input rent_day[m in month]: date
+
+input share: num
+
+input skip_m: month
+
+input top_dom: int
+
+input fee_day[m in month]: date
+
+move rent[m in month]: transfers
+  on rent_day[m]
+  at start_of(m)
+  when m != skip_m
+  leg cash from pot to landlord amount rent_amt[m]
+
+move top[m in month]: transfers
+  on day_of(m, top_dom)
+  at start_of(m)
+  leg cash from konto to shop amount round(flows(rent, m) * share, minor(PLN), half-up)
+
+move fee[m in month]: transfers
+  on fee_day[m]
+  at start_of(m)
+  leg cash from pot to landlord amount rent_amt[m]
+
+move top3[m in month]: transfers
+  on day_of(m, top_dom)
+  at start_of(m)
+  leg cash from konto to shop amount flows(fee, m)
+
+move top2[m in month]: transfers
+  on day_of(m, top_dom)
+  at start_of(m)
+  leg cash from konto to shop amount flows(rent[m].cash, m .. (m + 1))
+
+ask a: flows(top, m) for m in [2026-01, 2026-02, 2026-03, 2026-04, 2026-05, 2026-06]
+
+ask b: flows(top2, m) for m in [2026-01, 2026-02, 2026-03, 2026-04, 2026-05]
+
+ask c: flows(top3, m) for m in [2026-01, 2026-02, 2026-03, 2026-04, 2026-05]
+
+ask c2: flows(fee, m) for m in [2026-01, 2026-02, 2026-03, 2026-04]
+
+ask k: bal(konto, 2026-05-19)
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  share = 0.1 "s"
+  skip_m = 2026-03 "s"
+  top_dom = 20 "s"
+  rent_amt[2026-01] = 900.00 PLN "s"
+  rent_amt[2026-02] = -5.00 PLN "refused"
+  rent_amt[2026-03] = 910.00 PLN "s"
+  rent_amt[2026-04] = 920.00 PLN "s"
+  rent_amt[2026-06] = 940.00 PLN "s"
+  rent_day[2026-01] = 2026-01-31 "last day"
+  rent_day[2026-02] = 2026-03-01 "next month's first day"
+  rent_day[2026-03] = 2026-03-20 "when false"
+  rent_day[2026-04] = 2025-12-31 "before the run"
+  rent_day[2026-05] = 2026-05-01 "amount a hole"
+  rent_day[2026-06] = 2026-07-01 "after the run"
+  fee_day[2026-01] = 2026-02-02 "s"
+  fee_day[2026-02] = 2026-02-27 "s"
+  fee_day[2026-03] = 2026-03-03 "s"
+  fee_day[2026-04] = 2026-04-04 "s"
+  fee_day[2026-05] = 2026-05-05 "s"
+  fee_day[2026-06] = 2026-06-06 "s"
+  opening[konto] = 5000.00 PLN at 2026-01-01 start "s"
+  opening[pot] = 9000.00 PLN at 2026-01-01 start "s"
+
+version feb
+  cite s
+  governs 2026-01
+  known 2026-02-21
+  covers pot
+  bank[x1] = (on: 2026-01-31, kind: transfers, leg cash from pot to landlord amount 901.00 PLN, fulfils: rent[2026-01]) "names jan"
+
+version sm
+  cite s
+  known 2026-01-02
+  same rent[2026-01] = fee[2026-01]
+  same rent[2026-04] = fee[2026-04]
+,,1:0,980:c (m = 2026-01): refused: ENGINE-INVARIANT a booked plan amount changed: top3[2026-01] booked at 2026-01-20 differs between the cuts 2026-01-20 and 2026-05-20 (E §9 invariant 5)
+  cut 2026-05-20
+c (m = 2026-02): refused: ENGINE-INVARIANT a booked plan amount changed: top3[2026-01] booked at 2026-01-20 differs between the cuts 2026-01-20 and 2026-05-20 (E §9 invariant 5)
+  cut 2026-05-20
+c (m = 2026-03): refused: ENGINE-INVARIANT a booked plan amount changed: top3[2026-01] booked at 2026-01-20 differs between the cuts 2026-01-20 and 2026-05-20 (E §9 invariant 5)
+  cut 2026-05-20
+c (m = 2026-04): refused: ENGINE-INVARIANT a booked plan amount changed: top3[2026-01] booked at 2026-01-20 differs between the cuts 2026-01-20 and 2026-05-20 (E §9 invariant 5)
+  cut 2026-05-20
+c (m = 2026-05): refused: ENGINE-INVARIANT a booked plan amount changed: top3[2026-01] booked at 2026-01-20 differs between the cuts 2026-01-20 and 2026-05-20 (E §9 invariant 5)
+  cut 2026-05-20
+,25:fixes/t231g58/p07_same/c2,13:fixes-t231g58,27:run p07_same.tally --ask c2,2826:14:p07_same.tally,2802:model p7
+  tally 2
+  on 2026-05-20
+  start 2026-01-01
+  end 2026-06-30
+
+source s "invented values"
+
+unit PLN: currency minor 0.01
+
+index month = month 2026-01..2026-06
+
+place konto: accounts PLN lives 2026-01-01..
+
+place pot: accounts PLN lives 2026-01-01..
+
+place landlord: outside lives 1900-01-01..
+
+place shop: outside lives 1900-01-01..
+
+input bank: observed
+
+input rent_amt[m in month]: money PLN
+
+input rent_day[m in month]: date
+
+input share: num
+
+input skip_m: month
+
+input top_dom: int
+
+input fee_day[m in month]: date
+
+move rent[m in month]: transfers
+  on rent_day[m]
+  at start_of(m)
+  when m != skip_m
+  leg cash from pot to landlord amount rent_amt[m]
+
+move top[m in month]: transfers
+  on day_of(m, top_dom)
+  at start_of(m)
+  leg cash from konto to shop amount round(flows(rent, m) * share, minor(PLN), half-up)
+
+move fee[m in month]: transfers
+  on fee_day[m]
+  at start_of(m)
+  leg cash from pot to landlord amount rent_amt[m]
+
+move top3[m in month]: transfers
+  on day_of(m, top_dom)
+  at start_of(m)
+  leg cash from konto to shop amount flows(fee, m)
+
+move top2[m in month]: transfers
+  on day_of(m, top_dom)
+  at start_of(m)
+  leg cash from konto to shop amount flows(rent[m].cash, m .. (m + 1))
+
+ask a: flows(top, m) for m in [2026-01, 2026-02, 2026-03, 2026-04, 2026-05, 2026-06]
+
+ask b: flows(top2, m) for m in [2026-01, 2026-02, 2026-03, 2026-04, 2026-05]
+
+ask c: flows(top3, m) for m in [2026-01, 2026-02, 2026-03, 2026-04, 2026-05]
+
+ask c2: flows(fee, m) for m in [2026-01, 2026-02, 2026-03, 2026-04]
+
+ask k: bal(konto, 2026-05-19)
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  share = 0.1 "s"
+  skip_m = 2026-03 "s"
+  top_dom = 20 "s"
+  rent_amt[2026-01] = 900.00 PLN "s"
+  rent_amt[2026-02] = -5.00 PLN "refused"
+  rent_amt[2026-03] = 910.00 PLN "s"
+  rent_amt[2026-04] = 920.00 PLN "s"
+  rent_amt[2026-06] = 940.00 PLN "s"
+  rent_day[2026-01] = 2026-01-31 "last day"
+  rent_day[2026-02] = 2026-03-01 "next month's first day"
+  rent_day[2026-03] = 2026-03-20 "when false"
+  rent_day[2026-04] = 2025-12-31 "before the run"
+  rent_day[2026-05] = 2026-05-01 "amount a hole"
+  rent_day[2026-06] = 2026-07-01 "after the run"
+  fee_day[2026-01] = 2026-02-02 "s"
+  fee_day[2026-02] = 2026-02-27 "s"
+  fee_day[2026-03] = 2026-03-03 "s"
+  fee_day[2026-04] = 2026-04-04 "s"
+  fee_day[2026-05] = 2026-05-05 "s"
+  fee_day[2026-06] = 2026-06-06 "s"
+  opening[konto] = 5000.00 PLN at 2026-01-01 start "s"
+  opening[pot] = 9000.00 PLN at 2026-01-01 start "s"
+
+version feb
+  cite s
+  governs 2026-01
+  known 2026-02-21
+  covers pot
+  bank[x1] = (on: 2026-01-31, kind: transfers, leg cash from pot to landlord amount 901.00 PLN, fulfils: rent[2026-01]) "names jan"
+
+version sm
+  cite s
+  known 2026-01-02
+  same rent[2026-01] = fee[2026-01]
+  same rent[2026-04] = fee[2026-04]
+,,1:0,784:c2 (m = 2026-01): refused: ENGINE-INVARIANT a booked plan amount changed: top[2026-01] booked at 2026-01-20 differs between the cuts 2026-01-20 and 2026-05-20 (E §9 invariant 5)
+  cut 2026-05-20
+c2 (m = 2026-02): refused: ENGINE-INVARIANT a booked plan amount changed: top[2026-01] booked at 2026-01-20 differs between the cuts 2026-01-20 and 2026-05-20 (E §9 invariant 5)
+  cut 2026-05-20
+c2 (m = 2026-03): refused: ENGINE-INVARIANT a booked plan amount changed: top[2026-01] booked at 2026-01-20 differs between the cuts 2026-01-20 and 2026-05-20 (E §9 invariant 5)
+  cut 2026-05-20
+c2 (m = 2026-04): refused: ENGINE-INVARIANT a booked plan amount changed: top[2026-01] booked at 2026-01-20 differs between the cuts 2026-01-20 and 2026-05-20 (E §9 invariant 5)
+  cut 2026-05-20
+,24:fixes/t231g58/p07_same/k,13:fixes-t231g58,26:run p07_same.tally --ask k,2826:14:p07_same.tally,2802:model p7
+  tally 2
+  on 2026-05-20
+  start 2026-01-01
+  end 2026-06-30
+
+source s "invented values"
+
+unit PLN: currency minor 0.01
+
+index month = month 2026-01..2026-06
+
+place konto: accounts PLN lives 2026-01-01..
+
+place pot: accounts PLN lives 2026-01-01..
+
+place landlord: outside lives 1900-01-01..
+
+place shop: outside lives 1900-01-01..
+
+input bank: observed
+
+input rent_amt[m in month]: money PLN
+
+input rent_day[m in month]: date
+
+input share: num
+
+input skip_m: month
+
+input top_dom: int
+
+input fee_day[m in month]: date
+
+move rent[m in month]: transfers
+  on rent_day[m]
+  at start_of(m)
+  when m != skip_m
+  leg cash from pot to landlord amount rent_amt[m]
+
+move top[m in month]: transfers
+  on day_of(m, top_dom)
+  at start_of(m)
+  leg cash from konto to shop amount round(flows(rent, m) * share, minor(PLN), half-up)
+
+move fee[m in month]: transfers
+  on fee_day[m]
+  at start_of(m)
+  leg cash from pot to landlord amount rent_amt[m]
+
+move top3[m in month]: transfers
+  on day_of(m, top_dom)
+  at start_of(m)
+  leg cash from konto to shop amount flows(fee, m)
+
+move top2[m in month]: transfers
+  on day_of(m, top_dom)
+  at start_of(m)
+  leg cash from konto to shop amount flows(rent[m].cash, m .. (m + 1))
+
+ask a: flows(top, m) for m in [2026-01, 2026-02, 2026-03, 2026-04, 2026-05, 2026-06]
+
+ask b: flows(top2, m) for m in [2026-01, 2026-02, 2026-03, 2026-04, 2026-05]
+
+ask c: flows(top3, m) for m in [2026-01, 2026-02, 2026-03, 2026-04, 2026-05]
+
+ask c2: flows(fee, m) for m in [2026-01, 2026-02, 2026-03, 2026-04]
+
+ask k: bal(konto, 2026-05-19)
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  share = 0.1 "s"
+  skip_m = 2026-03 "s"
+  top_dom = 20 "s"
+  rent_amt[2026-01] = 900.00 PLN "s"
+  rent_amt[2026-02] = -5.00 PLN "refused"
+  rent_amt[2026-03] = 910.00 PLN "s"
+  rent_amt[2026-04] = 920.00 PLN "s"
+  rent_amt[2026-06] = 940.00 PLN "s"
+  rent_day[2026-01] = 2026-01-31 "last day"
+  rent_day[2026-02] = 2026-03-01 "next month's first day"
+  rent_day[2026-03] = 2026-03-20 "when false"
+  rent_day[2026-04] = 2025-12-31 "before the run"
+  rent_day[2026-05] = 2026-05-01 "amount a hole"
+  rent_day[2026-06] = 2026-07-01 "after the run"
+  fee_day[2026-01] = 2026-02-02 "s"
+  fee_day[2026-02] = 2026-02-27 "s"
+  fee_day[2026-03] = 2026-03-03 "s"
+  fee_day[2026-04] = 2026-04-04 "s"
+  fee_day[2026-05] = 2026-05-05 "s"
+  fee_day[2026-06] = 2026-06-06 "s"
+  opening[konto] = 5000.00 PLN at 2026-01-01 start "s"
+  opening[pot] = 9000.00 PLN at 2026-01-01 start "s"
+
+version feb
+  cite s
+  governs 2026-01
+  known 2026-02-21
+  covers pot
+  bank[x1] = (on: 2026-01-31, kind: transfers, leg cash from pot to landlord amount 901.00 PLN, fulfils: rent[2026-01]) "names jan"
+
+version sm
+  cite s
+  known 2026-01-02
+  same rent[2026-01] = fee[2026-01]
+  same rent[2026-04] = fee[2026-04]
+,,1:0,181:k: refused: ENGINE-INVARIANT a booked plan amount changed: top[2026-01] booked at 2026-01-20 differs between the cuts 2026-01-20 and 2026-05-20 (E §9 invariant 5)
+  cut 2026-05-20
 ,
