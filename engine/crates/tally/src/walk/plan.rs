@@ -358,10 +358,11 @@ impl Engine {
         if scenario_early(m, mv, inst) {
             return Ok(Status::LeftOut);
         }
-        // a row stands in for the instance it names by the name alone, never its existence: a
-        // refused plan instance is modelled, and a field read of it keeps its refusal (L §5.19
-        // l.1713, §8.4 l.2355; tally 2.3.1 rulings 22 (1); part 1's review B2)
-        if applied && !mv.decision {
+        // a row stands in for the instance it names by the name alone, never its existence or
+        // its day: a refused plan instance, and a decision's whose day is a hole, never run, are
+        // modelled; a field read of either keeps its refusal or its hole (L §5.19 l.1713,
+        // l.1718, l.1723, §8.4 l.2355; tally 2.3.1 rulings 22 (1); part 1's review B2, B3)
+        if applied && (!mv.decision || day.is_none()) {
             return Ok(Status::Modelled);
         }
         if inst.err.is_some() {

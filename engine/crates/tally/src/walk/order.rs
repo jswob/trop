@@ -1462,6 +1462,41 @@ version feb
 "#;
 
     #[test]
+    fn a_row_stands_in_for_a_decision_whose_day_is_a_hole() {
+        // L §5.19 l.1713, l.1718, l.1723 (tally 2.3.1 rulings 22 (1); part 1's review B3):
+        // February's day is a hole and its row stands in, so the balance reads the row; the
+        // hole stays with a field read of the instance
+        let text = DEC_LINK
+            .replace("LIM", "600.00 PLN")
+            .replace("  on day_of(m, d5)", "  on day_of(m, dt[m])")
+            .replace(
+                "input d5: int",
+                "input d5: int\n\ninput dt[m in month]: int",
+            )
+            .replace(
+                "  d5 = 5 \"s\"",
+                "  d5 = 5 \"s\"\n  dt[2026-01] = 5 \"s\"\n  dt[2026-02] = ?\"feb day?\" \"s\"\n  \
+                 dt[2026-03] = 5 \"s\"\n  dt[2026-04] = 5 \"s\"\n  dt[2026-05] = 5 \"s\"",
+            )
+            .replace("ask b:", "ask dy: topup[2026-02].day\n\nask b:");
+        let first = |ask: &str| {
+            let given = vec![Given {
+                path: "dec_hole.tally".to_owned(),
+                bytes: Some(text.clone().into_bytes()),
+            }];
+            let asks = Asks::Named(vec![ask.to_owned()]);
+            let answer = run(Files::new(given), &Request::new(asks)).expect("an answer");
+            answer.lines().first().cloned().expect("a line")
+        };
+        assert_eq!(first("b"), "b: 870.00 PLN", "the row stands in");
+        assert_eq!(
+            first("dy"),
+            "dy: ?\"feb day?\" (dt[2026-02])",
+            "a field read"
+        );
+    }
+
+    #[test]
     fn step_7s_mark_is_a_field_read_through_fulfils_and_row_precise() {
         // E §3.1 step 7 l.127 (tally 2.3.1 rulings 19 D, rulings 22 (6)): `topup`'s `when`
         // reads a dated balance, a running read; a plan that reads a field through the

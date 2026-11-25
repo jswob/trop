@@ -868,6 +868,9 @@ fn schedule_decision(
                 .or_insert_with(Vec::new)
                 .push(inst.clone());
         }
+        // a hole day a row names: the row stands in, booked from its own fields, and the
+        // instance is never booked (L §5.19 l.1713, l.1723; tally 2.3.1 part 1's review B3)
+        Some(Dated::Hole(_)) if inst.status == Status::Modelled => {}
         Some(Dated::Hole(h)) => {
             let at = At::before(walk.start);
             decision_hole(walk, (at, h), inst, places)?;
