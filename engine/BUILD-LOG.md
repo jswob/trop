@@ -9196,3 +9196,174 @@ The eighth G2 brief: links follow the exist study's part 1 in the critic's repai
 **STOP-REPORTs:** none new. Q2.6 and Q2.29 stay open.
 
 **check quick:** green, 11 steps.
+
+## 2026-11-25 tally 2.3.1 G5, one printer (issue #259)
+
+The builder's turn on group 5 (R4: the declared-type printer, the `held:` merge, `RUN-NONE`'s words), against pin 6 (spec/2.3.1 ff4249e7, refcore ffebad27, merged 06ab0eb7). Plan §5's engine rows, rulings 1 and pick P24 (the merge is in). Probes and scripts are in `tmp/spec-2.3.1/g5/`:
+- `pair.sh` (this worktree's release engine against its refcore, pin 6);
+- `t/`: refcore's W5 tests split into texts (`bin/split.py`);
+- `p/`: my probes and the critic's, copied;
+- `ref0/`: refcore before pin 6 (06ab0eb7^1), to tell pin 6's changes from older differences.
+
+Link forms (`book/observe.rs`, `walk/tuples.rs`, step 7's reach) untouched.
+
+**Commits** (none pushed):
+- f06dd646 `fix(format): a declared item prints in its declared type` (Q2.9, N256.7, N250.7, Q1.8)
+- d600b595 `fix(ask): held: prints once per row and keys, its reads in runs` (Q1.5)
+- bb34ce17 `fix(eval): RUN-NONE names its read: a condition, a built-in's name` (Q2.37, N256.8, Q1.13)
+- db7033f8 `fix(ask): the fork oracle's held: line is once per row, as refcore's` (the fence suite's held line)
+
+**The mechanisms:**
+1. **Declared type.**
+   - `coerce_def` gives a unitless def value its declared `num` or `num %`.
+   - A check's `differs` sides print with `typed_text`; the difference stays plain.
+   - `Value::text` prints a one-day window as its day (a question still names it `window(a, b)`, as refcore's `window_text` does) and a tuple in brackets.
+2. **The merge.** The register collects `held` texts and merges them (`merged_held`, refcore's `merge_held`): texts alike up to the last `, read for` are one line; their day, month, quarter or year points are sorted by kind, then place; consecutive ones form a run `a .. b`. A text read for another form stays as it is. `pin_day` and the merge share `iso_day`.
+3. **The words.**
+   - `boolean` (for `and`, `or`, `not`), `if`'s condition and membership name the read with `none_here`, as `a condition` and `a membership test`.
+   - `named_none(call, (i, v))` names argument i and the built-in before that argument's own check, in written order, as refcore's `known_first` does. It covers `round` (all three arguments: x and the step were `arithmetic`), `add_business`, `last_business`, `schedule`, `periodic`, `factor`, `accrue` (all six) and `dcf`'s two days. `dcf`'s day count keeps its own refusal, as refcore's does.
+
+**Each row, the engine's line beside the plan's:**
+- **Q2.9** (`critic/pct` q_dnum, q_dpct): `0.1` and `10 %`. Plan: the declared type. Refcore matches.
+- **N256.7** (`pct2` q_chk): `differs: p = 10 %, n + p = 0.2, difference -0.1`. Plan's row word for word. Refcore matches.
+  - `p/n2567` c2: `pn = 0.3 %, p = 10 %`; c6: `dz = 0 %`.
+- **N250.7** (refcore's `L2_4_one_day_window_and_tuple`): `q_w: 2026-03-05`, `[1] row v:w = 2026-03-05`. Plan: the day.
+- **Q1.8**: tuple `q_t: [a, a]`. Calendar `q3: calendar(weekends [sat, sun], added [2026-06-24])` (`p/q18`), unchanged; both interpreters agree with the plan.
+- **P36** (`L7_1_bare_zero_in_nested_if`): the same 34 lines on both before and after; the engine already built it.
+- **Q1.5** (`L8_2_held_once_per_row`): `held: rd[de] = 2026-01-02 (v), read for 2026-01-05 .. 2026-01-07, 2026-01-09 .. 2026-01-11`, keys apart. Plan: one line per row and keys.
+- **Q2.37** (`L8_4_none_names_its_read`): `ok[b] is none here: a condition` for `if`, `and`, `or`, `not`, and `st[b] is none here: a membership test`. Plan: `a condition`, `a membership test`, no article.
+- **N256.8, Q1.13**: `r[b] is none here: accrue`, `md_n is none here: round`, `n_n is none here: last_business`. Plan: the read's name and the built-in's.
+- **N256.6**: G3's, unchanged (`q_wn: 0.5`, `pinned: n = 0.5`).
+- **N256.12**: `q_dr: 0 /year` (a rate def's 0 in an untaken branch, `p/q216`). The same on both; no change.
+- **`z3`** (`m4/fixes/g2fix/q5_zero`): `refused: RUN-ZERO add_business(window(2026-03-02, 2026-03-04), 0, cal)`. The same on both, the plan's window form; no `unknown day:` line on either. A refusal carries no hole, so I read "its line kept" as nothing to add. No change.
+- **Q2.16, Q1.14, N245.3, N245.15, N245.18, N245.20**: refcore at pin 6 prints the old form. STOP-REPORT below; the engine is unchanged.
+
+**Probes** (`pair.sh`, every ask):
+- The same bytes on both:
+  - `critic/pct` (44 lines);
+  - `critic/pct2` and `planner/ex/pct3` with `explain if c then p else n` taken out (18 and 32 lines). As written they print `LOAD-RESERVED if is a keyword` on both;
+  - refcore's 8 W5 tests' texts. `L6_1`'s joint text is `LOAD-PIN` out of its folder on both;
+  - `p/q216`, `n2567`, `q18`, `days`, `ut_print`, `ut_none`;
+  - the 2.2.1 review's `hs/s1`, `day/d4`, `hs/h10`;
+  - `q5_zero`.
+- `p/nonesweep` (52 none-argument asks) differs only on forms that differ the same way against refcore before pin 6 (`ref0/`); listed in the STOP-REPORT.
+
+**What `check commit` shows red:** 435 ids. All of the 263 are still red, none gone, and **172 are new**, each in its change's class. The guard refuses `git checkout`, so I couldn't run `check commit` at each commit. I ran it at the head and sorted each new id by its first moved line (`bin/classify.py`; each line read, the `held:` ones checked by machine: the engine's merged line extends the stored line).
+
+**A, the declared-type printer (f06dd646), 2.** A tuple is now `[k2, j1]` where the store holds `(k2, j1)`:
+- `constructs/argm/t_tuple`
+- `paper/print__rows/c`
+
+No stored `%` or one-day-window answer moved in the gating stores.
+
+**B, the merge (d600b595), 82.** A `held:` line is now one line per row and keys:
+- `I:D:d11_pairs`, `I:M:RC-08`
+- `I:X:pit37@c1_fast`, `c2_fast`, `c3_fast`, `c4_fast`, `c6_fast`, `c7_fast`, `v3_fast`, `v4_fast`
+- `I:X:social_and_health@c2_fast`, `c7_fast`
+- `U:set/law/LAW-13/LAW-13`, `U:set/surf/SURF-04/SURF-04`, `U:surf/SURF-04/SURF-04`
+- `changes/run/` `b1`, `b2`, `b3`, `b4a`, `b4b`, `b6a`, `b6b`, `b7`, `c1`, `c2`, `c3`, `c4a`, `c4b`, `c6a`, `c6b`, `c7`
+- `fixes/g6/r1_register/` `b`, `r_min`, `r_sum`, `sv`, `sv_all`
+- `fixes/g9/`:
+  - `r_known_later_a_bal_late`, `r_known_later_a_low_late`, `r_known_later_k_at_known`, `r_known_later_k_low_mid`, `r_known_later_k_mid`
+  - `r_scen_more_s_early`, `r_scen_more_s_late`, `r_scen_more_s_mixed`
+  - `u_amount_q_back`, `u_amount_q_edge`, `u_amount_q_fwd`, `u_amount_q_min_low`, `u_amount_q_sum_bal`, `u_amount_q_sum_low`
+  - `u_place_q_back`, `u_place_q_fwd`, `u_place_q_min_low`, `u_place_q_sum_bal`, `u_place_q_sum_low`
+- `fixes/gate8/` `d512_hole_ans`, `k4_changed_after`, `m2_g6_kae`, `m2_g6_kin2`, `m2_g7_p1_cuts`, `m2_gate_b2`, `m3_uncertain_hole`, `p47_k4_changed_after`
+- `fixes/rv/g3_b3_uncertain_partial`
+- `goldens/` `g10_rent`, `g6_raise`, `g7_price_year`, `pins_business`, `pins_employment`, `pins_y22`, `r7_joint_2027`, `r7_joint_oki_2030`, `r7_oki_2030`, `r7_pins_2027`
+- `last/net_worth`, `operations/asks`
+- `paper/cal__register/` `a`, `e`, `i`
+- `r11/sum_first`
+- `spec/lawdate/` `g1-d-last`, `w-asks-count`
+
+**C, the words (bb34ce17), 88.** `a value is none here: <use>` (and `round`'s `x is none here: arithmetic`, P26's store) is now `<read> is none here: <a condition | a membership test | the built-in>`:
+- `constructs/logic/none_and`, `none_or`
+- `fixes/g1/a12_nonehole/q_acc`, `q_per`
+- `fixes/g1/b2_rates/q_fac_none`, `q_per_none`
+- `fixes/p12/accrue/`:
+  - `h_a__n_b`, `h_a__n_c`, `h_a__n_dc`, `h_a__n_p`, `h_a__n_r`
+  - `h_b__n_a`, `h_b__n_c`, `h_b__n_dc`, `h_b__n_p`, `h_b__n_r`
+  - `h_c__n_a`, `h_c__n_b`, `h_c__n_dc`, `h_c__n_p`, `h_c__n_r`
+  - `h_dc__n_a`, `h_dc__n_b`, `h_dc__n_c`, `h_dc__n_p`, `h_dc__n_r`
+  - `h_p__n_a`, `h_p__n_b`, `h_p__n_c`, `h_p__n_dc`, `h_p__n_r`
+  - `h_r__n_a`, `h_r__n_b`, `h_r__n_c`, `h_r__n_dc`, `h_r__n_p`
+  - `n_a__k_c`, `n_a__z_c`, `n_b__k_c`, `n_b__z_c`, `n_dc__k_c`, `n_dc__z_c`
+  - `n_p__k_c`, `n_p__m_r`, `n_p__z_c`, `n_r__k_c`, `n_r__z_c`
+- `fixes/p12/add_business/` `h_cal__n_d`, `h_cal__n_n`, `h_d__n_n`, `h_n__n_d`, `n_d__z_n`
+- `fixes/p12/dcf/` `h_a__n_b`, `h_b__n_a`, `h_dc__n_a`, `h_dc__n_b`
+- `fixes/p12/factor/` `h_n__n_r`, `h_r__n_n`
+- `fixes/p12/last_business/` `h_cal__n_mo`, `h_cal__n_n`, `h_mo__n_n`, `h_n__n_mo`
+- `fixes/p12/periodic/` `h_c__n_r`, `h_r__n_c`, `n_r__z_c`
+- `fixes/p12/round/` `h_step__n_mode`, `h_x__n_mode`
+- `fixes/p12/schedule/` `h_cal__n_e`, `h_cal__n_mo`, `h_e__n_mo`, `h_e__n_roll`, `h_mo__n_e`, `h_mo__n_roll`, `h_roll__n_e`, `h_roll__n_mo`
+- `fixes/t231g34/none_eq/q_in`
+- `items/none/` `q_and`, `q_if`, `q_member`, `q_not`
+- `spec/p12/schedule/h_cal__n_roll`
+- `spec/p26/items/none/q_round`
+- `spec/p26/p12/round/` `h_mode__n_step`, `h_mode__n_x`, `h_step__n_x`, `h_x__n_step`, `n_x__g_step`, `n_x__z_step`
+
+**None outside a class.** The red tests are T's runner targets alone: 76 of 1578. My 3 new unit tests pass.
+
+**Size** (`git diff --shortstat 06ab0eb7 HEAD -- engine/crates`): 10 files, +442 −78. The plan's R4 is 0.4 to 0.6 k with tests: 520 changed lines, within.
+
+| Commit | Lines (in, out) |
+|---|---|
+| A, the declared type | +89 −15 (tests about 62) |
+| B, the merge | +175 −29 (tests 49) |
+| C, the words | +175 −32 (tests 95) |
+| the fence's line | +3 −2 |
+
+- **Kernel files touched:** none. The changes are in `eval/rules.rs`, `ask/check.rs`, `model/value.rs`, `ask/register.rs`, `eval/builtin.rs`, `business.rs`, `rates.rs`, `dates.rs`, `expr.rs` and `tally-cli/tests/fork_oracle.rs`.
+- **Unit tests** (3 new, each holding refcore's bytes for its text):
+  - `ask/check.rs` `a_declared_item_prints_in_its_declared_type`;
+  - `ask/register.rs` `held_prints_once_per_row_and_keys_its_reads_in_runs`: days, months across a year, quarters, years apart, a band row, another form;
+  - `eval/builtin.rs` `none_is_refused_by_its_read_and_its_use`.
+- **Fences:** no fence module or twin edited. Fence suite `fork_oracle`'s `forks_on_prints_forks_off_and_refcore_on_its_own_reality` held the unmerged `held: rent …, read for 2026-07-01`; it now holds refcore's merged line. `check fences`: green, 1 step (50s).
+- **Exceptions:** +0. `exceptions --check`: 6; report-only 8, as before.
+- **Mutants:** none proved. Sites for T:
+  - `held_point`'s run test `last.checked_add(1) == Some(point.1)` and its kind test;
+  - the quarter's `1..=4`;
+  - `coerce_def`'s new arm, its `s != shown`;
+  - `window_text`'s `lo == hi`;
+  - `named_none`'s calls (each argument index).
+
+## STOP-REPORT 2026-11-25: R4's rows that refcore at pin 6 doesn't print, and RUN-NONE words where refcore and the landed row differ
+
+- **Kind:** other: the spec and refcore disagree (the brief: a STOP-REPORT, and go on).
+- **Where:** plan §5's table; L §2.4 Values (l.342), §8.4 `RUN-NONE`'s row (l.2363); refcore ffebad27. Writer notes W5, "Not done in refcore".
+- **Rule or gate:** R4; DONE gate 10.
+- **What happens:** the same bytes on both interpreters for each row below, against the plan's row. The engine is unchanged for each, so it keeps refcore's bytes:
+  - **Q2.16** (`p/q216` e_p): `explain p` of a `num %` input prints `[1] row v:p = 0.01`, and its head `e_p: 0.01`. The plan says `1 %` (a declared item in its type); refcore's explain prints `fmt_value` with no type.
+  - **Q1.14** (`p/q18` q2): `given h[*] = 2` prints `given: h = 2 (g)`. The plan and l.342 say `given h[*] = …` as written.
+  - **N245.3** (2.2.1 review `day/d4` fl1): `the amount of cash differs on 2026-03-09`. The plan says both days, merged as a list.
+  - **N245.20** (`hs/s1` bk against sm): `leg fee differs` from a balance, `the amount of fee differs` from a sum. The plan says one form, the leg's.
+  - **N245.18:** not probed. Refcore didn't build it (W5).
+  - **N245.15** (`p/n24515`): `dv + kn` (never + none) prints `never in arithmetic` on both; `none + never` has no form the checker loads (`int + date`, `date - date` are LOAD-UNIT).
+  - **Older differences**, the same against refcore before pin 6 (`p/nonesweep`, `ref0/`):
+    - `min(xn, x1)`: engine `xn is none here: ordering`, refcore `a value is none here: min`;
+    - `max`: the same, `max`;
+    - `abs(xn)`: engine `xn is none here: arithmetic`, refcore `a value is none here: abs`;
+    - `xn < x1`: engine `xn is none here: ordering`, refcore `… an ordering`;
+    - `sum`, `max` over a none term: engine `tn[b] is none here: aggregate`, refcore `a term of sum is none here`;
+    - `age_months`: engine names `age_months`, refcore `age`.
+    - The landed row ("the built-in's name; arithmetic, ordering, … aggregate", no article) reads `xn is none here: min` for the first two. Neither interpreter prints that.
+  - **A rate's arithmetic** (`critic/pct` q_r0, q_ifr): `r - r` prints `0 1/year` on both, where §5.18 prints a rate `0.076 /year`. A def of that value prints `0 /year` (`q216` q_dr).
+- **What I tried:** nothing in code for these. Any form the engine printed would differ from refcore and turn T's stores red outside the change's class.
+- **What I ask:** the writer's bytes in refcore for each, or each row withdrawn to "as both print". The engine follows at the next pin.
+- **State:** db7033f8 green on `check quick`; nothing uncommitted but this entry.
+
+**Usage:** about 0.6 % of the week by `engine/tools/usage tmp/spec-2.3.1/g5-ids.txt` before this entry.
+
+**Time:** about 32 minutes, 09:48 to 10:20. About 13 minutes of it were checks:
+- the release binary twice (4.5 min);
+- `check quick` three times (1.5);
+- `check commit` twice (3.5);
+- `check fences` once (1);
+- refcore runs (about 2).
+
+**Checks:**
+- `check commit: red at tests, stopped after 10 of 24 steps (86s)`, red only on the 435 ids above (76 of 1578 test targets, all T's);
+- `check fences: green, 1 step (50s)`;
+- `check quick`: below, after this entry's commit.
+
+**Waiting for T.**
