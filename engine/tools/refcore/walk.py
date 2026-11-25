@@ -631,6 +631,10 @@ class Walk:
                         self.at((d.toordinal(), 3, mi.stratum, qid, 0), 'decday', (mi, d))
                     self.decday[k].append(i)
                 elif isinstance(d, Hole):
+                    if eng.status(i, ctx) == 'modelled':
+                        # a row that names it stands in for it, by the name alone: never booked (L §5.19; tally
+                        # 2.3.1 P32 B3, d3_holeday)
+                        continue
                     self.dec_hole(i, K_before(S), d, ctx)
                 elif isinstance(i.err, RandomLine) and ctx.path is None:
                     # a decision whose day reaches a sample, outside a path: refused at the places it books only
@@ -1207,13 +1211,24 @@ class Walk:
                 # they are booked"), so it books no place here (TX-F1, writer 10: snap14 let it take acc, then booked it
                 # nowhere), and an observation books an end another version covers from that version's row
                 touch = [(mv, lg, si)]
+
+                def at_p(legs):
+                    return [g for g in legs if (g.unit or '*') == (lg.unit or '*') and
+                            any(isinstance(q, Thing) and q.name == p.name for q in (g.frm, g.to))]
+                mine = at_p(mv.legs)
+                k = next((j for j, g in enumerate(mine) if g is lg), 0)
                 for o in others:
                     if getattr(o, 'status', None) == 'modelled' and not getattr(o, 'decision', False):
                         continue
                     # a row with a leg of this one's name is one fact with it: that leg alone is compared (HOLE-SAME's
                     # row, "one fact, each row once"; tally 2.2.1, 237.2)
                     named = [g for g in o.legs if g.name == lg.name]
-                    for g in (named or o.legs):
+                    if not named:
+                        # sides whose leg names differ: each leg at p against the other's in the same place, by order,
+                        # so each row is named once, one question per leg (tally 2.3.1 N245.18)
+                        theirs = at_p(o.legs)
+                        named = theirs[k:k + 1]
+                    for g in named:
                         for sj, q in enumerate((g.frm, g.to)):
                             if isinstance(q, Thing) and q.name == p.name and (g.unit or '*') == (lg.unit or '*'):
                                 if isinstance(o, ObsMv):

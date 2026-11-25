@@ -1986,6 +1986,8 @@ class Loader:
                             it.loc)
         row = Row(inf, tuple(pattern), nstated, it.value, it.assumed, v, own_span, own_known, instant, it.locator,
                   it.given, it.replace, it.loc, it)
+        # the keys as written, a `*` included: what the text writes prints as written (L §2.5; tally 2.3.1 Q1.14)
+        row.nwritten = len(it.keys) if it.keys is not None else 0
         if kind == 'input':
             if of is not None:
                 # a reading's stated parts (L §5.19, tally 2.1): kept beside the readings, never a total

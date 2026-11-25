@@ -2426,7 +2426,7 @@ class Engine:
                 raise src.err
         if n.op not in ('==', '!=') and (a is NONE or b is NONE):
             # an ordering names the read that gave none (L §8.4's row; P48, N2)
-            raise refuse('RUN-NONE', '%s is none here: an ordering' % env_txt(n.l if a is NONE else n.r, env))
+            raise refuse('RUN-NONE', '%s is none here: ordering' % env_txt(n.l if a is NONE else n.r, env))
         return self.compare(n.op, a, b, n, ctx)
 
     def compare(self, op, a, b, n, ctx):
@@ -3383,7 +3383,7 @@ class Engine:
                 holes.append(self.window_term(t, fn))
                 continue
             if t is NONE:
-                raise refuse('RUN-NONE', 'a term of %s is none here' % fn)
+                raise refuse('RUN-NONE', '%s is none here: %s' % (env_txt(n.term, e2), fn))
             terms.append((e2, t))
         if fn == 'count':
             if holes:
@@ -3772,7 +3772,7 @@ class Engine:
             try:
                 t = self.ev(n.term, e2, ctx)
                 if t is NONE:
-                    raise refuse('RUN-NONE', 'a term of %s is none here' % fn)
+                    raise refuse('RUN-NONE', '%s is none here: %s' % (env_txt(n.term, e2), fn))
             except Refusal as e:
                 first = first or e
                 continue
@@ -3811,7 +3811,7 @@ class Engine:
                 holes.append(t)
                 continue
             if t is NONE:
-                raise refuse('RUN-NONE', 'a term of %s is none here' % n.fn)
+                raise refuse('RUN-NONE', '%s is none here: %s' % (env_txt(n.arg, e2), n.fn))
             if isinstance(t, Iv):
                 holes.append(self.window_term(t, n.fn))
                 continue
@@ -4206,6 +4206,8 @@ class Engine:
         h = self.hole_args([b, d])
         if h:
             return h
+        for a, v in zip(n.args, (b, d)):
+            self.no_none(v, n.name, a, env)
         b = self.as_date_or_iv(b, 'age')
         d = self.as_date_or_iv(d, 'age')
         fn = age if n.name == 'age' else age_months
@@ -4260,8 +4262,9 @@ class Engine:
         h = self.hole_args(vals, strict=n.name)
         if h:
             return h
-        for v in vals:
-            self.no_none(v, n.name)
+        for a, v in zip(n.args, vals):
+            # the read and the built-in's name (L §8.4's RUN-NONE row; tally 2.3.1 R4, P31)
+            self.no_none(v, n.name, a, env)
         vals = [coerce_flex(v, a._t, vals, n) for v, a in zip(vals, n.args)]
         res = self.agg_minmax(n.name, vals, None)
         if snap is not None:
@@ -4275,7 +4278,7 @@ class Engine:
         v, = self.args(n, env, ctx)
         if isinstance(v, Hole):
             return v
-        self.no_none(v, 'abs')
+        self.no_none(v, 'abs', n.args[0], env)
         v = self.off_list('abs', v)
         return Num(abs(v.q), v.u, money=v.money, isint=v.isint, rate=v.rate, enc=enc_abs(v.enc))
 
@@ -4639,6 +4642,8 @@ class Engine:
         tn.lines.append(', '.join(bits))
         val = r.val
         tn.value = Hole([(val[1], self.origin(info, keys))]) if isinstance(val, tuple) and val[0] == 'hole' else val
+        # a declared item's row prints in its declared type (L §2.4 Values; tally 2.3.1 R4, Q2.16)
+        tn._t = getattr(info, 'type', None)
         self.trace_stack[-1].children.append(('node', tn))
 
 
@@ -5123,7 +5128,8 @@ def arith(op, a, b, rt, lt, rtt):
         return Num(q, u if u else ((rt.cur, 1),), money=True, enc=e)
     if k == 'int':
         return Num(q, (), isint=True, enc=e)
-    if k == 'rate':
+    if k == 'rate' or (op in '+-' and a.rate and b.rate):
+        # rate ± rate of one period is a rate, 0 included: `r - r` prints `0 /year` (L §3.3, §2.4; tally 2.3.1 R4)
         return Num(q, a.u if a.rate else b.u, rate=True, enc=e)
     if k == 'dyn' and (a.money or b.money) and len(u) == 1 and u[0][1] == 1 and u[0][0] in CURRENCIES and \
             not (op in '+-' and not (a.money and b.money) and (b if a.money else a).q != 0):

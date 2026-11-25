@@ -388,6 +388,11 @@ def m_mv_field(self, n, env, ctx):
         return src.day
     if what == 'fulfils':
         f = src.fulfils
+        if f is None and isinstance(src, ObsMv):
+            # rows stated same are one movement, its fulfils stated on either row (L §5.19, §6.1 "read from both
+            # sides together"; tally 2.3.1 P32 N1: s1_same's n2)
+            f = next((x.fulfils for x in self.same_others(src, ctx) if getattr(x, 'fulfils', None) is not None),
+                     None)
         if f is None:
             return NONE
         if isinstance(f, tuple) and f[0] == 'adj':
@@ -963,7 +968,12 @@ def m_span_members(self, dom, sp, ctx, owner=None):
                                          id(ctx.walk) if ctx.walk is not None else None, ctx.wp, owner), ()):
         if not (isinstance(i.day, datetime.date) and not sp.contains(i.day)):
             self.cur.merge(c_st)
+    # a refused instance a row names stands in by that row, by the name alone (L §5.19 l.1713, l.1718; tally 2.3.1
+    # P32 B2): not a refused member
+    named_ids = set(self.link_targets(ctx))
     for x in xs:
+        if isinstance(x, Inst) and x.err is not None and x.id in named_ids:
+            continue
         e1 = self.s1_refusal(getattr(x, 'id', None), ctx)
         if e1 is not None and (sp.contains(x.day) if isinstance(x.day, datetime.date) else True):
             # a binding over movements rests on each it takes (L §5.19 S1, P42): a count or a sum is refused
@@ -1679,6 +1689,10 @@ def m_flows_place(self, place, sp, env, ctx, fk=None):
         if fk is None or e.mv is None:
             return False
         fp = mv_for(e.mv)
+        if isinstance(fp, Hole):
+            # a movement for a hole period: whether it counts is that hole (L §8.1; tally 2.3.1 P32 B5)
+            holes.append(fp)
+            return True
         return fp is None or vkey(fp) != vkey(fk)
     last = sp.end - ONE_DAY if sp.end is not None else m.E
     w = ctx.walk
@@ -2076,7 +2090,9 @@ def m_flows_move(self, n, sp, fk, env, ctx):
     for i in insts:
         if keys and tuple(vkey(k) for k in i.keys[:len(keys)]) != tuple(keys):
             continue
-        if i.id in named and (getattr(i, '_rawhole', False) or isinstance(i.day, Hole)) and i.err is None:
+        if i.id in named and (getattr(i, '_rawhole', False) or isinstance(i.day, Hole) or i.err is not None or
+                              (mi.decision and getattr(i, 'status', None) == 'refused')):
+            # a refused one too: the rows stand in by the name alone (tally 2.3.1 P32 B2)
             by_rows.add(i.id)
             continue
         if getattr(i, '_rawhole', False):
@@ -2146,6 +2162,10 @@ def m_flows_move(self, n, sp, fk, env, ctx):
                 d.window_text(), mi.id), i.id)]), d))
             continue
         if fk is not None and not isinstance(i.forp, Hole) and (i.forp is None or vkey(i.forp) != vkey(fk)):
+            continue
+        if fk is not None and isinstance(i.forp, Hole) and st == 'modelled':
+            # its rows are for the hole period: whether they count is that hole (L §8.1; tally 2.3.1 P32 N3)
+            holes.append(i.forp)
             continue
         counted.add(id(i))
         e1 = self.s1_refusal(i.id, ctx)

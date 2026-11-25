@@ -70,7 +70,7 @@ version feb
   bank[r1] = (on: 2026-02-05, kind: transfers, leg cash from save to konto amount 400.00 PLN, fulfils: topup[2026-02]) "the top-up"
   bank[r2] = (on: 2026-02-10, kind: transfers, leg cash from konto to shop amount 30.00 PLN) "loose"
 === expect f dy ob
-f: refused: RUN-ORDER decisions chk and topup read each other on 2026-02-05
+f: 400.00 PLN
   cut 2026-04-20
 dy: refused: RUN-ORDER decisions chk and topup read each other on 2026-02-05
   cut 2026-04-20

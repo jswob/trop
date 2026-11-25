@@ -1,0 +1,44 @@
+# tally 2.3.1 Q1.14 (L §2.5 Canonical form, Values: what the text writes prints as written, `given h[*] = …`;
+# §8.2 a given "printed once as written"): q[*] and p[a, *] keep their `*`; p[b], written without it, stays.
+# Before: given: q = 1, given: p[a] = 2.
+=== q114.tally
+model t
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+
+index ks = [a, b]
+index js = [x, y]
+input five: int
+
+def q[k in ks]: int at reader
+  rule base = 0
+
+def p[k in ks, j in js]: int at reader
+  rule base = 0
+
+version g
+  cite s
+  governs always
+  known 2026-01-01
+  given q[*] = 1
+  given p[a, *] = 2
+  given p[b] = 3
+  five = 5
+
+ask q1: q[a], q[b] law 2026-06-30
+ask p1: p[a, x] law 2026-06-30
+ask p2: p[b, y] law 2026-06-30
+=== expect
+p1: 2
+  given: p[a, *] = 2 (g)
+  law date 2026-06-30, cut 2026-12-31
+p2: 3
+  given: p[b] = 3 (g)
+  law date 2026-06-30, cut 2026-12-31
+q1: (1, 1)
+  given: q[*] = 1 (g)
+  law date 2026-06-30, cut 2026-12-31
