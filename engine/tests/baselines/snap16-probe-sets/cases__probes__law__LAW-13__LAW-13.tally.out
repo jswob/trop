@@ -9,12 +9,7 @@ before_unchanged: diff in rate25 against law13: 6 changed, 0 added, 0 removed, 4
   changed (y = 2035): 2 500 DUK against 1 900 DUK
   world: law13
   world: rate25
-  held: rate = 0.25 (rate25_law), read for 2030-01-01
-  held: rate = 0.25 (rate25_law), read for 2031-01-01
-  held: rate = 0.25 (rate25_law), read for 2032-01-01
-  held: rate = 0.25 (rate25_law), read for 2033-01-01
-  held: rate = 0.25 (rate25_law), read for 2034-01-01
-  held: rate = 0.25 (rate25_law), read for 2035-01-01
+  held: rate = 0.25 (rate25_law), read for 2030-01-01, 2031-01-01, 2032-01-01, 2033-01-01, 2034-01-01, 2035-01-01
   law date 2026-10-25, cut 2026-10-25
 whatif_2030: 2 500 DUK
   world: rate25
@@ -22,10 +17,5 @@ whatif_2030: 2 500 DUK
   law date 2026-10-25, cut 2026-10-25
 whatif_total: 22 600 DUK
   world: rate25
-  held: rate = 0.25 (rate25_law), read for 2030-01-01
-  held: rate = 0.25 (rate25_law), read for 2031-01-01
-  held: rate = 0.25 (rate25_law), read for 2032-01-01
-  held: rate = 0.25 (rate25_law), read for 2033-01-01
-  held: rate = 0.25 (rate25_law), read for 2034-01-01
-  held: rate = 0.25 (rate25_law), read for 2035-01-01
+  held: rate = 0.25 (rate25_law), read for 2030-01-01, 2031-01-01, 2032-01-01, 2033-01-01, 2034-01-01, 2035-01-01
   law date 2026-10-25, cut 2026-10-25

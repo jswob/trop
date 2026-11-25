@@ -1111,8 +1111,9 @@ impl Checker {
     }
 
     /// An ask: the world it names a world of the run; an ask of a scenario's file names one;
-    /// its bindings, its pins, `law` and `as known` (dates), a quantile's level, then what it
-    /// asks (refcore's `check_ask`). L §5.18, §6.4.
+    /// its bindings, its pins (one law date and one cut a line, tally 2.3.1 R3), `law` and
+    /// `as known` (dates), a quantile's level, then what it asks (refcore's `check_ask`).
+    /// L §5.18, §6.4, §5.11.
     fn check_ask(&mut self, m: &Reality, ask: &Ask, file: &str) -> Result<(), Stop> {
         let mut scope = Scope::new(
             Node::new(NodeKind::Ask, &ask.id),
@@ -1137,6 +1138,7 @@ impl Checker {
             self.pin(m, &scope, pin, 0)?;
         }
         super::pins::pin_ties(m, &scope, &ask.pins).map_err(|s| scope.place(s))?;
+        super::pins::line_pins(ask).map_err(|s| scope.place(s))?;
         for (clause, word) in [(&ask.law, "law"), (&ask.known, "as known")] {
             if let Some(e) = clause {
                 let t = self.expr(m, &scope, e, None, 0)?;

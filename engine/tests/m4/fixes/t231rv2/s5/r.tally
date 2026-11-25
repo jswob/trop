@@ -1,0 +1,81 @@
+model s5
+  tally 2
+  on 2026-06-10
+  start 2026-01-01
+  end 2026-12-31
+
+source s "probe"
+unit PLN: currency minor 0.01
+place wallet: accounts PLN lives 2025-01-01..
+place w2: accounts PLN lives 2025-01-01..
+place w3: accounts PLN lives 2025-01-01..
+place other: accounts PLN lives 2025-01-01..
+place world: outside lives 1900-01-01..
+input d1: date
+input d2: date
+input a: money PLN
+input a2: money PLN
+
+move in1: transfers
+  reads other
+  on d1
+  at d1
+  leg cash from world to wallet amount a + 0 * bal(other)
+move in2: transfers
+  reads other
+  on d2
+  at d2
+  leg cash from world to wallet amount a + 0 * bal(other)
+move j1: transfers
+  on d1
+  at d1
+  leg cash from world to w2 amount a
+move j2: transfers
+  reads other
+  on d2
+  at d2
+  leg cash from world to w2 amount a2 + 0 * bal(other)
+move k1: transfers
+  reads w3
+  on d1
+  at d1
+  leg cash from world to w3 amount a + 0 * bal(w3)
+move k2: transfers
+  on d2
+  at d2
+  leg cash from world to w3 amount a
+
+ask b6: bal(wallet, 2026-03-06)
+ask b8: bal(wallet, 2026-03-08)
+ask c6: bal(w2, 2026-03-06)
+ask c8: bal(w2, 2026-03-08)
+ask cu: bal(w2, 2026-03-08) in up
+ask cu6: bal(w2, 2026-03-06) in up
+ask ku: bal(w3, 2026-03-08) in up
+ask ex: explain bal(wallet, 2026-03-08)
+ask k8: bal(w3, 2026-03-08) as known 2026-03-06
+ask k9: bal(w3, 2026-03-08)
+
+ask b31: bal(wallet, 2026-05-31)
+ask c31: bal(w2, 2026-05-31)
+ask cu31: bal(w2, 2026-05-31) in up
+ask k31: bal(w3, 2026-05-31)
+ask ku31: bal(w3, 2026-05-31) in up
+ask eb31: explain bal(wallet, 2026-05-31)
+ask ec31: explain bal(w2, 2026-05-31) in up
+
+version v
+  cite s
+  governs always
+  known 2025-12-01
+  opening[wallet] = 0.00 PLN at 2026-01-01 start "s"
+  opening[w2] = 0.00 PLN at 2026-01-01 start "s"
+  opening[w3] = 0.00 PLN at 2026-01-01 start "s"
+  opening[other] = 5.00 PLN at 2026-01-01 start "s"
+  d1 = 2026-03-05 "s"
+  d2 = 2026-05-07 "s"
+  a = 100.00 PLN "s"
+  a2 = 130.00 PLN "s"
+  same in1 = in2
+  same j1 = j2
+  same k1 = k2

@@ -71,8 +71,7 @@ c05_rosvald_owed (q = 2026-01): (2026-01, 690.00 FLR, 690.00 FLR, 0.00 FLR, 2026
 c05_rosvald_owed (q = 2026-04): (2026-04, 690.00 FLR, 690.00 FLR, 0.00 FLR, 2026-07-31)
   law date 2026-09-30, cut 2026-09-30
 c05_rosvald_owed (q = 2026-07): (2026-07, 536.52 FLR, 0.00 FLR, 536.52 FLR, 2026-10-30)
-  held: rv_holidays = calendar(weekends [sat, sun], yearly [01-01, 05-01, 06-14, 10-03, 12-24, 12-25, 12-26, 12-31]) (rgp1_v1), read for 2026-10-30
-  held: rv_holidays = calendar(weekends [sat, sun], yearly [01-01, 05-01, 06-14, 10-03, 12-24, 12-25, 12-26, 12-31]) (rgp1_v1), read for 2026-10-31
+  held: rv_holidays = calendar(weekends [sat, sun], yearly [01-01, 05-01, 06-14, 10-03, 12-24, 12-25, 12-26, 12-31]) (rgp1_v1), read for 2026-10-30 .. 2026-10-31
   law date 2026-09-30, cut 2026-09-30
 c05_lenia_owed: 0.00 DUK
   law date 2026-09-30, cut 2026-09-30

@@ -1,0 +1,52 @@
+model b1x
+  tally 2
+  on 2026-10-18
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+unit PLN: currency minor 0.01
+index ks = [k1, k2, k3]
+index js = [j1, j2]
+input v[k in ks, j in js]: money PLN
+input u[k in ks, j in js]: money PLN
+input w[k in ks, j in js]: money PLN
+input b: bool
+axis mode
+  ma "a"
+  mb "b"
+def h[k in ks, j in js]: money PLN = v[k, j] + v[k, j]
+def pick: money PLN = v[argmin(u[k, j] for k in ks, j in js)]
+def md: money PLN = if mode == ma then v[argmin(u[k, j] for k in ks, j in js)] else v[k1, j1]
+
+ask a28: inputs-of pick
+
+version ver
+  cite s
+  governs always
+  known 2026-01-01
+  b = true "s"
+  v[k1, j1] = 5.00 PLN "s"
+  v[k1, j2] = 7.00 PLN "s"
+  v[k2, j1] = 3.00 PLN "s"
+  v[k2, j2] = 9.00 PLN "s"
+  v[k3, j1] = 4.00 PLN "s"
+  v[k3, j2] = 6.00 PLN "s"
+  u[k1, j1] = 5.00 PLN "s"
+  u[k1, j2] = 7.00 PLN "s"
+  u[k2, j1] = 3.00 PLN "s"
+  u[k2, j2] = 9.00 PLN "s"
+  u[k3, j1] = 4.00 PLN "s"
+  u[k3, j2] = 6.00 PLN "s"
+  w[k1, j1] = 1.00 PLN "s"
+  w[k1, j2] = 7.00 PLN "s"
+  w[k2, j1] = 1.00 PLN "s"
+  w[k2, j2] = 9.00 PLN "s"
+  w[k3, j1] = 4.00 PLN "s"
+  w[k3, j2] = 6.00 PLN "s"
+
+version v2
+  cite s
+  governs always
+  known 2026-09-01
+  replace u[k1, j2] = ?"which u?"

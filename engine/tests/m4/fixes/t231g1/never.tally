@@ -1,0 +1,29 @@
+model nev
+  tally 2
+  on 2026-06-30
+  start 2026-01-01
+  end 2026-12-31
+
+source s "probe"
+index ks = [a, b]
+input dl[k in ks]: date
+input d: date
+input nv: date
+
+ask m1: min(nv, d)
+ask m2: max(nv, d)
+ask m3: min(dl[k] for k in ks)
+ask m4: max(dl[k] for k in ks)
+ask m5: argmin(dl[k] for k in ks)
+ask m6: argmax(dl[k] for k in ks)
+ask m7: d < nv
+ask m8: add_days(nv, 1)
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  dl[a] = 2026-03-01 "s"
+  dl[b] = never "s"
+  d = 2026-05-01 "s"
+  nv = never "s"

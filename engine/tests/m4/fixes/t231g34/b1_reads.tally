@@ -1,0 +1,58 @@
+model b1_reads
+  tally 2
+  on 2026-10-25
+  start 2026-01-01
+  end 2026-12-31
+
+source s "invented"
+
+unit PLN: currency minor 0.01
+
+index ks = [k1, k2]
+index dd = day 2026-03-01..2026-03-02
+
+place a1: accounts PLN lives 2026-01-01..
+place a2: accounts PLN lives 2026-01-01..
+place world: outside lives 1900-01-01..
+
+input b[k in ks]: money PLN
+input n[k in ks]: int
+input acct[k in ks]: key accounts
+input amt[k in ks]: money PLN
+input pd: date
+
+def dbl[k in ks]: money PLN = b[k] + b[k]
+def nn[k in ks]: int = n[k] + n[k]
+
+move pay[k in ks]: transfers
+  on pd
+  leg cash from world to acct[k] amount amt[k]
+
+def p_flows[k in ks, d in dd]: money PLN = dbl[k] as if {b[k] = flows(acct[k], start_of(month_of(d)) .. d)}
+def p_bal[k in ks, d in dd]: money PLN = dbl[k] as if {b[k] = bal(acct[k], d)}
+def p_value[k in ks, d in dd]: money PLN = dbl[k] as if {b[k] = round(value(acct[k], d) in PLN, minor(PLN), half-up)}
+def p_leg[k in ks, d in dd]: money PLN = dbl[k] as if {b[k] = if d > pd then pay[k].cash.amount else b[k]}
+def p_count[k in ks, d in dd]: int = nn[k] as if {n[k] = count(m in transfers over start_of(month_of(d)) .. d where n[k] > 0)}
+
+ask q_flows: p_flows[k, d] for k in ks, d in dd
+ask q_bal: p_bal[k, d] for k in ks, d in dd
+ask q_value: p_value[k, d] for k in ks, d in dd
+ask q_leg: p_leg[k, d] for k in ks, d in dd
+ask q_count: p_count[k, d] for k in ks, d in dd
+ask q_plain: dbl[k1]
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  b[k1] = 1.00 PLN "s"
+  b[k2] = 2.00 PLN "s"
+  n[k1] = 1 "s"
+  n[k2] = 2 "s"
+  acct[k1] = a1 "s"
+  acct[k2] = a2 "s"
+  amt[k1] = 50.00 PLN "s"
+  amt[k2] = 70.00 PLN "s"
+  pd = 2026-03-01 "s"
+  opening[a1] = 100.00 PLN at 2026-01-01 start "s"
+  opening[a2] = 200.00 PLN at 2026-01-01 start "s"

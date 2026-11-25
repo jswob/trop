@@ -20,7 +20,7 @@ use crate::base::{Load, Run};
 use crate::hole::{Hole, spread};
 use crate::model::{
     Class, DefInfo, KeyVal, Node, NodeKind, Number, Reality, RuleVer, Shown, Ty, Unit, Value,
-    Window, pattern_text,
+    Window,
 };
 use crate::read::{Clocks, Test, candidates, choose, held, origin, rule_in_force, worded};
 use crate::syntax::{LawDate, RuleValue, Stop};
@@ -508,7 +508,8 @@ impl Engine {
             .filter(|l| !beaten_by_any(def, &applicable, *l))
             .collect();
         let law_text = ctx.law.map_or_else(|| "no law date".to_owned(), Day::text);
-        if let [first, second, ..] = cands.as_slice() {
+        let relevant = changes_outcome(def, &cands, &unknown);
+        if let ([first, second, ..], None) = (cands.as_slice(), &relevant) {
             self.narrow_to_day(ctx.law);
             return Err(refuse(
                 Run::Conflict,
@@ -520,17 +521,9 @@ impl Engine {
             ));
         }
         self.trace_candidates(def, node, &applicable, &cands);
-        let mut relevant: Vec<Option<&Hole>> = Vec::new();
-        for (at, hole) in &unknown {
-            let beats_cand = cands.iter().any(|c| beats(def, *at, *c));
-            let beaten_by_cand = cands.iter().any(|c| beats(def, *c, *at));
-            if beats_cand || !beaten_by_cand || cands.is_empty() {
-                relevant.push(Some(hole));
-            }
-        }
-        if let Some(hole) = spread(&relevant) {
-            if let Some(first) = cands.first() {
-                self.trace_state(node, label_of(def, *first), RuleState::Candidate);
+        if let Some(hole) = relevant {
+            for cand in &cands {
+                self.trace_state(node, label_of(def, *cand), RuleState::Candidate);
             }
             return Ok(Err(Value::Hole(hole)));
         }
@@ -711,7 +704,7 @@ impl Engine {
             }
         };
         let shown = shown(m, &value)?;
-        let keys_text = pattern_text(&row.pattern);
+        let keys_text = row.keys_text();
         self.note(
             "given",
             format!("{}{keys_text} = {shown} ({})", def.id, row.version),
@@ -817,6 +810,22 @@ fn beats(def: &DefInfo, a: InForce, b: InForce) -> bool {
     version.rule.beats.iter().any(|x| x == target)
 }
 
+/// The hole of the rules among `unknown`, each a rule of unknown applicability with its
+/// `when`'s hole, that could change the outcome of the choice whose candidates are `cands`,
+/// one or many: one that would beat a candidate, be a candidate beside the winner, or be the
+/// only rule left (refcore's `eval_rules`); none where no such rule is. L §5.11 steps 5 and 6.
+fn changes_outcome(def: &DefInfo, cands: &[InForce], unknown: &[(InForce, Hole)]) -> Option<Hole> {
+    let mut relevant = Vec::new();
+    for (at, hole) in unknown {
+        let beats_cand = cands.iter().any(|c| beats(def, *at, *c));
+        let beaten_by_cand = cands.iter().any(|c| beats(def, *c, *at));
+        if beats_cand || !beaten_by_cand || cands.is_empty() {
+            relevant.push(Some(hole));
+        }
+    }
+    spread(&relevant)
+}
+
 /// Whether a rule other than `x` among `rules` beats `x`.
 fn beaten_by_any(def: &DefInfo, rules: &[InForce], x: InForce) -> bool {
     rules.iter().any(|o| *o != x && beats(def, *o, x))
@@ -892,8 +901,9 @@ fn whole_value(m: &Reality, ty: &Ty, v: Value) -> Result<Value, Stop> {
     Ok(Value::Number(Number { q, class }))
 }
 
-/// A def's value in its declared type (refcore's `coerce_def`): an int that is one, money
-/// from a bare 0, a key of its index. L §5.11, §3.2.
+/// A def's value in its declared type (refcore's `coerce_def`, and the static type its
+/// printer `fmt_typed` reads): an int that is one, money from a bare 0, a key of its index,
+/// a unitless number shown as its `num` or `num %`. L §5.11, §3.2, §2.4.
 fn coerce_def(m: &Reality, def: &DefInfo, v: Value) -> Result<Value, Stop> {
     if matches!(v, Value::Hole(_) | Value::None | Value::Never) {
         return Ok(v);
@@ -915,6 +925,18 @@ fn coerce_def(m: &Reality, def: &DefInfo, v: Value) -> Result<Value, Stop> {
             }))
         }
         (Ty::Num(_, shown), Value::Number(n)) if matches!(n.class, Class::Int) => {
+            Ok(Value::Number(Number {
+                q: n.q,
+                class: Class::Num(Unit::one(), *shown),
+            }))
+        }
+        // a declared item prints in its declared type: a `num` def built from a `num %`
+        // prints plain, a `num %` def built from plain numbers with its `%` (L §2.4 Values;
+        // tally 2.3.1 R4, Q2.9)
+        (Ty::Num(unit, shown), Value::Number(n))
+            if unit.is_one()
+                && matches!(&n.class, Class::Num(u, s) if u.is_one() && s != shown) =>
+        {
             Ok(Value::Number(Number {
                 q: n.q,
                 class: Class::Num(Unit::one(), *shown),
@@ -999,4 +1021,117 @@ fn bad_law_date(m: &Reality, def: &DefInfo, v: &Value) -> Result<Stop, Stop> {
             v.text(m).map_err(num_stop)?
         ),
     ))
+}
+
+#[cfg(test)]
+mod tests {
+    use crate::api::{Asks, Files, Given, Request, run};
+
+    /// Two applicable rules no applicable rule beats, and a rule whose `when` is a hole that
+    /// would beat both (`d1`), only one (`d2`), or none and is beaten by one (`d9`).
+    const UNKNOWN_BEATS: &str = r#"model unknown_beats
+  tally 2
+  on 2026-10-25
+  start 2026-01-01
+  end 2027-12-31
+
+source s "invented values"
+
+unit PLN: currency minor 0.01
+
+input ch: bool
+
+input ct: bool
+
+input va: money PLN
+
+input vb: money PLN
+
+input vt: money PLN
+
+def d1: money PLN at reader
+  rule a = va when ct
+  rule base = vb
+  rule top beats a, base = vt when ch
+
+def d2: money PLN at reader
+  rule a = va when ct
+  rule base = vb
+  rule mid beats base = vt when ch
+
+def d9: money PLN at reader
+  rule a beats c = va when ct
+  rule b = vb
+  rule c = vt when ch
+
+ask q1: d1 law 2026-03-01
+ask q2: d2 law 2026-03-01
+ask q9: d9 law 2026-03-01
+ask e1: explain d1 law 2026-03-01
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  ch = ?"does it apply?" "s"
+  ct = true "s"
+  va = 1 PLN "s"
+  vb = 2 PLN "s"
+  vt = 3 PLN "s"
+"#;
+
+    #[test]
+    fn an_unknown_rule_that_could_change_a_conflict_makes_the_def_its_hole() {
+        // L §5.11 step 5 (tally 2.3.1, N256.3, l.1140): `top` and `mid` would each beat a
+        // candidate, so d1 and d2 are their hole; `c`, beaten by the candidate `a` and
+        // beating none, changes nothing, so d9 is refused
+        let given = vec![Given {
+            path: "unknown_beats.tally".to_owned(),
+            bytes: Some(UNKNOWN_BEATS.as_bytes().to_vec()),
+        }];
+        let request = Request::new(Asks::Every);
+        let answer = run(Files::new(given), &request).expect("an answer");
+        let values: Vec<&str> = answer
+            .lines()
+            .iter()
+            .filter(|line| line.starts_with('q'))
+            .map(String::as_str)
+            .collect();
+        assert_eq!(
+            values,
+            [
+                "q1: ?\"does it apply?\" (ch)",
+                "q2: ?\"does it apply?\" (ch)",
+                "q9: refused: RUN-CONFLICT rules a and b both win for d9 on 2026-03-01"
+            ],
+            "the hole where the unknown rule could change the outcome"
+        );
+    }
+
+    #[test]
+    fn explaining_a_step_5_hole_lists_every_candidate() {
+        // L §5.18 l.1616: explain prints the def's rules, each with its state; d1's hole
+        // has two candidates, a and base, and both show
+        let given = vec![Given {
+            path: "unknown_beats.tally".to_owned(),
+            bytes: Some(UNKNOWN_BEATS.as_bytes().to_vec()),
+        }];
+        let request = Request::new(Asks::Named(vec!["e1".to_owned()]));
+        let answer = run(Files::new(given), &request).expect("an answer");
+        let states: Vec<&str> = answer
+            .lines()
+            .iter()
+            .map(|line| line.trim_start())
+            .filter(|line| line.starts_with("rule "))
+            .collect();
+        assert_eq!(
+            states,
+            [
+                "rule a: candidate",
+                "rule base: candidate",
+                "rule top: unknown"
+            ],
+            "every candidate with its state"
+        );
+    }
 }

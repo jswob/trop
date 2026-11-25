@@ -1,0 +1,33 @@
+model p4
+  tally 2
+  on 2026-10-25
+  start 2026-01-01
+  end 2026-12-31
+
+source s "invented"
+
+unit PLN: currency minor 0.01
+
+index ks = [k1, k2]
+
+input b[k in ks]: money PLN
+input c[k in ks]: money PLN
+input x: money PLN
+
+def dbl[k in ks]: money PLN = b[k] + b[k]
+def two[k in ks]: money PLN = (dbl[k] as if {b[k] = c[k]}) - (dbl[k] as if {b[k] = c[k] + x})
+def twoc: money PLN = (dbl[k2] as if {b[k2] = c[k2]}) - (dbl[k2] as if {b[k2] = c[k2] + x})
+
+ask q_one: two[k] for k in ks
+ask q_for: (dbl[k] as if {b[k] = c[k]}) - (dbl[k] as if {b[k] = c[k] + x}) for k in ks
+ask q_c: twoc
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  b[k1] = 100 PLN "s"
+  b[k2] = 200 PLN "s"
+  c[k1] = 1 PLN "s"
+  c[k2] = ?"which c?" "s"
+  x = 5 PLN "s"

@@ -1,0 +1,34 @@
+model lawpin
+  tally 2
+  on 2026-06-30
+  start 2026-01-01
+  end 2026-12-31
+
+source s "probe"
+unit PLN: currency minor 0.01
+input w: date
+input rate: money PLN
+
+def cost: money PLN at reader
+  rule one = rate
+
+ask q5: cost with law 2026-09-01, law 2026-02-01
+
+
+version v
+  cite s
+  governs 2026-01-01..2026-06-30
+  known 2026-01-01
+  rate = 10.00 PLN "s"
+
+version v2
+  cite s
+  governs 2026-07-01..
+  known 2026-01-01
+  rate = 20.00 PLN "s"
+
+version v3
+  cite s
+  governs always
+  known 2026-01-01
+  w = 2026-02-01 "s"

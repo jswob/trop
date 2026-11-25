@@ -885,7 +885,7 @@ fn dist_read(m: &Reality, scope: &Scope, x: &Expr) -> AmountNode {
 }
 
 /// An expression with its outer brackets taken off (refcore's `strip`).
-fn bare(e: &Expr) -> &Expr {
+pub(super) fn bare(e: &Expr) -> &Expr {
     let mut e = e;
     while let Expr::Paren(inner) = e {
         e = inner;

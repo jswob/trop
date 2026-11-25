@@ -7,7 +7,7 @@ ok/joint	m3/check/joint	j.tally	§2.3, L §6.1: a joint model and its member loa
 ok/joint-unread	m3/check/joint	j_warn.tally	§2.3, L §6.1: a member's unread input warns as run prints it (Q6)
 base/dup	m3/check	model.tally dup.tally	§2.3: a base that doesn't load: its one refused line, nothing more (LOAD-DUP)
 base/path	m3/check	model.tally nope.tally	§2.3, INTERFACE §2: a path that names nothing (LOAD-PATH)
-base/no-path	m3/check		§2.3 "inputs as run's": no path at all, as run (LOAD-HEADER)
+base/no-path	m3/check		§2.3 "inputs as run's": no path at all, as run: a usage error, exit 2 (O §2, tally 2.3.1's S12)
 base/scenario-read	m3/check	model.tally s_i_extra.tally reads_scen.tally	L §6.4: a base item reading a scenario's item refuses the base (LOAD-SCENARIO)
 base/beside-scenario	m3/check	model.tally dup.tally s_a_zulu.tally	§2.3: a base refusal outranks a refused scenario: its line alone
 base/member	m3/check/joint	j_bad.tally	§2.3, INTERFACE §2: a member that doesn't load: refused: member a: …

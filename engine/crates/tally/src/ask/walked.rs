@@ -22,6 +22,7 @@ use super::explain::{head_text, invariant};
 use crate::base::Code;
 use crate::book::{gap_text, instant_text};
 use crate::eval::{Collected, Ctx, Engine, Entries, Env, Item};
+use crate::hole::Hole;
 use crate::model::{GapRole, Reality, Value};
 use crate::num::Num;
 use crate::syntax::{Ask, Bal, Expr, Stop};
@@ -348,7 +349,9 @@ fn projection_lines(
 
 /// The entries of a balance's logs, each with its log's unit, in walk order, as `(day, text)`
 /// rows; an entry that only marks the register makes none (refcore's `_entry_text` over the
-/// sorted entries). E §10.
+/// sorted entries). A two-day `same` pair's last day whose hole a reading closed before it
+/// books that hole, as the walk's state does: it shows as the hole, the leg written beside it
+/// in it (L §6.1, l.1616 "every value traces to the rows"). E §10.
 fn entry_rows(
     m: &Reality,
     engine: &Engine,
@@ -357,12 +360,49 @@ fn entry_rows(
 ) -> Result<Vec<(Day, String)>, Stop> {
     ents.sort_by_key(|(e, _)| e.at);
     let mut rows = Vec::new();
+    // the pairs' holes open since the last reading, by unit, and the last days that book one
+    let mut open: Vec<(String, Hole)> = Vec::new();
+    let mut held: Vec<(At, String, Option<String>, Option<String>)> = Vec::new();
     for (e, u) in ents {
-        if let Some(t) = entry_text(m, engine, walk, e, u)? {
+        let leg = (e.at, u.to_owned(), e.mv.clone(), e.leg.clone());
+        let shown = match &e.change {
+            Change::Reset { .. } => {
+                open.retain(|(un, _)| un != u);
+                None
+            }
+            Change::Open(h) => {
+                open.push((u.to_owned(), h.clone()));
+                None
+            }
+            Change::Close(h) if !closes(&mut open, (u, h)) => {
+                held.push(leg);
+                Some(Ent {
+                    change: Change::Hole(h.clone()),
+                    ..e.clone()
+                })
+            }
+            Change::Delta(_) if held.contains(&leg) => continue,
+            Change::Delta(_)
+            | Change::Close(_)
+            | Change::Hole(_)
+            | Change::Perm(_)
+            | Change::Bad(_)
+            | Change::PermBad(_)
+            | Change::Mark => None,
+        };
+        if let Some(t) = entry_text(m, engine, walk, shown.as_ref().unwrap_or(e), u)? {
             rows.push((e.at.day, t));
         }
     }
     Ok(rows)
+}
+
+/// Whether hole `h` of unit `u` is among the open holes `open`, each copy taken out if it is
+/// (the walk's `ended`; L §6.1, rulings 17 statement B).
+fn closes(open: &mut Vec<(String, Hole)>, (u, h): (&str, &Hole)) -> bool {
+    let before = open.len();
+    open.retain(|(un, x)| !(un == u && x == h));
+    open.len() < before
 }
 
 /// Where a balance with no reading before it starts: zero from its lifespan's start, when
@@ -488,6 +528,8 @@ fn reset_value(m: &Reality, e: &Ent, unit: &str) -> Result<String, Stop> {
         Change::Delta(_)
         | Change::Hole(_)
         | Change::Perm(_)
+        | Change::Open(_)
+        | Change::Close(_)
         | Change::Bad(_)
         | Change::PermBad(_)
         | Change::Mark => Err(invariant("a reading that is no reset")),
@@ -506,7 +548,9 @@ fn entry_text(
 ) -> Result<Option<String>, Stop> {
     let pad = engine.entries.any_word(&e.reg, "pad")?;
     let mut head = e.mv.clone().unwrap_or_else(|| "the walk".to_owned());
-    if let (Change::Delta(_) | Change::Hole(_), Some(leg), false) = (&e.change, &e.leg, pad) {
+    if let (Change::Delta(_) | Change::Hole(_) | Change::Open(_), Some(leg), false) =
+        (&e.change, &e.leg, pad)
+    {
         head = format!("{head}.{leg}");
     }
     let status = match e.mv.as_deref() {
@@ -526,7 +570,9 @@ fn entry_text(
             };
             format!("{head}: {sign}{}", quantity_text(m, f, unit)?)
         }
-        Change::Hole(h) | Change::Perm(h) => format!("{head}: hole: {}", h.text()),
+        Change::Hole(h) | Change::Perm(h) | Change::Open(h) => {
+            format!("{head}: hole: {}", h.text())
+        }
         Change::Bad(r) | Change::PermBad(r) => format!("{head}: refused: {}", r.text()),
         Change::Reset { .. } => {
             let sid = e
@@ -538,7 +584,8 @@ fn entry_text(
             let word = reading_word(e, &engine.entries)?;
             format!("{word} {sid} = {}", reset_value(m, e, unit)?)
         }
-        Change::Mark => return Ok(None),
+        // the last day of a movement of two days books it as written, beside this
+        Change::Mark | Change::Close(_) => return Ok(None),
     };
     Ok(Some(text))
 }
@@ -677,4 +724,84 @@ fn by_day(mut rows: Vec<(Day, String)>) -> Vec<String> {
         out.push(format!("  {text}"));
     }
     out
+}
+
+#[cfg(test)]
+mod tests {
+    use crate::api::{Asks, Files, Given, Request, run};
+
+    /// A `same` pair on two days of one amount, and a reading between its days.
+    const READ_BETWEEN: &str = r#"model read_between
+  tally 2
+  on 2026-06-10
+  start 2026-01-01
+  end 2026-12-31
+
+source s "invented values"
+
+unit PLN: currency minor 0.01
+
+place till: accounts PLN lives 2025-01-01..
+
+place world: outside lives 1900-01-01..
+
+input d1: date
+
+input d2: date
+
+input a: money PLN
+
+move k1: transfers
+  on d1
+  leg cash from world to till amount a
+
+move k2: transfers
+  on d2
+  leg cash from world to till amount a
+
+ask ex: explain bal(till, 2026-03-31)
+
+version v
+  cite s
+  governs always
+  known 2025-12-01
+  opening[till] = 0.00 PLN at 2026-01-01 start "s"
+  d1 = 2026-03-10 "s"
+  d2 = 2026-03-20 "s"
+  a = 60.00 PLN "s"
+  same k1 = k2
+
+version rd
+  cite s
+  governs 2026
+  known 2026-01-01
+  pad till from world
+  stated[till] = 60.00 PLN at 2026-03-15 end "s"
+"#;
+
+    #[test]
+    fn a_two_day_pairs_last_day_after_a_reading_explains_as_its_hole() {
+        // L §6.1, §5.18 l.1616: the reading between the days leaves the pair's hole open, so
+        // the last day books it; its row is that hole, not the leg's amount
+        let given = vec![Given {
+            path: "read_between.tally".to_owned(),
+            bytes: Some(READ_BETWEEN.as_bytes().to_vec()),
+        }];
+        let answer = run(Files::new(given), &Request::new(Asks::Every)).expect("an answer");
+        let hole = "?\"k1 and k2 are one, but leg cash differs on 2026-03-10, 2026-03-20: 60.00 PLN (k1) and 60.00 PLN (k2)\" (k1, k2)";
+        let rows: Vec<&str> = answer
+            .lines()
+            .iter()
+            .map(|line| line.trim_start())
+            .filter(|line| line.starts_with("k2.") || line.starts_with("ex:"))
+            .collect();
+        assert_eq!(
+            rows,
+            [
+                format!("ex: {hole}"),
+                format!("k2.cash (past): hole: {hole}")
+            ],
+            "the last day's row carries the hole"
+        );
+    }
 }

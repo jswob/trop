@@ -232,7 +232,8 @@ impl Checker {
     }
 
     /// A period literal compared with a key of a period index of its granularity is that
-    /// index's key (refcore's `compare`, its literal arm). L §2.5, §7.1.
+    /// index's key, bracketed or as both arms of an `if`, each arm its key or `LOAD-KEY`
+    /// (refcore's `compare`, its literal arm; G3's review B4). L §2.5 Keys, §7.1.
     fn period_literal(
         &mut self,
         m: &Reality,
@@ -247,30 +248,38 @@ impl Checker {
         let Some(index) = m.indexes.get(ix) else {
             return Ok(false);
         };
-        let Some(lit) = &side.lit else {
+        let Some(lits) = &side.arms else {
             return Ok(false);
         };
-        let gran = match lit {
-            Lit::Num(_) if matches!(t, Ty::Year4) => PeriodKind::Year,
-            Lit::Month(..) if matches!(t, Ty::Period(_)) => PeriodKind::Month,
-            Lit::Quarter(..) if matches!(t, Ty::Period(_)) => PeriodKind::Quarter,
-            Lit::Num(_)
-            | Lit::Month(..)
-            | Lit::Quarter(..)
-            | Lit::Day(_)
-            | Lit::MonthDay(..)
-            | Lit::Key(_)
-            | Lit::Cur(_)
-            | Lit::Bool(_)
-            | Lit::Inf { .. }
-            | Lit::Nominal(_)
-            | Lit::Name(_) => return Ok(false),
-        };
+        let mut shared: Option<PeriodKind> = None;
+        for lit in lits {
+            let gran = match lit {
+                Lit::Num(_) if matches!(t, Ty::Year4) => PeriodKind::Year,
+                Lit::Month(..) if matches!(t, Ty::Period(_)) => PeriodKind::Month,
+                Lit::Quarter(..) if matches!(t, Ty::Period(_)) => PeriodKind::Quarter,
+                Lit::Num(_)
+                | Lit::Month(..)
+                | Lit::Quarter(..)
+                | Lit::Day(_)
+                | Lit::MonthDay(..)
+                | Lit::Key(_)
+                | Lit::Cur(_)
+                | Lit::Bool(_)
+                | Lit::Inf { .. }
+                | Lit::Nominal(_)
+                | Lit::Name(_) => return Ok(false),
+            };
+            if shared.is_some_and(|before| before != gran) {
+                // arms of two granularities are no one period's key
+                return Ok(false);
+            }
+            shared = Some(gran);
+        }
         let periodic = matches!(
             index.period,
             Some(PeriodKind::Year | PeriodKind::Quarter | PeriodKind::Month)
         );
-        if !periodic || index.period != Some(gran) {
+        if !periodic || shared.is_none() || index.period != shared {
             return Ok(false);
         }
         if let Some(entry) = side.year4 {
@@ -281,8 +290,15 @@ impl Checker {
             if let Some(y) = self.year4.get_mut(entry) {
                 y.keyed = true;
             }
+        } else if shared == Some(PeriodKind::Year) {
+            // a year reached through brackets or an `if`'s arms is a date as the bare one is,
+            // under the date figure's literal rule: in a rule, `LOAD-LITERAL` (L §2.5 Keys,
+            // §7.1; tally 2.3.1 statement G, refcore's `reach_leaves` with each leaf's rule)
+            lit_rule(scope, Figure::Date, "", None)?;
         }
-        super::keyed::resolve_lit(m, scope, &lit_expr(lit), &Domain::Index(ix.clone()))?;
+        for lit in lits {
+            super::keyed::resolve_lit(m, scope, &lit_expr(lit), &Domain::Index(ix.clone()))?;
+        }
         Ok(true)
     }
 
@@ -366,6 +382,17 @@ fn compare_rest(m: &Reality, op: CmpOp, lt: &Ty, rt: &Ty) -> Result<(), Stop> {
         return compare_numbers(lt, rt, ka, kb);
     }
     if is_date(m, lt) && is_date(m, rt) {
+        return Ok(());
+    }
+    if let (Ty::Tuple(a), Ty::Tuple(b)) = (lt, rt)
+        && eq
+        && a.len() == b.len()
+        && a.iter()
+            .zip(b)
+            .all(|pair| matches!(pair, (Ty::Key(x), Ty::Key(y)) if x == y))
+    {
+        // the tuple argmin, argmax, first or last returns is its keys: it compares with ==
+        // and != key by key (L §5.11's aggregate paragraph; tally 2.3.1 S6, Q1.11)
         return Ok(());
     }
     let pa = if lk == "period" || lk == "key" {
@@ -508,4 +535,213 @@ fn compare_plain(op: CmpOp, lt: &Ty, rt: &Ty) -> Result<(), Stop> {
         ));
     }
     Err(uerr(format!("{} and {} compared", lt.show(), rt.show())))
+}
+
+#[cfg(test)]
+mod tests {
+    use crate::api::{Asks, Files, Given, Request, run};
+
+    /// The tuple `argmin` and `first` return (the writer's `tuple.tally`, tally 2.3.1 S6).
+    const TUPLE: &str = r#"model tuple
+  tally 2
+  on 2026-10-18
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+unit PLN: currency minor 0.01
+index ks = [k1, k2, k3]
+index js = [j1, j2]
+input v[k in ks, j in js]: money PLN
+
+ask t1: argmin(v[k, j] for k in ks, j in js) == argmax(v[k, j] for k in ks, j in js)
+ask t2: argmin(v[k, j] for k in ks, j in js) != argmax(v[k, j] for k in ks, j in js)
+ask t3: argmin(v[k, j] for k in ks, j in js) == argmin(v[k, j] for k in ks, j in js)
+ask t4: v[argmin(v[k, j] for k in ks, j in js)]
+ask t5: v[first(k in ks, j in js where v[k, j] > v[k2, j1])]
+
+version ver
+  cite s
+  governs always
+  known 2026-01-01
+  v[k1, j1] = 5.00 PLN "s"
+  v[k1, j2] = 7.00 PLN "s"
+  v[k2, j1] = 3.00 PLN "s"
+  v[k2, j2] = 9.00 PLN "s"
+  v[k3, j1] = 4.00 PLN "s"
+  v[k3, j2] = 6.00 PLN "s"
+"#;
+
+    /// Every ask's first line.
+    fn heads(text: &str) -> Vec<String> {
+        let given = vec![Given {
+            path: "tuple.tally".to_owned(),
+            bytes: Some(text.as_bytes().to_vec()),
+        }];
+        let lines = run(Files::new(given), &Request::new(Asks::Every))
+            .expect("an answer")
+            .lines()
+            .to_vec();
+        lines.into_iter().filter(|l| !l.starts_with(' ')).collect()
+    }
+
+    #[test]
+    fn a_returned_tuple_compares_and_stands_in_key_positions() {
+        // L §5.11's aggregate paragraph: compared with == and != key by key, and the keys
+        // of a read of the same indexes
+        assert_eq!(
+            heads(TUPLE),
+            [
+                "t1: false",
+                "t2: true",
+                "t3: true",
+                "t4: 3.00 PLN",
+                "t5: 5.00 PLN"
+            ],
+            "each tuple as its keys"
+        );
+    }
+
+    #[test]
+    fn a_returned_tuple_that_is_a_hole_keys_the_read_as_that_hole() {
+        // L §8.1 (G3's review B1): the tuple's hole is the read's, the other asks stand
+        let text = TUPLE.replace("v[k1, j2] = 7.00 PLN", "v[k1, j2] = ?\"which v?\"");
+        let lines = heads(&text);
+        assert_eq!(
+            lines.get(3).map(String::as_str),
+            Some("t4: ?\"which v?\" (v[k1, j2])"),
+            "t4 is the argmin's hole"
+        );
+        assert_eq!(lines.len(), 5, "every ask answers");
+    }
+
+    #[test]
+    fn a_bracketed_tuple_or_an_ifs_tuples_key_the_read() {
+        // L §2.5 Keys (G3's review B2): brackets and an `if`'s arms stand where the whole does
+        let t4 = "ask t4: v[argmin(v[k, j] for k in ks, j in js)]";
+        let bracketed = TUPLE.replace(t4, "ask t4: v[(argmin(v[k, j] for k in ks, j in js))]");
+        assert_eq!(
+            heads(&bracketed).get(3).map(String::as_str),
+            Some("t4: 3.00 PLN"),
+            "bracketed"
+        );
+        let arms = TUPLE.replace(
+            t4,
+            "ask t4: v[if true then argmin(v[k, j] for k in ks, j in js) else \
+             argmax(v[k, j] for k in ks, j in js)]",
+        );
+        assert_eq!(
+            heads(&arms).get(3).map(String::as_str),
+            Some("t4: 3.00 PLN"),
+            "an if's arms"
+        );
+    }
+
+    #[test]
+    fn a_tuple_of_other_indexes_is_still_refused() {
+        // only keys of the same indexes, in their order: (key ks, key js) against (js, ks)
+        let text = TUPLE.replace(
+            "== argmax(v[k, j] for k in ks, j in js)",
+            "== argmax(v[k, j] for j in js, k in ks)",
+        );
+        let first = heads(&text).into_iter().next();
+        assert_eq!(
+            first.as_deref(),
+            Some(
+                "refused: LOAD-UNIT (key ks, key js) and (key js, key ks) compared (tuple.tally:13)"
+            ),
+            "a tuple of other key types"
+        );
+    }
+
+    /// Keys of a quarter grid of months and of a year grid by 3, and a read over the first.
+    const PERIODS: &str = r#"model periods
+  tally 2
+  on 2026-10-25
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+index qs = month 2026-01..2026-12 by 3
+index ys = year 2020..2030 by 3
+input qk: key qs
+input yk: key ys
+input b: bool
+input vv[q in qs]: int
+
+ask n1: check qk == (if b then 2026-10 else 2026-07)
+ask n2: check yk == (2029)
+ask n3: vv[if b then 2026-07 else 2026-10]
+
+version ver
+  cite s
+  governs always
+  known 2026-01-01
+  qk = 2026-04 "s"
+  yk = 2026 "s"
+  b = true "s"
+  vv[2026-07] = 3 "s"
+  vv[2026-10] = 4 "s"
+"#;
+
+    #[test]
+    fn a_period_literal_reaches_through_brackets_and_an_ifs_arms() {
+        // L §2.5 Keys (G3's review B4): each is the grid's key, so `check` differs by keys
+        assert_eq!(
+            heads(PERIODS),
+            [
+                "n1: differs: qk = 2026-04, (if b then 2026-10 else 2026-07) = 2026-10, \
+                 difference -2",
+                "n2: differs: yk = 2026, (2029) = 2029, difference -1",
+                "n3: 3",
+            ],
+            "the steps of each grid"
+        );
+    }
+
+    #[test]
+    fn an_off_grid_arm_or_bracketed_year_is_no_key() {
+        // L §2.5 Keys (G3's review B4, note 7): an arm off the grid is a literal of no key
+        for (ask, refusal) in [
+            (
+                "ask n3: vv[if b then 2026-08 else 2026-10]",
+                "refused: LOAD-KEY 2026-08 is not a key of qs (tuple.tally:17)",
+            ),
+            (
+                "ask n3: check qk == (if b then 2026-10 else 2026-08)",
+                "refused: LOAD-KEY 2026-08 is not a key of qs (tuple.tally:17)",
+            ),
+            (
+                "ask n3: check yk == (2028)",
+                "refused: LOAD-KEY 2028 is not a key of ys (tuple.tally:17)",
+            ),
+        ] {
+            let text = PERIODS.replace("ask n3: vv[if b then 2026-07 else 2026-10]", ask);
+            assert_eq!(
+                heads(&text).first().map(String::as_str),
+                Some(refusal),
+                "{ask}"
+            );
+        }
+    }
+
+    #[test]
+    fn a_year_reached_through_brackets_or_arms_in_a_rule_is_a_date() {
+        // L §2.5 Keys, §7.1 (statement G): beside a year key it is a date, so a rule refuses it
+        for rule in [
+            "def z: bool = yk == (2029)",
+            "def z: bool = yk == (if b then 2029 else 2026)",
+            "def z: bool = (if b then 2029 else 2026) == yk",
+        ] {
+            let text = PERIODS.replace(
+                "ask n3: vv[if b then 2026-07 else 2026-10]",
+                &format!("{rule}\nask n3: z"),
+            );
+            assert_eq!(
+                heads(&text).first().map(String::as_str),
+                Some("refused: LOAD-LITERAL a date in a rule; make it a version (tuple.tally:17)"),
+                "{rule}"
+            );
+        }
+    }
 }

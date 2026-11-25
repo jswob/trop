@@ -15,11 +15,10 @@
 //! later keys are unbound, an instance that is a hole booking, a decision, an uncertain kind,
 //! an `explain` or an `inputs-of`, a read at the ask's cut K or later, and a move whose whole
 //! list at that cut is kept are all read whole; the links of every instance an observation at
-//! the cut names are judged once per (move, cut), their reads absorbed by the first reader,
-//! as the list's status loop absorbs them, and by no later one; and since which reader is a
-//! list's first is the whole evaluation's order, a move is read narrowly only at cuts before
-//! the first day a link to another move in its cone is known, where no instance it skips can
-//! be a first reader that takes a link's reads (group 6c's review, B1). `o.fulfils` takes no
+//! the cut names are judged once per (move, cut), their reads each instance's own, as the
+//! list's status loop keeps them (tally 2.3.1 R2, item 6); and a move is read narrowly only at
+//! cuts before the first day a link to another move in its cone is known (group 6c's review,
+//! B1: the link bound, which M4p's build 5 takes out, C-13.8). `o.fulfils` takes no
 //! list in either mode: it reads the instance's existence alone (`tuples.rs`
 //! `linked_instance`, P22). The BUILD-LOG's G6c entries list every stop and its ruling.
 //! PERF: P8-L10 (the stage runs: `spend[d]` is daily, so every day before K is a cut its
@@ -66,11 +65,11 @@ pub(crate) struct Narrowed {
     made: BTreeMap<usize, Option<Inst>>,
     /// Each tuple's day once read.
     days: BTreeMap<usize, Probe>,
-    /// Whether a tuple is refused with its later keys unbound, which stops the list: every
-    /// read of the move at the cut is then read whole.
+    /// Whether a tuple is refused with its later keys unbound, which stands for itself alone
+    /// (tally 2.3.1 R6): every read of the move at the cut is then read whole.
     whole: bool,
     /// Whether the links of every instance an observation at the cut names are judged, their
-    /// reads absorbed by the first reader.
+    /// reads each instance's own.
     judged: bool,
 }
 
@@ -91,8 +90,8 @@ pub(crate) enum Narrows {
 pub(super) enum KeptTuple {
     /// None kept: `Plans::Whole`, or a decision; the reader makes its own.
     Own,
-    /// The tuple at the keys, or none, and whether a tuple stops the move's list.
-    Kept(Option<Box<Tuple>>, bool),
+    /// The tuple at the keys, or the refused one a `where` ended before them, or none.
+    Kept(Option<Box<Tuple>>),
 }
 
 /// What reading a tuple's day at the cut gave, before its body (L §5.14, E §4.1 step 2).
@@ -274,10 +273,10 @@ impl Engine {
 
     /// Whether the narrow reads of move `mv` at cut `cut` may go on: its binding tuples made,
     /// once, as the list makes them, with the move's plan at that cut in progress; false where
-    /// one is refused with its later keys unbound, which stops the list (refcore's
-    /// `insts_of_tuples` raises); and the links of every instance an observation at the cut
-    /// names judged, once, their reads absorbed by this reader, as the list's status loop
-    /// absorbs them into the list's first reader. E §4.1 steps 1–3, L §5.19 Links.
+    /// one is refused with its later keys unbound, whose instance the list makes as it stands
+    /// (tally 2.3.1 R6); and the links of every instance an observation at the cut
+    /// names judged, once, their reads each instance's own, as the list's status loop keeps
+    /// them. E §4.1 steps 1–3, L §5.19 Links, §8.2.
     ///
     /// # Errors
     ///
@@ -300,10 +299,10 @@ impl Engine {
     }
 
     /// The tuple of plan move `mv` at keys `keys` under cut `cut`, as `move_tuples` gives it
-    /// there, from the move's tuples at that cut made once and kept, with whether one of them
-    /// is refused with its later keys unbound, which stops the move's list; a decision's, and
+    /// there, from the move's tuples at that cut made once and kept: the one at the keys, or
+    /// the refused one a `where` ended before them (`tuples.rs` `tuple_at`); a decision's, and
     /// any under `Plans::Whole`, its reader makes (the twin: `link_tuple`'s and
-    /// `linked_instance`'s own). E §4.1 step 1, L §5.19 Links; P8-L10.
+    /// `linked_instance`'s own). E §4.1 step 1, L §5.19 Links, §5.14 (tally 2.3.1 R6); P8-L10.
     ///
     /// # Errors
     ///
@@ -335,7 +334,14 @@ impl Engine {
                 break;
             }
         }
-        Ok(KeptTuple::Kept(found, entry.whole))
+        if found.is_none() && entry.whole {
+            found = entry
+                .tuples
+                .iter()
+                .find(|t| t.refused.is_some() && keys.starts_with(&t.keys))
+                .map(|t| Box::new(t.clone()));
+        }
+        Ok(KeptTuple::Kept(found))
     }
 
     /// Move `mv`'s binding tuples at cut `cut` made once and kept: under the move, their reads
@@ -377,14 +383,29 @@ impl Engine {
     }
 
     /// The links of every instance of move `mv` an observation at cut `cut` names, each
-    /// instance evaluated and its links judged, their reads absorbed by this reader, in the
-    /// list's order: what the list's status loop absorbs into its first reader (refcore's
-    /// `move_instances`, its statuses). E §4.1 step 3, L §5.19 Links.
+    /// instance evaluated and its links judged, in the list's order, what judging them meets
+    /// each instance's own (`narrow_inst`), no reader's, as the list's status loop keeps it
+    /// (refcore's `move_instances`, its statuses; tally 2.3.1 R2, item 6). E §4.1 step 3,
+    /// L §5.19 Links, §8.2 One read set.
     ///
     /// # Errors
     ///
     /// As [`Engine::narrow_inst`] and [`Engine::obs_links_for`].
     fn judge_named(&mut self, m: &Reality, mv: &MoveInfo, cut: Day) -> Result<(), Stop> {
+        let mark = self.reads_apart();
+        self.push();
+        let judged = self.judge_each(m, mv, cut);
+        self.pop_alone();
+        self.reads_back(mark);
+        judged
+    }
+
+    /// The judging [`Engine::judge_named`] does, its reads where it finds them. E §4.1 step 3.
+    ///
+    /// # Errors
+    ///
+    /// As [`Engine::narrow_inst`] and [`Engine::obs_links_for`].
+    fn judge_each(&mut self, m: &Reality, mv: &MoveInfo, cut: Day) -> Result<(), Stop> {
         let key = (mv.id.clone(), cut);
         let targets: Vec<String> = self
             .observations(m, cut)?
@@ -411,20 +432,10 @@ impl Engine {
         Ok(())
     }
 
-    /// Whether narrow reads judged the links of move `id`'s instances at cut `cut`, their
-    /// reads absorbed by the first reader, so the list made later at that cut absorbs none, as
-    /// the twin's cached list does. E §4.1 step 3, §3.2; P8-L10.
-    pub(crate) fn links_judged(&self, id: &str, cut: Day) -> bool {
-        self.prefixes
-            .narrow
-            .get(&(id.to_owned(), cut))
-            .is_some_and(|e| e.judged)
-    }
-
     /// The instance of tuple `at` of move `mv` at cut `cut`, once: made by the list's own step
     /// with the move's plan at that cut in progress, its order and status set as the list sets
-    /// them, the status's link reads absorbed by none (the list's first reader took them,
-    /// [`Engine::judge_named`]). E §4.1 steps 1–3, §5 step 1.
+    /// them, the status's link reads its own, as the list keeps them. E §4.1 steps 1–3, §5
+    /// step 1; L §8.2 One read set (tally 2.3.1 R2, item 6).
     ///
     /// # Errors
     ///
@@ -451,7 +462,9 @@ impl Engine {
         let tctx = self.timeline_ctx(None, cut);
         // what it books stays with the instance it keeps, never a list's still being made
         let booked = self.booked_open.len();
+        self.making_open(mv)?;
         let made = self.tuple_instance(m, mv, (tuple, cut, None), tctx, None);
+        self.making_close(mv)?;
         self.booked_kept(booked);
         self.reads_back(mark);
         self.holder = outer;
@@ -459,9 +472,14 @@ impl Engine {
         let mut made = made?;
         if let Some(inst) = &mut made {
             inst.order = inst_order(m, mv, inst);
+            // what judging its links meets is its own, as the list's status loop keeps it,
+            // inside the plan's making as there
+            self.making_open(mv)?;
             self.push();
             let status = self.status(m, mv, inst, cut);
-            self.pop_alone();
+            let met = self.pop_alone();
+            self.making_close(mv)?;
+            inst.coll.merge(&met);
             inst.status = status?;
         }
         if let Some(entry) = self.prefixes.narrow.get_mut(&key) {

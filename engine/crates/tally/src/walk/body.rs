@@ -38,6 +38,9 @@ pub(super) struct Body {
     /// What reading each leg met, by the leg's name: a read of one leg of a movement stated
     /// `same` holds the other side's reads of that leg only (S3, P43 on #241).
     pub(super) leg_reads: BTreeMap<String, Collected>,
+    /// What its evaluation met before its legs: what decided whether it exists and its day,
+    /// never its amounts, a binding's member's read set (L §8.2 l.2252; tally 2.3.1 pick P16).
+    pub(super) exist: Collected,
 }
 
 impl Engine {
@@ -358,6 +361,7 @@ impl Engine {
                         for_period: None,
                         fulfils: None,
                         leg_reads: BTreeMap::new(),
+                        exist: self.met_here(),
                     });
                 };
                 ex = join(ex, h);
@@ -374,6 +378,8 @@ impl Engine {
             Some(e) => Some(self.ev(m, e, &inst.env, ctx)?),
             None => None,
         };
+        // what decided its existence and day, before its amounts (tally 2.3.1 pick P16)
+        let exist = self.met_here();
         let kind_legs = m.kind_legs(&mv.kind);
         let mut legs = Vec::with_capacity(mv.decl.legs.len());
         let mut leg_reads = BTreeMap::new();
@@ -407,6 +413,7 @@ impl Engine {
             for_period,
             fulfils,
             leg_reads,
+            exist,
         })
     }
 }

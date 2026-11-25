@@ -127,7 +127,9 @@ impl Engine {
     }
 
     /// A movement instance named by move `id` and the keys written: the instance the cut sees
-    /// at those keys, else a movement known by its id alone; a hole key makes it that hole
+    /// at those keys, or the refused one of a tuple refused before its later keys, which stands
+    /// for every instance its keys begin (L §5.14 An instance's existence is a cell, l.1362;
+    /// tally 2.3.1 R6), else a movement known by its id alone; a hole key makes it that hole
     /// (refcore's `e_moveref`, `find_inst`). L §2.5, §5.14.
     fn move_ref(
         &mut self,
@@ -150,6 +152,12 @@ impl Engine {
         if let Some(inst) = insts.iter().find(|i| i.keys == made) {
             return Ok(Value::Mv(Box::new(inst_ref(inst))));
         }
+        if let Some(inst) = insts
+            .iter()
+            .find(|i| i.err.is_some() && i.keys.len() < made.len() && made.starts_with(&i.keys))
+        {
+            return Ok(Value::Mv(Box::new(inst_ref(inst))));
+        }
         let id = if made.is_empty() {
             id.to_owned()
         } else {
@@ -160,7 +168,6 @@ impl Engine {
             id,
             day: None,
             src: MvSrc::Missing,
-            member: false,
         })))
     }
 
@@ -317,6 +324,11 @@ impl Engine {
                 if let Some(lit) = year_literal(e, &v)? {
                     return Ok(Given::Literal(lit));
                 }
+                // a key that is none names its read (L §8.4 `RUN-NONE`'s row; tally 2.3.1
+                // P42, the review's note 6)
+                if v == Value::None {
+                    return Err(super::bindings::none_here(m, e, env, "a key"));
+                }
                 Ok(Given::Value(v))
             }
         }
@@ -404,7 +416,8 @@ impl Engine {
             return flex_branch(m, value, kept);
         }
         if test == Value::None {
-            return Err(refuse(Run::None, "a value is none here: if".to_owned()));
+            // a condition, named by its read (L §8.4 `RUN-NONE`'s row; tally 2.3.1 R4, Q2.37)
+            return Err(super::bindings::none_here(m, cond, env, "a condition"));
         }
         let Value::Hole(cond_hole) = test else {
             return Err(not_typed());
@@ -416,7 +429,7 @@ impl Engine {
 
     /// `if c then a else b` with hole condition `cond_hole`: both branches evaluated, the
     /// `if` a hole unless they are equal (refcore's `e_if`). L §5.11 Logic, §8.1.
-    fn choice_unknown(
+    pub(super) fn choice_unknown(
         &mut self,
         m: &Reality,
         (cond_hole, yes, no): (&Hole, &Expr, &Expr),
@@ -448,10 +461,7 @@ impl Engine {
         env: &Env,
         ctx: Ctx,
     ) -> Result<Value, Stop> {
-        let (word, any) = match kind {
-            Logic::Any => ("or", true),
-            Logic::All => ("and", false),
-        };
+        let any = kind == Logic::Any;
         if kind == Logic::All
             && !m.narrow_tests.is_empty()
             && self.narrowed_false(m, terms, env, ctx)?
@@ -466,7 +476,7 @@ impl Engine {
                 return Ok(Value::Bool(any));
             }
             let v = self.ev(m, term, env, ctx)?;
-            let v = boolean(v, word)?;
+            let v = boolean(m, v, (term, env))?;
             if v == Value::Bool(any) {
                 return Ok(Value::Bool(any));
             }
@@ -513,7 +523,7 @@ impl Engine {
     /// `not e` (refcore's `e_not`). L §5.11.
     fn not(&mut self, m: &Reality, x: &Expr, env: &Env, ctx: Ctx) -> Result<Value, Stop> {
         let v = self.ev(m, x, env, ctx)?;
-        let tested = boolean(v, "not")?;
+        let tested = boolean(m, v, (x, env))?;
         if let Value::Bool(holds) = tested {
             return Ok(Value::Bool(!holds));
         }
@@ -533,6 +543,19 @@ impl Engine {
     ) -> Result<Value, Stop> {
         let left = self.ev(m, lhs, env, ctx)?;
         let right = self.ev(m, rhs, env, ctx)?;
+        // an instance written `m[k]` and compared with `none` is its existence cell as it
+        // stands, a refusal or a hole, whatever decided it (L §8.4, §3.1 l.390; tally 2.3.1
+        // R1, R6, rulings 16 Q3, rulings 23 (a)); its list was just read for that side;
+        // compared with another movement, the two are compared by name (rulings 22 (1))
+        for (side, other, operand) in [(&left, &right, lhs), (&right, &left, rhs)] {
+            if let Value::Mv(v) = side
+                && *other == Value::None
+                && names_movement(m, operand, env)
+                && let Some(h) = self.existence_cell(m, v, ctx)?
+            {
+                return Ok(Value::Hole(h));
+            }
+        }
         let left = year_beside(lhs, left, &right);
         let right = year_beside(rhs, right, &left);
         let (left, right) = resolve_pair(m, left, right)?;
@@ -601,9 +624,12 @@ impl Engine {
             return Ok(member);
         }
         if member == Value::None {
-            return Err(refuse(
-                Run::None,
-                "a value is none here: a membership test".to_owned(),
+            // named by its read (L §8.4 `RUN-NONE`'s row; tally 2.3.1 R4, Q2.37)
+            return Err(super::bindings::none_here(
+                m,
+                &x.member,
+                env,
+                "a membership test",
             ));
         }
         if let Expr::List(items) = &x.set {
@@ -920,13 +946,16 @@ pub(crate) fn hole_of(operands: &[Option<&Hole>]) -> Result<Value, Stop> {
         .ok_or_else(|| invariant("a hole spread over operands that hold none"))
 }
 
-/// A value in a logic position: a bool, or a hole; `none` is refused (L §3.1, §5.11).
-fn boolean(v: Value, word: &str) -> Result<Value, Stop> {
+/// A value in a logic position, the value of `term`: a bool, or a hole; `none` is refused,
+/// named by the term as written, each variable a binding gave printed as its value
+/// (`ok[b] is none here: a condition`). L §3.1, §5.11, §8.4 `RUN-NONE`'s row (tally 2.3.1 R4,
+/// Q2.37: `if`, `and`, `or` and `not` are a condition).
+fn boolean(m: &Reality, v: Value, (term, env): (&Expr, &Env)) -> Result<Value, Stop> {
     if let Value::Bool(_) | Value::Hole(_) = v {
         return Ok(v);
     }
     if v == Value::None {
-        return Err(refuse(Run::None, format!("a value is none here: {word}")));
+        return Err(super::bindings::none_here(m, term, env, "a condition"));
     }
     Err(not_typed())
 }
@@ -1118,6 +1147,22 @@ fn resolve_word(m: &Reality, word: &str, other: &Value) -> Result<Value, Stop> {
     Ok(Value::Word(word.to_owned()))
 }
 
+/// Whether `e` names a move's movement as written, `m` or `m[k]`, under `env` (L §2.5,
+/// §5.14).
+fn names_movement(m: &Reality, e: &Expr, env: &Env) -> bool {
+    let base = if let Expr::Post(base, post) = e
+        && matches!(post.as_slice(), [Postfix::Keys(_)])
+    {
+        base.as_ref()
+    } else {
+        e
+    };
+    if let Expr::Name(n) = base {
+        return env.get(n).is_none() && m.names.kind(n) == Some(NameKind::Move);
+    }
+    false
+}
+
 /// The comparison `a op b` of two values, keys resolved, as `written` under `env` (refcore's
 /// `compare`); an ordering of `none` is refused naming the side that gave it, each variable
 /// by its value, `rate[k2] is none here: an ordering`. L §3.1, §4.4, §8.4 (tally 2.2.1
@@ -1170,6 +1215,11 @@ pub(super) fn compare_values(
     }
     if let (Value::Mv(x), Value::Mv(y), true) = (a, b, eq) {
         return Ok(holds(x.id == y.id));
+    }
+    if let (Value::Tuple(x), Value::Tuple(y), true) = (a, b, eq) {
+        // a returned tuple is its keys: equal where every key is (L §5.11's aggregate
+        // paragraph; tally 2.3.1 S6)
+        return Ok(holds(x == y));
     }
     let test = if eq { Test::Equality } else { Test::Order };
     let order = compare(m, a, b, test)?;

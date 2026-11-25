@@ -1,0 +1,15 @@
+model p21
+  tally 2
+  on 2026-06-30
+  start 2026-01-01
+  end 2026-12-31
+source s "probe"
+index ns = 1..2
+input x[n in ns]: int
+ask aw: any(x[n] > 0 for n in ns where x[2] / x[n] > 0)
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  x[1] = 0 "s"
+  x[2] = 5 "s"

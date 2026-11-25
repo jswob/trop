@@ -1,0 +1,75 @@
+model a03
+  tally 2
+  on 2026-10-25
+  start 2026-01-01
+  end 2027-12-31
+
+source s "invented"
+unit PLN: currency minor 0.01
+
+input ch: bool
+input ct: bool
+input cf: bool
+input va: money PLN
+input vb: money PLN
+input vt: money PLN
+
+def d1: money PLN at reader
+  rule a = va when ct
+  rule base = vb
+  rule top beats a, base = vt when ch
+
+def d2: money PLN at reader
+  rule a = va when ct
+  rule base = vb
+  rule mid beats base = vt when ch
+
+def d3: money PLN at reader
+  rule a = va when ch
+  rule b = vb when ch
+  rule base = vt when cf
+
+def d4: money PLN at reader
+  rule a beats base = va when ch
+  rule b beats base = vb when ch
+  rule base = vt
+
+def d5: money PLN at reader
+  rule lone = va when ch
+
+def d6: money PLN at reader
+  rule a beats b = va when ch
+  rule b = vb when ct
+  rule c = vt when cf
+
+def d7: money PLN at reader
+  rule a v late = va
+  rule base = vb when cf
+
+ask q1: d1 law 2026-03-01
+ask q2: d2 law 2026-03-01
+ask q3: d3 law 2026-03-01
+ask q4: d4 law 2026-03-01
+ask q5: d5 law 2026-03-01
+ask q6: d6 law 2026-03-01
+ask q7: d7 law 2026-03-01
+ask q7k: d7 law 2026-03-01 as known 2026-02-01
+ask q7l: d7 law 2027-03-01
+ask e1: explain d1 law 2026-03-01
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  ch = ?"does it apply?" "s"
+  ct = true "s"
+  cf = false "s"
+  va = 1 PLN "s"
+  vb = 2 PLN "s"
+  vt = 3 PLN "s"
+
+version late
+  cite s
+  governs 2026
+  known 2026-03-01
+  replace cf = false "s"

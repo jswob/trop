@@ -1,0 +1,26 @@
+model p5
+  tally 2
+  on 2026-10-25
+  start 2026-01-01
+  end 2026-12-31
+
+source s "invented"
+index ks = [k1, k2, k3]
+index ys = year 2020..2030
+index ms = month 2026-01..2026-12 by 3
+index ns = int 1..5
+input a: key ks
+input yk: key ys
+input mk: key ms
+input nk: key ns
+input y: year
+ask b3: mk with mk = 2026-08
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  a = k1 "s"
+  yk = 2021 "s"
+  mk = 2026-04 "s"
+  nk = 2 "s"
+  y = 2022 "s"

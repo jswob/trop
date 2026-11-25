@@ -432,7 +432,7 @@ impl Engine {
         }
         inst.legs = Vec::new();
         inst.attrs = Vec::new();
-        inst.err = Some(err);
+        inst.err = Some(err.clone());
         inst.status = Status::Refused;
         // what the refusal rests on is what a read of the run lists (L §8.2; P20)
         inst.coll.merge_rows(met);
@@ -674,6 +674,8 @@ impl Engine {
             ran,
             tested: Tested::Nothing,
         };
+        // what decided its existence: its list's reads, then its body's before its amounts
+        let mut exist = run.inst.coll.clone();
         run.inst.coll.merge(&met);
         run.inst.obs = linked;
         run.inst.err = None;
@@ -682,6 +684,8 @@ impl Engine {
                 run.inst.exists = b.exists;
                 run.inst.legs = b.legs;
                 run.inst.leg_reads = b.leg_reads;
+                exist.merge(&b.exist);
+                run.inst.exist_coll = Some(exist);
                 run.inst.attrs = b.attrs;
                 run.inst.for_period = b.for_period;
                 run.inst.fulfils = b.fulfils;
@@ -753,6 +757,19 @@ impl Engine {
             .get_mut(id)
             .ok_or_else(|| invariant("a walk the engine lacks"))?;
         let ix = walk.runs.len();
+        // the rows that name its tuple stand in for it by the name, booked at this point from
+        // their own fields, whether it is refused here or not: the instance is never booked
+        // (L §5.19, E §4.2 steps 1 and 3; tally 2.3.1 rulings 22 (1), (2), P1-C1)
+        if run.inst.err.is_some() && !run.inst.obs.is_empty() {
+            // modelled, as a plan's refused instance a row names: every read over movements
+            // takes the rows, a field read of the run its refusal (part 1's review B2)
+            run.inst.status = Status::Modelled;
+            let inst = run.inst.clone();
+            walk.modelled.push(inst.clone());
+            walk.record(run);
+            self.book_own_obs(m, id, &inst, key)?;
+            return Ok(ix);
+        }
         if let Some(err) = run.inst.err.clone() {
             // refused: the places its legs give, every place where one can't be read, none for
             // a move with no legs (L §8.4, tally 2.1.6; P16)
@@ -1383,5 +1400,247 @@ version openings
             ],
             "box and bin refused from 20 February, konto standing"
         );
+    }
+
+    /// "Pay when the balance drops" (L §5.14.1), a February bank row fulfilling its instance
+    /// on its own day: the critic's `dec_link.tally`, its limit written in for `LIM`.
+    const DEC_LINK: &str = r#"model dec_link
+  tally 2
+  on 2026-04-20
+  start 2026-01-01
+  end 2026-05-31
+
+source s "probe"
+
+unit PLN: currency minor 0.01
+
+index month = month 2026-01..2026-05
+
+place konto: accounts PLN lives 2026-01-01..
+
+place save: accounts PLN lives 2026-01-01..
+
+place shop: outside lives 1900-01-01..
+
+input bank: observed
+
+input lim: money PLN
+
+input amt: money PLN
+
+input d5: int
+
+move topup[m in month]: transfers
+  reads konto
+  on day_of(m, d5)
+  when bal(konto) < lim
+  leg cash from save to konto amount amt
+
+ask loose: sum(o.cash.amount for o in bank over 2026-02 where o.fulfils == none)
+
+ask b: bal(konto, 2026-03-31)
+
+ask f: flows(topup, 2026-02)
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  opening[konto] = 100.00 PLN at 2026-01-01 start "s"
+  opening[save] = 5 000.00 PLN at 2026-01-01 start "s"
+  lim = LIM "s"
+  amt = 400.00 PLN "s"
+  d5 = 5 "s"
+
+version feb
+  cite s
+  governs 2026-02
+  known 2026-03-01
+  covers konto
+  bank[r1] = (on: 2026-02-05, kind: transfers, leg cash from save to konto amount 400.00 PLN, fulfils: topup[2026-02]) "the top-up"
+  bank[r2] = (on: 2026-02-10, kind: transfers, leg cash from konto to shop amount 30.00 PLN) "loose"
+"#;
+
+    #[test]
+    fn a_row_stands_in_for_a_decision_whose_day_is_a_hole() {
+        // L §5.19 l.1713, l.1718, l.1723 (tally 2.3.1 rulings 22 (1); part 1's review B3):
+        // February's day is a hole and its row stands in, so the balance reads the row; the
+        // hole stays with a field read of the instance
+        let text = DEC_LINK
+            .replace("LIM", "600.00 PLN")
+            .replace("  on day_of(m, d5)", "  on day_of(m, dt[m])")
+            .replace(
+                "input d5: int",
+                "input d5: int\n\ninput dt[m in month]: int",
+            )
+            .replace(
+                "  d5 = 5 \"s\"",
+                "  d5 = 5 \"s\"\n  dt[2026-01] = 5 \"s\"\n  dt[2026-02] = ?\"feb day?\" \"s\"\n  \
+                 dt[2026-03] = 5 \"s\"\n  dt[2026-04] = 5 \"s\"\n  dt[2026-05] = 5 \"s\"",
+            )
+            .replace("ask b:", "ask dy: topup[2026-02].day\n\nask b:");
+        let first = |ask: &str| {
+            let given = vec![Given {
+                path: "dec_hole.tally".to_owned(),
+                bytes: Some(text.clone().into_bytes()),
+            }];
+            let asks = Asks::Named(vec![ask.to_owned()]);
+            let answer = run(Files::new(given), &Request::new(asks)).expect("an answer");
+            answer.lines().first().cloned().expect("a line")
+        };
+        assert_eq!(first("b"), "b: 870.00 PLN", "the row stands in");
+        assert_eq!(
+            first("dy"),
+            "dy: ?\"feb day?\" (dt[2026-02])",
+            "a field read"
+        );
+    }
+
+    #[test]
+    fn step_7s_mark_is_a_field_read_through_fulfils_and_row_precise() {
+        // E §3.1 step 7 l.127 (tally 2.3.1 rulings 19 D, rulings 22 (6)): `topup`'s `when`
+        // reads a dated balance, a running read; a plan that reads a field through the
+        // `fulfils` of rows that can name it reads that instance, so load refuses it; one that
+        // asks only whether a row names something, or reads a row with no `fulfils` by its
+        // id, loads
+        let dated = DEC_LINK
+            .replace("LIM", "600.00 PLN")
+            .replace(
+                "when bal(konto) < lim",
+                "when bal(konto, start_of(m)) < lim",
+            )
+            .replace("input d5: int", "input d5: int\n\ninput fm: month")
+            .replace("  d5 = 5 \"s\"", "  d5 = 5 \"s\"\n  fm = 2026-02 \"s\"");
+        let first = |plan: &str| {
+            let given = vec![Given {
+                path: "dec_s7d.tally".to_owned(),
+                bytes: Some(dated.replace("ask loose:", plan).into_bytes()),
+            }];
+            let asks = Asks::Named(vec!["q".to_owned()]);
+            let answer = run(Files::new(given), &Request::new(asks)).expect("an answer");
+            answer.lines().first().cloned().expect("a line")
+        };
+        let plan = |read: &str| {
+            format!(
+                "def lo[m in month]: money PLN at start_of(m)\n  rule guessed = 0.00 PLN\n  rule \
+                 seen beats guessed = {read} when covered(konto, m)\n\nmove pay[m in month]: \
+                 transfers\n  on day_of(m, d5)\n  leg cash from konto to shop amount \
+                 lo[fm]\n\nask q: amt\n\nask loose:"
+            )
+        };
+        let field = first(&plan(
+            "sum(o.fulfils.cash.amount for o in bank over m where o.fulfils != none)",
+        ));
+        assert!(
+            field.starts_with(
+                "refused: LOAD-READS pay reaches a running read or projection of topup without \
+                 reads topup (dec_s7d.tally:"
+            ),
+            "{field}"
+        );
+        let none = first(&plan(
+            "sum(o.cash.amount for o in bank over m where o.fulfils == none)",
+        ));
+        assert_eq!(none, "q: 400.00 PLN", "{none}");
+        let named = first(
+            "move pay[m in month]: transfers\n  on day_of(m, d5)\n  leg cash from konto to shop \
+             amount bank[r2].cash.amount\n\nask q: amt\n\nask loose:",
+        );
+        assert_eq!(named, "q: 400.00 PLN", "{named}");
+    }
+
+    #[test]
+    fn step_7s_mark_finds_a_field_read_through_fulfils_however_spelled() {
+        // E §3.1 steps 5 and 7 (tally 2.3.1 rulings 22 (6); part 1's review B1): a bracketed
+        // `(o.fulfils)` and a def keyed by a kind read at `o.fulfils` read a field of the
+        // instance, the def itself or through the def it passes its key to; a keyed def that
+        // reads no field of its key reads none
+        let dated = DEC_LINK
+            .replace("LIM", "600.00 PLN")
+            .replace(
+                "when bal(konto) < lim",
+                "when bal(konto, start_of(m)) < lim",
+            )
+            .replace("input d5: int", "input d5: int\n\ninput fm: month")
+            .replace("  d5 = 5 \"s\"", "  d5 = 5 \"s\"\n  fm = 2026-02 \"s\"");
+        let first = |defs: &str, read: &str| {
+            let plan = format!(
+                "{defs}def lo[m in month]: money PLN at start_of(m)\n  rule guessed = 0.00 PLN\n  \
+                 rule seen beats guessed = {read} when covered(konto, m)\n\nmove pay[m in \
+                 month]: transfers\n  on day_of(m, d5)\n  leg cash from konto to shop amount \
+                 lo[fm]\n\nask q: amt\n\nask loose:"
+            );
+            let given = vec![Given {
+                path: "dec_s7s.tally".to_owned(),
+                bytes: Some(dated.replace("ask loose:", &plan).into_bytes()),
+            }];
+            let asks = Asks::Named(vec!["q".to_owned()]);
+            let answer = run(Files::new(given), &Request::new(asks)).expect("an answer");
+            answer.lines().first().cloned().expect("a line")
+        };
+        let refused = "refused: LOAD-READS pay reaches a running read or projection of topup \
+                       without reads topup (dec_s7s.tally:";
+        let keyed = "sum(amt_of[o.fulfils] for o in bank over m where o.fulfils != none)";
+        let field = "def amt_of[t in transfers]: money PLN\n  rule a = t.cash.amount\n\n";
+        let passed = "def amt_of[t in transfers]: money PLN\n  rule a = inner[t]\n\ndef \
+                      inner[t in transfers]: money PLN\n  rule a = (t).cash.amount\n\n";
+        let no_field = "def amt_of[t in transfers]: money PLN\n  rule a = amt\n\n";
+        let paren = first(
+            "",
+            "sum((o.fulfils).cash.amount for o in bank over m where o.fulfils != none)",
+        );
+        assert!(paren.starts_with(refused), "bracketed: {paren}");
+        let read = first(field, keyed);
+        assert!(read.starts_with(refused), "keyed: {read}");
+        let through = first(passed, keyed);
+        assert!(through.starts_with(refused), "passed on: {through}");
+        let none = first(no_field, keyed);
+        assert_eq!(
+            none, "q: 400.00 PLN",
+            "a keyed def reading no field: {none}"
+        );
+        // rulings 23 (d): by key position; a def over two transfers reaches through the key
+        // `o.fulfils` binds only where it reads a field of that key
+        let two = "def f2[t in transfers, u in transfers]: money PLN\n  rule a = u.cash.amount\n\n";
+        let row = first(
+            two,
+            "sum(f2[o.fulfils, o] for o in bank over m where o.fulfils != none)",
+        );
+        assert_eq!(row, "q: 400.00 PLN", "the row's own field: {row}");
+        let inst = first(
+            two,
+            "sum(f2[o, o.fulfils] for o in bank over m where o.fulfils != none)",
+        );
+        assert!(inst.starts_with(refused), "the instance's field: {inst}");
+        // and a field read through `fulfils` is a read of the named move for `reads`: pay
+        // declaring `reads topup` loads, however the read is spelled
+        let reads = |defs: &str, body: &str| {
+            let plan = format!(
+                "{defs}def lo[m in month]: money PLN at start_of(m)\n  rule guessed = 0.00 PLN\n  \
+                 rule seen beats guessed = {body} when covered(konto, m)\n\nmove pay[m in \
+                 month]: transfers\n  reads topup\n  on day_of(m, d5)\n  leg cash from konto to \
+                 shop amount lo[fm]\n\nask q: amt\n\nask loose:"
+            );
+            let given = vec![Given {
+                path: "dec_s7r.tally".to_owned(),
+                bytes: Some(dated.replace("ask loose:", &plan).into_bytes()),
+            }];
+            let asks = Asks::Named(vec!["q".to_owned()]);
+            let answer = run(Files::new(given), &Request::new(asks)).expect("an answer");
+            answer.lines().first().cloned().expect("a line")
+        };
+        for (defs, body) in [
+            (
+                "",
+                "sum(o.fulfils.cash.amount for o in bank over m where o.fulfils != none)",
+            ),
+            (
+                "",
+                "sum((o.fulfils).cash.amount for o in bank over m where o.fulfils != none)",
+            ),
+            (passed, keyed),
+        ] {
+            assert_eq!(reads(defs, body), "q: 400.00 PLN", "reads topup: {body}");
+        }
     }
 }

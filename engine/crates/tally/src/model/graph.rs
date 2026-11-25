@@ -251,6 +251,10 @@ impl Target {
     }
 }
 
+/// What a move's existence reads: its own running reads and projections, and the items it
+/// reads (E §3.1 step 7; tally 2.3.1 rulings 19 D).
+pub type ExistenceReads = (Vec<(Mark, Target)>, BTreeSet<Node>);
+
 /// The item graph and what load decides from it (refcore's `Checker` graph and the
 /// reality's `from_decisions`, `walk_bound`, `after`, `order_groups`, `written_order`).
 #[derive(Debug, Clone, Default, PartialEq, Eq)]
@@ -300,6 +304,31 @@ pub struct Graph {
     /// The items holding a binding over each event kind, by the kind bound: `readers-of` an
     /// event kind's first layer (E §10, ruling P63, #132).
     pub bound_kinds: BTreeMap<String, BTreeSet<Node>>,
+    /// What each move's existence reads, its keys' `where`s and its `when`: its own running
+    /// reads and projections, and the items it reads (L §5.14 An instance's existence is a
+    /// cell; E §3.1 step 7; tally 2.3.1 rulings 19 D).
+    pub existence: BTreeMap<String, ExistenceReads>,
+    /// The rows of an observed input each item reads by their id, `bank[r2]`, by the input
+    /// (L §5.19; tally 2.3.1 rulings 19 D: step 7's mark is row-precise).
+    pub named_rows: BTreeMap<Node, BTreeMap<String, BTreeSet<String>>>,
+    /// The decisions whose existence reads a running read or a projection: a field read of
+    /// one of their instances through a row's `fulfils` reaches it (E §3.1 step 7; tally
+    /// 2.3.1 rulings 19 D, rulings 22 (6)).
+    pub marked: BTreeSet<String>,
+    /// The items that read a field through `.fulfils`, `o.fulfils.day`: a field read of the
+    /// instance the row names (L §5.19 Links; tally 2.3.1 rulings 22 (6)).
+    pub fulfils_fields: BTreeSet<Node>,
+    /// The items keyed by a kind that each item reads at a key `.fulfils` gives, with that
+    /// key's position, `amt_of[o.fulfils]` (E §3.1 step 5; tally 2.3.1 part 1's review B1,
+    /// rulings 23 (d)).
+    pub fulfils_keyed: BTreeMap<Node, BTreeSet<(Node, usize)>>,
+    /// The items keyed by a kind and the positions of the keys they read a field of,
+    /// `t.cash.amount` (E §3.1 step 5: what such an item reads of its key reaches through
+    /// whoever names the key).
+    pub key_fields: BTreeSet<(Node, usize)>,
+    /// By an item and one of its own key positions, the items keyed by a kind it reads at
+    /// that key variable, with the position, `amt[t]` (E §3.1 step 5).
+    pub key_passes: BTreeMap<(Node, usize), BTreeSet<(Node, usize)>>,
 }
 
 impl Graph {

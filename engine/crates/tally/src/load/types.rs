@@ -107,6 +107,9 @@ pub(super) struct Operand {
     pub(super) var: Option<String>,
     /// The literal it is, when it is a bare one.
     pub(super) lit: Option<Lit>,
+    /// The literals it is through brackets and an `if`'s arms, in the text's order, when every
+    /// leaf is one ([`literal_arms`]).
+    pub(super) arms: Option<Vec<Lit>>,
     /// Its text, as a message names it.
     pub(super) text: String,
 }
@@ -415,11 +418,16 @@ impl Checker {
         if let Expr::Lit(written) = e {
             lit = Some(written.clone());
         }
+        // a literal's position reaches through brackets and into both arms of an `if`:
+        // `(2026-07)` or an arm beside a key is that index's key, as `2026-07` is (L §2.5
+        // Keys; tally 2.3.1 R5, N255.2, G3's review B4)
+        let arms = literal_arms(e).map(|lits| lits.into_iter().cloned().collect());
         Ok(Operand {
             ty,
             year4,
             var,
             lit,
+            arms,
             text: text(e),
         })
     }
@@ -522,6 +530,8 @@ impl Checker {
             }
         }
         super::pins::pin_ties(m, scope, pins)?;
+        // two pins of the law date, or of the cut, in one `as if` (G3's review N6)
+        super::pins::same_cell(pins, (None, None))?;
         self.expr(m, &under, inner, expect, depth)
     }
 
@@ -864,6 +874,7 @@ impl Checker {
                 year4: None,
                 var: None,
                 lit: None,
+                arms: None,
                 text,
             };
         }
@@ -892,6 +903,27 @@ impl Checker {
         }
         Ok(t)
     }
+}
+
+/// The literals at `e`'s leaves through brackets and both arms of each `if`, which stand where
+/// the whole stands, in the text's order; none where a leaf is no literal (L §2.5 Keys; G3's
+/// review B4).
+pub(super) fn literal_arms(e: &Expr) -> Option<Vec<&Lit>> {
+    let mut out = Vec::new();
+    let mut work = vec![e];
+    while let Some(node) = work.pop() {
+        if let Expr::Lit(lit) = node {
+            out.push(lit);
+        } else if let Expr::Paren(inner) = node {
+            work.push(inner);
+        } else if let Expr::If(parts, _) = node {
+            let [_, yes, no] = parts.as_ref();
+            work.extend([no, yes]);
+        } else {
+            return None;
+        }
+    }
+    Some(out)
 }
 
 /// The granularity of a date, month or quarter literal.

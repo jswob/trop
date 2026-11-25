@@ -87,14 +87,23 @@ fn months_between(from: Day, to: Day) -> Option<i64> {
     years.checked_mul(12)?.checked_add(months)
 }
 
-/// Whether `e` is a written month or quarter, bracketed or not (L §2.1: a parenthesised
-/// literal is that literal).
+/// Whether `e` is a written month or quarter, bracketed or not, or an `if` whose every arm is
+/// one at any depth of `if`s and brackets (L §2.1: a parenthesised literal is that literal;
+/// §2.5 Keys: the position reaches into both branches of an `if`; G3's review B4).
 pub(super) fn period_literal(e: &Expr) -> bool {
-    let mut at = e;
-    while let Expr::Paren(inner) = at {
-        at = inner;
+    let mut work = vec![e];
+    while let Some(node) = work.pop() {
+        if let Expr::If(parts, _) = node {
+            let [_, yes, no] = parts.as_ref();
+            work.push(yes);
+            work.push(no);
+        } else if let Expr::Paren(inner) = node {
+            work.push(inner);
+        } else if !matches!(node, Expr::Lit(Lit::Month(..) | Lit::Quarter(..))) {
+            return false;
+        }
     }
-    matches!(at, Expr::Lit(Lit::Month(..) | Lit::Quarter(..)))
+    true
 }
 
 /// The year an int names at a span's end. Load lets an int stand there only as a year: a

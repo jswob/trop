@@ -1,0 +1,38 @@
+model b5
+  tally 2
+  on 2026-02-20
+  start 2026-01-01
+  end 2026-03-31
+
+source s "probe"
+unit PLN: currency minor 0.01
+index month = month 2026-01..2026-05
+place pot: accounts PLN lives 2026-01-01..
+place landlord: outside lives 1900-01-01..
+input amt: money PLN
+input d5: int
+input per[m in month]: month
+
+move rent[m in month]: transfers
+  on day_of(m, d5)
+  for per[m]
+  leg cash from pot to landlord amount amt
+
+ask fa: flows(pot, 2026-01-01..2026-05-31, for 2026-03)
+ask fb: flows(pot, 2026-01-01..2026-05-31, for 2026-04)
+ask fc: flows(pot, 2026-04-01..2026-05-31, for 2026-05)
+ask fm: flows(rent, 2026-01-01..2026-05-31, for 2026-03)
+ask fw: flows(pot, 2026-01-01..2026-03-31, for 2026-03)
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  amt = 100.00 PLN "s"
+  d5 = 5 "s"
+  per[2026-01] = 2026-01 "s"
+  per[2026-02] = 2026-02 "s"
+  per[2026-03] = 2026-03 "s"
+  per[2026-04] = 2026-04 "s"
+  per[2026-05] = ?"which period is may's rent for?" "s"
+  opening[pot] = 1000.00 PLN at 2026-01-01 start "s"

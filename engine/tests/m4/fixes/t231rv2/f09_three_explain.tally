@@ -1,0 +1,38 @@
+model f09
+  tally 2
+  on 2026-06-10
+  start 2026-01-01
+  end 2026-12-31
+source s "probe"
+unit PLN: currency minor 0.01
+place wa: accounts PLN lives 2025-01-01..
+place world: outside lives 1900-01-01..
+input d1: date
+input d2: date
+input d3: date
+input a: money PLN
+move x1: transfers
+  on d1
+  leg cash from world to wa amount a
+move x2: transfers
+  on d2
+  leg cash from world to wa amount a
+move x3: transfers
+  on d3
+  leg cash from world to wa amount a
+ask e9: explain bal(wa, 2026-03-31)
+ask e8: explain bal(wa, 2026-03-08)
+ask c9: count(t in transfers over 2026-03)
+ask pd: bal(wa, 2026-03-31) with d2 = 2026-03-10
+ask pe: explain bal(wa, 2026-03-31) with d2 = 2026-03-10
+version v
+  cite s
+  governs always
+  known 2025-12-01
+  opening[wa] = 0.00 PLN at 2026-01-01 start "s"
+  d1 = 2026-03-05 "s"
+  d2 = 2026-03-07 "s"
+  d3 = 2026-03-09 "s"
+  a = 100.00 PLN "s"
+  same x1 = x2
+  same x2 = x3

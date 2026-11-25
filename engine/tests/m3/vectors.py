@@ -19,7 +19,8 @@ Refcore has no `check` until the spec step writes it (the M3 brief, §2), so eac
    asks refused alone by id, then the file's full path, then line (pick P5); then the warnings as `run` prints them;
    exit 0 only after `ok`.
 
-A fixture whose argument words `check` doesn't take (P3: `--ask`) is a usage error: exit 2, its words the engine's
+A fixture whose argument words `check` doesn't take (P3: `--ask`), or that names no path (O §2, tally 2.3.1's S12),
+is a usage error: exit 2, its words the engine's
 (INTERFACE.md §1), so its stored output is empty and the runner compares the exit code alone.
 
 Each prediction is tied, as m0/vectors.py ties the probe: for a set of checks.tsv, every stored output that compares
@@ -416,7 +417,8 @@ def scenario_files(v):
 def predict(vs):
     """Each vector's predicted (exit, output, source), from refcore's runs."""
     probes = stored_probes()
-    usage = [v for v in vs if '--ask' in v['args']]
+    # A usage error (exit 2, O §2): `--ask` given to `check` (P3), or no path at all (tally 2.3.1's S12)
+    usage = [v for v in vs if '--ask' in v['args'] or not path_words(v['args'])]
     todo = [v for v in vs if v not in usage and v['id'] not in probes]
     for v, e in zip(todo, refcore([run_check(v, ['run'] + v['args'] + ['--ask', M0.PROBE]) for v in todo])):
         probes[v['id']] = (e['rc'], e['out'])

@@ -1,0 +1,19 @@
+model ip
+  tally 2
+  on 2026-10-25
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+input n: int
+input ratio: num
+def dd: int = n + n
+
+ask q4: dd with n = n + ratio
+
+version ver
+  cite s
+  governs always
+  known 2026-01-01
+  n = 3 "s"
+  ratio = 0.5 "s"

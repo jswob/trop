@@ -88,6 +88,15 @@ pub enum Pat {
 /// `Row.keys_text`). L §8.2.
 #[must_use]
 pub fn pattern_text(pattern: &[Pat]) -> String {
+    written_pattern_text(pattern, 0)
+}
+
+/// A row's pattern as it prints, the first `written` positions as the text writes them, a
+/// `*` kept, and the trailing stars after them dropped: `given h[*] = …` prints `h[*]`
+/// (refcore's `Row.keys_text`, its `nwritten`). L §2.4 Values, §2.5 (tally 2.3.1 R4, Q1.14),
+/// §8.2.
+#[must_use]
+pub(super) fn written_pattern_text(pattern: &[Pat], written: usize) -> String {
     let mut parts: Vec<String> = pattern
         .iter()
         .map(|p| match p {
@@ -96,7 +105,7 @@ pub fn pattern_text(pattern: &[Pat]) -> String {
             Pat::Range(a, b) => format!("{}..{}", a.text(), b.text()),
         })
         .collect();
-    while parts.last().is_some_and(|p| p == "*") {
+    while parts.len() > written && parts.last().is_some_and(|p| p == "*") {
         parts.pop();
     }
     if parts.is_empty() {
@@ -221,7 +230,7 @@ impl Span {
 
 #[cfg(test)]
 mod tests {
-    use super::{KeyVal, Pat, Span, pattern_text};
+    use super::{KeyVal, Pat, Span, pattern_text, written_pattern_text};
     use crate::time::Day;
 
     fn day(y: u16, m: u8, d: u8) -> Day {
@@ -263,5 +272,24 @@ mod tests {
             "leading star"
         );
         assert_eq!(pattern_text(&[Pat::Star]), "", "all stars");
+    }
+
+    #[test]
+    fn a_written_star_prints_as_written() {
+        // L §2.4 Values (tally 2.3.1 R4, Q1.14): `given h[*] = …` prints `h[*]`; a position
+        // the text leaves out still drops
+        let me = KeyVal::Thing("me".to_owned());
+        assert_eq!(written_pattern_text(&[Pat::Star], 1), "[*]", "h[*]");
+        assert_eq!(
+            written_pattern_text(&[Pat::Key(me.clone()), Pat::Star], 2),
+            "[me, *]",
+            "p[me, *]"
+        );
+        assert_eq!(
+            written_pattern_text(&[Pat::Key(me), Pat::Star], 1),
+            "[me]",
+            "p[me], its second key left out"
+        );
+        assert_eq!(written_pattern_text(&[Pat::Star], 0), "", "h");
     }
 }

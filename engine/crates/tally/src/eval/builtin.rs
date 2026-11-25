@@ -175,6 +175,23 @@ impl Engine {
         Ok(out)
     }
 
+    /// The arguments of a call of a date or number built-in, evaluated in order, the first
+    /// `none` among them refused by its read and the built-in's name, ahead of any hole:
+    /// a refusal outranks a hole (L §8.4 `RUN-NONE`'s row, E §8; tally 2.3.1 N256.8, P42).
+    pub(super) fn args_named(
+        &mut self,
+        m: &Reality,
+        call: &Call,
+        env: &Env,
+        ctx: Ctx,
+    ) -> Result<Vec<Value>, Stop> {
+        let vals = self.args(m, call, env, ctx)?;
+        for (i, v) in vals.iter().enumerate() {
+            named_none(m, call, (i, v), env)?;
+        }
+        Ok(vals)
+    }
+
     /// `round(x, u, mode)`: the multiple of u the mode chooses, money when u is a whole
     /// number of minor units of x's currency, an int for `round(x, 1, m)` of a plain number
     /// (refcore's `c_round` and check.py's `c_round` for the result's type); a step written as
@@ -185,17 +202,14 @@ impl Engine {
             .try_into()
             .map_err(|_| arity())?;
         // refusals outrank holes (L §8; pick P12): each argument in written order, `none`
-        // refused (an operand named as written, P3), a known one's own check run, a hole's
-        // waiting
-        if x == Value::None {
-            return Err(none_arg(m, call, 0, env, "arithmetic"));
-        }
-        if u == Value::None {
-            return Err(none_arg(m, call, 1, env, "arithmetic"));
-        }
+        // refused (named as written and by the built-in, R4), a known one's own check run, a
+        // hole's waiting
+        named_none(m, call, (0, &x), env)?;
+        named_none(m, call, (1, &u), env)?;
         if given(&u, "round")? {
             positive_step(m, &u)?;
         }
+        named_none(m, call, (2, &mode), env)?;
         if given(&mode, "round")? {
             rounding_mode(m, "round", &mode)?;
         }
@@ -218,8 +232,10 @@ impl Engine {
         let snap = self.trace_snap();
         let vals = self.args(m, call, env, ctx)?;
         let holes: Vec<Option<&crate::hole::Hole>> = vals.iter().map(Value::as_hole).collect();
+        // a refusal outranks a hole, and a none beside a hole names its read and the
+        // built-in too (L §8.4 `RUN-NONE`'s row; tally 2.3.1 R4, P31, P42 B1)
         if let Some(i) = vals.iter().position(|v| *v == Value::None) {
-            return Err(none_arg(m, call, i, env, "ordering"));
+            return Err(none_arg(m, call, i, env, &call.name));
         }
         if holes.iter().any(Option::is_some) {
             return hole_of(&holes);
@@ -253,16 +269,10 @@ impl Engine {
     /// L §3.3, §7.1, §7.3.
     fn pow(&mut self, m: &Reality, call: &Call, env: &Env, ctx: Ctx) -> Result<Value, Stop> {
         let [x, k] = self
-            .args(m, call, env, ctx)?
+            .args_named(m, call, env, ctx)?
             .try_into()
             .map_err(|_| arity())?;
-        let some_hole = x.as_hole().is_some() || k.as_hole().is_some();
-        for v in [&x, &k] {
-            if *v == Value::None {
-                return Err(refuse(Run::None, "a value is none here: pow".to_owned()));
-            }
-        }
-        if some_hole {
+        if x.as_hole().is_some() || k.as_hole().is_some() {
             return hole_of(&[x.as_hole(), k.as_hole()]);
         }
         // off the list: a ranged date is the hole (L §4.4)
@@ -340,9 +350,8 @@ impl Engine {
         if let Value::Hole(_) = v {
             return Ok(v);
         }
-        if v == Value::None {
-            return Err(none_arg(m, call, 0, env, "arithmetic"));
-        }
+        // the read and the built-in's name (L §8.4 `RUN-NONE`'s row; tally 2.3.1 R4, P31)
+        named_none(m, call, (0, &v), env)?;
         // off the list: a ranged date is the hole (L §4.4)
         if let Some(hole) = unlisted(&[&v], "abs") {
             return Ok(Value::Hole(hole));
@@ -460,6 +469,26 @@ fn none_arg(m: &Reality, call: &Call, i: usize, env: &Env, use_word: &str) -> St
         Some(e) => none_here(m, e, env, use_word),
         None => invariant("a value of an argument the call doesn't hold"),
     }
+}
+
+/// Argument `i` of built-in `call`, `v`, where it is `none`: refused by its read as written
+/// and the built-in's name (`rate[k2] is none here: accrue`), before that argument's own
+/// check runs; nothing for another value (refcore's `known_first`). L §8.4 `RUN-NONE`'s row
+/// (tally 2.3.1 R4, N256.8, Q1.13), §8 What an operation decides.
+///
+/// # Errors
+///
+/// `RUN-NONE` for `none`.
+pub(super) fn named_none(
+    m: &Reality,
+    call: &Call,
+    (i, v): (usize, &Value),
+    env: &Env,
+) -> Result<(), Stop> {
+    if *v == Value::None {
+        return Err(none_arg(m, call, i, env, &call.name));
+    }
+    Ok(())
 }
 
 /// A call with the wrong number of arguments: load refuses it, so here it is an invariant.
@@ -965,4 +994,144 @@ pub(super) fn power_past_64_bits(base: &Num, e: &Num) -> Result<Num, Stop> {
         return Ok(if even { one } else { Num::int(-1) });
     }
     Err(num_stop(NumError::Digits))
+}
+
+#[cfg(test)]
+mod tests {
+    use crate::api::{Asks, Files, Given, Request, run};
+
+    /// `none` met by a condition, a membership test and the built-ins whose checks read one
+    /// argument (tally 2.3.1 R4).
+    const NONE_WORDS: &str = r#"model none_words
+  tally 2
+  on 2026-06-30
+  start 2026-01-01
+  end 2026-12-31
+
+source s "invented"
+unit PLN: currency minor 0.01
+index ks = [a, b]
+input ok[k in ks]: bool
+input st[k in ks]: key ks
+input r[k in ks]: rate
+input p: money PLN
+input d0: date
+input d1: date
+input dn: date
+input kn: int
+input mn: month
+input md: rounding
+input cal: calendar
+input xn: num
+input x1: num
+input tn[k in ks]: num
+input xh: num
+input mz: month
+input kk: key ks
+
+ask c_if: if ok[b] then d0 else d1
+ask c_and: ok[a] and ok[b]
+ask c_or: ok[b] or ok[a]
+ask c_not: not ok[b]
+ask c_in: count(k in ks where st[k] in [a])
+ask c_acc: accrue(p, r[k], d0, d1, act365, effective) for k in ks
+ask c_per: periodic(r[b], year, effective)
+ask c_dcf: dcf(d0, dn, act365)
+ask c_rnd: round(p, p, md)
+ask c_bus: add_business(d0, kn, cal)
+ask c_lst: last_business(mn, kn, cal)
+ask c_min: min(xn, x1)
+ask c_max: max(x1, xn)
+ask c_abs: abs(xn)
+ask c_age: age_months(d0, dn)
+ask c_sum: sum(tn[k] for k in ks)
+ask c_agm: max(tn[k] for k in ks)
+ask c_lt: xn < x1
+ask c_mh: min(xn, xh)
+ask c_st: start_of(mz)
+ask c_am: add_months(d0, kn)
+ask c_pw: pow(xn, x1)
+ask c_wd: weekday(dn)
+ask c_ib: is_business(dn, cal)
+ask c_win: window(d0, dn)
+ask c_key: tn[kk]
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  ok[a] = true "s"
+  ok[b] = none "s"
+  st[a] = a "s"
+  st[b] = none "s"
+  r[a] = 5 %/year "s"
+  r[b] = none "s"
+  p = 100.00 PLN "s"
+  d0 = 2026-01-01 "s"
+  d1 = 2027-01-01 "s"
+  dn = none "s"
+  kn = none "s"
+  mn = 2026-03 "s"
+  md = none "s"
+  cal = calendar(weekends [sat, sun], added []) "s"
+  xn = none "s"
+  x1 = 1 "s"
+  tn[a] = 1 "s"
+  tn[b] = none "s"
+  xh = ?"xh" "s"
+  mz = none "s"
+  kk = none "s"
+"#;
+
+    #[test]
+    fn none_is_refused_by_its_read_and_its_use() {
+        // L §8.4 `RUN-NONE`'s row (tally 2.3.1 R4, Q2.37, N256.8, Q1.13, P31): `if`, `and`,
+        // `or` and `not` are a condition, a membership test is one, `<` an ordering, a
+        // built-in and an aggregate's term name the built-in, and each names the read that
+        // gave none
+        let given = vec![Given {
+            path: "none.tally".to_owned(),
+            bytes: Some(NONE_WORDS.as_bytes().to_vec()),
+        }];
+        let lines: Vec<String> = run(Files::new(given), &Request::new(Asks::Every))
+            .expect("an answer")
+            .lines()
+            .iter()
+            .filter(|l| !l.starts_with(' '))
+            .cloned()
+            .collect();
+        assert_eq!(
+            lines,
+            [
+                "c_abs: refused: RUN-NONE xn is none here: abs",
+                "c_acc (k = a): 5 PLN",
+                "c_acc (k = b): refused: RUN-NONE r[b] is none here: accrue",
+                "c_age: refused: RUN-NONE dn is none here: age_months",
+                "c_agm: refused: RUN-NONE tn[b] is none here: max",
+                "c_am: refused: RUN-NONE kn is none here: add_months",
+                "c_and: refused: RUN-NONE ok[b] is none here: a condition",
+                "c_bus: refused: RUN-NONE kn is none here: add_business",
+                "c_dcf: refused: RUN-NONE dn is none here: dcf",
+                "c_ib: refused: RUN-NONE dn is none here: is_business",
+                "c_if: refused: RUN-NONE ok[b] is none here: a condition",
+                "c_in: refused: RUN-NONE st[b] is none here: a membership test",
+                "c_key: refused: RUN-NONE kk is none here: a key",
+                "c_lst: refused: RUN-NONE kn is none here: last_business",
+                "c_lt: refused: RUN-NONE xn is none here: ordering",
+                "c_max: refused: RUN-NONE xn is none here: max",
+                "c_mh: refused: RUN-NONE xn is none here: min",
+                "c_min: refused: RUN-NONE xn is none here: min",
+                "c_not: refused: RUN-NONE ok[b] is none here: a condition",
+                "c_or: refused: RUN-NONE ok[b] is none here: a condition",
+                "c_per: refused: RUN-NONE r[b] is none here: periodic",
+                "c_pw: refused: RUN-NONE xn is none here: pow",
+                "c_rnd: refused: RUN-NONE md is none here: round",
+                "c_st: refused: RUN-NONE mz is none here: start_of",
+                "c_sum: refused: RUN-NONE tn[b] is none here: sum",
+                "c_wd: refused: RUN-NONE dn is none here: weekday",
+                "c_win: refused: RUN-NONE dn is none here: window",
+            ],
+            "refcore's bytes, and L §8.4's for the rows refcore lags on (P42)"
+        );
+    }
 }

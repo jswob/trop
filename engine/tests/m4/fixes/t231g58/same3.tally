@@ -1,0 +1,40 @@
+model same3
+  tally 2
+  on 2026-05-20
+  start 2026-01-01
+  end 2026-03-31
+
+source s "probe"
+unit PLN: currency minor 0.01
+place konto: accounts PLN lives 2026-01-01..
+place sav: accounts PLN lives 2026-01-01..
+input bank: observed
+input card: observed
+input third: observed
+
+ask b: bal(konto, 2026-03-31)
+ask sv: bal(sav, 2026-03-31)
+ask fl: flows(konto, 2026-01)
+ask oa: bank[a1].cash.amount
+ask oc: third[c1].cash.amount
+ask od: third[c1].day
+ask sm: sum(t.cash.amount for t in transfers over 2026-01)
+ask n: count(t in transfers over 2026-01)
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  opening[konto] = 1000.00 PLN at 2026-01-01 start "s"
+  opening[sav] = 0.00 PLN at 2026-01-01 start "s"
+
+version q1
+  cite s
+  governs 2026-01-01..2026-03-31
+  known 2026-04-01
+  covers konto
+  bank[a1] = (on: 2026-01-07, kind: transfers, leg cash from konto to sav amount 100.00 PLN) "a"
+  card[b1] = (on: 2026-01-08, kind: transfers, leg cash from konto to sav amount 100.00 PLN) "b"
+  third[c1] = (on: 2026-01-09, kind: transfers, leg cash from konto to sav amount 120.00 PLN) "c"
+  same card[b1] = bank[a1]
+  same third[c1] = card[b1]

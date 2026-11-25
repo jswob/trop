@@ -868,6 +868,10 @@ fn schedule_decision(
                 .or_insert_with(Vec::new)
                 .push(inst.clone());
         }
+        // no day of its own, a hole or a refusal, and a row names it: the row stands in, booked
+        // from its own fields, and the instance is never booked (L §5.19 l.1713, l.1723, §8.4
+        // l.2355; tally 2.3.1 part 1's review B3, rulings 23 (b))
+        Some(Dated::Hole(_)) | None if inst.status == Status::Modelled => {}
         Some(Dated::Hole(h)) => {
             let at = At::before(walk.start);
             decision_hole(walk, (at, h), inst, places)?;

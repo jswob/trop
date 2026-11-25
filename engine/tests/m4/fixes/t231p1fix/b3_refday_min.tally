@@ -1,0 +1,44 @@
+model b3r
+  tally 2
+  on 2026-05-20
+  start 2026-01-01
+  end 2026-02-28
+
+source s "probe"
+unit PLN: currency minor 0.01
+index month = month 2026-01..2026-02
+place pot: accounts PLN lives 2026-01-01..
+place landlord: outside lives 1900-01-01..
+input bank: observed
+input amt: money PLN
+input d5: int
+input dz[m in month]: int
+
+move rent[m in month]: transfers
+  reads pot
+  on day_of(m, d5 / dz[m])
+  when bal(pot) > 0.00 PLN
+  leg cash from pot to landlord amount amt
+
+ask c: bal(pot, 2026-02-28)
+ask f: flows(rent, 2026-01)
+ask fp: flows(pot, 2026-01)
+ask kt: count(t in transfers over 2026-01)
+ask e: rent[2026-01] == none
+ask dy: rent[2026-01].day
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  amt = 100.00 PLN "s"
+  d5 = 5 "s"
+  dz[2026-01] = 0 "refused"
+  dz[2026-02] = 1 "s"
+  opening[pot] = 1000.00 PLN at 2026-01-01 start "s"
+
+version q1
+  cite s
+  governs 2026-01-01..2026-02-28
+  known 2026-03-01
+  bank[a1] = (on: 2026-01-07, kind: transfers, leg cash from pot to landlord amount 110.00 PLN, fulfils: rent[2026-01]) "jan"

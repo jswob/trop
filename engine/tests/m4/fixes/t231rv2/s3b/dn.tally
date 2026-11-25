@@ -1,0 +1,9 @@
+scenario dn over s3b
+  tally 2
+  from 2026-04-01
+
+version w2
+  cite s
+  governs 2026-04..
+  known 2026-04-01
+  replace a3 = 130.00 PLN "what if"

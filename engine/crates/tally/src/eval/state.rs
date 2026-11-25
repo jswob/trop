@@ -488,6 +488,9 @@ pub struct Engine {
     pub(crate) links: BTreeMap<(Day, String), Linked>,
     /// The links being judged (`RUN-CYCLE`).
     pub(crate) link_active: BTreeSet<(Day, String)>,
+    /// How many plan lists are being made, any phase: a decision's existence traced inside
+    /// one is a plan reaching a running read (E §3.1 step 7; tally 2.3.1 R6, P43).
+    pub(crate) plans_making: usize,
     /// The refusals of observations' records, per cut, by observation (L §5.19 Links).
     pub(crate) obs_errs: BTreeMap<(Day, String), Refusal>,
     /// The refusal an instance's realised movement rests on, per cut, by instance: a record
@@ -514,11 +517,6 @@ pub struct Engine {
     /// booked: a list that stops takes back its own, so nothing booked from a list that stopped
     /// stays in the walk (E §9 item 5, §4.1; P40).
     pub(crate) booked_open: Vec<(String, Day, Option<Day>)>,
-    /// What judging each list's links met (their register entries) where an existence read
-    /// made the list: an existence read takes none of it, so the list's next other reader
-    /// takes it, once, as the reader that makes a list takes it (L §5.19 Links, §8.2; E §3.2,
-    /// §4.1 step 3; P30, P40).
-    pub(crate) links_unread: BTreeMap<(String, Day), Collected>,
     /// Each main walk's signature once it is done, by its place in `walks` (E §9 item 4).
     pub(crate) signatures: BTreeMap<usize, crate::invariant::Signature>,
     /// Each walk-bound def's cells a decision read at its point of a main walk (E §10).
@@ -676,6 +674,7 @@ impl Engine {
             covered: BTreeMap::new(),
             links: BTreeMap::new(),
             link_active: BTreeSet::new(),
+            plans_making: 0,
             obs_errs: BTreeMap::new(),
             bad_links: BTreeMap::new(),
             s1_links: BTreeMap::new(),
@@ -686,7 +685,6 @@ impl Engine {
             adjust_all_active: BTreeSet::new(),
             booked: BTreeMap::new(),
             booked_open: Vec::new(),
-            links_unread: BTreeMap::new(),
             signatures: BTreeMap::new(),
             walk_cells: WalkCells::new(),
             keep_walk_cells: false,
@@ -935,6 +933,16 @@ impl Engine {
     pub(crate) fn absorb(&mut self, met: &Collected) {
         if let Some(top) = self.stack.last_mut() {
             top.merge(met);
+        }
+    }
+
+    /// What the innermost collector has met so far, left open: the reads a later part of the
+    /// same evaluation doesn't add to (L §8.2 One read set).
+    #[must_use]
+    pub(crate) fn met_here(&self) -> Collected {
+        match self.stack.last() {
+            Some(top) => top.clone(),
+            None => Collected::default(),
         }
     }
 

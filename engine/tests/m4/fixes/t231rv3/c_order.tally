@@ -1,0 +1,107 @@
+model co
+  tally 2
+  on 2026-08-20
+  start 2026-01-01
+  end 2026-08-31
+
+source s "invented values"
+unit PLN: currency minor 0.01
+index month = month 2026-01..2026-08
+place pot: accounts PLN lives 2026-01-01..
+place landlord: outside lives 1900-01-01..
+input bank: observed
+input amt: money PLN
+input ten: int
+input dz[m in month]: int
+input dd[m in month]: int
+input dn[m in month]: bool
+input wz[m in month]: int
+input ok[m in month]: bool
+
+move rent[m in month where ten / dz[m] > 0]: transfers
+  on if dn[m] then none else day_of(m, dd[m])
+  when ten / wz[m] > 0 and ok[m]
+  leg cash from pot to landlord amount amt
+
+ask o1: observed(rent[2026-01]).cash.amount
+ask o2: observed(rent[2026-02]).cash.amount
+ask o3: observed(rent[2026-03]).cash.amount
+ask o4: observed(rent[2026-04]).cash.amount
+ask o5: observed(rent[2026-05]).cash.amount
+ask o6: observed(rent[2026-06]).cash.amount
+ask o7: observed(rent[2026-07]).cash.amount
+ask f1: flows(rent, 2026-01)
+ask f2: flows(rent, 2026-02)
+ask f3: flows(rent, 2026-03)
+ask f6: flows(rent, 2026-06)
+ask f7: flows(rent, 2026-07)
+ask n1: count(o in bank over 2026-01 where o.fulfils == none)
+ask n3: count(o in bank over 2026-03 where o.fulfils == none)
+ask n7: count(o in bank over 2026-07 where o.fulfils == none)
+ask e1: rent[2026-01] == none
+ask e3: rent[2026-03] == none
+ask e7: rent[2026-07] == none
+def ob[m in month]: money PLN = observed(rent[m]).cash.amount
+ask x1: explain ob[2026-01]
+ask x2: explain ob[2026-02]
+ask i5: inputs-of ob[2026-05]
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  amt = 100.00 PLN "s"
+  ten = 10 "s"
+  opening[pot] = 9000.00 PLN at 2026-01-01 start "s"
+  dz[2026-01] = 0 "z"
+  dz[2026-02] = 1 "z"
+  dz[2026-03] = 0 "z"
+  dz[2026-04] = 0 "z"
+  dz[2026-05] = ?"may where" "z"
+  dz[2026-06] = ?"jun where" "z"
+  dz[2026-07] = 1 "z"
+  dz[2026-08] = 1 "z"
+  dd[2026-01] = ?"jan day" "d"
+  dd[2026-02] = ?"feb day" "d"
+  dd[2026-03] = 5 "d"
+  dd[2026-04] = 5 "d"
+  dd[2026-05] = 5 "d"
+  dd[2026-06] = 5 "d"
+  dd[2026-07] = ?"jul day" "d"
+  dd[2026-08] = 5 "d"
+  dn[2026-01] = false "n"
+  dn[2026-02] = false "n"
+  dn[2026-03] = false "n"
+  dn[2026-04] = true "n"
+  dn[2026-05] = false "n"
+  dn[2026-06] = false "n"
+  dn[2026-07] = false "n"
+  dn[2026-08] = false "n"
+  wz[2026-01] = 1 "w"
+  wz[2026-02] = 0 "w"
+  wz[2026-03] = 1 "w"
+  wz[2026-04] = 1 "w"
+  wz[2026-05] = 0 "w"
+  wz[2026-06] = 1 "w"
+  wz[2026-07] = 1 "w"
+  wz[2026-08] = 1 "w"
+  ok[2026-01] = true "o"
+  ok[2026-02] = true "o"
+  ok[2026-03] = false "o"
+  ok[2026-04] = true "o"
+  ok[2026-05] = true "o"
+  ok[2026-06] = false "o"
+  ok[2026-07] = false "o"
+  ok[2026-08] = true "o"
+
+version rows
+  cite s
+  governs 2026-01..2026-07
+  known 2026-08-01
+  bank[r1] = (on: 2026-01-05, kind: transfers, leg cash from pot to landlord amount 100.00 PLN, fulfils: rent[2026-01]) "r1"
+  bank[r2] = (on: 2026-02-05, kind: transfers, leg cash from pot to landlord amount 100.00 PLN, fulfils: rent[2026-02]) "r2"
+  bank[r3] = (on: 2026-03-05, kind: transfers, leg cash from pot to landlord amount 100.00 PLN, fulfils: rent[2026-03]) "r3"
+  bank[r4] = (on: 2026-04-05, kind: transfers, leg cash from pot to landlord amount 100.00 PLN, fulfils: rent[2026-04]) "r4"
+  bank[r5] = (on: 2026-05-05, kind: transfers, leg cash from pot to landlord amount 100.00 PLN, fulfils: rent[2026-05]) "r5"
+  bank[r6] = (on: 2026-06-05, kind: transfers, leg cash from pot to landlord amount 100.00 PLN, fulfils: rent[2026-06]) "r6"
+  bank[r7] = (on: 2026-07-05, kind: transfers, leg cash from pot to landlord amount 100.00 PLN, fulfils: rent[2026-07]) "r7"

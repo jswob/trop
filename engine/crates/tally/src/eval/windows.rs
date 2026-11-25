@@ -364,8 +364,9 @@ fn imprecise_all(windows: &[&Window], what: &str) -> Option<Hole> {
 
 /// The comparison `a op b` where a side is a window, a listed reader (`Takes::Order`): decided
 /// when it holds for every day both sides can take, two reads alike of one item decided as one
-/// day, else `HOLE-IMPRECISE` naming the comparison as written, `text` (refcore's `iv_compare`;
-/// its identity is the input row, the spec's the read, #115). L §4.4.
+/// day, else `HOLE-IMPRECISE` naming the comparison as written, `text`, and each unknown day
+/// of both sides (refcore's `iv_compare`; its identity is the input row, the spec's the read,
+/// #115). L §4.4, §8.1.
 pub(super) fn window_compare(
     m: &Reality,
     op: CmpOp,
@@ -424,10 +425,12 @@ pub(super) fn window_compare(
             }
         }
     }
-    let w = as_window(a)
-        .or_else(|| as_window(b))
-        .ok_or_else(|| invariant("a window comparison with no window"))?;
-    Ok(Value::Hole(imprecise(w, text)))
+    // an undecided comparison names each unknown day it evaluated, both sides' (L §4.4
+    // "naming each unknown day", §8.1; tally 2.3.1, Q1.15)
+    let windows: Vec<&Window> = [a, b].into_iter().filter_map(as_window).collect();
+    imprecise_all(&windows, text)
+        .map(Value::Hole)
+        .ok_or_else(|| invariant("a window comparison with no window"))
 }
 
 /// Whether two values are windows that are two reads alike of one item, so one value (L §4.4:
@@ -604,7 +607,7 @@ impl Engine {
         ctx: Ctx,
     ) -> Result<Value, Stop> {
         let [a, b] = self
-            .args(m, call, env, ctx)?
+            .args_named(m, call, env, ctx)?
             .try_into()
             .map_err(|_| invariant("a built-in called with the wrong number of arguments"))?;
         if a.as_hole().is_some() || b.as_hole().is_some() {
@@ -714,14 +717,18 @@ source card "invented"
 
 input w: date
 
+input v: date
+
 version v_card
   cite card
   governs always
   known 2020-01-01
   w = window(2026-03-02, 2026-03-20) "c"
+  v = window(2026-03-10, 2026-03-25) "c"
 
 ask printed: w
 ask pinned: w with w = 2026-03-05
+ask both: w < v
 "#;
 
     fn answer(ask: &str) -> Vec<String> {
@@ -734,6 +741,22 @@ ask pinned: w with w = 2026-03-05
             .expect("an answer")
             .lines()
             .to_vec()
+    }
+
+    #[test]
+    fn an_undecided_comparison_of_two_windows_names_both_days() {
+        // L §4.4 "naming each unknown day", §8.1 (tally 2.3.1, Q1.15): one question per
+        // unknown day, the left's and the right's
+        assert_eq!(
+            answer("both"),
+            [
+                "both: ?\"date within window(2026-03-02, 2026-03-20) not precise enough for w < v\" (w) ?\"date within window(2026-03-10, 2026-03-25) not precise enough for w < v\" (v)",
+                "  unknown day: v",
+                "  unknown day: w",
+                "  cut 2026-01-01"
+            ],
+            "both days"
+        );
     }
 
     #[test]

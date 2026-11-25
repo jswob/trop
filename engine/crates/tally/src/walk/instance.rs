@@ -400,6 +400,9 @@ pub struct Inst {
     pub day_coll: Collected,
     /// What reading each leg met, by the leg's name (S3, P43 on #241).
     pub leg_reads: BTreeMap<String, Collected>,
+    /// What decided whether it exists and its day, never its amounts: a binding's member's
+    /// read set; none where its body wasn't read (L §8.2 l.2252; tally 2.3.1 pick P16).
+    pub exist_coll: Option<Collected>,
     /// Its place in the movement order.
     pub order: Order,
     /// For a hole booking a later version answered: the cut that version is known from and
@@ -439,6 +442,7 @@ impl Inst {
             fulfils: None,
             day_coll: Collected::default(),
             leg_reads: BTreeMap::new(),
+            exist_coll: None,
             order: Order {
                 day: None,
                 stratum: mv.stratum,
