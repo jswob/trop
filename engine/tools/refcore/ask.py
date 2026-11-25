@@ -21,6 +21,7 @@ from .evaluate import (Engine, Ctx, Coll, TraceNode, HoleSignal, OutKey, ListKey
 from .model import key_text, set_world
 from .values import (CURRENCIES, fmt_typed, Num, Hole, Iv, Special, Thing, Key, Lst, Text, NONE, vkey, fmt, fmt_hole, fmt_q)
 from .check import _txt
+from . import ty as T
 from .eval2 import QOut
 
 
@@ -1186,9 +1187,14 @@ class Asker:
         lv = self.one(eng, l, env, ctx)
         rv = self.one(eng, r, env, ctx)
         lt, rt = _txt(l), _txt(r)
+
+        def side(v, e):
+            # each side in its type beside a hole or a refused side too (L §2.4 Values; tally 2.3.1 R4, N256.7, P44)
+            if isinstance(v, (TallyError, Hole)):
+                return fmt_value(v, ctx.partial)
+            return fmt_typed(v, getattr(e, '_t', None))
         if isinstance(lv, (TallyError, Hole)) or isinstance(rv, (TallyError, Hole)):
-            return CheckOut('%s = %s, %s = %s' % (lt, fmt_value(lv, ctx.partial), rt, fmt_value(rv, ctx.partial)),
-                            'open', (lv, rv))
+            return CheckOut('%s = %s, %s = %s' % (lt, side(lv, l), rt, side(rv, r)), 'open', (lv, rv))
         try:
             same = eng.compare('==', lv, rv, None, ctx)
         except TallyError as err:
@@ -1204,7 +1210,9 @@ class Asker:
             from .evaluate import arith
             try:
                 d = arith('-', lv, rv, l._t, l._t, r._t)
-                diff = ', difference %s' % fmt(d)
+                # `%` kept by `-` where both sides have it (L §2.4 Values; tally 2.3.1 N256.7, P44)
+                pct = T.is_pct(getattr(l, '_t', None)) and T.is_pct(getattr(r, '_t', None))
+                diff = ', difference %s' % (fmt_typed(d, l._t) if pct else fmt(d))
             except TallyError as err:
                 if is_load(err):
                     raise LoadAtRun(err)

@@ -1,0 +1,30 @@
+# tally 2.3.1 N256.7, P44 (L §2.4 Values, a check's sides in their types): a declared `%` side prints in its
+# type beside a hole too (c2: `p = 10 %`), and the difference of two `%` sides prints with `%` (c1:
+# `difference -20 %`). Before: `p = 0.1` beside the hole, `difference -0.2`.
+=== chkpct1.tally
+model b3
+  tally 2
+  on 2026-06-30
+  start 2026-01-01
+  end 2026-12-31
+
+source s "probe"
+input p: num %
+input q: num %
+input ph: num %
+
+ask c1: check p == q
+ask c2: check p == ph
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  p = 10 % "s"
+  q = 30 % "s"
+  ph = ?"which?" "s"
+=== expect
+c1: differs: p = 10 %, q = 30 %, difference -20 %
+  cut 2026-06-30
+c2: p = 10 %, ph = ?"which?" (ph)
+  cut 2026-06-30

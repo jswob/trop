@@ -1,0 +1,85 @@
+# tally 2.3.1, G5's review note 8 (L §8.4): `never` in age_months is `never in age_months`, the built-in's
+# name. Before: `never in age`.
+=== i01_none_age.tally
+model i01
+  tally 2
+  on 2026-10-25
+  start 2026-01-01
+  end 2026-12-31
+
+source s "invented"
+unit PLN: currency minor 0.01
+
+index ks = [k1, k2, k3]
+
+input x[k in ks]: money PLN
+input n[k in ks]: num
+input b: date
+input bleap: date
+input bh: date
+input bw: date
+input d1: date
+input d2: date
+input d3: date
+input d4: date
+input dnone: date
+input p1: num %
+input cal: calendar
+input i0: int
+input r0: rate
+input rec: (a money PLN, d date)
+
+def xn[k in ks]: money PLN at reader
+  rule base = x[k]
+def viadef: money PLN = xn[k2] + xn[k1] at reader
+
+ask pct: p1, p1 + p1, p1 * x[k1]
+ask a1: x[k2] + x[k1]
+ask a2: x[k1] * n[k2]
+ask a3: -x[k2]
+ask a4: x[k2] < x[k1]
+ask a5: sum(x[k] for k in ks)
+ask a6: max(n[k] for k in ks)
+ask a7: abs(n[k2]), round(n[k2], 1, down)
+ask a8: viadef law 2026-06-01
+ask a9: min(x[k1], x[k2])
+ask a10: argmin(n[k] for k in ks)
+ask a11: n[k1] / n[k2], x[k2] == x[k1], x[k2] != x[k1]
+ask a12: rec.a + x[k1], rec.d < d1
+ask a13: add_days(dnone, i0), days_between(dnone, d1), year_of(dnone), weekday(dnone)
+ask a14: accrue(x[k2], r0, d1, d2, act365, simple)
+ask a15: (x[k2] + x[k1]) as if {x[k1] = none}
+ask a16: count(k in ks where x[k] > x[k1])
+ask a17: any(x[k] > x[k1] for k in ks), all(n[k] > 0 for k in ks)
+ask g1: age_months(b, d1), age_months(b, d2), age_months(b, d3), age_months(b, d4), age(b, d4), age(b, d1)
+ask g2: age_months(bleap, d1), age_months(bleap, d2), age_months(bleap, bleap), age_months(bleap, bleap - 1)
+ask g3: age_months(bh, d1), age_months(b, bh), age_months(dnone, d1), age_months(b, never), age_months(never, d1)
+ask g4: age_months(bw, d1), age_months(bw, d3), age_months(b, bw), age(bw, d3)
+ask g5: age_months(b, d1) > i0, age_months(d1, b) == none, age_months(d1, b) > i0
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  x[k1] = 10 PLN "s"
+  x[k2] = none "s"
+  x[k3] = 30 PLN "s"
+  n[k1] = 1 "s"
+  n[k2] = none "s"
+  n[k3] = 3 "s"
+  b = 2024-01-31 "s"
+  bleap = 2024-02-29 "s"
+  bh = ?"when born?" "s"
+  bw = window(2024-01-10, 2024-01-20) "s"
+  d1 = 2024-02-29 "s"
+  d2 = 2024-03-30 "s"
+  d3 = 2025-02-28 "s"
+  d4 = 2026-01-30 "s"
+  dnone = none "s"
+  p1 = 5 % "s"
+  i0 = 0 "s"
+  r0 = 5 %/year "s"
+  rec = (a: none, d: none) "s"
+=== expect g3
+g3: (?"when born?" (bh), ?"when born?" (bh), refused: RUN-NONE dnone is none here: age_months, refused: RUN-NONE never in age_months, refused: RUN-NONE never in age_months)
+  cut 2026-10-25

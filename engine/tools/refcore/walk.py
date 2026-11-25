@@ -1219,7 +1219,7 @@ class Walk:
                     return [g for g in legs if (g.unit or '*') == (lg.unit or '*') and
                             any(isinstance(q, Thing) and q.name == p.name for q in (g.frm, g.to))]
                 mine = at_p(mv.legs)
-                k = next((j for j, g in enumerate(mine) if g is lg), 0)
+                lonely = []
                 for o in others:
                     if getattr(o, 'status', None) == 'modelled' and not getattr(o, 'decision', False):
                         continue
@@ -1227,10 +1227,15 @@ class Walk:
                     # row, "one fact, each row once"; tally 2.2.1, 237.2)
                     named = [g for g in o.legs if g.name == lg.name]
                     if not named:
-                        # sides whose leg names differ: each leg at p against the other's in the same place, by order,
-                        # so each row is named once, one question per leg (tally 2.3.1 N245.18)
+                        # legs pair by name, then by order among the unpaired at p; a leg with no partner where the
+                        # other books p is HOLE-SAME, its missing side none (tally 2.3.1 rulings 25, P42 B2, P43)
                         theirs = at_p(o.legs)
-                        named = theirs[k:k + 1]
+                        mine_un = [g for g in mine if not any(h.name == g.name for h in o.legs)]
+                        theirs_un = [h for h in theirs if not any(g.name == h.name for g in mv.legs)]
+                        ku = next((j for j, g in enumerate(mine_un) if g is lg), None)
+                        named = theirs_un[ku:ku + 1] if ku is not None else []
+                        if not named and theirs:
+                            lonely.append(o)
                     for g in named:
                         for sj, q in enumerate((g.frm, g.to)):
                             if isinstance(q, Thing) and q.name == p.name and (g.unit or '*') == (lg.unit or '*'):
@@ -1239,6 +1244,9 @@ class Walk:
                                     if isinstance(gd, datetime.date) and not self.obs_end_on(o, q, gd):
                                         continue
                                 touch.append((o, g, sj))
+                if lonely:
+                    out.append(self.same_hole(touch + [(o, None, si) for o in lonely], lg, p))
+                    continue
                 if len(set(id(x[0]) for x in touch)) < 2:
                     if J is not None and owner_of(mv.id) == '' and owner_of(p.name) != '':
                         # the joint model's own movement into a member's place that no same links to that member's
@@ -1347,10 +1355,11 @@ class Walk:
         from .moves import id_order
         touch = sorted(touch, key=lambda t: id_order(self.m, t[0].id))
         names = and_list(shown(t[0].id) for t in touch)
-        days = sorted(set(g.day for o, g, sj in touch if isinstance(g.day, datetime.date)))
-        parts = and_list('%s (%s)' % (fmt(g.amount) if not isinstance(g.amount, TallyError) else 'refused',
-                                      shown(o.id)) for o, g, sj in touch)
-        what = ('leg %s' % lg.name) if all(g.name == lg.name for o, g, sj in touch) else \
+        days = sorted(set(g.day for o, g, sj in touch if g is not None and isinstance(g.day, datetime.date)))
+        # a side with no partner leg prints `none` (tally 2.3.1 rulings 25, P43)
+        parts = and_list('%s (%s)' % ('none' if g is None else fmt(g.amount) if not isinstance(g.amount, TallyError)
+                                      else 'refused', shown(o.id)) for o, g, sj in touch)
+        what = ('leg %s' % lg.name) if all(g is None or g.name == lg.name for o, g, sj in touch) else \
             ('the leg at %s' % shown(p.name))
         q = '%s are one, but %s differs on %s: %s' % (
             names, what, ', '.join(str(d) for d in days), parts)

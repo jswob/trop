@@ -1,0 +1,51 @@
+# tally 2.3.1 rulings 25, note 5: a field read pairs legs as booking does: bank's fee (2.00) and card's charge
+# (3.00) pair by order, so bank[a1].fee.amount is the HOLE-SAME the balance shows. Before: ob 2.00 PLN.
+=== sm18g.tally
+model sm18
+  tally 2
+  on 2026-05-20
+  start 2026-01-01
+  end 2026-03-31
+
+source s "probe"
+unit PLN: currency minor 0.01
+kind paid: event certain
+  leg cash: PLN
+  leg fee: PLN
+kind cpaid: event certain
+  leg pay: PLN
+  leg charge: PLN
+place konto: accounts PLN lives 2026-01-01..
+place karta: accounts PLN lives 2026-01-01..
+place bankfee: outside lives 1900-01-01..
+input bank: observed
+input card: observed
+
+ask b: bal(konto, 2026-03-31)
+ask sf: sum(t.fee.amount for t in paid over 2026-01)
+ask ob: bank[a1].fee.amount
+ask fl: flows(konto, 2026-01)
+ask c2: bal(karta, 2026-03-31)
+ask oc: card[b1].charge.amount
+ask fk: flows(karta, 2026-01)
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  opening[konto] = 1 000.00 PLN at 2026-01-01 start "s"
+  opening[karta] = 1 000.00 PLN at 2026-01-01 start "s"
+
+version q1
+  cite s
+  governs 2026-01-01..2026-03-31
+  known 2026-04-01
+  covers konto, karta
+  bank[a1] = (on: 2026-01-07, kind: paid, leg cash from konto to karta amount 100.00 PLN, leg fee from konto to bankfee amount 2.00 PLN) "bank"
+  card[b1] = (on: 2026-01-07, kind: cpaid, leg pay from konto to karta amount 110.00 PLN, leg charge from konto to bankfee amount 3.00 PLN) "card"
+  same card[b1] = bank[a1]
+=== expect ob oc
+ob: ?"bank[a1] and card[b1] are one, but leg fee differs on 2026-01-07: 2.00 PLN (bank[a1]) and 3.00 PLN (card[b1])" (bank[a1], card[b1])
+  cut 2026-05-20
+oc: ?"bank[a1] and card[b1] are one, but leg charge differs on 2026-01-07: 2.00 PLN (bank[a1]) and 3.00 PLN (card[b1])" (bank[a1], card[b1])
+  cut 2026-05-20
