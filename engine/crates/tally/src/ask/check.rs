@@ -162,12 +162,14 @@ fn sides_text(
         return Ok(("ok".to_owned(), Vec::new()));
     }
     // each side as the comparison took it: a key literal the other side's key, a four-digit
-    // literal beside a year that year (refcore's sides, evaluated as load resolved them)
+    // literal beside a year that year (refcore's sides, evaluated as load resolved them);
+    // each printed in its type, a declared item's `%` kept, and the difference plain (L §2.4
+    // Values; tally 2.3.1 R4, N256.7)
     let (a, b) = resolved_sides(m, (left, a), (right, b))?;
     let text = format!(
         "differs: {lt} = {}, {rt} = {}{}",
-        plain(m, &a)?,
-        plain(m, &b)?,
+        a.typed_text(m).map_err(num_stop)?,
+        b.typed_text(m).map_err(num_stop)?,
         difference(m, (&a, &b), ask)?
     );
     Ok((text, Vec::new()))
@@ -369,6 +371,66 @@ version v
                 "c8: differs: qk = 2026-04, qk + 1 = 2026-07, difference -1",
             ],
             "each check's difference"
+        );
+    }
+
+    /// Declared items beside expressions, a one-day window and a tuple (tally 2.3.1 R4).
+    const PRINT: &str = r#"model print
+  tally 2
+  on 2026-06-30
+  start 2026-01-01
+  end 2026-12-31
+
+source s "invented"
+index ks = [a, b]
+input p: num %
+input n: num
+input w: date
+input h[k in ks]: num
+
+def dn: num = p
+def dp: num % = n
+
+ask c1: check p == n + p
+ask c2: check dp == n + n
+ask c3: check dn == dp
+ask d1: dn
+ask d2: dp
+ask d3: dp + p
+ask d4: dn + p
+ask w1: w
+ask t1: argmin(h[k] + h[i] for k in ks, i in ks)
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  p = 10 % "s"
+  n = 0.1 "s"
+  w = window(2026-03-05, 2026-03-05) "s"
+  h[a] = 1 "s"
+  h[b] = 2 "s"
+"#;
+
+    #[test]
+    fn a_declared_item_prints_in_its_declared_type() {
+        // L §2.4 Values (tally 2.3.1 R4): a declared item in its declared type, an
+        // expression in its value's unit (`%` kept where every operand has it), the
+        // difference plain; a window of one day as that day, a tuple in brackets
+        assert_eq!(
+            heads(PRINT),
+            [
+                "c1: differs: p = 10 %, n + p = 0.2, difference -0.1",
+                "c2: differs: dp = 10 %, n + n = 0.2, difference -0.1",
+                "c3: ok",
+                "d1: 0.1",
+                "d2: 10 %",
+                "d3: 20 %",
+                "d4: 0.2",
+                "t1: [a, a]",
+                "w1: 2026-03-05",
+            ],
+            "refcore's bytes"
         );
     }
 

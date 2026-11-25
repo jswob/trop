@@ -901,8 +901,9 @@ fn whole_value(m: &Reality, ty: &Ty, v: Value) -> Result<Value, Stop> {
     Ok(Value::Number(Number { q, class }))
 }
 
-/// A def's value in its declared type (refcore's `coerce_def`): an int that is one, money
-/// from a bare 0, a key of its index. L §5.11, §3.2.
+/// A def's value in its declared type (refcore's `coerce_def`, and the static type its
+/// printer `fmt_typed` reads): an int that is one, money from a bare 0, a key of its index,
+/// a unitless number shown as its `num` or `num %`. L §5.11, §3.2, §2.4.
 fn coerce_def(m: &Reality, def: &DefInfo, v: Value) -> Result<Value, Stop> {
     if matches!(v, Value::Hole(_) | Value::None | Value::Never) {
         return Ok(v);
@@ -924,6 +925,18 @@ fn coerce_def(m: &Reality, def: &DefInfo, v: Value) -> Result<Value, Stop> {
             }))
         }
         (Ty::Num(_, shown), Value::Number(n)) if matches!(n.class, Class::Int) => {
+            Ok(Value::Number(Number {
+                q: n.q,
+                class: Class::Num(Unit::one(), *shown),
+            }))
+        }
+        // a declared item prints in its declared type: a `num` def built from a `num %`
+        // prints plain, a `num %` def built from plain numbers with its `%` (L §2.4 Values;
+        // tally 2.3.1 R4, Q2.9)
+        (Ty::Num(unit, shown), Value::Number(n))
+            if unit.is_one()
+                && matches!(&n.class, Class::Num(u, s) if u.is_one() && s != shown) =>
+        {
             Ok(Value::Number(Number {
                 q: n.q,
                 class: Class::Num(Unit::one(), *shown),
