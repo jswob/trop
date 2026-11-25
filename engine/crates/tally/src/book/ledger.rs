@@ -290,11 +290,15 @@ impl Engine {
         cut: Day,
     ) -> Result<(), Stop> {
         let obs = self.ledger_obs(m, &lines.of, span)?;
-        let (model, undated) = self.ledger_model(m, &lines.of, span, cut, &obs)?;
+        let far = self.far_rows(m, &lines.of, span)?;
+        let (model, undated) = self.ledger_model(m, &lines.of, span, cut, (&obs, &far))?;
         // rows stated same are one movement: listed once, naming both rows (L §6.1); the
         // `same` lines are the observations' side, so read as known on `on`, as the rows are
         let (obs, also) = self.same_once_at(m, &lines.of.place, obs, m.on)?;
-        let fulfilling = fulfilling(&obs);
+        // a row stands in for the instance it names whatever places it touches: it is that
+        // instance's in every ledger, its flow into this place none where it touches none
+        // (E §6.3; tally 2.3.1 part 1's review B4)
+        let fulfilling = fulfilling(&[obs.as_slice(), far.as_slice()].concat());
         for inst in &model {
             instance_line(m, lines, inst, &fulfilling)?;
         }
@@ -334,15 +338,26 @@ impl Engine {
             .collect())
     }
 
-    /// The last day of the observations as known on the model's `on` date that touch the
-    /// ledger's place and fulfil each instance, in any span: the day of a hole-day instance
-    /// they fulfil, in every ledger (refcore's `ful_last`). E §6.3 Grouping, L §5.19.
-    fn last_fulfilled(&mut self, m: &Reality, of: &Of) -> Result<BTreeMap<String, Day>, Stop> {
+    /// The observations as known on the model's `on` date, dated in the span, that fulfil an
+    /// instance and touch no place of the ledger: each is compared with the instance it names
+    /// all the same, its flow into the place none (E §6.3, an instance that an observation
+    /// fulfils; tally 2.3.1 part 1's review B4).
+    fn far_rows(&mut self, m: &Reality, of: &Of, span: &Span) -> Result<Vec<Obs>, Stop> {
+        let all = self.observations(m, m.on)?;
+        Ok(all
+            .iter()
+            .filter(|o| far_row(o, of, span))
+            .cloned()
+            .collect())
+    }
+
+    /// The last day of the observations as known on the model's `on` date that fulfil each
+    /// instance, whatever places they touch, in any span: the day of a hole-day instance they
+    /// fulfil, in every ledger (refcore's `ful_last`; tally 2.3.1 part 1's review B4). E §6.3
+    /// Grouping, L §5.19.
+    fn last_fulfilled(&mut self, m: &Reality) -> Result<BTreeMap<String, Day>, Stop> {
         let mut last: BTreeMap<String, Day> = BTreeMap::new();
         for o in self.observations(m, m.on)? {
-            if !of.touches(&o.legs) {
-                continue;
-            }
             if let Some(id) = o.target_id() {
                 let day = last.entry(id).or_insert(o.day);
                 *day = (*day).max(o.day);
@@ -351,21 +366,25 @@ impl Engine {
         Ok(last)
     }
 
-    /// The model: each plan instance at cut `cut` that touches the place, dated in the span
-    /// on a day a statement covers it or fulfilled by an observation there, and each decision
-    /// as the main walk at the cut ran it on a covered day, in the movement order; and apart,
-    /// the instances whose day is a hole, but one an observation dated outside the span
-    /// fulfils (refcore's `model`, `undated`). E §6.3, §6.2.
+    /// The model: each plan instance at cut `cut` that touches the place or that an
+    /// observation there `obs` fulfils, dated in the span on a day a statement covers the
+    /// place or fulfilled by an observation, `obs` or `far`, and each decision as the main walk
+    /// at the cut ran it the same way, in the movement order; and apart, the instances whose
+    /// day is a hole, but one an observation dated outside the span fulfils (refcore's
+    /// `model`, `undated`). E §6.3, §6.2 (tally 2.3.1 part 1's review B4: whatever places the
+    /// row touches).
     fn ledger_model(
         &mut self,
         m: &Reality,
         of: &Of,
         span: &Span,
         cut: Day,
-        obs: &[Obs],
+        (obs, far): (&[Obs], &[Obs]),
     ) -> Result<(Vec<Inst>, Vec<Inst>), Stop> {
-        let fulfilled: BTreeSet<String> = obs.iter().filter_map(Obs::target_id).collect();
-        let last = self.last_fulfilled(m, of)?;
+        let here: BTreeSet<String> = obs.iter().filter_map(Obs::target_id).collect();
+        let mut fulfilled = here.clone();
+        fulfilled.extend(far.iter().filter_map(Obs::target_id));
+        let last = self.last_fulfilled(m)?;
         let mut model = Vec::new();
         let mut undated = Vec::new();
         // the plan moves the timeline's world holds (L §6.4)
@@ -387,7 +406,7 @@ impl Engine {
             } else {
                 of.touches(&inst.legs)
             };
-            if !touching {
+            if !touching && !here.contains(&inst.id) {
                 continue;
             }
             if let Some(day) = day {
@@ -410,20 +429,21 @@ impl Engine {
                 Some(_) => model.push(inst),
             }
         }
-        model.extend(self.ledger_runs(m, of, span, cut)?);
+        model.extend(self.ledger_runs(m, of, (span, cut), (&here, &fulfilled))?);
         model.sort_by(|a, b| a.order.cmp(&b.order));
         Ok((model, undated))
     }
 
     /// The decisions as the main walk at cut `cut` ran them, by instance id, each dated in
-    /// the span on a day a statement covers the place and touching it (refcore's `w.decs`).
-    /// E §6.3, §6.2.
+    /// the span on a day a statement covers the place or fulfilled by an observation, its id
+    /// in `fulfilled`, and touching the place or fulfilled by an observation there, in `here`
+    /// (refcore's `w.decs`). E §6.3, §6.2 (tally 2.3.1 part 1's review B4).
     fn ledger_runs(
         &mut self,
         m: &Reality,
         of: &Of,
-        span: &Span,
-        cut: Day,
+        (span, cut): (&Span, Day),
+        (here, fulfilled): (&BTreeSet<String>, &BTreeSet<String>),
     ) -> Result<Vec<Inst>, Stop> {
         let id = self.main_walk(m, cut)?;
         let walk = self.walk(id)?;
@@ -438,7 +458,9 @@ impl Engine {
             let Some(day) = inst.day.as_ref().and_then(Dated::day) else {
                 continue;
             };
-            if !span.contains(day) || self.covering(m, &of.place, day, m.on).is_empty() {
+            let shown =
+                fulfilled.contains(&inst.id) || !self.covering(m, &of.place, day, m.on).is_empty();
+            if !span.contains(day) || !shown {
                 continue;
             }
             if let Some(err) = &inst.err {
@@ -447,7 +469,7 @@ impl Engine {
                 }
                 continue;
             }
-            if of.touches(&inst.legs) {
+            if of.touches(&inst.legs) || here.contains(&inst.id) {
                 out.push(inst);
             }
         }
@@ -551,6 +573,13 @@ fn may_touch(m: &Reality, inst: &Inst, of: &Of) -> bool {
             .legs
             .iter()
             .any(|lg| lg.to.place().is_none() || lg.from.place().is_none())
+}
+
+/// Whether observation `o` is dated in the span, fulfils an instance and touches no place of
+/// ledger `of` (E §6.3; tally 2.3.1 part 1's review B4).
+fn far_row(o: &Obs, of: &Of, span: &Span) -> bool {
+    let names = matches!(o.fulfils, Some(Fulfils::Instance(..)));
+    names && span.contains(o.day) && !of.touches(&o.legs)
 }
 
 /// A refused instance's refusal. L §8.4.
@@ -1185,5 +1214,94 @@ ask r_apr: residuals konto 2026-04
                 "{day}: March"
             );
         }
+    }
+
+    /// The lines of ask `ask` over [`FULFILLED`] with its day `day`, its row running from the
+    /// world to place `save`, the version covering `covers`, and no reading.
+    fn far_lines(day: &str, covers: &str, ask: &str) -> Vec<String> {
+        let text = FULFILLED
+            .replace("DAY", day)
+            .replace(
+                "place unexplained: outside lives 1900-01-01..\n\nplace world:",
+                "place save: accounts PLN lives 2025-01-01..\n\nplace world:",
+            )
+            .replace("covers konto", &format!("covers {covers}"))
+            .replace(
+                "  pad konto from unexplained\n  stated[konto] = 600.00 PLN at 2026-03-31 end \
+                 \"the statement\"\n",
+                "",
+            )
+            .replace(
+                "leg cash from world to konto amount 100.00 PLN, fulfils",
+                "leg cash from world to save amount 110.00 PLN, fulfils",
+            )
+            .replace(
+                "ask r_apr:",
+                "ask s_mar: residuals save 2026-03\n\nask r_apr:",
+            );
+        let given = vec![Given {
+            path: "far.tally".to_owned(),
+            bytes: Some(text.into_bytes()),
+        }];
+        let request = Request::new(Asks::Named(vec![ask.to_owned()]));
+        run(Files::new(given), &request)
+            .expect("an answer")
+            .lines()
+            .to_vec()
+    }
+
+    #[test]
+    fn an_instance_a_row_fulfils_is_matched_whatever_places_the_row_touches() {
+        // E §6.3 (tally 2.3.1 part 1's review B4, the critic's P1-C5 repair): the row at save
+        // stands in for pw at konto; each ledger holds pw's matched line on pw's day, its
+        // difference the whole amount at that place, covered there or not; a hole day is the
+        // row's, never the `?` group's
+        let konto = |day: &str, timing: &str| {
+            vec![
+                "r_mar: residuals konto 2026-03".to_owned(),
+                "  2026-03 move pw: model 100.00 PLN, observed 0.00 PLN, difference -100.00 PLN"
+                    .to_owned(),
+                format!(
+                    "    matched pw on {day}: model 100.00 PLN, observed 0.00 PLN, difference \
+                     -100.00 PLN, timing {timing}"
+                ),
+                "  cut 2026-06-10".to_owned(),
+            ]
+        };
+        let save = |day: &str, timing: &str| {
+            vec![
+                "s_mar: residuals save 2026-03".to_owned(),
+                "  2026-03 move pw: model 0.00 PLN, observed 110.00 PLN, difference 110.00 PLN"
+                    .to_owned(),
+                format!(
+                    "    matched pw on {day}: model 0.00 PLN, observed 110.00 PLN, difference \
+                     110.00 PLN, timing {timing}"
+                ),
+                "  cut 2026-06-10".to_owned(),
+            ]
+        };
+        for covers in ["konto, save", "save"] {
+            assert_eq!(
+                far_lines("2026-03-05", covers, "r_mar"),
+                konto("2026-03-05", "+25 days"),
+                "konto, covers {covers}"
+            );
+            assert_eq!(
+                far_lines("2026-03-05", covers, "s_mar"),
+                save("2026-03-05", "+25 days"),
+                "save, covers {covers}"
+            );
+        }
+        let hole = "?\"which day?\"";
+        assert_eq!(
+            far_lines(hole, "save", "r_mar"),
+            konto("2026-03-30", "+0 days"),
+            "a hole day, konto"
+        );
+        assert_eq!(
+            far_lines(hole, "save", "s_mar"),
+            save("2026-03-30", "+0 days"),
+            "a hole day, save"
+        );
     }
 }
