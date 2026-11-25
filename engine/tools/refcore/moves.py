@@ -1765,6 +1765,10 @@ def m_status(self, i, ctx):
         # in for it by the name alone, its refusal too (E §4.1 step 3, L §5.19; tally 2.3.1 rulings 22, P32 B2); one
         # fulfilling a hole movement answers it
         st = 'modelled'
+    elif applied and isinstance(d, Hole) and i.err is None:
+        # a decision tuple whose day is a hole has no point to be booked at: a row that names it stands in for it, by
+        # the name alone, and the hole is its field reads' alone (L §5.19; tally 2.3.1 P32 B3, d3_holeday)
+        st = 'modelled'
     elif i.err is not None:
         st = 'refused'
     elif isinstance(d, Hole) or isinstance(i.exists, Hole):

@@ -631,6 +631,10 @@ class Walk:
                         self.at((d.toordinal(), 3, mi.stratum, qid, 0), 'decday', (mi, d))
                     self.decday[k].append(i)
                 elif isinstance(d, Hole):
+                    if eng.status(i, ctx) == 'modelled':
+                        # a row that names it stands in for it, by the name alone: never booked (L §5.19; tally
+                        # 2.3.1 P32 B3, d3_holeday)
+                        continue
                     self.dec_hole(i, K_before(S), d, ctx)
                 elif isinstance(i.err, RandomLine) and ctx.path is None:
                     # a decision whose day reaches a sample, outside a path: refused at the places it books only
