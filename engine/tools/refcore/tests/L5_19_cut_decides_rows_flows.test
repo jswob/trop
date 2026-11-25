@@ -1,0 +1,72 @@
+# tally 2.3.1 statement F (b), P36 R1 (L §4.5, E §4.1 step 3): as known 2026-01-07 bank[a1], dated that day, is
+# seen but not applied, so no row stands in: flows of the move reads the refused instance, as bal does (fk7,
+# ck7 RUN-DIV); a day later the row stands in (fk8 110.00). Before: fk7 110.00.
+=== b2_cut.tally
+model b2m
+  tally 2
+  on 2026-05-20
+  start 2026-01-01
+  end 2026-03-31
+
+source s "probe"
+unit PLN: currency minor 0.01
+index month = month 2026-01..2026-03
+place pot: accounts PLN lives 2026-01-01..
+place landlord: outside lives 1900-01-01..
+input bank: observed
+input amt: money PLN
+input d5: int
+input ten: int
+input dz[m in month]: int
+
+move rent[m in month]: transfers
+  on day_of(m, d5)
+  when ten / dz[m] > 0
+  leg cash from pot to landlord amount amt
+
+ask c: bal(pot, 2026-03-31)
+ask fr: flows(rent, 2026-01-01..2026-03-31)
+ask fp: flows(pot, 2026-01-01..2026-02-28)
+ask fm: flows(pot, 2026-03)
+ask kt: count(t in transfers over 2026-01-01..2026-03-31)
+ask st: sum(t.cash.amount for t in transfers over 2026-01-01..2026-02-28)
+ask fi: first(t in transfers over 2026-01-01..2026-03-31) ties by t.day
+ask la: last(t in transfers over 2026-01-01..2026-02-28) ties by t.day
+ask n: count(o in bank over 2026-01-01..2026-03-31 where o.fulfils != none)
+ask dy1: rent[2026-01].day
+ask dy2: rent[2026-02].day
+ask e1: rent[2026-01] == none
+ask e2: rent[2026-02] == none
+ask ob: observed(rent[2026-01]).cash.amount
+ask ck5: bal(pot, 2026-03-31) as known 2026-01-05
+ask ck7: bal(pot, 2026-03-31) as known 2026-01-07
+ask ck8: bal(pot, 2026-03-31) as known 2026-01-08
+ask fk7: flows(rent, 2026-01) as known 2026-01-07
+ask fk8: flows(rent, 2026-01) as known 2026-01-08
+ask kk8: count(t in transfers over 2026-01) as known 2026-01-08
+ask rs: residuals pot 2026-01-01..2026-03-31
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  amt = 100.00 PLN "s"
+  d5 = 5 "s"
+  ten = 10 "s"
+  dz[2026-01] = 0 "refused"
+  dz[2026-02] = 1 "s"
+  dz[2026-03] = 1 "s"
+  opening[pot] = 1000.00 PLN at 2026-01-01 start "s"
+
+version q1
+  cite s
+  governs 2026-01-01..2026-03-31
+  known 2026-01-02
+  bank[a1] = (on: 2026-01-07, kind: transfers, leg cash from pot to landlord amount 110.00 PLN, fulfils: rent[2026-01]) "jan"
+=== expect fk7 ck7 fk8
+fk7: refused: RUN-DIV division by zero
+  cut 2026-01-07
+ck7: refused: RUN-DIV division by zero
+  cut 2026-01-07
+fk8: 110.00 PLN
+  cut 2026-01-08

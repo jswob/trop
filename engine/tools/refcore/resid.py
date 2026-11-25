@@ -342,6 +342,10 @@ def m_residuals(self, place, span, by, ctx, unit=None):
     for i in model:
         dd = ful_last[i.id] if isinstance(i.day, Hole) else day_lo(i.day)
         mdl = self_flow(i.legs, place, unit)
+        if isinstance(getattr(i, 'exists', None), Hole) and (isinstance(mdl, Hole) or mdl != 0):
+            # its existence a hole: the model there is that hole, its difference too (L §5.14; tally 2.3.1 statement
+            # F (a), P36 R4)
+            mdl = Hole(i.exists.qs)
         os = by_target.get(i.id, [])
         seen.update(o.id for o in os)
         if not os:
