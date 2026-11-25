@@ -299,7 +299,7 @@ version st_card
 ask s4: explain bank[a1].cash.amount
 ask s5: bank[a1].cash.amount
 "#;
-        let hole = "?\"bank[a1], bank[b1] and bank[c1] are one, but the amount of cash differs on 2026-03-10: 100.00 PLN (bank[a1]), 100.00 PLN (bank[b1]) and 110.00 PLN (bank[c1])\" (bank[a1], bank[b1], bank[c1])";
+        let hole = "?\"bank[a1], bank[b1] and bank[c1] are one, but leg cash differs on 2026-03-10: 100.00 PLN (bank[a1]), 100.00 PLN (bank[b1]) and 110.00 PLN (bank[c1])\" (bank[a1], bank[b1], bank[c1])";
         let lines = lines_of("s6_reads.tally", text);
         let want = [
             format!("s4: {hole}"),

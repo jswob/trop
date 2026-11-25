@@ -97,6 +97,18 @@ fn amount_text(m: &Reality, lg: &LegVal) -> Result<String, Stop> {
     }
 }
 
+/// The positions of the legs among `legs` in unit `unit` with an end at place `p`, in their
+/// order (refcore's `consol`, its `at_p`). L §6.1 What `same` does; tally 2.3.1 N245.18.
+fn at_place(legs: &[LegVal], (p, unit): (&str, Option<&str>)) -> Vec<usize> {
+    (0..legs.len())
+        .zip(legs)
+        .filter(|(_, g)| {
+            g.unit.as_deref() == unit && (g.from.place() == Some(p) || g.to.place() == Some(p))
+        })
+        .map(|(li, _)| li)
+        .collect()
+}
+
 impl Engine {
     /// The ends of leg `lg` of `mover` its booking keeps under the `same` lines: an end the
     /// group's latest member books instead, or one waiting for a decision's point, is dropped;
@@ -391,26 +403,46 @@ impl Engine {
         p: &str,
         others: &[Member],
     ) -> Result<EndBook, Stop> {
+        let unit = lg.unit.as_deref();
         let mut touch: Vec<(&Member, &LegVal, usize)> = vec![(mover, lg, side)];
+        // the mover's leg's place among its legs at `p`, by its name, one a movement's legs
+        // never share (`LOAD-LEG`, `leg l twice`): the other side's leg there in that place
+        // is paired with it
+        let k = at_place(mover.legs(), (p, unit))
+            .into_iter()
+            .filter_map(|li| mover.legs().get(li))
+            .position(|g| g.name == lg.name)
+            .ok_or_else(|| invariant("a leg with no end at its own place"))?;
         for o in others {
             if matches!(o, Member::Plan(i) if i.status == Status::Modelled) {
                 // a plan instance modelled past is never booked (L §5.19 Coverage)
                 continue;
             }
-            let mut theirs = Vec::new();
-            for (li, sj) in self.touching(m, id, o, (p, lg.unit.as_deref()))? {
+            // each leg is compared with the other side's of its name, where it states one: two
+            // movements that agree in full leave no hole (L §6.1; N6, P36 on #241); where their
+            // names differ, each leg at `p` with the other's there by order, so each row is
+            // named once, one question per leg (tally 2.3.1 N245.18)
+            let named: Vec<usize> = (0..o.legs().len())
+                .zip(o.legs())
+                .filter(|(_, g)| g.name == lg.name)
+                .map(|(li, _)| li)
+                .collect();
+            let legs = if named.is_empty() {
+                at_place(o.legs(), (p, unit))
+                    .into_iter()
+                    .skip(k)
+                    .take(1)
+                    .collect()
+            } else {
+                named
+            };
+            for (li, sj) in self.touching(m, id, o, &legs, (p, unit))? {
                 let g = o
                     .legs()
                     .get(li)
                     .ok_or_else(|| invariant("a leg the member lacks"))?;
-                theirs.push((g, sj));
+                touch.push((o, g, sj));
             }
-            // each leg is compared with the other side's of its name, where it states one: two
-            // movements that agree in full leave no hole (L §6.1; N6, P36 on #241)
-            if theirs.iter().any(|(g, _)| g.name == lg.name) {
-                theirs.retain(|(g, _)| g.name == lg.name);
-            }
-            touch.extend(theirs.into_iter().map(|(g, sj)| (o, g, sj)));
         }
         let mut movers: Vec<&str> = touch.iter().map(|(x, _, _)| x.id()).collect();
         movers.dedup();
@@ -483,8 +515,9 @@ impl Engine {
         }
         // one movement: each side before the last books the hole its first side opened, the
         // last ends it (rulings 17 statement B)
-        let unit = lg.unit.as_deref().unwrap_or(ALL);
-        let opened = self.group_open(id, (p, unit), &ids)?.unwrap_or(hole);
+        let opened = self
+            .group_open(id, (p, unit.unwrap_or(ALL)), &ids)?
+            .unwrap_or(hole);
         Ok(if mine {
             EndBook::Close(opened)
         } else {
@@ -492,19 +525,24 @@ impl Engine {
         })
     }
 
-    /// The legs of member `o` that touch place `p` in unit `unit`, by position, each with
-    /// its side; an observed row's only where it books that end (refcore's `consol`, its
-    /// `touch`). L §6.1, §5.19 Booking an observation.
+    /// Of member `o`'s legs `legs`, by position, those that touch place `p` in unit `unit`,
+    /// each with its side; an observed row's only where it books that end (refcore's
+    /// `consol`, its `touch`). L §6.1, §5.19 Booking an observation.
     fn touching(
         &mut self,
         m: &Reality,
         id: usize,
         o: &Member,
+        legs: &[usize],
         (p, unit): (&str, Option<&str>),
     ) -> Result<Vec<(usize, usize)>, Stop> {
         let cut = self.walk(id)?.cut;
         let mut out = Vec::new();
-        for (li, g) in o.legs().iter().enumerate() {
+        for &li in legs {
+            let g = o
+                .legs()
+                .get(li)
+                .ok_or_else(|| invariant("a leg the member lacks"))?;
             if g.unit.as_deref() != unit {
                 continue;
             }
@@ -936,6 +974,142 @@ ask b_after: bal(wallet, 2026-04-30)
                 "b_between: ?\"pay and top are one, but leg cash differs on 2026-04-02, 2026-04-09: 40.00 PLN (pay) and 40.00 PLN (top)\" (pay, top)"
             ],
             "known after both days"
+        );
+    }
+
+    /// The asks' lines of `text`, a model named `name`, that start with one of `asks`.
+    fn lines_of(name: &str, text: &str, asks: &[&str]) -> Vec<String> {
+        let given = vec![Given {
+            path: name.to_owned(),
+            bytes: Some(text.as_bytes().to_vec()),
+        }];
+        let answer = run(Files::new(given), &Request::new(Asks::Every)).expect("an answer");
+        answer
+            .lines()
+            .iter()
+            .filter(|line| asks.iter().any(|a| line.starts_with(&format!("{a}: "))))
+            .cloned()
+            .collect()
+    }
+
+    /// Two rows stated `same` whose kinds name their legs differently, each with two legs
+    /// from konto, the second side's both larger (W9's probe `sm18`).
+    const NAMES_DIFFER: &str = r#"model sm18
+  tally 2
+  on 2026-05-20
+  start 2026-01-01
+  end 2026-03-31
+
+source s "probe"
+unit PLN: currency minor 0.01
+kind paid: event certain
+  leg cash: PLN
+  leg fee: PLN
+kind cpaid: event certain
+  leg pay: PLN
+  leg charge: PLN
+place konto: accounts PLN lives 2026-01-01..
+place karta: accounts PLN lives 2026-01-01..
+place bankfee: outside lives 1900-01-01..
+input bank: observed
+input card: observed
+
+ask b: bal(konto, 2026-03-31)
+ask c2: bal(karta, 2026-03-31)
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  opening[konto] = 1 000.00 PLN at 2026-01-01 start "s"
+  opening[karta] = 1 000.00 PLN at 2026-01-01 start "s"
+
+version q1
+  cite s
+  governs 2026-01-01..2026-03-31
+  known 2026-04-01
+  covers konto, karta
+  bank[a1] = (on: 2026-01-07, kind: paid, leg cash from konto to karta amount 100.00 PLN, leg fee from konto to bankfee amount 2.00 PLN) "bank"
+  card[b1] = (on: 2026-01-07, kind: cpaid, leg pay from konto to karta amount 110.00 PLN, leg charge from konto to bankfee amount 3.00 PLN) "card"
+  same card[b1] = bank[a1]
+"#;
+
+    #[test]
+    fn sides_whose_leg_names_differ_pair_their_legs_by_order() {
+        // L §6.1 What `same` does, §8.1 (tally 2.3.1 N245.18): at a place, each leg with the
+        // other side's there in the same order, each row named once, one question per leg
+        let at = |place: &str, a: &str, b: &str| {
+            format!(
+                "?\"bank[a1] and card[b1] are one, but the leg at {place} differs on 2026-01-07: \
+                 {a} PLN (bank[a1]) and {b} PLN (card[b1])\" (bank[a1], card[b1])"
+            )
+        };
+        assert_eq!(
+            lines_of("sm18.tally", NAMES_DIFFER, &["b", "c2"]),
+            [
+                format!(
+                    "b: {} {}",
+                    at("konto", "100.00", "110.00"),
+                    at("konto", "2.00", "3.00")
+                ),
+                format!("c2: {}", at("karta", "100.00", "110.00")),
+            ],
+            "cash with pay, fee with charge"
+        );
+    }
+
+    /// One transfer seen by two rows stated `same`, a day apart, of different amounts (W9's
+    /// probe `s1_same`, cut down).
+    const DAYS_APART: &str = r#"model s1
+  tally 2
+  on 2026-05-20
+  start 2026-01-01
+  end 2026-03-31
+
+source s "probe"
+unit PLN: currency minor 0.01
+place konto: accounts PLN lives 2026-01-01..
+place sav: accounts PLN lives 2026-01-01..
+input bank: observed
+input card: observed
+
+ask ob: bank[a1].cash.amount
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  opening[konto] = 1000.00 PLN at 2026-01-01 start "s"
+  opening[sav] = 0.00 PLN at 2026-01-01 start "s"
+
+version q1
+  cite s
+  governs 2026-01-01..2026-03-31
+  known 2026-04-01
+  covers konto
+  bank[a1] = (on: 2026-01-07, kind: transfers, leg cash from konto to sav amount 100.00 PLN) "jan"
+
+version q2
+  cite s
+  governs 2026-01-01..2026-03-31
+  known 2026-04-01
+  covers sav
+  card[b1] = (on: 2026-01-08, kind: transfers, leg cash from konto to sav amount 110.00 PLN) "jan, the other side"
+  same card[b1] = bank[a1]
+"#;
+
+    #[test]
+    fn an_amount_that_differs_names_the_leg_and_both_days() {
+        // L §8.1 HOLE-SAME (tally 2.3.1 N245.3, N245.20): one question in the leg's form, on
+        // every side's day
+        assert_eq!(
+            lines_of("s1.tally", DAYS_APART, &["ob"]),
+            [
+                "ob: ?\"bank[a1] and card[b1] are one, but leg cash differs on 2026-01-07, \
+                 2026-01-08: 100.00 PLN (bank[a1]) and 110.00 PLN (card[b1])\" (bank[a1], card[b1])"
+                    .to_owned()
+            ],
+            "the read's question as the booking's"
         );
     }
 }
