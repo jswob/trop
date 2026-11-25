@@ -66,12 +66,12 @@ version jan
   covers pot
   bank[a1] = (on: 2026-01-05, kind: transfers, leg cash from pot to landlord amount 100.00 PLN, fulfils: rent[2026-01]) "names jan"
 === expect
-a: refused: RUN-DIV division by zero
+a: 100.00 PLN
   cut 2026-05-20
 b: 100.00 PLN
   unfulfilled: rent[2026-03]
   cut 2026-05-20
-c: refused: RUN-DIV division by zero
+c: 8 700.00 PLN
   unfulfilled: rent[2026-02]
   unfulfilled: rent[2026-03]
   cut 2026-05-20

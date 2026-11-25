@@ -1355,6 +1355,9 @@ class Asker:
             return getattr(a.exprs[i], '_t', None)
         if a.form == 'solve':
             return getattr(a.solve, '_t', None)
+        if a.form == 'explain' and getattr(a, 'ref', None) is not None:
+            # its head in the item's type, as a plain ask's (L §2.4 Values; tally 2.3.1 R4, Q2.16)
+            return getattr(a.ref, '_t', None)
         return None
 
     def register(self, coll, reading, ctx, samples=False, laws=None, unknown=()):
@@ -2045,7 +2048,7 @@ class Asker:
         self._seen[ident] = self._no
         no = self._no
         if tn.kind == 'row':
-            out.append('%s[%d] row %s = %s' % (ind, no, tn.label, fmt_value(tn.value)))
+            out.append('%s[%d] row %s = %s' % (ind, no, tn.label, fmt_value(tn.value, t=getattr(tn, '_t', None))))
             for l in tn.lines:
                 out.append('%s    %s' % (ind, l))
             return

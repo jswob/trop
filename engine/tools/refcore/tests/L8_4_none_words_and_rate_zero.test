@@ -1,0 +1,73 @@
+# tally 2.3.1 R4, P31 (L §8.4's RUN-NONE row: the read and the built-in's name; ordering, aggregate's terms by the
+# built-in; L §2.4 l.342: a value of a unit prints with it, 0 included; Q2.16: a declared num % row in its
+# type): min, max, abs, age_months, sum and max over a none term name the read and the built-in, `<` is
+# `ordering` (n_*); r - r is 0 /year (q_r0); explain p's row is 1 % (e_p; its head still prints 0.01, for the
+# writer's next turn). Before: `a value is none here: min` (max, abs, age), `a term of sum is none here`, `an
+# ordering`, `0 1/year`, the row 0.01.
+=== w9a.tally
+model w9a
+  tally 2
+  on 2026-06-30
+  start 2026-01-01
+  end 2026-12-31
+
+source s "probe"
+unit PLN: currency minor 0.01
+index ks = [a, b]
+input r: rate
+input p: num %
+input xn: num
+input x1: num
+input d0: date
+input dn: date
+input tn[k in ks]: num
+
+ask q_r0: r - r
+ask q_rr: r + r
+ask e_p: explain p
+ask q_p: p
+ask n_min: min(xn, x1)
+ask n_max: max(xn, x1)
+ask n_abs: abs(xn)
+ask n_lt: xn < x1
+ask n_sum: sum(tn[k] for k in ks)
+ask n_mx: max(tn[k] for k in ks)
+ask n_age: age_months(dn, d0)
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  r = 4 %/year "s"
+  p = 1 % "s"
+  xn = none "s"
+  x1 = 1 "s"
+  d0 = 2026-03-01 "s"
+  dn = none "s"
+  tn[a] = 1 "s"
+  tn[b] = none "s"
+=== expect
+e_p: 0.01
+  [1] row v:p = 1 %
+      version v, source s, "probe", locator "s", governs always, known 2026-01-01
+  cut 2026-06-30
+n_abs: refused: RUN-NONE xn is none here: abs
+  cut 2026-06-30
+n_age: refused: RUN-NONE dn is none here: age_months
+  cut 2026-06-30
+n_lt: refused: RUN-NONE xn is none here: ordering
+  cut 2026-06-30
+n_max: refused: RUN-NONE xn is none here: max
+  cut 2026-06-30
+n_min: refused: RUN-NONE xn is none here: min
+  cut 2026-06-30
+n_mx: refused: RUN-NONE tn[b] is none here: max
+  cut 2026-06-30
+n_sum: refused: RUN-NONE tn[b] is none here: sum
+  cut 2026-06-30
+q_p: 1 %
+  cut 2026-06-30
+q_r0: 0 /year
+  cut 2026-06-30
+q_rr: 0.08 /year
+  cut 2026-06-30

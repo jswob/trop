@@ -188,8 +188,8 @@ ask ed: explain dl[2026-02]
 qo: ?"own[2026-02] on 2026-02-05 changed after it was paid (version febk); is back pay due, and when?" (own[2026-02])
   unfulfilled: own[2026-02]
   cut 2026-04-20
-emx: refused: RUN-ORDER decisions dd and dr read each other on 2026-02-05
-  [1] mx[2026-02] = refused: RUN-ORDER decisions dd and dr read each other on 2026-02-05
+emx: 10.00 PLN
+  [1] mx[2026-02] = 10.00 PLN
       rule base: won
         [2] dl[2026-02] = 0.00 PLN, law date 2026-02-01
             rule guessed: beaten by seen
@@ -276,8 +276,8 @@ emx: refused: RUN-ORDER decisions dd and dr read each other on 2026-02-05
         [34] row v:lim = -100 000.00 PLN
             version v, source s, "probe", locator "s", governs always, known 2026-01-01
   cut 2026-04-20
-exm: refused: RUN-ORDER decisions dd and dr read each other on 2026-02-05
-  [1] xm[2026-02] = refused: RUN-ORDER decisions dd and dr read each other on 2026-02-05
+exm: 10.00 PLN
+  [1] xm[2026-02] = 10.00 PLN
       rule base: won
         [2] row v:ten = 10
             version v, source s, "probe", locator "s", governs always, known 2026-01-01
@@ -360,6 +360,9 @@ exm: refused: RUN-ORDER decisions dd and dr read each other on 2026-02-05
         [32] running read bal(konto) = 0.00 PLN, the balance up to this point of 2026-01-05
         [33] row v:lim = -100 000.00 PLN
             version v, source s, "probe", locator "s", governs always, known 2026-01-01
+        [34] dl[2026-02] = 0.00 PLN, law date 2026-02-01
+            rule guessed: beaten by seen
+            rule seen: won
   cut 2026-04-20
 edw: 0.00 PLN
   [1] dw[2026-02] = 0.00 PLN, law date 2026-02-01

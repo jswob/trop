@@ -2076,7 +2076,9 @@ def m_flows_move(self, n, sp, fk, env, ctx):
     for i in insts:
         if keys and tuple(vkey(k) for k in i.keys[:len(keys)]) != tuple(keys):
             continue
-        if i.id in named and (getattr(i, '_rawhole', False) or isinstance(i.day, Hole)) and i.err is None:
+        if i.id in named and (getattr(i, '_rawhole', False) or isinstance(i.day, Hole) or i.err is not None or
+                              (mi.decision and getattr(i, 'status', None) == 'refused')):
+            # a refused one too: the rows stand in by the name alone (tally 2.3.1 P32 B2)
             by_rows.add(i.id)
             continue
         if getattr(i, '_rawhole', False):

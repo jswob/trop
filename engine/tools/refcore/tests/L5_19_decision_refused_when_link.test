@@ -74,27 +74,22 @@ eb: refused: RUN-DIV division by zero
             version v, source s, "probe", locator "s", governs always, known 2026-01-01
         [3] bal(konto, 2026-03-31) = refused: RUN-DIV division by zero
   cut 2026-04-20
-ef: refused: RUN-DIV division by zero
-  [1] fl = refused: RUN-DIV division by zero
+ef: 400.00 PLN
+  [1] fl = 400.00 PLN
       rule base: won
         [2] row v:fm = 2026-02
             version v, source s, "probe", locator "s", governs always, known 2026-01-01
         [3] row v:d5 = 5
             version v, source s, "probe", locator "s", governs always, known 2026-01-01
-        [4] running read bal(konto) = 100.00 PLN, the balance up to this point of 2026-01-05
-        [5] row v:lim = 600.00 PLN
-            version v, source s, "probe", locator "s", governs always, known 2026-01-01
-        [6] row v:zz = 0
-            version v, source s, "probe", locator "s", governs always, known 2026-01-01
   cut 2026-04-20
-f: refused: RUN-DIV division by zero
+f: 400.00 PLN
   cut 2026-04-20
 ful: 1
   cut 2026-04-20
 iof:
+  bank[r1] (source s "probe", locator "the top-up")
   v:d5 (source s "probe", locator "s")
   v:fm (source s "probe", locator "s")
-  v:opening[konto] (source s "probe", locator "s")
   cut 2026-04-20
 loose: 30.00 PLN
   cut 2026-04-20
