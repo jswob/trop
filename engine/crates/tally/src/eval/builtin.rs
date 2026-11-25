@@ -185,17 +185,14 @@ impl Engine {
             .try_into()
             .map_err(|_| arity())?;
         // refusals outrank holes (L §8; pick P12): each argument in written order, `none`
-        // refused (an operand named as written, P3), a known one's own check run, a hole's
-        // waiting
-        if x == Value::None {
-            return Err(none_arg(m, call, 0, env, "arithmetic"));
-        }
-        if u == Value::None {
-            return Err(none_arg(m, call, 1, env, "arithmetic"));
-        }
+        // refused (named as written and by the built-in, R4), a known one's own check run, a
+        // hole's waiting
+        named_none(m, call, (0, &x), env)?;
+        named_none(m, call, (1, &u), env)?;
         if given(&u, "round")? {
             positive_step(m, &u)?;
         }
+        named_none(m, call, (2, &mode), env)?;
         if given(&mode, "round")? {
             rounding_mode(m, "round", &mode)?;
         }
@@ -460,6 +457,26 @@ fn none_arg(m: &Reality, call: &Call, i: usize, env: &Env, use_word: &str) -> St
         Some(e) => none_here(m, e, env, use_word),
         None => invariant("a value of an argument the call doesn't hold"),
     }
+}
+
+/// Argument `i` of built-in `call`, `v`, where it is `none`: refused by its read as written
+/// and the built-in's name (`rate[k2] is none here: accrue`), before that argument's own
+/// check runs; nothing for another value (refcore's `known_first`). L §8.4 `RUN-NONE`'s row
+/// (tally 2.3.1 R4, N256.8, Q1.13), §8 What an operation decides.
+///
+/// # Errors
+///
+/// `RUN-NONE` for `none`.
+pub(super) fn named_none(
+    m: &Reality,
+    call: &Call,
+    (i, v): (usize, &Value),
+    env: &Env,
+) -> Result<(), Stop> {
+    if *v == Value::None {
+        return Err(none_arg(m, call, i, env, &call.name));
+    }
+    Ok(())
 }
 
 /// A call with the wrong number of arguments: load refuses it, so here it is an invariant.
@@ -965,4 +982,100 @@ pub(super) fn power_past_64_bits(base: &Num, e: &Num) -> Result<Num, Stop> {
         return Ok(if even { one } else { Num::int(-1) });
     }
     Err(num_stop(NumError::Digits))
+}
+
+#[cfg(test)]
+mod tests {
+    use crate::api::{Asks, Files, Given, Request, run};
+
+    /// `none` met by a condition, a membership test and the built-ins whose checks read one
+    /// argument (tally 2.3.1 R4).
+    const NONE_WORDS: &str = r#"model none_words
+  tally 2
+  on 2026-06-30
+  start 2026-01-01
+  end 2026-12-31
+
+source s "invented"
+unit PLN: currency minor 0.01
+index ks = [a, b]
+input ok[k in ks]: bool
+input st[k in ks]: key ks
+input r[k in ks]: rate
+input p: money PLN
+input d0: date
+input d1: date
+input dn: date
+input kn: int
+input mn: month
+input md: rounding
+input cal: calendar
+
+ask c_if: if ok[b] then d0 else d1
+ask c_and: ok[a] and ok[b]
+ask c_or: ok[b] or ok[a]
+ask c_not: not ok[b]
+ask c_in: count(k in ks where st[k] in [a])
+ask c_acc: accrue(p, r[k], d0, d1, act365, effective) for k in ks
+ask c_per: periodic(r[b], year, effective)
+ask c_dcf: dcf(d0, dn, act365)
+ask c_rnd: round(p, p, md)
+ask c_bus: add_business(d0, kn, cal)
+ask c_lst: last_business(mn, kn, cal)
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  ok[a] = true "s"
+  ok[b] = none "s"
+  st[a] = a "s"
+  st[b] = none "s"
+  r[a] = 5 %/year "s"
+  r[b] = none "s"
+  p = 100.00 PLN "s"
+  d0 = 2026-01-01 "s"
+  d1 = 2027-01-01 "s"
+  dn = none "s"
+  kn = none "s"
+  mn = 2026-03 "s"
+  md = none "s"
+  cal = calendar(weekends [sat, sun], added []) "s"
+"#;
+
+    #[test]
+    fn none_is_refused_by_its_read_and_its_use() {
+        // L §8.4 `RUN-NONE`'s row (tally 2.3.1 R4, Q2.37, N256.8, Q1.13): `if`, `and`, `or`
+        // and `not` are a condition, a membership test is one, a built-in names itself, and
+        // each names the read that gave none
+        let given = vec![Given {
+            path: "none.tally".to_owned(),
+            bytes: Some(NONE_WORDS.as_bytes().to_vec()),
+        }];
+        let lines: Vec<String> = run(Files::new(given), &Request::new(Asks::Every))
+            .expect("an answer")
+            .lines()
+            .iter()
+            .filter(|l| !l.starts_with(' '))
+            .cloned()
+            .collect();
+        assert_eq!(
+            lines,
+            [
+                "c_acc (k = a): 5 PLN",
+                "c_acc (k = b): refused: RUN-NONE r[b] is none here: accrue",
+                "c_and: refused: RUN-NONE ok[b] is none here: a condition",
+                "c_bus: refused: RUN-NONE kn is none here: add_business",
+                "c_dcf: refused: RUN-NONE dn is none here: dcf",
+                "c_if: refused: RUN-NONE ok[b] is none here: a condition",
+                "c_in: refused: RUN-NONE st[b] is none here: a membership test",
+                "c_lst: refused: RUN-NONE kn is none here: last_business",
+                "c_not: refused: RUN-NONE ok[b] is none here: a condition",
+                "c_or: refused: RUN-NONE ok[b] is none here: a condition",
+                "c_per: refused: RUN-NONE r[b] is none here: periodic",
+                "c_rnd: refused: RUN-NONE md is none here: round",
+            ],
+            "refcore's bytes"
+        );
+    }
 }

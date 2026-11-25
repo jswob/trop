@@ -11,7 +11,7 @@
 //! power that isn't an integer stops `NotBuilt` (`to u`, the transcendental kernel, is M6's);
 //! nothing here rounds.
 
-use super::builtin::power_past_64_bits;
+use super::builtin::{named_none, power_past_64_bits};
 use super::dates::{daycount_of, year_fraction_of};
 use super::expr::hole_of;
 use super::state::{
@@ -42,15 +42,21 @@ impl Engine {
         };
         let what = call.name.as_str();
         // refusals outrank holes (L §8; pick P12): each argument in written order, `none`
-        // refused, a known one's own check run, a hole's waiting; the rate's check reads the
-        // period word, which load fixes
+        // refused (named as written and by the built-in, R4), a known one's own check run, a
+        // hole's waiting; the rate's check reads the period word, which load fixes
+        named_none(m, call, (0, rate), env)?;
         let share = given(rate, what)?
             .then(|| rate_share(m, rate, period, what))
             .transpose()?;
         let times = match count {
-            Some(n) => given(n, what)?.then(|| plain_count(m, n)).transpose()?,
+            Some(n) => {
+                named_none(m, call, (1, n), env)?;
+                given(n, what)?.then(|| plain_count(m, n)).transpose()?
+            }
             None => None,
         };
+        let last = vals.len().checked_sub(1).ok_or_else(arity)?;
+        named_none(m, call, (last, code), env)?;
         let how = given(code, what)?
             .then(|| compounding(m, what, code).and_then(nominal_positive))
             .transpose()?;
@@ -100,16 +106,23 @@ impl Engine {
         };
         let what = "accrue";
         // refusals outrank holes (L §8; pick P12): each argument in written order, `none`
-        // refused, a known one's own check run, a hole's waiting
+        // refused (named as written and by the built-in, R4), a known one's own check run, a
+        // hole's waiting
+        named_none(m, call, (0, principal), env)?;
         let principal = given(principal, what)?
             .then(|| principal_of(m, principal))
             .transpose()?;
+        named_none(m, call, (1, rate), env)?;
         let r = given(rate, what)?.then(|| yearly(m, rate)).transpose()?;
+        named_none(m, call, (2, from), env)?;
         day_given(from, what)?;
+        named_none(m, call, (3, to), env)?;
         day_given(to, what)?;
+        named_none(m, call, (4, daycount), env)?;
         if given(daycount, what)? {
             daycount_of(m, daycount)?;
         }
+        named_none(m, call, (5, code), env)?;
         let how = given(code, what)?
             .then(|| compounding(m, what, code).and_then(accrual))
             .transpose()?;

@@ -411,7 +411,8 @@ impl Engine {
             return flex_branch(m, value, kept);
         }
         if test == Value::None {
-            return Err(refuse(Run::None, "a value is none here: if".to_owned()));
+            // a condition, named by its read (L §8.4 `RUN-NONE`'s row; tally 2.3.1 R4, Q2.37)
+            return Err(super::bindings::none_here(m, cond, env, "a condition"));
         }
         let Value::Hole(cond_hole) = test else {
             return Err(not_typed());
@@ -455,10 +456,7 @@ impl Engine {
         env: &Env,
         ctx: Ctx,
     ) -> Result<Value, Stop> {
-        let (word, any) = match kind {
-            Logic::Any => ("or", true),
-            Logic::All => ("and", false),
-        };
+        let any = kind == Logic::Any;
         if kind == Logic::All
             && !m.narrow_tests.is_empty()
             && self.narrowed_false(m, terms, env, ctx)?
@@ -473,7 +471,7 @@ impl Engine {
                 return Ok(Value::Bool(any));
             }
             let v = self.ev(m, term, env, ctx)?;
-            let v = boolean(v, word)?;
+            let v = boolean(m, v, (term, env))?;
             if v == Value::Bool(any) {
                 return Ok(Value::Bool(any));
             }
@@ -520,7 +518,7 @@ impl Engine {
     /// `not e` (refcore's `e_not`). L §5.11.
     fn not(&mut self, m: &Reality, x: &Expr, env: &Env, ctx: Ctx) -> Result<Value, Stop> {
         let v = self.ev(m, x, env, ctx)?;
-        let tested = boolean(v, "not")?;
+        let tested = boolean(m, v, (x, env))?;
         if let Value::Bool(holds) = tested {
             return Ok(Value::Bool(!holds));
         }
@@ -620,9 +618,12 @@ impl Engine {
             return Ok(member);
         }
         if member == Value::None {
-            return Err(refuse(
-                Run::None,
-                "a value is none here: a membership test".to_owned(),
+            // named by its read (L §8.4 `RUN-NONE`'s row; tally 2.3.1 R4, Q2.37)
+            return Err(super::bindings::none_here(
+                m,
+                &x.member,
+                env,
+                "a membership test",
             ));
         }
         if let Expr::List(items) = &x.set {
@@ -939,13 +940,16 @@ pub(crate) fn hole_of(operands: &[Option<&Hole>]) -> Result<Value, Stop> {
         .ok_or_else(|| invariant("a hole spread over operands that hold none"))
 }
 
-/// A value in a logic position: a bool, or a hole; `none` is refused (L §3.1, §5.11).
-fn boolean(v: Value, word: &str) -> Result<Value, Stop> {
+/// A value in a logic position, the value of `term`: a bool, or a hole; `none` is refused,
+/// named by the term as written, each variable a binding gave printed as its value
+/// (`ok[b] is none here: a condition`). L §3.1, §5.11, §8.4 `RUN-NONE`'s row (tally 2.3.1 R4,
+/// Q2.37: `if`, `and`, `or` and `not` are a condition).
+fn boolean(m: &Reality, v: Value, (term, env): (&Expr, &Env)) -> Result<Value, Stop> {
     if let Value::Bool(_) | Value::Hole(_) = v {
         return Ok(v);
     }
     if v == Value::None {
-        return Err(refuse(Run::None, format!("a value is none here: {word}")));
+        return Err(super::bindings::none_here(m, term, env, "a condition"));
     }
     Err(not_typed())
 }

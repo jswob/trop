@@ -14,6 +14,7 @@
 //! the built-in and each unknown day.
 
 use super::arith::whole_of;
+use super::builtin::named_none;
 use super::expr::hole_of;
 use super::state::{Ctx, Engine, Env, invariant, num_stop, refuse, refuse_load};
 use super::state::{a_day, not_typed, past_days};
@@ -240,8 +241,10 @@ impl Engine {
             .try_into()
             .map_err(|_| arity())?;
         // refusals outrank holes (L §8; pick P12): each argument in written order, a known
-        // one's own check run (`none` among them), a hole or a window's waiting
-        for day in [&a, &b] {
+        // one's own check run (`none` among them, a day named as written and by the built-in,
+        // R4), a hole or a window's waiting; the day count's `none` is its code's refusal
+        for (i, day) in [&a, &b].into_iter().enumerate() {
+            named_none(m, call, (i, day), env)?;
             let day = single(day);
             if day.as_hole().is_none() && !matches!(*day, Value::Window(_)) {
                 dcf_day(m, &day)?;
