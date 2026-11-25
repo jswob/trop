@@ -50100,18 +50100,18 @@ ask fw: flows(wage, 2026-05-01 .. 2026-05-31)
 ask fw3: flows(wage, 2026-03-01 .. 2026-05-31)
 ask bk: bal(konto, 2026-05-31)
 ask ew: explain bal(konto, 2026-05-31)
-,,1:0,2956:fw: ?"bank[c1] and bank[r1] are one, but the amount of cash differs on 2026-05-15: 400.00 PLN (bank[c1]) and 500.00 PLN (bank[r1])" (bank[c1], bank[r1])
-  adjustment: wage[2026-03] by 500.00 PLN on 2026-05-01 (version raise_2026), remaining ?"bank[c1] and bank[r1] are one, but the amount of cash differs on 2026-05-15: 400.00 PLN (bank[c1]) and 500.00 PLN (bank[r1])" (bank[c1], bank[r1])
+,,1:0,2896:fw: ?"bank[c1] and bank[r1] are one, but leg cash differs on 2026-05-15: 400.00 PLN (bank[c1]) and 500.00 PLN (bank[r1])" (bank[c1], bank[r1])
+  adjustment: wage[2026-03] by 500.00 PLN on 2026-05-01 (version raise_2026), remaining ?"bank[c1] and bank[r1] are one, but leg cash differs on 2026-05-15: 400.00 PLN (bank[c1]) and 500.00 PLN (bank[r1])" (bank[c1], bank[r1])
   unfulfilled: wage[2026-05]
   cut 2026-10-20
-fw3: ?"bank[c1] and bank[r1] are one, but the amount of cash differs on 2026-05-15: 400.00 PLN (bank[c1]) and 500.00 PLN (bank[r1])" (bank[c1], bank[r1])
-  adjustment: wage[2026-03] by 500.00 PLN on 2026-05-01 (version raise_2026), remaining ?"bank[c1] and bank[r1] are one, but the amount of cash differs on 2026-05-15: 400.00 PLN (bank[c1]) and 500.00 PLN (bank[r1])" (bank[c1], bank[r1])
+fw3: ?"bank[c1] and bank[r1] are one, but leg cash differs on 2026-05-15: 400.00 PLN (bank[c1]) and 500.00 PLN (bank[r1])" (bank[c1], bank[r1])
+  adjustment: wage[2026-03] by 500.00 PLN on 2026-05-01 (version raise_2026), remaining ?"bank[c1] and bank[r1] are one, but leg cash differs on 2026-05-15: 400.00 PLN (bank[c1]) and 500.00 PLN (bank[r1])" (bank[c1], bank[r1])
   unfulfilled: wage[2026-03]
   unfulfilled: wage[2026-04]
   unfulfilled: wage[2026-05]
   cut 2026-10-20
 bk: ?"bank[c1] and bank[r1] are one, but leg cash differs on 2026-05-15: 400.00 PLN (bank[c1]) and 500.00 PLN (bank[r1])" (bank[c1], bank[r1])
-  adjustment: wage[2026-03] by 500.00 PLN on 2026-05-01 (version raise_2026), remaining ?"bank[c1] and bank[r1] are one, but the amount of cash differs on 2026-05-15: 400.00 PLN (bank[c1]) and 500.00 PLN (bank[r1])" (bank[c1], bank[r1])
+  adjustment: wage[2026-03] by 500.00 PLN on 2026-05-01 (version raise_2026), remaining ?"bank[c1] and bank[r1] are one, but leg cash differs on 2026-05-15: 400.00 PLN (bank[c1]) and 500.00 PLN (bank[r1])" (bank[c1], bank[r1])
   unfulfilled: wage[2026-01]
   unfulfilled: wage[2026-02]
   unfulfilled: wage[2026-03]
@@ -50134,7 +50134,7 @@ ew: ?"bank[c1] and bank[r1] are one, but leg cash differs on 2026-05-15: 400.00 
   2026-05-15:
     bank[c1].cash (observed): hole: ?"bank[c1] and bank[r1] are one, but leg cash differs on 2026-05-15: 400.00 PLN (bank[c1]) and 500.00 PLN (bank[r1])" (bank[c1], bank[r1])
     bank[r1].cash (observed): hole: ?"bank[c1] and bank[r1] are one, but leg cash differs on 2026-05-15: 400.00 PLN (bank[c1]) and 500.00 PLN (bank[r1])" (bank[c1], bank[r1])
-  adjustment: wage[2026-03] by 500.00 PLN on 2026-05-01 (version raise_2026), remaining ?"bank[c1] and bank[r1] are one, but the amount of cash differs on 2026-05-15: 400.00 PLN (bank[c1]) and 500.00 PLN (bank[r1])" (bank[c1], bank[r1])
+  adjustment: wage[2026-03] by 500.00 PLN on 2026-05-01 (version raise_2026), remaining ?"bank[c1] and bank[r1] are one, but leg cash differs on 2026-05-15: 400.00 PLN (bank[c1]) and 500.00 PLN (bank[r1])" (bank[c1], bank[r1])
   unfulfilled: wage[2026-01]
   unfulfilled: wage[2026-02]
   unfulfilled: wage[2026-03]
@@ -108028,9 +108028,9 @@ version join_b
 ask fp: flows(tip, 2026-03)
 ask f3: flows(save, 2026-03)
 ask b3: bal(sav, 2026-03-31), bal(konto, 2026-03-31)
-,,1:0,1013:fp: ?"bank[q1] and bank[q2] are one, but the amount of cash differs on 2026-03-20: 35.00 PLN (bank[q1]) and 30.00 PLN (bank[q2])" (bank[q1], bank[q2])
+,,1:0,993:fp: ?"bank[q1] and bank[q2] are one, but leg cash differs on 2026-03-20: 35.00 PLN (bank[q1]) and 30.00 PLN (bank[q2])" (bank[q1], bank[q2])
   cut 2026-06-10
-f3: ?"bank[r1], bank[r2] and bank[r3] are one, but the amount of cash differs on 2026-03-15: 950.00 PLN (bank[r1]), 950.00 PLN (bank[r2]) and 940.00 PLN (bank[r3])" (bank[r1], bank[r2], bank[r3])
+f3: ?"bank[r1], bank[r2] and bank[r3] are one, but leg cash differs on 2026-03-15: 950.00 PLN (bank[r1]), 950.00 PLN (bank[r2]) and 940.00 PLN (bank[r3])" (bank[r1], bank[r2], bank[r3])
   cut 2026-06-10
 b3: (?"bank[r2] and bank[r3] are one, but leg cash differs on 2026-03-15: 950.00 PLN (bank[r2]) and 940.00 PLN (bank[r3])" (bank[r2], bank[r3]), 100.00 PLN)
   cut 2026-06-10
@@ -110230,7 +110230,7 @@ version rd
   known 2026-04-03
   anchor konto
   stated[konto] = 70.00 PLN at 2026-03-10 end "saldo"
-,,1:0,614:q_konto: 70.00 PLN
+,,1:0,806:q_konto: 70.00 PLN
   anchor: konto 2026-03-10 end, stated 70.00 PLN, difference -20.00 PLN
   cut 2026-06-30
 q_last: 70.00 PLN
@@ -110239,6 +110239,8 @@ q_last: 70.00 PLN
 q_led: residuals konto 2026-03
   2026-03 balance: model 90.00 PLN, observed 70.00 PLN, difference -20.00 PLN
     balance konto 2026-03-10 end (anchored): booked 90.00 PLN, stated 70.00 PLN, gap -20.00 PLN
+  2026-03 move sw: model 0.00 PLN, observed -10.00 PLN, difference -10.00 PLN
+    matched sw[2026-03] on 2026-03-10: model 0.00 PLN, observed -10.00 PLN, difference -10.00 PLN, timing +0 days
   cut 2026-06-30
 q_obs: 10.00 PLN
   cut 2026-06-30
@@ -110391,7 +110393,7 @@ version sm
   cite s
   known 2026-01-02
   same pay[9] = pay[10]
-,,1:0,997:l (x = pay[1]): 500.00 PLN
+,,1:0,1043:l (x = pay[1]): 500.00 PLN
   unfulfilled: pay[1]
   cut 2026-04-10
 l (x = pay[2]): 500.00 PLN
@@ -110416,6 +110418,7 @@ l (x = pay[8]): 500.00 PLN
   unfulfilled: pay[8]
   cut 2026-04-10
 l (x = pay[9]): 500.00 PLN
+  unfulfilled: pay[10]
   unfulfilled: pay[9]
   cut 2026-04-10
 l (x = pay[11]): 500.00 PLN
@@ -110425,6 +110428,7 @@ l (x = pay[12]): 500.00 PLN
   unfulfilled: pay[12]
   cut 2026-04-10
 n: 11
+  unfulfilled: pay[10]
   unfulfilled: pay[11]
   unfulfilled: pay[12]
   unfulfilled: pay[1]
@@ -110471,7 +110475,7 @@ version sm
   cite s
   known 2026-01-02
   same pay[10] = pay[9]
-,,1:0,997:l (x = pay[1]): 500.00 PLN
+,,1:0,1043:l (x = pay[1]): 500.00 PLN
   unfulfilled: pay[1]
   cut 2026-04-10
 l (x = pay[2]): 500.00 PLN
@@ -110496,6 +110500,7 @@ l (x = pay[8]): 500.00 PLN
   unfulfilled: pay[8]
   cut 2026-04-10
 l (x = pay[9]): 500.00 PLN
+  unfulfilled: pay[10]
   unfulfilled: pay[9]
   cut 2026-04-10
 l (x = pay[11]): 500.00 PLN
@@ -110505,6 +110510,7 @@ l (x = pay[12]): 500.00 PLN
   unfulfilled: pay[12]
   cut 2026-04-10
 n: 11
+  unfulfilled: pay[10]
   unfulfilled: pay[11]
   unfulfilled: pay[12]
   unfulfilled: pay[1]
@@ -110551,13 +110557,15 @@ version sm
   cite s
   known 2026-01-02
   same pay[aa] = pay[zz]
-,,1:0,204:l (x = pay[zz]): 500.00 PLN
+,,1:0,250:l (x = pay[zz]): 500.00 PLN
+  unfulfilled: pay[aa]
   unfulfilled: pay[zz]
   cut 2026-04-10
 l (x = pay[mm]): 500.00 PLN
   unfulfilled: pay[mm]
   cut 2026-04-10
 n: 2
+  unfulfilled: pay[aa]
   unfulfilled: pay[mm]
   unfulfilled: pay[zz]
   cut 2026-04-10

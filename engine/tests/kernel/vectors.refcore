@@ -2604,12 +2604,11 @@ version mbank_2026_09
   bank[r20260926a] = (on: 2026-09-26, kind: spending, leg cash from konto to niewyjasnione amount 120.00 PLN, cat: other) "RESTAURACJA"
   bank[r20260929a] = (on: 2026-09-29, kind: spending, leg cash from konto to niewyjasnione amount 401.09 PLN, cat: groceries) "BIEDRONKA KRAKOW"
   stated[konto] = 41386.27 at 2026-09-30 end "saldo końcowe"
-,,1:0,3236:konto_balance (d = 2026-10-31): (6 064.17 PLN, 6 064.17 PLN)
+,,1:0,3201:konto_balance (d = 2026-10-31): (6 064.17 PLN, 6 064.17 PLN)
   assumed: budżet gospodarstwa na 2026, przed pierwszym wyciągiem (spend_budget[groceries], spend_budget[health_care], spend_budget[other], spend_budget[transport])
   anchor: konto 2026-09-30 end, stated 41 386.27 PLN, difference 32 097.23 PLN
   unfulfilled: client_pay[client_a, 2026-09]
   unfulfilled: costs_pay[2026-10]
-  unfulfilled: health_pay[2026-07]
   unfulfilled: invest[mak, 2026-10]
   unfulfilled: loan_instalment[laptop, 5]
   unfulfilled: rent_pay[2026-10]

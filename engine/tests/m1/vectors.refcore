@@ -102751,7 +102751,7 @@ ask zm2: explain rent[2026-02]
 ask zm3: explain rent[2026-03]
 
 ask zm4: explain rent[2026-04]
-,,1:0,6264:c: ?"rent[2026-03] on 2026-03-10 changed after it was paid (version late); is back pay due, and when?" (rent[2026-03]) ?"rent[2026-03] on 2026-03-10 changed after it was paid (version later); is back pay due, and when?" (rent[2026-03])
+,,1:0,6288:c: ?"rent[2026-03] on 2026-03-10 changed after it was paid (version late); is back pay due, and when?" (rent[2026-03]) ?"rent[2026-03] on 2026-03-10 changed after it was paid (version later); is back pay due, and when?" (rent[2026-03])
   adjustment: rent[2026-03] by ?"were the seats taken in March?" (seats[2026-03]) on 2026-05-01 (version late), remaining ?"were the seats taken in March?" (seats[2026-03])
   adjustment: rent[2026-03] by ?"were the seats taken in March?" (seats[2026-03]) on 2026-07-01 (version later), remaining ?"were the seats taken in March?" (seats[2026-03])
   unfulfilled: rent[2026-01]
@@ -102788,11 +102788,11 @@ zm1: rent[2026-01]
   derivation at 2026-01-10:
     [1] row plan_2026:dom = 10
         version plan_2026, source plan, "T's invented plan", governs 2026-01-01.., known 2026-01-01
-    [2] row plan_2026:seats = 1
+    [2] row plan_2026:seats[*] = 1
         version plan_2026, source plan, "T's invented plan", governs 2026-01-01.., known 2026-01-01
     [3] row plan_2026:total = 900.00 PLN
         version plan_2026, source plan, "T's invented plan", governs 2026-01-01.., known 2026-01-01
-    [4] row plan_2026:fee = 20.00 PLN
+    [4] row plan_2026:fee[*] = 20.00 PLN
         version plan_2026, source plan, "T's invented plan", governs 2026-01-01.., known 2026-01-01
   cut 2026-10-20
 zm2: rent[2026-02]
@@ -102802,11 +102802,11 @@ zm2: rent[2026-02]
   derivation at 2026-02-10:
     [1] row plan_2026:dom = 10
         version plan_2026, source plan, "T's invented plan", governs 2026-01-01.., known 2026-01-01
-    [2] row plan_2026:seats = 1
+    [2] row plan_2026:seats[*] = 1
         version plan_2026, source plan, "T's invented plan", governs 2026-01-01.., known 2026-01-01
     [3] row plan_2026:total = 900.00 PLN
         version plan_2026, source plan, "T's invented plan", governs 2026-01-01.., known 2026-01-01
-    [4] row plan_2026:fee = 20.00 PLN
+    [4] row plan_2026:fee[*] = 20.00 PLN
         version plan_2026, source plan, "T's invented plan", governs 2026-01-01.., known 2026-01-01
   cut 2026-10-20
 zm3: rent[2026-03]
@@ -102816,11 +102816,11 @@ zm3: rent[2026-03]
   derivation at 2026-03-10:
     [1] row plan_2026:dom = 10
         version plan_2026, source plan, "T's invented plan", governs 2026-01-01.., known 2026-01-01
-    [2] row plan_2026:seats = 1
+    [2] row plan_2026:seats[*] = 1
         version plan_2026, source plan, "T's invented plan", governs 2026-01-01.., known 2026-01-01
     [3] row plan_2026:total = 900.00 PLN
         version plan_2026, source plan, "T's invented plan", governs 2026-01-01.., known 2026-01-01
-    [4] row plan_2026:fee = 20.00 PLN
+    [4] row plan_2026:fee[*] = 20.00 PLN
         version plan_2026, source plan, "T's invented plan", governs 2026-01-01.., known 2026-01-01
   adjustment adjustments[rent[2026-03].cash, late]: change ?"were the seats taken in March?" (seats[2026-03]) on 2026-05-01 (version late), settled by nothing; remaining ?"were the seats taken in March?" (seats[2026-03])
   adjustment adjustments[rent[2026-03].charge, late]: change ?"were the seats taken in March?" (seats[2026-03]) on 2026-05-01 (version late), settled by nothing; remaining ?"were the seats taken in March?" (seats[2026-03])
@@ -102834,11 +102834,11 @@ zm4: rent[2026-04]
   derivation at 2026-04-10:
     [1] row plan_2026:dom = 10
         version plan_2026, source plan, "T's invented plan", governs 2026-01-01.., known 2026-01-01
-    [2] row plan_2026:seats = 1
+    [2] row plan_2026:seats[*] = 1
         version plan_2026, source plan, "T's invented plan", governs 2026-01-01.., known 2026-01-01
     [3] row plan_2026:total = 900.00 PLN
         version plan_2026, source plan, "T's invented plan", governs 2026-01-01.., known 2026-01-01
-    [4] row plan_2026:fee = 20.00 PLN
+    [4] row plan_2026:fee[*] = 20.00 PLN
         version plan_2026, source plan, "T's invented plan", governs 2026-01-01.., known 2026-01-01
   cut 2026-10-20
 ,53:fixes/g12/pm6_remeasure_hole_when_remeasure_hole_when,9:fixes-g12,53:run pm6_remeasure_hole_when_remeasure_hole_when.tally,2625:49:pm6_remeasure_hole_when_remeasure_hole_when.tally,2566:model g11_remeasure_hole_when
@@ -102931,7 +102931,7 @@ ask zm6: explain rent_e[2026-02]
 ask zm7: explain rent_e[2026-03]
 
 ask zm8: explain rent_e[2026-04]
-,,1:0,7205:before_l: 8 000.00 PLN
+,,1:0,7229:before_l: 8 000.00 PLN
   unfulfilled: rent_l[2026-01]
   unfulfilled: rent_l[2026-02]
   unfulfilled: rent_l[2026-03]
@@ -102969,7 +102969,7 @@ zm1: rent_l[2026-01]
   derivation at 2026-01-10:
     [1] row plan_2026:dom = 10
         version plan_2026, source plan, "T's invented plan", governs 2026-01-01.., known 2026-01-01
-    [2] row plan_2026:seats_l = 1
+    [2] row plan_2026:seats_l[*] = 1
         version plan_2026, source plan, "T's invented plan", governs 2026-01-01.., known 2026-01-01
     [3] row plan_2026:total = 500.00 PLN
         version plan_2026, source plan, "T's invented plan", governs 2026-01-01.., known 2026-01-01
@@ -102980,7 +102980,7 @@ zm2: rent_l[2026-02]
   derivation at 2026-02-10:
     [1] row plan_2026:dom = 10
         version plan_2026, source plan, "T's invented plan", governs 2026-01-01.., known 2026-01-01
-    [2] row plan_2026:seats_l = 1
+    [2] row plan_2026:seats_l[*] = 1
         version plan_2026, source plan, "T's invented plan", governs 2026-01-01.., known 2026-01-01
     [3] row plan_2026:total = 500.00 PLN
         version plan_2026, source plan, "T's invented plan", governs 2026-01-01.., known 2026-01-01
@@ -102991,7 +102991,7 @@ zm3: rent_l[2026-03]
   derivation at 2026-03-10:
     [1] row plan_2026:dom = 10
         version plan_2026, source plan, "T's invented plan", governs 2026-01-01.., known 2026-01-01
-    [2] row plan_2026:seats_l = 1
+    [2] row plan_2026:seats_l[*] = 1
         version plan_2026, source plan, "T's invented plan", governs 2026-01-01.., known 2026-01-01
     [3] row plan_2026:total = 500.00 PLN
         version plan_2026, source plan, "T's invented plan", governs 2026-01-01.., known 2026-01-01
@@ -103004,7 +103004,7 @@ zm4: rent_l[2026-04]
   derivation at 2026-04-10:
     [1] row plan_2026:dom = 10
         version plan_2026, source plan, "T's invented plan", governs 2026-01-01.., known 2026-01-01
-    [2] row plan_2026:seats_l = 1
+    [2] row plan_2026:seats_l[*] = 1
         version plan_2026, source plan, "T's invented plan", governs 2026-01-01.., known 2026-01-01
     [3] row plan_2026:total = 500.00 PLN
         version plan_2026, source plan, "T's invented plan", governs 2026-01-01.., known 2026-01-01
@@ -103015,7 +103015,7 @@ zm5: rent_e[2026-01]
   derivation at 2026-01-10:
     [1] row plan_2026:dom = 10
         version plan_2026, source plan, "T's invented plan", governs 2026-01-01.., known 2026-01-01
-    [2] row plan_2026:seats_e = 1
+    [2] row plan_2026:seats_e[*] = 1
         version plan_2026, source plan, "T's invented plan", governs 2026-01-01.., known 2026-01-01
     [3] row plan_2026:total = 500.00 PLN
         version plan_2026, source plan, "T's invented plan", governs 2026-01-01.., known 2026-01-01
@@ -103026,7 +103026,7 @@ zm6: rent_e[2026-02]
   derivation at 2026-02-10:
     [1] row plan_2026:dom = 10
         version plan_2026, source plan, "T's invented plan", governs 2026-01-01.., known 2026-01-01
-    [2] row plan_2026:seats_e = 1
+    [2] row plan_2026:seats_e[*] = 1
         version plan_2026, source plan, "T's invented plan", governs 2026-01-01.., known 2026-01-01
     [3] row plan_2026:total = 500.00 PLN
         version plan_2026, source plan, "T's invented plan", governs 2026-01-01.., known 2026-01-01
@@ -103037,7 +103037,7 @@ zm7: rent_e[2026-03]
   derivation at 2026-03-10:
     [1] row plan_2026:dom = 10
         version plan_2026, source plan, "T's invented plan", governs 2026-01-01.., known 2026-01-01
-    [2] row plan_2026:seats_e = 1
+    [2] row plan_2026:seats_e[*] = 1
         version plan_2026, source plan, "T's invented plan", governs 2026-01-01.., known 2026-01-01
     [3] row plan_2026:total = 500.00 PLN
         version plan_2026, source plan, "T's invented plan", governs 2026-01-01.., known 2026-01-01
@@ -103050,7 +103050,7 @@ zm8: rent_e[2026-04]
   derivation at 2026-04-10:
     [1] row plan_2026:dom = 10
         version plan_2026, source plan, "T's invented plan", governs 2026-01-01.., known 2026-01-01
-    [2] row plan_2026:seats_e = 1
+    [2] row plan_2026:seats_e[*] = 1
         version plan_2026, source plan, "T's invented plan", governs 2026-01-01.., known 2026-01-01
     [3] row plan_2026:total = 500.00 PLN
         version plan_2026, source plan, "T's invented plan", governs 2026-01-01.., known 2026-01-01
@@ -103113,7 +103113,7 @@ ask zm2: explain rent[2026-02]
 ask zm3: explain rent[2026-03]
 
 ask zm4: explain rent[2026-04]
-,,1:0,2997:before: 8 000.00 PLN
+,,1:0,3009:before: 8 000.00 PLN
   unfulfilled: rent[2026-01]
   unfulfilled: rent[2026-02]
   unfulfilled: rent[2026-03]
@@ -103139,7 +103139,7 @@ zm1: rent[2026-01]
         version plan_2026, source plan, "T's invented plan", governs 2026-01-01.., known 2026-01-01
     [2] row plan_2026:total = 1 000.00 PLN
         version plan_2026, source plan, "T's invented plan", governs 2026-01-01.., known 2026-01-01
-    [3] row plan_2026:tenants = 2
+    [3] row plan_2026:tenants[*] = 2
         version plan_2026, source plan, "T's invented plan", governs 2026-01-01.., known 2026-01-01
   cut 2026-10-20
 zm2: rent[2026-02]
@@ -103150,7 +103150,7 @@ zm2: rent[2026-02]
         version plan_2026, source plan, "T's invented plan", governs 2026-01-01.., known 2026-01-01
     [2] row plan_2026:total = 1 000.00 PLN
         version plan_2026, source plan, "T's invented plan", governs 2026-01-01.., known 2026-01-01
-    [3] row plan_2026:tenants = 2
+    [3] row plan_2026:tenants[*] = 2
         version plan_2026, source plan, "T's invented plan", governs 2026-01-01.., known 2026-01-01
   cut 2026-10-20
 zm3: rent[2026-03]
@@ -103161,7 +103161,7 @@ zm3: rent[2026-03]
         version plan_2026, source plan, "T's invented plan", governs 2026-01-01.., known 2026-01-01
     [2] row plan_2026:total = 1 000.00 PLN
         version plan_2026, source plan, "T's invented plan", governs 2026-01-01.., known 2026-01-01
-    [3] row plan_2026:tenants = 2
+    [3] row plan_2026:tenants[*] = 2
         version plan_2026, source plan, "T's invented plan", governs 2026-01-01.., known 2026-01-01
   adjustment adjustments[rent[2026-03].cash, late]: change refused: RUN-DIV division by zero on 2026-05-01 (version late)
   cut 2026-10-20
@@ -103173,7 +103173,7 @@ zm4: rent[2026-04]
         version plan_2026, source plan, "T's invented plan", governs 2026-01-01.., known 2026-01-01
     [2] row plan_2026:total = 1 000.00 PLN
         version plan_2026, source plan, "T's invented plan", governs 2026-01-01.., known 2026-01-01
-    [3] row plan_2026:tenants = 2
+    [3] row plan_2026:tenants[*] = 2
         version plan_2026, source plan, "T's invented plan", governs 2026-01-01.., known 2026-01-01
   cut 2026-10-20
 ,65:fixes/g12/pm6_remeasure_refused_booking_remeasure_refused_booking,9:fixes-g12,65:run pm6_remeasure_refused_booking_remeasure_refused_booking.tally,2001:61:pm6_remeasure_refused_booking_remeasure_refused_booking.tally,1930:model g11_remeasure_refused_booking
@@ -103246,7 +103246,7 @@ ask zm2: explain rent[2026-02]
 ask zm3: explain rent[2026-03]
 
 ask zm4: explain rent[2026-04]
-,,1:0,2567:b: (9 000.00 PLN, refused: RUN-DIV division by zero)
+,,1:0,2579:b: (9 000.00 PLN, refused: RUN-DIV division by zero)
   unfulfilled: rent[2026-01]
   unfulfilled: rent[2026-02]
   cut 2026-10-20
@@ -103263,7 +103263,7 @@ zm1: rent[2026-01]
         version plan_2026, source plan, "T's invented plan", governs 2026-01-01.., known 2026-01-01
     [2] row plan_2026:total = 1 000.00 PLN
         version plan_2026, source plan, "T's invented plan", governs 2026-01-01.., known 2026-01-01
-    [3] row plan_2026:tenants = 2
+    [3] row plan_2026:tenants[*] = 2
         version plan_2026, source plan, "T's invented plan", governs 2026-01-01.., known 2026-01-01
   cut 2026-10-20
 zm2: rent[2026-02]
@@ -103274,7 +103274,7 @@ zm2: rent[2026-02]
         version plan_2026, source plan, "T's invented plan", governs 2026-01-01.., known 2026-01-01
     [2] row plan_2026:total = 1 000.00 PLN
         version plan_2026, source plan, "T's invented plan", governs 2026-01-01.., known 2026-01-01
-    [3] row plan_2026:tenants = 2
+    [3] row plan_2026:tenants[*] = 2
         version plan_2026, source plan, "T's invented plan", governs 2026-01-01.., known 2026-01-01
   cut 2026-10-20
 zm3: rent[2026-03]
@@ -103285,7 +103285,7 @@ zm3: rent[2026-03]
         version plan_2026, source plan, "T's invented plan", governs 2026-01-01.., known 2026-01-01
     [2] row plan_2026:total = 1 000.00 PLN
         version plan_2026, source plan, "T's invented plan", governs 2026-01-01.., known 2026-01-01
-    [3] row zero:tenants = 0
+    [3] row zero:tenants[*] = 0
         version zero, source act, "T's invented act", governs 2026-03-01..2026-03-31, known 2026-02-01
   cut 2026-10-20
 zm4: rent[2026-04]
@@ -103296,7 +103296,7 @@ zm4: rent[2026-04]
         version plan_2026, source plan, "T's invented plan", governs 2026-01-01.., known 2026-01-01
     [2] row plan_2026:total = 1 000.00 PLN
         version plan_2026, source plan, "T's invented plan", governs 2026-01-01.., known 2026-01-01
-    [3] row plan_2026:tenants = 2
+    [3] row plan_2026:tenants[*] = 2
         version plan_2026, source plan, "T's invented plan", governs 2026-01-01.., known 2026-01-01
   cut 2026-10-20
 ,77:fixes/g12/pm6_remeasure_refused_leg_hole_when_remeasure_refused_leg_hole_when,9:fixes-g12,77:run pm6_remeasure_refused_leg_hole_when_remeasure_refused_leg_hole_when.tally,2126:73:pm6_remeasure_refused_leg_hole_when_remeasure_refused_leg_hole_when.tally,2043:model g11_remeasure_refused_leg_hole_when
@@ -103373,7 +103373,7 @@ ask zm2: explain rent[2026-02]
 ask zm3: explain rent[2026-03]
 
 ask zm4: explain rent[2026-04]
-,,1:0,5029:after_c: refused: RUN-DIV division by zero
+,,1:0,5053:after_c: refused: RUN-DIV division by zero
   unfulfilled: rent[2026-01]
   unfulfilled: rent[2026-02]
   unfulfilled: rent[2026-03]
@@ -103405,11 +103405,11 @@ zm1: rent[2026-01]
   derivation at 2026-01-10:
     [1] row plan_2026:dom = 10
         version plan_2026, source plan, "T's invented plan", governs 2026-01-01.., known 2026-01-01
-    [2] row plan_2026:seats = 1
+    [2] row plan_2026:seats[*] = 1
         version plan_2026, source plan, "T's invented plan", governs 2026-01-01.., known 2026-01-01
     [3] row plan_2026:total = 900.00 PLN
         version plan_2026, source plan, "T's invented plan", governs 2026-01-01.., known 2026-01-01
-    [4] row plan_2026:tenants = 3
+    [4] row plan_2026:tenants[*] = 3
         version plan_2026, source plan, "T's invented plan", governs 2026-01-01.., known 2026-01-01
     [5] row plan_2026:fee = 20.00 PLN
         version plan_2026, source plan, "T's invented plan", governs 2026-01-01.., known 2026-01-01
@@ -103421,11 +103421,11 @@ zm2: rent[2026-02]
   derivation at 2026-02-10:
     [1] row plan_2026:dom = 10
         version plan_2026, source plan, "T's invented plan", governs 2026-01-01.., known 2026-01-01
-    [2] row plan_2026:seats = 1
+    [2] row plan_2026:seats[*] = 1
         version plan_2026, source plan, "T's invented plan", governs 2026-01-01.., known 2026-01-01
     [3] row plan_2026:total = 900.00 PLN
         version plan_2026, source plan, "T's invented plan", governs 2026-01-01.., known 2026-01-01
-    [4] row plan_2026:tenants = 3
+    [4] row plan_2026:tenants[*] = 3
         version plan_2026, source plan, "T's invented plan", governs 2026-01-01.., known 2026-01-01
     [5] row plan_2026:fee = 20.00 PLN
         version plan_2026, source plan, "T's invented plan", governs 2026-01-01.., known 2026-01-01
@@ -103437,11 +103437,11 @@ zm3: rent[2026-03]
   derivation at 2026-03-10:
     [1] row plan_2026:dom = 10
         version plan_2026, source plan, "T's invented plan", governs 2026-01-01.., known 2026-01-01
-    [2] row plan_2026:seats = 1
+    [2] row plan_2026:seats[*] = 1
         version plan_2026, source plan, "T's invented plan", governs 2026-01-01.., known 2026-01-01
     [3] row plan_2026:total = 900.00 PLN
         version plan_2026, source plan, "T's invented plan", governs 2026-01-01.., known 2026-01-01
-    [4] row plan_2026:tenants = 3
+    [4] row plan_2026:tenants[*] = 3
         version plan_2026, source plan, "T's invented plan", governs 2026-01-01.., known 2026-01-01
     [5] row plan_2026:fee = 20.00 PLN
         version plan_2026, source plan, "T's invented plan", governs 2026-01-01.., known 2026-01-01
@@ -103455,11 +103455,11 @@ zm4: rent[2026-04]
   derivation at 2026-04-10:
     [1] row plan_2026:dom = 10
         version plan_2026, source plan, "T's invented plan", governs 2026-01-01.., known 2026-01-01
-    [2] row plan_2026:seats = 1
+    [2] row plan_2026:seats[*] = 1
         version plan_2026, source plan, "T's invented plan", governs 2026-01-01.., known 2026-01-01
     [3] row plan_2026:total = 900.00 PLN
         version plan_2026, source plan, "T's invented plan", governs 2026-01-01.., known 2026-01-01
-    [4] row plan_2026:tenants = 3
+    [4] row plan_2026:tenants[*] = 3
         version plan_2026, source plan, "T's invented plan", governs 2026-01-01.., known 2026-01-01
     [5] row plan_2026:fee = 20.00 PLN
         version plan_2026, source plan, "T's invented plan", governs 2026-01-01.., known 2026-01-01
@@ -103528,7 +103528,7 @@ ask zm2: explain rent[2026-02]
 ask zm3: explain rent[2026-03]
 
 ask zm4: explain rent[2026-04]
-,,1:0,3620:before: 8 000.00 PLN
+,,1:0,3644:before: 8 000.00 PLN
   unfulfilled: rent[2026-01]
   unfulfilled: rent[2026-02]
   unfulfilled: rent[2026-03]
@@ -103556,11 +103556,11 @@ zm1: rent[2026-01]
   derivation at 2026-01-10:
     [1] row plan_2026:dom = 10
         version plan_2026, source plan, "T's invented plan", governs 2026-01-01.., known 2026-01-01
-    [2] row plan_2026:seats = 1
+    [2] row plan_2026:seats[*] = 1
         version plan_2026, source plan, "T's invented plan", governs 2026-01-01.., known 2026-01-01
     [3] row plan_2026:total = 1 000.00 PLN
         version plan_2026, source plan, "T's invented plan", governs 2026-01-01.., known 2026-01-01
-    [4] row plan_2026:tenants = 2
+    [4] row plan_2026:tenants[*] = 2
         version plan_2026, source plan, "T's invented plan", governs 2026-01-01.., known 2026-01-01
   cut 2026-10-20
 zm2: rent[2026-02]
@@ -103569,11 +103569,11 @@ zm2: rent[2026-02]
   derivation at 2026-02-10:
     [1] row plan_2026:dom = 10
         version plan_2026, source plan, "T's invented plan", governs 2026-01-01.., known 2026-01-01
-    [2] row plan_2026:seats = 1
+    [2] row plan_2026:seats[*] = 1
         version plan_2026, source plan, "T's invented plan", governs 2026-01-01.., known 2026-01-01
     [3] row plan_2026:total = 1 000.00 PLN
         version plan_2026, source plan, "T's invented plan", governs 2026-01-01.., known 2026-01-01
-    [4] row plan_2026:tenants = 2
+    [4] row plan_2026:tenants[*] = 2
         version plan_2026, source plan, "T's invented plan", governs 2026-01-01.., known 2026-01-01
   cut 2026-10-20
 zm3: rent[2026-03]
@@ -103582,11 +103582,11 @@ zm3: rent[2026-03]
   derivation at 2026-03-10:
     [1] row plan_2026:dom = 10
         version plan_2026, source plan, "T's invented plan", governs 2026-01-01.., known 2026-01-01
-    [2] row plan_2026:seats = 1
+    [2] row plan_2026:seats[*] = 1
         version plan_2026, source plan, "T's invented plan", governs 2026-01-01.., known 2026-01-01
     [3] row plan_2026:total = 1 000.00 PLN
         version plan_2026, source plan, "T's invented plan", governs 2026-01-01.., known 2026-01-01
-    [4] row plan_2026:tenants = 2
+    [4] row plan_2026:tenants[*] = 2
         version plan_2026, source plan, "T's invented plan", governs 2026-01-01.., known 2026-01-01
   adjustment adjustments[rent[2026-03].cash, late]: change refused: RUN-DIV division by zero on 2026-05-01 (version late)
   cut 2026-10-20
@@ -103596,11 +103596,11 @@ zm4: rent[2026-04]
   derivation at 2026-04-10:
     [1] row plan_2026:dom = 10
         version plan_2026, source plan, "T's invented plan", governs 2026-01-01.., known 2026-01-01
-    [2] row plan_2026:seats = 1
+    [2] row plan_2026:seats[*] = 1
         version plan_2026, source plan, "T's invented plan", governs 2026-01-01.., known 2026-01-01
     [3] row plan_2026:total = 1 000.00 PLN
         version plan_2026, source plan, "T's invented plan", governs 2026-01-01.., known 2026-01-01
-    [4] row plan_2026:tenants = 2
+    [4] row plan_2026:tenants[*] = 2
         version plan_2026, source plan, "T's invented plan", governs 2026-01-01.., known 2026-01-01
   cut 2026-10-20
 ,39:fixes/g12/pm6_settle_order_settle_order,9:fixes-g12,39:run pm6_settle_order_settle_order.tally,2300:35:pm6_settle_order_settle_order.tally,2255:model g11_settle_order
@@ -109843,7 +109843,7 @@ ask zm2: explain rent[2026-02]
 ask zm3: explain rent[2026-03]
 
 ask zm4: explain rent[2026-04]
-,,1:0,6264:c: ?"rent[2026-03] on 2026-03-10 changed after it was paid (version late); is back pay due, and when?" (rent[2026-03]) ?"rent[2026-03] on 2026-03-10 changed after it was paid (version later); is back pay due, and when?" (rent[2026-03])
+,,1:0,6288:c: ?"rent[2026-03] on 2026-03-10 changed after it was paid (version late); is back pay due, and when?" (rent[2026-03]) ?"rent[2026-03] on 2026-03-10 changed after it was paid (version later); is back pay due, and when?" (rent[2026-03])
   adjustment: rent[2026-03] by ?"were the seats taken in March?" (seats[2026-03]) on 2026-05-01 (version late), remaining ?"were the seats taken in March?" (seats[2026-03])
   adjustment: rent[2026-03] by ?"were the seats taken in March?" (seats[2026-03]) on 2026-07-01 (version later), remaining ?"were the seats taken in March?" (seats[2026-03])
   unfulfilled: rent[2026-01]
@@ -109880,11 +109880,11 @@ zm1: rent[2026-01]
   derivation at 2026-01-10:
     [1] row plan_2026:dom = 10
         version plan_2026, source plan, "T's invented plan", governs 2026-01-01.., known 2026-01-01
-    [2] row plan_2026:seats = 1
+    [2] row plan_2026:seats[*] = 1
         version plan_2026, source plan, "T's invented plan", governs 2026-01-01.., known 2026-01-01
     [3] row plan_2026:total = 900.00 PLN
         version plan_2026, source plan, "T's invented plan", governs 2026-01-01.., known 2026-01-01
-    [4] row plan_2026:fee = 20.00 PLN
+    [4] row plan_2026:fee[*] = 20.00 PLN
         version plan_2026, source plan, "T's invented plan", governs 2026-01-01.., known 2026-01-01
   cut 2026-10-20
 zm2: rent[2026-02]
@@ -109894,11 +109894,11 @@ zm2: rent[2026-02]
   derivation at 2026-02-10:
     [1] row plan_2026:dom = 10
         version plan_2026, source plan, "T's invented plan", governs 2026-01-01.., known 2026-01-01
-    [2] row plan_2026:seats = 1
+    [2] row plan_2026:seats[*] = 1
         version plan_2026, source plan, "T's invented plan", governs 2026-01-01.., known 2026-01-01
     [3] row plan_2026:total = 900.00 PLN
         version plan_2026, source plan, "T's invented plan", governs 2026-01-01.., known 2026-01-01
-    [4] row plan_2026:fee = 20.00 PLN
+    [4] row plan_2026:fee[*] = 20.00 PLN
         version plan_2026, source plan, "T's invented plan", governs 2026-01-01.., known 2026-01-01
   cut 2026-10-20
 zm3: rent[2026-03]
@@ -109908,11 +109908,11 @@ zm3: rent[2026-03]
   derivation at 2026-03-10:
     [1] row plan_2026:dom = 10
         version plan_2026, source plan, "T's invented plan", governs 2026-01-01.., known 2026-01-01
-    [2] row plan_2026:seats = 1
+    [2] row plan_2026:seats[*] = 1
         version plan_2026, source plan, "T's invented plan", governs 2026-01-01.., known 2026-01-01
     [3] row plan_2026:total = 900.00 PLN
         version plan_2026, source plan, "T's invented plan", governs 2026-01-01.., known 2026-01-01
-    [4] row plan_2026:fee = 20.00 PLN
+    [4] row plan_2026:fee[*] = 20.00 PLN
         version plan_2026, source plan, "T's invented plan", governs 2026-01-01.., known 2026-01-01
   adjustment adjustments[rent[2026-03].cash, late]: change ?"were the seats taken in March?" (seats[2026-03]) on 2026-05-01 (version late), settled by nothing; remaining ?"were the seats taken in March?" (seats[2026-03])
   adjustment adjustments[rent[2026-03].charge, late]: change ?"were the seats taken in March?" (seats[2026-03]) on 2026-05-01 (version late), settled by nothing; remaining ?"were the seats taken in March?" (seats[2026-03])
@@ -109926,11 +109926,11 @@ zm4: rent[2026-04]
   derivation at 2026-04-10:
     [1] row plan_2026:dom = 10
         version plan_2026, source plan, "T's invented plan", governs 2026-01-01.., known 2026-01-01
-    [2] row plan_2026:seats = 1
+    [2] row plan_2026:seats[*] = 1
         version plan_2026, source plan, "T's invented plan", governs 2026-01-01.., known 2026-01-01
     [3] row plan_2026:total = 900.00 PLN
         version plan_2026, source plan, "T's invented plan", governs 2026-01-01.., known 2026-01-01
-    [4] row plan_2026:fee = 20.00 PLN
+    [4] row plan_2026:fee[*] = 20.00 PLN
         version plan_2026, source plan, "T's invented plan", governs 2026-01-01.., known 2026-01-01
   cut 2026-10-20
 ,53:fixes/g12/pm9_remeasure_hole_when_remeasure_hole_when,9:fixes-g12,53:run pm9_remeasure_hole_when_remeasure_hole_when.tally,2625:49:pm9_remeasure_hole_when_remeasure_hole_when.tally,2566:model g11_remeasure_hole_when
@@ -110023,7 +110023,7 @@ ask zm6: explain rent_e[2026-02]
 ask zm7: explain rent_e[2026-03]
 
 ask zm8: explain rent_e[2026-04]
-,,1:0,7205:before_l: 8 000.00 PLN
+,,1:0,7229:before_l: 8 000.00 PLN
   unfulfilled: rent_l[2026-01]
   unfulfilled: rent_l[2026-02]
   unfulfilled: rent_l[2026-03]
@@ -110061,7 +110061,7 @@ zm1: rent_l[2026-01]
   derivation at 2026-01-10:
     [1] row plan_2026:dom = 10
         version plan_2026, source plan, "T's invented plan", governs 2026-01-01.., known 2026-01-01
-    [2] row plan_2026:seats_l = 1
+    [2] row plan_2026:seats_l[*] = 1
         version plan_2026, source plan, "T's invented plan", governs 2026-01-01.., known 2026-01-01
     [3] row plan_2026:total = 500.00 PLN
         version plan_2026, source plan, "T's invented plan", governs 2026-01-01.., known 2026-01-01
@@ -110072,7 +110072,7 @@ zm2: rent_l[2026-02]
   derivation at 2026-02-10:
     [1] row plan_2026:dom = 10
         version plan_2026, source plan, "T's invented plan", governs 2026-01-01.., known 2026-01-01
-    [2] row plan_2026:seats_l = 1
+    [2] row plan_2026:seats_l[*] = 1
         version plan_2026, source plan, "T's invented plan", governs 2026-01-01.., known 2026-01-01
     [3] row plan_2026:total = 500.00 PLN
         version plan_2026, source plan, "T's invented plan", governs 2026-01-01.., known 2026-01-01
@@ -110083,7 +110083,7 @@ zm3: rent_l[2026-03]
   derivation at 2026-03-10:
     [1] row plan_2026:dom = 10
         version plan_2026, source plan, "T's invented plan", governs 2026-01-01.., known 2026-01-01
-    [2] row plan_2026:seats_l = 1
+    [2] row plan_2026:seats_l[*] = 1
         version plan_2026, source plan, "T's invented plan", governs 2026-01-01.., known 2026-01-01
     [3] row plan_2026:total = 500.00 PLN
         version plan_2026, source plan, "T's invented plan", governs 2026-01-01.., known 2026-01-01
@@ -110096,7 +110096,7 @@ zm4: rent_l[2026-04]
   derivation at 2026-04-10:
     [1] row plan_2026:dom = 10
         version plan_2026, source plan, "T's invented plan", governs 2026-01-01.., known 2026-01-01
-    [2] row plan_2026:seats_l = 1
+    [2] row plan_2026:seats_l[*] = 1
         version plan_2026, source plan, "T's invented plan", governs 2026-01-01.., known 2026-01-01
     [3] row plan_2026:total = 500.00 PLN
         version plan_2026, source plan, "T's invented plan", governs 2026-01-01.., known 2026-01-01
@@ -110107,7 +110107,7 @@ zm5: rent_e[2026-01]
   derivation at 2026-01-10:
     [1] row plan_2026:dom = 10
         version plan_2026, source plan, "T's invented plan", governs 2026-01-01.., known 2026-01-01
-    [2] row plan_2026:seats_e = 1
+    [2] row plan_2026:seats_e[*] = 1
         version plan_2026, source plan, "T's invented plan", governs 2026-01-01.., known 2026-01-01
     [3] row plan_2026:total = 500.00 PLN
         version plan_2026, source plan, "T's invented plan", governs 2026-01-01.., known 2026-01-01
@@ -110118,7 +110118,7 @@ zm6: rent_e[2026-02]
   derivation at 2026-02-10:
     [1] row plan_2026:dom = 10
         version plan_2026, source plan, "T's invented plan", governs 2026-01-01.., known 2026-01-01
-    [2] row plan_2026:seats_e = 1
+    [2] row plan_2026:seats_e[*] = 1
         version plan_2026, source plan, "T's invented plan", governs 2026-01-01.., known 2026-01-01
     [3] row plan_2026:total = 500.00 PLN
         version plan_2026, source plan, "T's invented plan", governs 2026-01-01.., known 2026-01-01
@@ -110129,7 +110129,7 @@ zm7: rent_e[2026-03]
   derivation at 2026-03-10:
     [1] row plan_2026:dom = 10
         version plan_2026, source plan, "T's invented plan", governs 2026-01-01.., known 2026-01-01
-    [2] row plan_2026:seats_e = 1
+    [2] row plan_2026:seats_e[*] = 1
         version plan_2026, source plan, "T's invented plan", governs 2026-01-01.., known 2026-01-01
     [3] row plan_2026:total = 500.00 PLN
         version plan_2026, source plan, "T's invented plan", governs 2026-01-01.., known 2026-01-01
@@ -110142,7 +110142,7 @@ zm8: rent_e[2026-04]
   derivation at 2026-04-10:
     [1] row plan_2026:dom = 10
         version plan_2026, source plan, "T's invented plan", governs 2026-01-01.., known 2026-01-01
-    [2] row plan_2026:seats_e = 1
+    [2] row plan_2026:seats_e[*] = 1
         version plan_2026, source plan, "T's invented plan", governs 2026-01-01.., known 2026-01-01
     [3] row plan_2026:total = 500.00 PLN
         version plan_2026, source plan, "T's invented plan", governs 2026-01-01.., known 2026-01-01
@@ -110205,7 +110205,7 @@ ask zm2: explain rent[2026-02]
 ask zm3: explain rent[2026-03]
 
 ask zm4: explain rent[2026-04]
-,,1:0,2997:before: 8 000.00 PLN
+,,1:0,3009:before: 8 000.00 PLN
   unfulfilled: rent[2026-01]
   unfulfilled: rent[2026-02]
   unfulfilled: rent[2026-03]
@@ -110231,7 +110231,7 @@ zm1: rent[2026-01]
         version plan_2026, source plan, "T's invented plan", governs 2026-01-01.., known 2026-01-01
     [2] row plan_2026:total = 1 000.00 PLN
         version plan_2026, source plan, "T's invented plan", governs 2026-01-01.., known 2026-01-01
-    [3] row plan_2026:tenants = 2
+    [3] row plan_2026:tenants[*] = 2
         version plan_2026, source plan, "T's invented plan", governs 2026-01-01.., known 2026-01-01
   cut 2026-10-20
 zm2: rent[2026-02]
@@ -110242,7 +110242,7 @@ zm2: rent[2026-02]
         version plan_2026, source plan, "T's invented plan", governs 2026-01-01.., known 2026-01-01
     [2] row plan_2026:total = 1 000.00 PLN
         version plan_2026, source plan, "T's invented plan", governs 2026-01-01.., known 2026-01-01
-    [3] row plan_2026:tenants = 2
+    [3] row plan_2026:tenants[*] = 2
         version plan_2026, source plan, "T's invented plan", governs 2026-01-01.., known 2026-01-01
   cut 2026-10-20
 zm3: rent[2026-03]
@@ -110253,7 +110253,7 @@ zm3: rent[2026-03]
         version plan_2026, source plan, "T's invented plan", governs 2026-01-01.., known 2026-01-01
     [2] row plan_2026:total = 1 000.00 PLN
         version plan_2026, source plan, "T's invented plan", governs 2026-01-01.., known 2026-01-01
-    [3] row plan_2026:tenants = 2
+    [3] row plan_2026:tenants[*] = 2
         version plan_2026, source plan, "T's invented plan", governs 2026-01-01.., known 2026-01-01
   adjustment adjustments[rent[2026-03].cash, late]: change refused: RUN-DIV division by zero on 2026-05-01 (version late)
   cut 2026-10-20
@@ -110265,7 +110265,7 @@ zm4: rent[2026-04]
         version plan_2026, source plan, "T's invented plan", governs 2026-01-01.., known 2026-01-01
     [2] row plan_2026:total = 1 000.00 PLN
         version plan_2026, source plan, "T's invented plan", governs 2026-01-01.., known 2026-01-01
-    [3] row plan_2026:tenants = 2
+    [3] row plan_2026:tenants[*] = 2
         version plan_2026, source plan, "T's invented plan", governs 2026-01-01.., known 2026-01-01
   cut 2026-10-20
 ,65:fixes/g12/pm9_remeasure_refused_booking_remeasure_refused_booking,9:fixes-g12,65:run pm9_remeasure_refused_booking_remeasure_refused_booking.tally,2001:61:pm9_remeasure_refused_booking_remeasure_refused_booking.tally,1930:model g11_remeasure_refused_booking
@@ -110338,7 +110338,7 @@ ask zm2: explain rent[2026-02]
 ask zm3: explain rent[2026-03]
 
 ask zm4: explain rent[2026-04]
-,,1:0,2567:b: (9 000.00 PLN, refused: RUN-DIV division by zero)
+,,1:0,2579:b: (9 000.00 PLN, refused: RUN-DIV division by zero)
   unfulfilled: rent[2026-01]
   unfulfilled: rent[2026-02]
   cut 2026-10-20
@@ -110355,7 +110355,7 @@ zm1: rent[2026-01]
         version plan_2026, source plan, "T's invented plan", governs 2026-01-01.., known 2026-01-01
     [2] row plan_2026:total = 1 000.00 PLN
         version plan_2026, source plan, "T's invented plan", governs 2026-01-01.., known 2026-01-01
-    [3] row plan_2026:tenants = 2
+    [3] row plan_2026:tenants[*] = 2
         version plan_2026, source plan, "T's invented plan", governs 2026-01-01.., known 2026-01-01
   cut 2026-10-20
 zm2: rent[2026-02]
@@ -110366,7 +110366,7 @@ zm2: rent[2026-02]
         version plan_2026, source plan, "T's invented plan", governs 2026-01-01.., known 2026-01-01
     [2] row plan_2026:total = 1 000.00 PLN
         version plan_2026, source plan, "T's invented plan", governs 2026-01-01.., known 2026-01-01
-    [3] row plan_2026:tenants = 2
+    [3] row plan_2026:tenants[*] = 2
         version plan_2026, source plan, "T's invented plan", governs 2026-01-01.., known 2026-01-01
   cut 2026-10-20
 zm3: rent[2026-03]
@@ -110377,7 +110377,7 @@ zm3: rent[2026-03]
         version plan_2026, source plan, "T's invented plan", governs 2026-01-01.., known 2026-01-01
     [2] row plan_2026:total = 1 000.00 PLN
         version plan_2026, source plan, "T's invented plan", governs 2026-01-01.., known 2026-01-01
-    [3] row zero:tenants = 0
+    [3] row zero:tenants[*] = 0
         version zero, source act, "T's invented act", governs 2026-03-01..2026-03-31, known 2026-02-01
   cut 2026-10-20
 zm4: rent[2026-04]
@@ -110388,7 +110388,7 @@ zm4: rent[2026-04]
         version plan_2026, source plan, "T's invented plan", governs 2026-01-01.., known 2026-01-01
     [2] row plan_2026:total = 1 000.00 PLN
         version plan_2026, source plan, "T's invented plan", governs 2026-01-01.., known 2026-01-01
-    [3] row plan_2026:tenants = 2
+    [3] row plan_2026:tenants[*] = 2
         version plan_2026, source plan, "T's invented plan", governs 2026-01-01.., known 2026-01-01
   cut 2026-10-20
 ,77:fixes/g12/pm9_remeasure_refused_leg_hole_when_remeasure_refused_leg_hole_when,9:fixes-g12,77:run pm9_remeasure_refused_leg_hole_when_remeasure_refused_leg_hole_when.tally,2126:73:pm9_remeasure_refused_leg_hole_when_remeasure_refused_leg_hole_when.tally,2043:model g11_remeasure_refused_leg_hole_when
@@ -110465,7 +110465,7 @@ ask zm2: explain rent[2026-02]
 ask zm3: explain rent[2026-03]
 
 ask zm4: explain rent[2026-04]
-,,1:0,5029:after_c: refused: RUN-DIV division by zero
+,,1:0,5053:after_c: refused: RUN-DIV division by zero
   unfulfilled: rent[2026-01]
   unfulfilled: rent[2026-02]
   unfulfilled: rent[2026-03]
@@ -110497,11 +110497,11 @@ zm1: rent[2026-01]
   derivation at 2026-01-10:
     [1] row plan_2026:dom = 10
         version plan_2026, source plan, "T's invented plan", governs 2026-01-01.., known 2026-01-01
-    [2] row plan_2026:seats = 1
+    [2] row plan_2026:seats[*] = 1
         version plan_2026, source plan, "T's invented plan", governs 2026-01-01.., known 2026-01-01
     [3] row plan_2026:total = 900.00 PLN
         version plan_2026, source plan, "T's invented plan", governs 2026-01-01.., known 2026-01-01
-    [4] row plan_2026:tenants = 3
+    [4] row plan_2026:tenants[*] = 3
         version plan_2026, source plan, "T's invented plan", governs 2026-01-01.., known 2026-01-01
     [5] row plan_2026:fee = 20.00 PLN
         version plan_2026, source plan, "T's invented plan", governs 2026-01-01.., known 2026-01-01
@@ -110513,11 +110513,11 @@ zm2: rent[2026-02]
   derivation at 2026-02-10:
     [1] row plan_2026:dom = 10
         version plan_2026, source plan, "T's invented plan", governs 2026-01-01.., known 2026-01-01
-    [2] row plan_2026:seats = 1
+    [2] row plan_2026:seats[*] = 1
         version plan_2026, source plan, "T's invented plan", governs 2026-01-01.., known 2026-01-01
     [3] row plan_2026:total = 900.00 PLN
         version plan_2026, source plan, "T's invented plan", governs 2026-01-01.., known 2026-01-01
-    [4] row plan_2026:tenants = 3
+    [4] row plan_2026:tenants[*] = 3
         version plan_2026, source plan, "T's invented plan", governs 2026-01-01.., known 2026-01-01
     [5] row plan_2026:fee = 20.00 PLN
         version plan_2026, source plan, "T's invented plan", governs 2026-01-01.., known 2026-01-01
@@ -110529,11 +110529,11 @@ zm3: rent[2026-03]
   derivation at 2026-03-10:
     [1] row plan_2026:dom = 10
         version plan_2026, source plan, "T's invented plan", governs 2026-01-01.., known 2026-01-01
-    [2] row plan_2026:seats = 1
+    [2] row plan_2026:seats[*] = 1
         version plan_2026, source plan, "T's invented plan", governs 2026-01-01.., known 2026-01-01
     [3] row plan_2026:total = 900.00 PLN
         version plan_2026, source plan, "T's invented plan", governs 2026-01-01.., known 2026-01-01
-    [4] row plan_2026:tenants = 3
+    [4] row plan_2026:tenants[*] = 3
         version plan_2026, source plan, "T's invented plan", governs 2026-01-01.., known 2026-01-01
     [5] row plan_2026:fee = 20.00 PLN
         version plan_2026, source plan, "T's invented plan", governs 2026-01-01.., known 2026-01-01
@@ -110547,11 +110547,11 @@ zm4: rent[2026-04]
   derivation at 2026-04-10:
     [1] row plan_2026:dom = 10
         version plan_2026, source plan, "T's invented plan", governs 2026-01-01.., known 2026-01-01
-    [2] row plan_2026:seats = 1
+    [2] row plan_2026:seats[*] = 1
         version plan_2026, source plan, "T's invented plan", governs 2026-01-01.., known 2026-01-01
     [3] row plan_2026:total = 900.00 PLN
         version plan_2026, source plan, "T's invented plan", governs 2026-01-01.., known 2026-01-01
-    [4] row plan_2026:tenants = 3
+    [4] row plan_2026:tenants[*] = 3
         version plan_2026, source plan, "T's invented plan", governs 2026-01-01.., known 2026-01-01
     [5] row plan_2026:fee = 20.00 PLN
         version plan_2026, source plan, "T's invented plan", governs 2026-01-01.., known 2026-01-01
@@ -110620,7 +110620,7 @@ ask zm2: explain rent[2026-02]
 ask zm3: explain rent[2026-03]
 
 ask zm4: explain rent[2026-04]
-,,1:0,3620:before: 8 000.00 PLN
+,,1:0,3644:before: 8 000.00 PLN
   unfulfilled: rent[2026-01]
   unfulfilled: rent[2026-02]
   unfulfilled: rent[2026-03]
@@ -110648,11 +110648,11 @@ zm1: rent[2026-01]
   derivation at 2026-01-10:
     [1] row plan_2026:dom = 10
         version plan_2026, source plan, "T's invented plan", governs 2026-01-01.., known 2026-01-01
-    [2] row plan_2026:seats = 1
+    [2] row plan_2026:seats[*] = 1
         version plan_2026, source plan, "T's invented plan", governs 2026-01-01.., known 2026-01-01
     [3] row plan_2026:total = 1 000.00 PLN
         version plan_2026, source plan, "T's invented plan", governs 2026-01-01.., known 2026-01-01
-    [4] row plan_2026:tenants = 2
+    [4] row plan_2026:tenants[*] = 2
         version plan_2026, source plan, "T's invented plan", governs 2026-01-01.., known 2026-01-01
   cut 2026-10-20
 zm2: rent[2026-02]
@@ -110661,11 +110661,11 @@ zm2: rent[2026-02]
   derivation at 2026-02-10:
     [1] row plan_2026:dom = 10
         version plan_2026, source plan, "T's invented plan", governs 2026-01-01.., known 2026-01-01
-    [2] row plan_2026:seats = 1
+    [2] row plan_2026:seats[*] = 1
         version plan_2026, source plan, "T's invented plan", governs 2026-01-01.., known 2026-01-01
     [3] row plan_2026:total = 1 000.00 PLN
         version plan_2026, source plan, "T's invented plan", governs 2026-01-01.., known 2026-01-01
-    [4] row plan_2026:tenants = 2
+    [4] row plan_2026:tenants[*] = 2
         version plan_2026, source plan, "T's invented plan", governs 2026-01-01.., known 2026-01-01
   cut 2026-10-20
 zm3: rent[2026-03]
@@ -110674,11 +110674,11 @@ zm3: rent[2026-03]
   derivation at 2026-03-10:
     [1] row plan_2026:dom = 10
         version plan_2026, source plan, "T's invented plan", governs 2026-01-01.., known 2026-01-01
-    [2] row plan_2026:seats = 1
+    [2] row plan_2026:seats[*] = 1
         version plan_2026, source plan, "T's invented plan", governs 2026-01-01.., known 2026-01-01
     [3] row plan_2026:total = 1 000.00 PLN
         version plan_2026, source plan, "T's invented plan", governs 2026-01-01.., known 2026-01-01
-    [4] row plan_2026:tenants = 2
+    [4] row plan_2026:tenants[*] = 2
         version plan_2026, source plan, "T's invented plan", governs 2026-01-01.., known 2026-01-01
   adjustment adjustments[rent[2026-03].cash, late]: change refused: RUN-DIV division by zero on 2026-05-01 (version late)
   cut 2026-10-20
@@ -110688,11 +110688,11 @@ zm4: rent[2026-04]
   derivation at 2026-04-10:
     [1] row plan_2026:dom = 10
         version plan_2026, source plan, "T's invented plan", governs 2026-01-01.., known 2026-01-01
-    [2] row plan_2026:seats = 1
+    [2] row plan_2026:seats[*] = 1
         version plan_2026, source plan, "T's invented plan", governs 2026-01-01.., known 2026-01-01
     [3] row plan_2026:total = 1 000.00 PLN
         version plan_2026, source plan, "T's invented plan", governs 2026-01-01.., known 2026-01-01
-    [4] row plan_2026:tenants = 2
+    [4] row plan_2026:tenants[*] = 2
         version plan_2026, source plan, "T's invented plan", governs 2026-01-01.., known 2026-01-01
   cut 2026-10-20
 ,39:fixes/g12/pm9_settle_order_settle_order,9:fixes-g12,39:run pm9_settle_order_settle_order.tally,2300:35:pm9_settle_order_settle_order.tally,2255:model g11_settle_order
@@ -151116,7 +151116,7 @@ version override_8
   governs 2025..2027
   known 2025-01-01
   cpi_change[2025..2027] = 0.08 "8 % for 2025-2027"
-,,1:0,1736:e_rent_s: 2 160.00 DUK
+,,1:0,1739:e_rent_s: 2 160.00 DUK
   [1] the pins, evaluated outside them
     [2] pin scenario infl8
   [3] inside the pins: 2 160.00 DUK
@@ -151138,7 +151138,7 @@ version override_8
               rule first: won
                 (lease_v:rent_2025: see [6])
               rule next: beaten by first
-          [11] row base_path:cpi_change = 0.03
+          [11] row base_path:cpi_change[*] = 0.03
               version base_path, source forecast, "SCEN-03 card: the price index's base path, 3 % a year", locator "base path: every year", governs always, known 2025-01-01
   world: infl8
   cut 2026-10-25
@@ -151292,7 +151292,7 @@ version override_8
   governs 2025..2027
   known 2025-01-01
   cpi_change[2025..2027] = 0.08 "8 % for 2025-2027"
-,,1:0,2575:e_shift: 2 332.80 DUK
+,,1:0,2581:e_shift: 2 332.80 DUK
   [1] shift[2027] = 2 332.80 DUK
       rule base: won
         [2] as if {...}
@@ -151324,9 +151324,9 @@ version override_8
                             rule first: won
                               (lease_v:rent_2025: see [9])
                             rule next: beaten by first
-                        [15] row base_path:cpi_change = 0.03
+                        [15] row base_path:cpi_change[*] = 0.03
                             version base_path, source forecast, "SCEN-03 card: the price index's base path, 3 % a year", locator "base path: every year", governs always, known 2025-01-01
-                  (base_path:cpi_change: see [15])
+                  (base_path:cpi_change[*]: see [15])
   world: infl8
   cut 2026-10-25
 warning: WARN-UNREAD def bond_rate is read by nothing
@@ -151479,7 +151479,7 @@ version override_8
   governs 2025..2027
   known 2025-01-01
   cpi_change[2025..2027] = 0.08 "8 % for 2025-2027"
-,,1:0,1804:e_lawed: 2 121.80 DUK
+,,1:0,1810:e_lawed: 2 121.80 DUK
   [1] lawed[2027] = 2 121.80 DUK
       rule base: won
         [2] as if {...}
@@ -151497,9 +151497,9 @@ version override_8
                               [9] row lease_v:rent_2025 = 2 000.00 DUK
                                   version lease_v, source lease, "SCEN-03 card: Halina's rent, 2 000.00 a month in 2025, raised each January by the previous year's price-index change, rounded half up to 0.01", locator "2 000.00 a month in 2025", governs always, known 2025-01-01
                             rule next: beaten by first
-                        [10] row base_path:cpi_change = 0.03
+                        [10] row base_path:cpi_change[*] = 0.03
                             version base_path, source forecast, "SCEN-03 card: the price index's base path, 3 % a year", locator "base path: every year", governs always, known 2025-01-01
-                  (base_path:cpi_change: see [10])
+                  (base_path:cpi_change[*]: see [10])
           [11] outside the as if: 2 121.80 DUK
             (rent[2027]: see [6])
   assumed: the price index's base path: 3 % a year (cpi_change[2025], cpi_change[2026])
@@ -152344,7 +152344,7 @@ version override_8
   governs 2025..2027
   known 2025-01-01
   cpi_change[2025..2027] = 0.08 "8 % for 2025-2027"
-,,1:0,1624:e_known: 2 060.00 DUK
+,,1:0,1630:e_known: 2 060.00 DUK
   [1] the pins, evaluated outside them
     [2] pin known 2025-06-01
   [3] inside the pins: 2 060.00 DUK
@@ -152356,7 +152356,7 @@ version override_8
                 [6] row lease_v:rent_2025 = 2 000.00 DUK
                     version lease_v, source lease, "SCEN-03 card: Halina's rent, 2 000.00 a month in 2025, raised each January by the previous year's price-index change, rounded half up to 0.01", locator "2 000.00 a month in 2025", governs always, known 2025-01-01
               rule next: beaten by first
-          [7] row base_path:cpi_change = 0.03
+          [7] row base_path:cpi_change[*] = 0.03
               version base_path, source forecast, "SCEN-03 card: the price index's base path, 3 % a year", locator "base path: every year", governs always, known 2025-01-01
   [8] outside the pins: 2 060.00 DUK
     [9] rent[2026] = 2 060.00 DUK, law date 2026-01-01
@@ -152366,7 +152366,7 @@ version override_8
               rule first: won
                 (lease_v:rent_2025: see [6])
               rule next: beaten by first
-          (base_path:cpi_change: see [7])
+          (base_path:cpi_change[*]: see [7])
   assumed: the price index's base path: 3 % a year (cpi_change[2025])
   pinned: known 2025-06-01
   cut 2025-06-01
@@ -176971,9 +176971,9 @@ version card_2026
   tally 2
 
 ask pn3: abs(age(d2, d1)) as if {d2 = window(2026-03-03, 2026-03-20)}
-,,1:0,563:base: (window(2026-03-03, 2026-03-20), window(2026-12-20, 2027-01-10), 5, 2026-01-01)
+,,1:0,567:base: (window(2026-03-03, 2026-03-20), window(2026-12-20, 2027-01-10), 5, 2026-01-01)
   cut 2026-03-01
-pn3: refused: RUN-NONE a value is none here: abs
+pn3: refused: RUN-NONE age(d2, d1) is none here: abs
   pinned: d2 = window(2026-03-03, 2026-03-20)
   cut 2026-03-01
 warning: WARN-UNREAD input kh is read by nothing
@@ -199387,9 +199387,9 @@ version bank_6
   known 2026-03-02
   covers k6
   bank[k6_rare] = (on: 2026-02-03, kind: transfers, leg cash from k6 to shop amount 12.00 PLN, fulfils: rare) "the rare payment, whose when is refused"
-,,1:0,156:q_fl: refused: RUN-DIV division by zero
+,,1:0,108:q_fl: 12.00 PLN
   law date 2026-03-15, cut 2026-03-15
-q_k6: refused: RUN-DIV division by zero
+q_k6: 88.00 PLN
   law date 2026-03-15, cut 2026-03-15
 ,20:fixes/gate8/linkdiv2,11:fixes-gate8,18:run linkdiv2.tally,1442:14:linkdiv2.tally,1418:model linkdiv2
   tally 2
@@ -208044,13 +208044,13 @@ version st_sav
   covers sav
   bank[b1] = (on: 2026-03-15, kind: transfers, leg cash from konto to sav amount 940.00 PLN) "b"
   same bank[a2] = bank[b1]
-,,1:0,672:q_moved: ?"bank[a2] and bank[b1] are one, but the amount of cash differs on 2026-03-15: 950.00 PLN (bank[a2]) and 940.00 PLN (bank[b1])" (bank[a2], bank[b1])
+,,1:0,642:q_moved: ?"bank[a2] and bank[b1] are one, but leg cash differs on 2026-03-15: 950.00 PLN (bank[a2]) and 940.00 PLN (bank[b1])" (bank[a2], bank[b1])
   cut 2026-04-10
-q_obs: ?"bank[a2] and bank[b1] are one, but the amount of cash differs on 2026-03-15: 950.00 PLN (bank[a2]) and 940.00 PLN (bank[b1])" (bank[a2], bank[b1])
+q_obs: ?"bank[a2] and bank[b1] are one, but leg cash differs on 2026-03-15: 950.00 PLN (bank[a2]) and 940.00 PLN (bank[b1])" (bank[a2], bank[b1])
   cut 2026-04-10
 q_sav: 940.00 PLN
   cut 2026-04-10
-q_save: ?"bank[a2] and bank[b1] are one, but the amount of cash differs on 2026-03-15: 950.00 PLN (bank[a2]) and 940.00 PLN (bank[b1])" (bank[a2], bank[b1])
+q_save: ?"bank[a2] and bank[b1] are one, but leg cash differs on 2026-03-15: 950.00 PLN (bank[a2]) and 940.00 PLN (bank[b1])" (bank[a2], bank[b1])
   cut 2026-04-10
 warning: WARN-LEGS the two observations of save[2026-03] disagree: bank[a2] (950.00 PLN) and bank[b1] (940.00 PLN)
 ,25:fixes/gate8/m2_g4_b4_twin,11:fixes-gate8,17:run b4_twin.tally,2648:13:b4_twin.tally,2625:model x_explain
@@ -208872,7 +208872,7 @@ version st_k2
   covers konto
   bank[c1] = (on: 2026-03-15, kind: transfers, leg cash from konto to sav amount 940.00 PLN, fulfils: save[2026-03]) "c"
   same bank[c1] = bank[b1]
-,,1:0,2329:q_flk: ?"bank[a2] and bank[c1] are one, but leg cash differs on 2026-03-15: 950.00 PLN (bank[a2]) and 940.00 PLN (bank[c1])" (bank[a2], bank[c1])
+,,1:0,2299:q_flk: ?"bank[a2] and bank[c1] are one, but leg cash differs on 2026-03-15: 950.00 PLN (bank[a2]) and 940.00 PLN (bank[c1])" (bank[a2], bank[c1])
   cut 2026-04-10
 q_konto: ?"bank[a2] and bank[c1] are one, but leg cash differs on 2026-03-15: 950.00 PLN (bank[a2]) and 940.00 PLN (bank[c1])" (bank[a2], bank[c1])
   cut 2026-04-10
@@ -208884,15 +208884,15 @@ q_ls: residuals sav 2026-03
   2026-03 move save: model 950.00 PLN, observed 950.00 PLN, difference 0.00 PLN
     matched save[2026-03] on 2026-03-15: model 950.00 PLN, observed 950.00 PLN, difference 0.00 PLN, timing +0 days
   cut 2026-04-10
-q_moved: ?"bank[a2], bank[b1] and bank[c1] are one, but the amount of cash differs on 2026-03-15: 950.00 PLN (bank[a2]), 950.00 PLN (bank[b1]) and 940.00 PLN (bank[c1])" (bank[a2], bank[b1], bank[c1])
+q_moved: ?"bank[a2], bank[b1] and bank[c1] are one, but leg cash differs on 2026-03-15: 950.00 PLN (bank[a2]), 950.00 PLN (bank[b1]) and 940.00 PLN (bank[c1])" (bank[a2], bank[b1], bank[c1])
   cut 2026-04-10
 q_n: 1
   cut 2026-04-10
-q_obs: ?"bank[a2], bank[b1] and bank[c1] are one, but the amount of cash differs on 2026-03-15: 950.00 PLN (bank[a2]), 950.00 PLN (bank[b1]) and 940.00 PLN (bank[c1])" (bank[a2], bank[b1], bank[c1])
+q_obs: ?"bank[a2], bank[b1] and bank[c1] are one, but leg cash differs on 2026-03-15: 950.00 PLN (bank[a2]), 950.00 PLN (bank[b1]) and 940.00 PLN (bank[c1])" (bank[a2], bank[b1], bank[c1])
   cut 2026-04-10
 q_sav: 950.00 PLN
   cut 2026-04-10
-q_save: ?"bank[a2], bank[b1] and bank[c1] are one, but the amount of cash differs on 2026-03-15: 950.00 PLN (bank[a2]), 950.00 PLN (bank[b1]) and 940.00 PLN (bank[c1])" (bank[a2], bank[b1], bank[c1])
+q_save: ?"bank[a2], bank[b1] and bank[c1] are one, but leg cash differs on 2026-03-15: 950.00 PLN (bank[a2]), 950.00 PLN (bank[b1]) and 940.00 PLN (bank[c1])" (bank[a2], bank[b1], bank[c1])
   cut 2026-04-10
 warning: WARN-LEGS the two observations of save[2026-03] disagree: bank[a2] (950.00 PLN) and bank[c1] (940.00 PLN)
 warning: WARN-LEGS the two observations of save[2026-03] disagree: bank[b1] (950.00 PLN) and bank[c1] (940.00 PLN)
@@ -209110,7 +209110,7 @@ version st_sav
   covers sav
   bank[b1] = (on: 2026-03-15, kind: transfers, leg cash from konto to sav amount 940.00 PLN, fulfils: save[2026-03]) "b"
   same bank[a2] = bank[b1]
-,,1:0,1320:q_flk: -950.00 PLN
+,,1:0,1290:q_flk: -950.00 PLN
   cut 2026-04-10
 q_konto: 100.00 PLN
   cut 2026-04-10
@@ -209122,15 +209122,15 @@ q_ls: residuals sav 2026-03
   2026-03 move save: model 950.00 PLN, observed 940.00 PLN, difference -10.00 PLN
     matched save[2026-03] on 2026-03-15: model 950.00 PLN, observed 940.00 PLN, difference -10.00 PLN, timing +0 days
   cut 2026-04-10
-q_moved: ?"bank[a2] and bank[b1] are one, but the amount of cash differs on 2026-03-15: 950.00 PLN (bank[a2]) and 940.00 PLN (bank[b1])" (bank[a2], bank[b1])
+q_moved: ?"bank[a2] and bank[b1] are one, but leg cash differs on 2026-03-15: 950.00 PLN (bank[a2]) and 940.00 PLN (bank[b1])" (bank[a2], bank[b1])
   cut 2026-04-10
 q_n: 1
   cut 2026-04-10
-q_obs: ?"bank[a2] and bank[b1] are one, but the amount of cash differs on 2026-03-15: 950.00 PLN (bank[a2]) and 940.00 PLN (bank[b1])" (bank[a2], bank[b1])
+q_obs: ?"bank[a2] and bank[b1] are one, but leg cash differs on 2026-03-15: 950.00 PLN (bank[a2]) and 940.00 PLN (bank[b1])" (bank[a2], bank[b1])
   cut 2026-04-10
 q_sav: 940.00 PLN
   cut 2026-04-10
-q_save: ?"bank[a2] and bank[b1] are one, but the amount of cash differs on 2026-03-15: 950.00 PLN (bank[a2]) and 940.00 PLN (bank[b1])" (bank[a2], bank[b1])
+q_save: ?"bank[a2] and bank[b1] are one, but leg cash differs on 2026-03-15: 950.00 PLN (bank[a2]) and 940.00 PLN (bank[b1])" (bank[a2], bank[b1])
   cut 2026-04-10
 warning: WARN-LEGS the two observations of save[2026-03] disagree: bank[a2] (950.00 PLN) and bank[b1] (940.00 PLN)
 warning: WARN-UNREAD place unexplained is read by nothing
@@ -209505,7 +209505,7 @@ version st_k2
   covers konto
   bank[c1] = (on: 2026-03-15, kind: transfers, leg cash from konto to sav amount 950.00 PLN, fulfils: save[2026-03]) "c"
   same bank[a2] = bank[c1]
-,,1:0,591:q_flk: -950.00 PLN
+,,1:0,787:q_flk: -950.00 PLN
   cut 2026-04-10
 q_konto: 100.00 PLN
   cut 2026-04-10
@@ -209514,6 +209514,8 @@ q_led: residuals konto 2026-03
     matched save[2026-03] on 2026-03-15: model -950.00 PLN, observed -950.00 PLN, difference 0.00 PLN, timing +0 days
   cut 2026-04-10
 q_ls: residuals sav 2026-03
+  2026-03 move save: model 950.00 PLN, observed 950.00 PLN, difference 0.00 PLN
+    matched save[2026-03] on 2026-03-15: model 950.00 PLN, observed 950.00 PLN, difference 0.00 PLN, timing +0 days
   cut 2026-04-10
 q_moved: 950.00 PLN
   cut 2026-04-10
@@ -209579,7 +209581,7 @@ version st_k2
   covers konto
   bank[c1] = (on: 2026-03-15, kind: transfers, leg cash from konto to sav amount 940.00 PLN, fulfils: save[2026-03]) "c"
   same bank[a2] = bank[c1]
-,,1:0,2017:q_flk: ?"bank[a2] and bank[c1] are one, but leg cash differs on 2026-03-15: 950.00 PLN (bank[a2]) and 940.00 PLN (bank[c1])" (bank[a2], bank[c1])
+,,1:0,2699:q_flk: ?"bank[a2] and bank[c1] are one, but leg cash differs on 2026-03-15: 950.00 PLN (bank[a2]) and 940.00 PLN (bank[c1])" (bank[a2], bank[c1])
   cut 2026-04-10
 q_konto: ?"bank[a2] and bank[c1] are one, but leg cash differs on 2026-03-15: 950.00 PLN (bank[a2]) and 940.00 PLN (bank[c1])" (bank[a2], bank[c1])
   cut 2026-04-10
@@ -209588,16 +209590,18 @@ q_led: residuals konto 2026-03
     matched save[2026-03] on 2026-03-15: model -950.00 PLN, observed ?"bank[a2] and bank[c1] are one, but leg cash differs on 2026-03-15: 950.00 PLN (bank[a2]) and 940.00 PLN (bank[c1])" (bank[a2], bank[c1]), difference ?"bank[a2] and bank[c1] are one, but leg cash differs on 2026-03-15: 950.00 PLN (bank[a2]) and 940.00 PLN (bank[c1])" (bank[a2], bank[c1]), timing +0 days
   cut 2026-04-10
 q_ls: residuals sav 2026-03
+  2026-03 move save: model 950.00 PLN, observed ?"bank[a2] and bank[c1] are one, but leg cash differs on 2026-03-15: 950.00 PLN (bank[a2]) and 940.00 PLN (bank[c1])" (bank[a2], bank[c1]), difference ?"bank[a2] and bank[c1] are one, but leg cash differs on 2026-03-15: 950.00 PLN (bank[a2]) and 940.00 PLN (bank[c1])" (bank[a2], bank[c1])
+    matched save[2026-03] on 2026-03-15: model 950.00 PLN, observed ?"bank[a2] and bank[c1] are one, but leg cash differs on 2026-03-15: 950.00 PLN (bank[a2]) and 940.00 PLN (bank[c1])" (bank[a2], bank[c1]), difference ?"bank[a2] and bank[c1] are one, but leg cash differs on 2026-03-15: 950.00 PLN (bank[a2]) and 940.00 PLN (bank[c1])" (bank[a2], bank[c1]), timing +0 days
   cut 2026-04-10
-q_moved: ?"bank[a2] and bank[c1] are one, but the amount of cash differs on 2026-03-15: 950.00 PLN (bank[a2]) and 940.00 PLN (bank[c1])" (bank[a2], bank[c1])
+q_moved: ?"bank[a2] and bank[c1] are one, but leg cash differs on 2026-03-15: 950.00 PLN (bank[a2]) and 940.00 PLN (bank[c1])" (bank[a2], bank[c1])
   cut 2026-04-10
 q_n: 1
   cut 2026-04-10
-q_obs: ?"bank[a2] and bank[c1] are one, but the amount of cash differs on 2026-03-15: 950.00 PLN (bank[a2]) and 940.00 PLN (bank[c1])" (bank[a2], bank[c1])
+q_obs: ?"bank[a2] and bank[c1] are one, but leg cash differs on 2026-03-15: 950.00 PLN (bank[a2]) and 940.00 PLN (bank[c1])" (bank[a2], bank[c1])
   cut 2026-04-10
 q_sav: ?"bank[a2] and bank[c1] are one, but leg cash differs on 2026-03-15: 950.00 PLN (bank[a2]) and 940.00 PLN (bank[c1])" (bank[a2], bank[c1])
   cut 2026-04-10
-q_save: ?"bank[a2] and bank[c1] are one, but the amount of cash differs on 2026-03-15: 950.00 PLN (bank[a2]) and 940.00 PLN (bank[c1])" (bank[a2], bank[c1])
+q_save: ?"bank[a2] and bank[c1] are one, but leg cash differs on 2026-03-15: 950.00 PLN (bank[a2]) and 940.00 PLN (bank[c1])" (bank[a2], bank[c1])
   cut 2026-04-10
 warning: WARN-LEGS the two observations of save[2026-03] disagree: bank[a2] (950.00 PLN) and bank[c1] (940.00 PLN)
 warning: WARN-UNREAD place unexplained is read by nothing
@@ -209980,7 +209984,7 @@ version st_sav
   covers sav
   bank[b1] = (on: 2026-03-15, kind: transfers, leg cash from konto to sav amount 940.00 PLN, fulfils: save[2026-03]) "b"
   same bank[a2] = bank[b1]
-,,1:0,1075:q_flk: -950.00 PLN
+,,1:0,1045:q_flk: -950.00 PLN
   cut 2026-04-10
 q_konto: 100.00 PLN
   cut 2026-04-10
@@ -209988,15 +209992,15 @@ q_led: residuals konto 2026-03
   2026-03 move save: model -950.00 PLN, observed -950.00 PLN, difference 0.00 PLN
     matched save[2026-03] on 2026-03-15: model -950.00 PLN, observed -950.00 PLN, difference 0.00 PLN, timing +0 days
   cut 2026-04-10
-q_moved: ?"bank[a2] and bank[b1] are one, but the amount of cash differs on 2026-03-15: 950.00 PLN (bank[a2]) and 940.00 PLN (bank[b1])" (bank[a2], bank[b1])
+q_moved: ?"bank[a2] and bank[b1] are one, but leg cash differs on 2026-03-15: 950.00 PLN (bank[a2]) and 940.00 PLN (bank[b1])" (bank[a2], bank[b1])
   cut 2026-04-10
 q_n: 1
   cut 2026-04-10
-q_obs: ?"bank[a2] and bank[b1] are one, but the amount of cash differs on 2026-03-15: 950.00 PLN (bank[a2]) and 940.00 PLN (bank[b1])" (bank[a2], bank[b1])
+q_obs: ?"bank[a2] and bank[b1] are one, but leg cash differs on 2026-03-15: 950.00 PLN (bank[a2]) and 940.00 PLN (bank[b1])" (bank[a2], bank[b1])
   cut 2026-04-10
 q_sav: 940.00 PLN
   cut 2026-04-10
-q_save: ?"bank[a2] and bank[b1] are one, but the amount of cash differs on 2026-03-15: 950.00 PLN (bank[a2]) and 940.00 PLN (bank[b1])" (bank[a2], bank[b1])
+q_save: ?"bank[a2] and bank[b1] are one, but leg cash differs on 2026-03-15: 950.00 PLN (bank[a2]) and 940.00 PLN (bank[b1])" (bank[a2], bank[b1])
   cut 2026-04-10
 warning: WARN-LEGS the two observations of save[2026-03] disagree: bank[a2] (950.00 PLN) and bank[b1] (940.00 PLN)
 warning: WARN-UNREAD place unexplained is read by nothing
@@ -210052,7 +210056,7 @@ version st_sav
   covers sav
   bank[b1] = (on: 2026-03-16, kind: transfers, leg cash from konto to sav amount 950.00 PLN, fulfils: save[2026-03]) "b"
   same bank[a2] = bank[b1]
-,,1:0,796:q_flk: -950.00 PLN
+,,1:0,789:q_flk: -950.00 PLN
   cut 2026-04-10
 q_konto: 100.00 PLN
   cut 2026-04-10
@@ -210068,7 +210072,7 @@ q_obs: 950.00 PLN
   cut 2026-04-10
 q_sav: 950.00 PLN
   cut 2026-04-10
-q_save: ?"bank[a2] and bank[b1] are one, but the day of cash differs on 2026-03-15: 2026-03-15 (bank[a2]) and 2026-03-16 (bank[b1])" (bank[a2], bank[b1])
+q_save: ?"bank[a2] and bank[b1] are one, but leg cash differs on 2026-03-15: 2026-03-15 (bank[a2]) and 2026-03-16 (bank[b1])" (bank[a2], bank[b1])
   cut 2026-04-10
 warning: WARN-LEGS the two observations of save[2026-03] disagree: bank[a2] (2026-03-15) and bank[b1] (2026-03-16)
 warning: WARN-UNREAD place unexplained is read by nothing
@@ -212393,13 +212397,13 @@ version st_sav
   covers sav
   bank[b1] = (on: 2026-03-15, kind: transfers, leg cash from konto to sav amount 940.00 PLN, fulfils: save[2026-03]) "b"
   same bank[a2] = bank[b1]
-,,1:0,672:q_moved: ?"bank[a2] and bank[b1] are one, but the amount of cash differs on 2026-03-15: 950.00 PLN (bank[a2]) and 940.00 PLN (bank[b1])" (bank[a2], bank[b1])
+,,1:0,642:q_moved: ?"bank[a2] and bank[b1] are one, but leg cash differs on 2026-03-15: 950.00 PLN (bank[a2]) and 940.00 PLN (bank[b1])" (bank[a2], bank[b1])
   cut 2026-04-10
-q_obs: ?"bank[a2] and bank[b1] are one, but the amount of cash differs on 2026-03-15: 950.00 PLN (bank[a2]) and 940.00 PLN (bank[b1])" (bank[a2], bank[b1])
+q_obs: ?"bank[a2] and bank[b1] are one, but leg cash differs on 2026-03-15: 950.00 PLN (bank[a2]) and 940.00 PLN (bank[b1])" (bank[a2], bank[b1])
   cut 2026-04-10
 q_sav: 940.00 PLN
   cut 2026-04-10
-q_save: ?"bank[a2] and bank[b1] are one, but the amount of cash differs on 2026-03-15: 950.00 PLN (bank[a2]) and 940.00 PLN (bank[b1])" (bank[a2], bank[b1])
+q_save: ?"bank[a2] and bank[b1] are one, but leg cash differs on 2026-03-15: 950.00 PLN (bank[a2]) and 940.00 PLN (bank[b1])" (bank[a2], bank[b1])
   cut 2026-04-10
 warning: WARN-LEGS the two observations of save[2026-03] disagree: bank[a2] (950.00 PLN) and bank[b1] (940.00 PLN)
 ,44:fixes/gate8/m2_rt_l5_19_same_rows_flows_once,11:fixes-gate8,36:run l5_19_same_rows_flows_once.tally,1263:32:l5_19_same_rows_flows_once.tally,1221:model t
@@ -212560,7 +212564,7 @@ version st_sav
   covers sav
   bank[b1] = (on: 2026-03-15, kind: transfers, leg cash from konto to sav amount 940.00 PLN) "b"
   same bank[a2] = bank[b1]
-,,1:0,955:q_led: residuals konto 2026-03
+,,1:0,935:q_led: residuals konto 2026-03
   2026-03 move save: model -950.00 PLN, observed -950.00 PLN, difference 0.00 PLN
     matched save[2026-03] on 2026-03-15: model -950.00 PLN, observed -950.00 PLN, difference 0.00 PLN, timing +0 days
   cut 2026-04-10
@@ -212568,9 +212572,9 @@ q_ls: residuals sav 2026-03
   2026-03 move save: model 950.00 PLN, observed 940.00 PLN, difference -10.00 PLN
     matched save[2026-03] on 2026-03-15: model 950.00 PLN, observed 940.00 PLN, difference -10.00 PLN, timing +0 days
   cut 2026-04-10
-q_obs: ?"bank[a2] and bank[b1] are one, but the amount of cash differs on 2026-03-15: 950.00 PLN (bank[a2]) and 940.00 PLN (bank[b1])" (bank[a2], bank[b1])
+q_obs: ?"bank[a2] and bank[b1] are one, but leg cash differs on 2026-03-15: 950.00 PLN (bank[a2]) and 940.00 PLN (bank[b1])" (bank[a2], bank[b1])
   cut 2026-04-10
-q_save: ?"bank[a2] and bank[b1] are one, but the amount of cash differs on 2026-03-15: 950.00 PLN (bank[a2]) and 940.00 PLN (bank[b1])" (bank[a2], bank[b1])
+q_save: ?"bank[a2] and bank[b1] are one, but leg cash differs on 2026-03-15: 950.00 PLN (bank[a2]) and 940.00 PLN (bank[b1])" (bank[a2], bank[b1])
   cut 2026-04-10
 warning: WARN-LEGS the two observations of save[2026-03] disagree: bank[a2] (950.00 PLN) and bank[b1] (940.00 PLN)
 ,50:fixes/gate8/m2_rt_l5_19_uncertain_covered_not_open,11:fixes-gate8,42:run l5_19_uncertain_covered_not_open.tally,966:38:l5_19_uncertain_covered_not_open.tally,919:model t
@@ -213196,7 +213200,7 @@ version st_sav
   bank[b2] = (on: 2026-03-20, kind: transfers, leg cash from konto to sav amount 250.00 PLN) "b2"
   same bank[a1] = bank[b1]
   same bank[b2] = bank[a2]
-,,1:0,1147:b_k: 700.00 PLN
+,,1:0,1137:b_k: 700.00 PLN
   cut 2026-04-10
 b_s: 350.00 PLN
   cut 2026-04-10
@@ -213214,7 +213218,7 @@ l_s: residuals sav 2026-03
   cut 2026-04-10
 t_n: 2
   cut 2026-04-10
-t_sum: ?"bank[a2] and bank[b2] are one, but the amount of cash differs on 2026-03-20: 200.00 PLN (bank[a2]) and 250.00 PLN (bank[b2])" (bank[a2], bank[b2])
+t_sum: ?"bank[a2] and bank[b2] are one, but leg cash differs on 2026-03-20: 200.00 PLN (bank[a2]) and 250.00 PLN (bank[b2])" (bank[a2], bank[b2])
   cut 2026-04-10
 warning: WARN-LEGS the two observations of bank[a2] disagree: bank[a2] (200.00 PLN) and bank[b2] (250.00 PLN)
 warning: WARN-UNREAD input amt is read by nothing
@@ -213399,15 +213403,15 @@ version st2
   bank[d1] = (on: 2026-03-10, kind: transfers, leg cash from konto to world amount 50.00 PLN) "d1"
   same bank[a1] = bank[b1]
   same bank[d1] = bank[c1]
-,,1:0,1017:b_k: 899.00 PLN
+,,1:0,993:b_k: 899.00 PLN
   cut 2026-04-10
 t_cash: 100.00 PLN
   cut 2026-04-10
-t_d10: ?"bank[c1] and bank[d1] are one, but the day of cash differs on 2026-03-12: 2026-03-12 (bank[c1]) and 2026-03-10 (bank[d1])" (bank[c1], bank[d1])
+t_d10: ?"bank[c1] and bank[d1] are one, but leg cash differs on 2026-03-12: 2026-03-12 (bank[c1]) and 2026-03-10 (bank[d1])" (bank[c1], bank[d1])
   cut 2026-04-10
-t_day: ?"bank[c1] and bank[d1] are one, but the day of cash differs on 2026-03-12: 2026-03-12 (bank[c1]) and 2026-03-10 (bank[d1])" (bank[c1], bank[d1])
+t_day: ?"bank[c1] and bank[d1] are one, but leg cash differs on 2026-03-12: 2026-03-12 (bank[c1]) and 2026-03-10 (bank[d1])" (bank[c1], bank[d1])
   cut 2026-04-10
-t_fee: ?"bank[a1] and bank[b1] are one, but the amount of fee differs on 2026-03-10: 1.00 PLN (bank[a1]) and 2.00 PLN (bank[b1])" (bank[a1], bank[b1])
+t_fee: ?"bank[a1] and bank[b1] are one, but leg fee differs on 2026-03-10: 1.00 PLN (bank[a1]) and 2.00 PLN (bank[b1])" (bank[a1], bank[b1])
   cut 2026-04-10
 warning: WARN-LEGS the two observations of bank[a1] disagree: bank[a1] (100.00 PLN, 1.00 PLN) and bank[b1] (100.00 PLN, 2.00 PLN)
 warning: WARN-LEGS the two observations of bank[c1] disagree: bank[c1] (2026-03-12) and bank[d1] (2026-03-10)
@@ -213622,7 +213626,7 @@ version sm
   cite s
   known 2026-01-02
   same pay[2026-03] = pay2[2026-03]
-,,1:0,324:b_k: 1 500.00 PLN
+,,1:0,353:b_k: 1 500.00 PLN
   unfulfilled: pay2[2026-03]
   cut 2026-04-10
 f_k: 500.00 PLN
@@ -213631,6 +213635,7 @@ f_k: 500.00 PLN
 l_k: residuals konto 2026-03
   cut 2026-04-10
 n_i: 1
+  unfulfilled: pay2[2026-03]
   unfulfilled: pay[2026-03]
   cut 2026-04-10
 warning: WARN-UNREAD input d15 is read by nothing
@@ -215187,8 +215192,8 @@ version st_sav
 ask q_list: a.change for a in adjustments over ..
 ask q_konto: bal(konto, 2026-05-31)
 ask q_sav: bal(sav, 2026-05-31)
-,,1:0,1031:q_konto: 550.00 PLN
-  adjustment: pay[2026-02] by 50.00 PLN on 2026-04-01 (version v2), remaining ?"bank[a1] and bank[b1] are one, but the amount of cash differs on 2026-04-10: 50.00 PLN (bank[a1]) and 60.00 PLN (bank[b1])" (bank[a1], bank[b1])
+,,1:0,1011:q_konto: 550.00 PLN
+  adjustment: pay[2026-02] by 50.00 PLN on 2026-04-01 (version v2), remaining ?"bank[a1] and bank[b1] are one, but leg cash differs on 2026-04-10: 50.00 PLN (bank[a1]) and 60.00 PLN (bank[b1])" (bank[a1], bank[b1])
   unfulfilled: pay[2026-01]
   unfulfilled: pay[2026-02]
   unfulfilled: pay[2026-03]
@@ -215198,7 +215203,7 @@ ask q_sav: bal(sav, 2026-05-31)
 q_list (a = adjustments[pay[2026-02].cash, v2]): 50.00 PLN
   cut 2026-06-30
 q_sav: 460.00 PLN
-  adjustment: pay[2026-02] by 50.00 PLN on 2026-04-01 (version v2), remaining ?"bank[a1] and bank[b1] are one, but the amount of cash differs on 2026-04-10: 50.00 PLN (bank[a1]) and 60.00 PLN (bank[b1])" (bank[a1], bank[b1])
+  adjustment: pay[2026-02] by 50.00 PLN on 2026-04-01 (version v2), remaining ?"bank[a1] and bank[b1] are one, but leg cash differs on 2026-04-10: 50.00 PLN (bank[a1]) and 60.00 PLN (bank[b1])" (bank[a1], bank[b1])
   unfulfilled: pay[2026-01]
   unfulfilled: pay[2026-02]
   unfulfilled: pay[2026-03]
@@ -223349,7 +223354,7 @@ version wide_rows
 ask s_reg: tot in wide with r[k1] = 9 law 2026-06-30
 ask s_exp: explain tot in wide with r[k1] = 9 law 2026-06-30
 ask s_inp: inputs-of tot in wide with r[k1] = 9 law 2026-06-30
-,,1:0,2960:a_reg: 14
+,,1:0,2984:a_reg: 14
   pinned: r[*] = 7
   law date 2026-06-30, cut 2026-06-30
 a_exp: 14
@@ -223369,7 +223374,7 @@ a_exp: 14
             [11] outside the as if: 10
               [12] tot = 10, law date 2026-06-30
                   rule base: won
-                    [13] row v:r = 1
+                    [13] row v:r[*] = 1
                         version v, source card, "invented", governs 2026-01-01.., known 2026-01-01
   [14] outside the pins: 14
     [15] inner = 14, law date 2026-06-30
@@ -223384,7 +223389,7 @@ a_exp: 14
             [21] outside the as if: 2
               [22] tot = 2, law date 2026-06-30
                   rule base: won
-                    (v:r: see [13])
+                    (v:r[*]: see [13])
   pinned: r[*] = 7
   law date 2026-06-30, cut 2026-06-30
 a_inp:
@@ -223402,16 +223407,16 @@ w_exp: 10
   [3] inside the pins: 10
     [4] tot = 10, law date 2026-06-30
         rule base: won
-          [5] row v:r = 1
+          [5] row v:r[*] = 1
               version v, source card, "invented", governs 2026-01-01.., known 2026-01-01
   [6] outside the pins: 2
     [7] tot = 2, law date 2026-06-30
         rule base: won
-          (v:r: see [5])
+          (v:r[*]: see [5])
   pinned: r[k1] = 9
   law date 2026-06-30, cut 2026-06-30
 w_inp:
-  v:r (source card "invented")
+  v:r[*] (source card "invented")
   pinned: r[k1] = 9
   law date 2026-06-30, cut 2026-06-30
 s_reg: 14
@@ -223424,17 +223429,17 @@ s_exp: 14
   [3] inside the pins: 14
     [4] tot = 14, law date 2026-06-30
         rule base: won
-          [5] row wide_rows:r = 5
+          [5] row wide_rows:r[*] = 5
               version wide_rows, source card, "invented", locator "the scenario's rows, which hide the ask's pin", governs 2026-01-01.., known 2025-12-01
   [6] outside the pins: 10
     [7] tot = 10, law date 2026-06-30
         rule base: won
-          (wide_rows:r: see [5])
+          (wide_rows:r[*]: see [5])
   pinned: r[k1] = 9
   world: wide
   law date 2026-06-30, cut 2026-06-30
 s_inp:
-  wide_rows:r (source card "invented", locator "the scenario's rows, which hide the ask's pin")
+  wide_rows:r[*] (source card "invented", locator "the scenario's rows, which hide the ask's pin")
   pinned: r[k1] = 9
   world: wide
   law date 2026-06-30, cut 2026-06-30
@@ -223466,7 +223471,7 @@ version v
   known 2026-01-01
   r[*] = 1 "c"
   seven = 7 "c"
-,,1:0,2438:t5 (k = k1): 9
+,,1:0,2444:t5 (k = k1): 9
   pinned: r[k1] = 9
   law date 2026-06-30, cut 2026-06-30
 t5 (k = k2): 3
@@ -223491,7 +223496,7 @@ p_exp (k = k1): 9
         rule base: won
           [8] one = 1, law date 2026-06-30
               rule base: won
-                [9] row v:r = 1
+                [9] row v:r[*] = 1
                     version v, source card, "invented", locator "c", governs 2026-01-01.., known 2026-01-01
   pinned: r[k1] = 9
   law date 2026-06-30, cut 2026-06-30
@@ -223525,7 +223530,7 @@ p_exp (k = k2): 7
             [20] outside the as if: 1
               [21] one = 1, law date 2026-06-30
                   rule base: won
-                    [22] row v:r = 1
+                    [22] row v:r[*] = 1
                         version v, source card, "invented", locator "c", governs 2026-01-01.., known 2026-01-01
   pinned: r[k1] = 7
   law date 2026-06-30, cut 2026-06-30
@@ -223564,7 +223569,7 @@ version v
   known 2026-01-01
   r[*] = 1 "c"
   seven = 7 "c"
-,,1:0,1508:b_reg (k = k1): 9
+,,1:0,1514:b_reg (k = k1): 9
   pinned: r[k1] = 9
   law date 2026-06-30, cut 2026-06-30
 b_reg (k = k2): 10
@@ -223583,7 +223588,7 @@ b_exp (k = k1): 9
         rule base: won
           [8] one = 1, law date 2026-06-30
               rule base: won
-                [9] row v:r = 1
+                [9] row v:r[*] = 1
                     version v, source card, "invented", locator "c", governs 2026-01-01.., known 2026-01-01
   pinned: r[k1] = 9
   law date 2026-06-30, cut 2026-06-30
@@ -223600,7 +223605,7 @@ b_exp (k = k2): 10
         rule base: won
           [8] one = 1, law date 2026-06-30
               rule base: won
-                [9] row v:r = 1
+                [9] row v:r[*] = 1
                     version v, source card, "invented", locator "c", governs 2026-01-01.., known 2026-01-01
   pinned: r[k1] = 9
   law date 2026-06-30, cut 2026-06-30

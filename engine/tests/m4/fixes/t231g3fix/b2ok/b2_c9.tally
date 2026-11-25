@@ -1,0 +1,38 @@
+model tup
+  tally 2
+  on 2026-10-18
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+unit PLN: currency minor 0.01
+index ks = [k1, k2, k3]
+index js = [j1, j2]
+input v[k in ks, j in js]: money PLN
+input u[k in ks, j in js]: money PLN
+input b: bool
+input x1[k in ks]: int
+def h[k in ks, j in js]: money PLN = v[k, j] + v[k, j]
+
+ask c9: v[(first(k in ks, j in js where v[k, j] > v[k3, j1]))]
+
+version ver
+  cite s
+  governs always
+  known 2026-01-01
+  b = true "s"
+  x1[k1] = 2 "s"
+  x1[k2] = 1 "s"
+  x1[k3] = 3 "s"
+  v[k1, j1] = 5.00 PLN "s"
+  v[k1, j2] = 7.00 PLN "s"
+  v[k2, j1] = 3.00 PLN "s"
+  v[k2, j2] = 9.00 PLN "s"
+  v[k3, j1] = 4.00 PLN "s"
+  v[k3, j2] = 6.00 PLN "s"
+  u[k1, j1] = 5.00 PLN "s"
+  u[k1, j2] = ?"which u?"
+  u[k2, j1] = 3.00 PLN "s"
+  u[k2, j2] = 9.00 PLN "s"
+  u[k3, j1] = 4.00 PLN "s"
+  u[k3, j2] = 6.00 PLN "s"
