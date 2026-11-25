@@ -1908,6 +1908,61 @@ version jan
     }
 
     #[test]
+    fn a_row_stands_in_for_an_instance_whose_day_is_refused() {
+        // L §5.19 l.1713, §8.4 l.2355 (tally 2.3.1 rulings 23 (b), the part-1 fix review's gap
+        // 3): January's day divides by zero; its row stands in by the name, on a plan and on a
+        // decision, so the balance and the flows read the row, and only a read of the instance
+        // keeps the refusal
+        let text = |decision: bool| {
+            let when = if decision {
+                "  reads pot\n  when ok[m] and bal(pot) > 0.00 PLN"
+            } else {
+                "  when ok[m]"
+            };
+            FIRST
+                .replace("OK", "true \"ok jan\"")
+                .replace("  on day_of(m, d5)", "  on day_of(m, d5 / dz[m])")
+                .replace("  when ok[m]", when)
+                .replace(
+                    "input d5: int",
+                    "input d5: int\n\ninput dz[m in month]: int",
+                )
+                .replace(
+                    "  d5 = 5 \"s\"",
+                    "  d5 = 5 \"s\"\n  dz[2026-01] = 0 \"s\"\n  dz[2026-02] = 1 \"s\"\n  \
+                     dz[2026-03] = 1 \"s\"\n  dz[2026-04] = 1 \"s\"\n  dz[2026-05] = 1 \"s\"\n  \
+                     dz[2026-06] = 1 \"s\"",
+                )
+                .replace(
+                    "ask c:",
+                    "ask dy: rent[2026-01].day\n\nask e: rent[2026-01] == none\n\nask c:",
+                )
+        };
+        for (decision, what) in [(false, "a plan"), (true, "a decision")] {
+            let t = text(decision);
+            let files = [("first.tally", t.as_str())];
+            let first = |ask: &str| answer(&files, ask).first().cloned().expect("a line");
+            assert_eq!(
+                first("c"),
+                "c: 8 700.00 PLN",
+                "{what}: the balance reads the row"
+            );
+            assert_eq!(
+                first("a"),
+                "a: 100.00 PLN",
+                "{what}: the flows read the row"
+            );
+            for ask in ["dy", "e"] {
+                assert_eq!(
+                    first(ask),
+                    format!("{ask}: refused: RUN-DIV division by zero"),
+                    "{what}: {ask} keeps the refusal"
+                );
+            }
+        }
+    }
+
+    #[test]
     fn flows_for_a_period_over_a_movement_whose_period_is_a_hole_is_that_hole() {
         // L §5.14 l.1363, §8.1 (tally 2.3.1 part 1's review B5): a row is for its named tuple's
         // period and an instance for its own; one that is a hole makes `, for k` that hole, on

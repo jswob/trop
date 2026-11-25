@@ -168,8 +168,9 @@ impl Engine {
         acc: &mut Counted,
     ) -> Result<(), Stop> {
         // the tuples rows name stand in for by the name in every read over movements: one the
-        // model doesn't hold, one that is none here, or one whose day is a hole is counted by its
-        // rows, on their own days (L §5.19 l.1718; tally 2.3.1 rulings 22 (1), P1-C7)
+        // model doesn't hold, one that is none here, or one with no day of its own, a hole or a
+        // refusal, is counted by its rows, on their own days, whatever its existence, legs or
+        // amounts (L §5.19 l.1718; tally 2.3.1 rulings 22 (1), P1-C7, rulings 23 (b))
         let named = self.named_tuples(m, mv, want, ctx.cut)?;
         let mut by_rows: BTreeSet<String> = named.clone();
         for i in insts {
@@ -179,8 +180,8 @@ impl Engine {
             if !i.keys.starts_with(want) {
                 continue;
             }
-            let hole_day = matches!(i.day, Some(Dated::Hole(_))) && i.err.is_none();
-            if named.contains(&i.id) && (hole_day || i.status == Status::None) {
+            let dayless = !matches!(i.day, Some(Dated::Day(_)));
+            if named.contains(&i.id) && (dayless || i.status == Status::None) {
                 by_rows.insert(i.id.clone());
                 continue;
             }
