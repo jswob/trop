@@ -13,6 +13,7 @@
 //! movement's field its kind lacks is read through the kind test that narrows its name, else
 //! refused; every recursion is counted (R-16).
 
+use super::across::bare;
 use super::check::{AxisRead, Checker, Figure, Narrowed, Scope, Var, VarDom, invariant};
 use super::keys::{RangeKey, resolve_key};
 use super::random::DrawKey;
@@ -28,8 +29,35 @@ use crate::eval::year_form;
 use crate::model::{
     BindInfo, Domain, KeyVal, KindSpec, NameKind, Node, NodeKind, PeriodWord, Reality, Rel, Ty,
 };
-use crate::syntax::{Expr, Key, Lit, Postfix, SiteKey, Stop};
+use crate::syntax::{AggFn, Expr, Key, Lit, Postfix, SiteKey, Stop};
 use crate::time::PeriodKind;
+use std::collections::{BTreeMap, BTreeSet};
+
+/// Whether expression `e`, through brackets and an `if`'s arms, which stand where the whole
+/// stands, may be the tuple an `argmin`, `argmax`, `first` or `last` over several bindings
+/// returns (L §2.5 Keys, §5.11's aggregate paragraph; G3's review B2).
+fn returns_tuple(e: &Expr) -> bool {
+    let mut work = vec![e];
+    while let Some(node) = work.pop() {
+        if let Expr::Agg(agg) = node
+            && matches!(
+                agg.func,
+                AggFn::Argmin | AggFn::Argmax | AggFn::First | AggFn::Last
+            )
+            && agg.binds.len() > 1
+        {
+            return true;
+        }
+        if let Expr::Paren(inner) = node {
+            work.push(inner);
+        }
+        if let Expr::If(parts, _) = node {
+            let [_, yes, no] = parts.as_ref();
+            work.extend([yes, no]);
+        }
+    }
+    false
+}
 
 impl Checker {
     /// A read of an input or a def at keys (refcore's `read`). L §2.5, §4.6; E §3.1 step 5.
@@ -60,7 +88,8 @@ impl Checker {
         } else {
             NodeKind::Def
         };
-        if keys.len() != binds.len() && !observed {
+        let tupled = self.tuple_keys(m, scope, keys, binds, depth)?;
+        if keys.len() != binds.len() && !observed && !tupled {
             return Err(refused(
                 Load::Key,
                 format!(
@@ -71,21 +100,30 @@ impl Checker {
             ));
         }
         if observed {
-            let by_id = match keys {
-                [Key::Expr(key)] => is_keylit_node(m, scope, key),
-                _ => false,
+            let row = match keys {
+                [Key::Expr(key)] if is_keylit_node(m, scope, key) => text(key),
+                _ => {
+                    return Err(refused(
+                        Load::Key,
+                        format!("an observation is read by its id: {id}[<id>]"),
+                    ));
+                }
             };
-            if !by_id {
-                return Err(refused(
-                    Load::Key,
-                    format!("an observation is read by its id: {id}[<id>]"),
-                ));
-            }
+            // the row read by its id, for step 7's row-precise mark (tally 2.3.1 rulings 19 D)
+            let named = &mut self.graph.named_rows;
+            let by_input = named
+                .entry(scope.item.clone())
+                .or_insert_with(BTreeMap::new);
+            let rows = by_input.entry(id.to_owned()).or_insert_with(BTreeSet::new);
+            rows.insert(row);
             self.edge(&scope.item, Node::new(NodeKind::Input, id), Rel::Any);
             return Ok(Ty::Key("events".to_owned()));
         }
         let mut env = Vec::new();
-        for (key, bind) in keys.iter().zip(binds) {
+        if tupled {
+            env.extend(binds.iter().map(|b| (b.var.clone(), "$?".to_owned())));
+        }
+        for (pos, (key, bind)) in keys.iter().zip(binds).enumerate().filter(|_| !tupled) {
             let Key::Expr(kn) = key else {
                 return Err(refused(
                     Load::Parse,
@@ -93,6 +131,9 @@ impl Checker {
                 ));
             };
             let lit = self.bind_key(m, scope, kn, bind, depth)?;
+            if matches!(bind.domain, Domain::Kind(_)) {
+                self.kind_key(scope, kn, (Node::new(node_kind, id), pos));
+            }
             let mut value = "$?".to_owned();
             if let Expr::Name(name) = kn
                 && scope.is_var(name)
@@ -128,6 +169,55 @@ impl Checker {
         }
         self.note_read(scope, &target);
         Ok(ty)
+    }
+
+    /// Key `key` of item `target`, keyed by a kind: what `target` reads of its key reaches the
+    /// graph through this reader, so a key `o.fulfils` is noted for step 7's mark, and the
+    /// reader's own key variable passes on what `target` reads of it (E §3.1 steps 5 and 7;
+    /// tally 2.3.1 rulings 22 (6), part 1's review B1).
+    fn kind_key(&mut self, scope: &Scope, key: &Expr, target: (Node, usize)) {
+        if names_fulfils(key) {
+            let keyed = self.graph.fulfils_keyed.entry(scope.item.clone());
+            keyed.or_insert_with(BTreeSet::new).insert(target);
+            return;
+        }
+        // the reader's own key variable, at its position, passes on what `target` reads there
+        if let Expr::Name(var) = bare(key)
+            && let Some(own) = scope.keyvars.iter().position(|v| v == var)
+        {
+            let passes = self.graph.key_passes.entry((scope.item.clone(), own));
+            passes.or_insert_with(BTreeSet::new).insert(target);
+        }
+    }
+
+    /// Whether a read's one key is the tuple `argmin`, `argmax`, `first` or `last` returns over
+    /// as many bindings as the read has positions, bracketed or an `if`'s arms included: it
+    /// stands in them, each of its keys checked against its position (refcore's `read`, its
+    /// `tupitem`; tally 2.3.1 S6, Q1.12, G3's review B2). L §5.11's aggregate paragraph, §2.5.
+    fn tuple_keys(
+        &mut self,
+        m: &Reality,
+        scope: &Scope,
+        keys: &[Key],
+        binds: &[BindInfo],
+        depth: u32,
+    ) -> Result<bool, Stop> {
+        let [Key::Expr(one)] = keys else {
+            return Ok(false);
+        };
+        if binds.len() < 2 || !returns_tuple(one) {
+            return Ok(false);
+        }
+        let Ty::Tuple(items) = self.expr(m, scope, one, None, depth)? else {
+            return Ok(false);
+        };
+        if items.len() != binds.len() {
+            return Ok(false);
+        }
+        for (item, bind) in items.iter().zip(binds) {
+            self.key_conv(m, scope, item, &bind.domain, one)?;
+        }
+        Ok(true)
     }
 
     /// A place read by its id, or a keyed place at keys (refcore's `m_place_value`).
@@ -287,6 +377,9 @@ impl Checker {
                 ));
             }
         }
+        if matches!(kn, Expr::If(..)) {
+            arm_keys(m, scope, kn, domain)?;
+        }
         if let Domain::Index(ix) = domain
             && let Some(pk) = m.indexes.get(ix).and_then(|index| index.period)
         {
@@ -313,16 +406,7 @@ impl Checker {
         if is_keylit_node(m, scope, kn) || range_number {
             match domain {
                 Domain::Index(_) | Domain::Kind(_) | Domain::Axis(_) => {
-                    let dated = matches!(
-                        kn,
-                        Expr::Lit(Lit::Day(_) | Lit::Month(..) | Lit::Quarter(..))
-                    );
-                    let year = matches!(kn, Expr::Lit(Lit::Num(n)) if n.four)
-                        && matches!(domain, Domain::Index(ix) if m.indexes.get(ix).is_some_and(|i| i.period.is_some()));
-                    if dated || year {
-                        lit_rule(scope, Figure::Date, "", None)?;
-                    }
-                    return resolve_lit(m, scope, kn, domain).map(Some);
+                    return literal_key(m, scope, kn, domain).map(Some);
                 }
                 Domain::List(_) => return resolve_lit(m, scope, kn, domain).map(Some),
                 Domain::Range => range_lit = true,
@@ -497,6 +581,11 @@ impl Checker {
         let ty = match first {
             Postfix::Keys(keys) => self.index(m, scope, base, keys, depth)?,
             Postfix::Field(field) => {
+                if names_fulfils(base) {
+                    // a field read through a bracketed `(o.fulfils)` is one through `.fulfils`
+                    // (L §5.19 Links; tally 2.3.1 rulings 22 (6), part 1's review B1)
+                    self.graph.fulfils_fields.insert(scope.item.clone());
+                }
                 let t = self.expr(m, scope, base, None, depth)?;
                 self.field(m, scope, Some(base), &t, field)?
             }
@@ -541,7 +630,15 @@ impl Checker {
         (mut ty, mut done): (Ty, usize),
     ) -> Typed {
         for post in posts.get(done..).unwrap_or(&[]) {
-            let prefix = post_text(base, posts.get(..done).unwrap_or(&[]));
+            let before = posts.get(..done).unwrap_or(&[]);
+            // a field read through a row's `fulfils` is a field read of the instance it names
+            // (L §5.19 Links; tally 2.3.1 rulings 22 (6))
+            if let (Postfix::Field(_), [.., Postfix::Field(prev)]) = (post, before)
+                && prev == "fulfils"
+            {
+                self.graph.fulfils_fields.insert(scope.item.clone());
+            }
+            let prefix = post_text(base, before);
             match post {
                 Postfix::Keys(_) => {
                     return Err(refused(
@@ -614,6 +711,16 @@ impl Checker {
         let (ty, used) = Self::field_of(m, scope, base, t, field)?;
         if let Some(test) = used {
             self.narrow_used.insert(test);
+        }
+        if let Some(Expr::Name(var)) = base.map(bare)
+            && let Some(pos) = scope.keyvars.iter().position(|v| v == var)
+            && scope
+                .vars
+                .get(var)
+                .is_some_and(|v| matches!(v.dom, VarDom::Kind(_)))
+        {
+            // a field of a key over a kind: whoever names that key reads it (E §3.1 step 5)
+            self.graph.key_fields.insert((scope.item.clone(), pos));
         }
         if let Ty::Key(kind) = t
             && self.reads_guarded_leg(m, kind, field)?
@@ -733,6 +840,59 @@ pub(super) fn resolve_lit(
     };
     let (file, line) = scope.file_line();
     resolve_key(m, &key, domain, &file, line)
+}
+
+/// A key literal at a position of an index, a kind or an axis: a day, month or quarter, or a
+/// four-digit figure at a period index, under the date figure's literal rule; then its key
+/// there (refcore's `key_pos`, its literal arm). L §2.1, §2.5.
+fn literal_key(m: &Reality, scope: &Scope, kn: &Expr, domain: &Domain) -> Result<KeyVal, Stop> {
+    let dated = matches!(
+        kn,
+        Expr::Lit(Lit::Day(_) | Lit::Month(..) | Lit::Quarter(..))
+    );
+    let year = matches!(kn, Expr::Lit(Lit::Num(n)) if n.four)
+        && matches!(domain, Domain::Index(ix) if m.indexes.get(ix).is_some_and(|i| i.period.is_some()));
+    if dated || year {
+        lit_rule(scope, Figure::Date, "", None)?;
+    }
+    resolve_lit(m, scope, kn, domain)
+}
+
+/// The key literals an `if` at a key position reaches through brackets and into both its
+/// branches, which stand where the whole stands, each resolved as a bare one there, in the
+/// text's order: off the index's keys, `LOAD-KEY` (refcore's `key_pos`, its `reach_leaves`
+/// loop). A literal of another granularity at a time index, or a four-digit figure at one
+/// not of years, reads the key whose period holds it, as the bare one does, and is left to
+/// the whole. L §2.5 Keys, §4.6.
+fn arm_keys(m: &Reality, scope: &Scope, kn: &Expr, domain: &Domain) -> Result<(), Stop> {
+    let period = match domain {
+        Domain::Index(ix) => m.indexes.get(ix).and_then(|index| index.period),
+        Domain::Kind(_) | Domain::Axis(_) => None,
+        Domain::List(_) | Domain::Range => return Ok(()),
+    };
+    let mut work = vec![kn];
+    while let Some(node) = work.pop() {
+        if let Expr::If(parts, _) = node {
+            let [_, yes, no] = parts.as_ref();
+            work.extend([no, yes]);
+            continue;
+        }
+        if let Expr::Paren(inner) = node {
+            work.push(inner);
+            continue;
+        }
+        if let Some(pk) = period {
+            let other = granularity(node).is_some_and(|g| g != pk);
+            let year = matches!(node, Expr::Lit(Lit::Num(n)) if n.four) && pk != PeriodKind::Year;
+            if other || year {
+                continue;
+            }
+        }
+        if is_keylit_node(m, scope, node) {
+            literal_key(m, scope, node, domain)?;
+        }
+    }
+    Ok(())
 }
 
 /// How a key stands at its key position: as a key there, or as a period read at a key of a
@@ -899,4 +1059,12 @@ fn event_field(m: &Reality, field: &str) -> Result<Option<Ty>, Stop> {
         }
     }
     Ok(None)
+}
+
+/// Whether `e`, its brackets off, is a row's link `o.fulfils` (L §5.19 Links).
+fn names_fulfils(e: &Expr) -> bool {
+    let Expr::Post(_, fixes) = bare(e) else {
+        return false;
+    };
+    matches!(fixes.last(), Some(Postfix::Field(field)) if field == "fulfils")
 }

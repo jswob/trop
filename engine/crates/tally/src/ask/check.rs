@@ -15,7 +15,7 @@ use crate::eval::{
 use crate::hole::Unknown;
 use crate::model::{Reality, Value};
 use crate::syntax::{Expr, PinForm, Stop};
-use crate::time::Day;
+use crate::time::{Day, PeriodKind};
 
 /// What an ask's line prints after its head: its text, the lines under it, the register
 /// entries it met, and, for a `check`, each side's law date where they differ.
@@ -162,12 +162,14 @@ fn sides_text(
         return Ok(("ok".to_owned(), Vec::new()));
     }
     // each side as the comparison took it: a key literal the other side's key, a four-digit
-    // literal beside a year that year (refcore's sides, evaluated as load resolved them)
+    // literal beside a year that year (refcore's sides, evaluated as load resolved them);
+    // each printed in its type, a declared item's `%` kept, and the difference plain (L §2.4
+    // Values; tally 2.3.1 R4, N256.7)
     let (a, b) = resolved_sides(m, (left, a), (right, b))?;
     let text = format!(
         "differs: {lt} = {}, {rt} = {}{}",
-        plain(m, &a)?,
-        plain(m, &b)?,
+        a.typed_text(m).map_err(num_stop)?,
+        b.typed_text(m).map_err(num_stop)?,
         difference(m, (&a, &b), ask)?
     );
     Ok((text, Vec::new()))
@@ -187,16 +189,20 @@ fn side(read: Result<Value, Stop>) -> Result<Item, Stop> {
 /// for two dates, texts or codes, or where a side is `none`; `, difference refused: …` where
 /// the subtraction is refused (refcore's `_check`). Two keys differ only where load typed both
 /// sides as keys of one ordered index (`keyed_checks`): the int of positions, of the integers
-/// for an integer index, or of the periods for a period index (L §4.2 "Differences"); a period
-/// typed as no key prints none, as on refcore. L §5.18, §3.2, §3.1.
+/// for an integer index, or of the steps for a period index. Two other period values of one
+/// type, keys of two indexes or a key and a period value among them, are points of one line
+/// and differ by its periods (`m - month_of(d)`; refcore's `point_diff`). L §5.18, §4.2 Keys
+/// and periods are points (tally 2.3.1 R5), §3.2, §3.1.
 fn difference(m: &Reality, (a, b): (&Value, &Value), ask: &str) -> Result<String, Stop> {
     let numbers = |v: &Value| matches!(v, Value::Number(_) | Value::Money(_));
     if *a == Value::None || *b == Value::None {
         // `none` in arithmetic is `RUN-NONE`: e − f isn't defined (L §3.1)
         return Ok(String::new());
     }
-    if !(numbers(a) && numbers(b) || m.keyed_checks.contains(ask)) {
-        // dates, periods load typed as no key, things, texts, codes: no difference
+    let periods = matches!((a, b), (Value::Period(late), Value::Period(early))
+        if late.kind() == early.kind() && late.kind() != PeriodKind::Day);
+    if !(numbers(a) && numbers(b) || periods || m.keyed_checks.contains(ask)) {
+        // dates, days, things, an open index's keys, texts, codes: no difference
         return Ok(String::new());
     }
     let keyed = if m.keyed_checks.contains(ask) {
@@ -285,4 +291,157 @@ fn side_law(
 /// but a load refusal met at run and an engine invariant, which are the run's (L §8.3, R-66).
 fn side_keeps(r: &Refusal) -> bool {
     !matches!(r.code(), Code::Load(_) | Code::EngineInvariant)
+}
+
+#[cfg(test)]
+mod tests {
+    use crate::api::{Asks, Files, Given, Request, run};
+
+    /// Points of several lines: period values, keys of a plain and a stepped index.
+    const POINTS: &str = r#"model points
+  tally 2
+  on 2026-10-25
+  start 2026-01-01
+  end 2026-12-31
+
+source s "invented"
+index ms = month 2026-01..2026-12
+index qs = month 2026-01..2026-12 by 3
+index ys = year 2020..2030 by 3
+input m1: month
+input m2: month
+input q1: quarter
+input y1: year
+input mk: key ms
+input qk: key qs
+input yk: key ys
+input d1: date
+
+ask c1: check m1 == m2
+ask c2: check q1 == 2026-Q3
+ask c3: check y1 == yk
+ask c4: check qk == m1
+ask c5: check qk == (2026-10)
+ask c6: check mk == (2026-07)
+ask c7: check d1 == 2026-01-09
+ask c8: check qk == qk + 1
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  m1 = 2026-03 "s"
+  m2 = 2026-07 "s"
+  q1 = 2026-Q1 "s"
+  y1 = 2024 "s"
+  mk = 2026-02 "s"
+  qk = 2026-04 "s"
+  yk = 2026 "s"
+  d1 = 2026-01-05 "s"
+"#;
+
+    /// Every ask's first line.
+    fn heads(text: &str) -> Vec<String> {
+        let given = vec![Given {
+            path: "points.tally".to_owned(),
+            bytes: Some(text.as_bytes().to_vec()),
+        }];
+        let lines = run(Files::new(given), &Request::new(Asks::Every))
+            .expect("an answer")
+            .lines()
+            .to_vec();
+        lines.into_iter().filter(|l| !l.starts_with(' ')).collect()
+    }
+
+    #[test]
+    fn points_of_one_type_differ_by_their_steps() {
+        // L §4.2 Keys and periods are points (tally 2.3.1 R5): period values, a key and a
+        // period value as period values, keys of one index by its steps, a bracketed period
+        // literal beside a key that key (L §2.5); two dates none
+        assert_eq!(
+            heads(POINTS),
+            [
+                "c1: differs: m1 = 2026-03, m2 = 2026-07, difference -4",
+                "c2: differs: q1 = 2026-Q1, 2026-Q3 = 2026-Q3, difference -2",
+                "c3: differs: y1 = 2024, yk = 2026, difference -2",
+                "c4: differs: qk = 2026-04, m1 = 2026-03, difference 1",
+                "c5: differs: qk = 2026-04, (2026-10) = 2026-10, difference -2",
+                "c6: differs: mk = 2026-02, (2026-07) = 2026-07, difference -5",
+                "c7: differs: d1 = 2026-01-05, 2026-01-09 = 2026-01-09",
+                "c8: differs: qk = 2026-04, qk + 1 = 2026-07, difference -1",
+            ],
+            "each check's difference"
+        );
+    }
+
+    /// Declared items beside expressions, a one-day window and a tuple (tally 2.3.1 R4).
+    const PRINT: &str = r#"model print
+  tally 2
+  on 2026-06-30
+  start 2026-01-01
+  end 2026-12-31
+
+source s "invented"
+index ks = [a, b]
+input p: num %
+input n: num
+input w: date
+input h[k in ks]: num
+
+def dn: num = p
+def dp: num % = n
+
+ask c1: check p == n + p
+ask c2: check dp == n + n
+ask c3: check dn == dp
+ask d1: dn
+ask d2: dp
+ask d3: dp + p
+ask d4: dn + p
+ask w1: w
+ask t1: argmin(h[k] + h[i] for k in ks, i in ks)
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  p = 10 % "s"
+  n = 0.1 "s"
+  w = window(2026-03-05, 2026-03-05) "s"
+  h[a] = 1 "s"
+  h[b] = 2 "s"
+"#;
+
+    #[test]
+    fn a_declared_item_prints_in_its_declared_type() {
+        // L §2.4 Values (tally 2.3.1 R4): a declared item in its declared type, an
+        // expression in its value's unit (`%` kept where every operand has it), the
+        // difference plain; a window of one day as that day, a tuple in brackets
+        assert_eq!(
+            heads(PRINT),
+            [
+                "c1: differs: p = 10 %, n + p = 0.2, difference -0.1",
+                "c2: differs: dp = 10 %, n + n = 0.2, difference -0.1",
+                "c3: ok",
+                "d1: 0.1",
+                "d2: 10 %",
+                "d3: 20 %",
+                "d4: 0.2",
+                "t1: [a, a]",
+                "w1: 2026-03-05",
+            ],
+            "refcore's bytes"
+        );
+    }
+
+    #[test]
+    fn a_bracketed_period_literal_off_a_keys_grid_is_load_key() {
+        // L §2.5: the position reaches through parentheses, so `(2026-08)` is a key of qs
+        let text = POINTS.replace("check qk == (2026-10)", "check qk == (2026-08)");
+        assert_eq!(
+            heads(&text),
+            ["refused: LOAD-KEY 2026-08 is not a key of qs (points.tally:24)"],
+            "as the bare literal"
+        );
+    }
 }

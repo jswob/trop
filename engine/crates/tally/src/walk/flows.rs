@@ -210,7 +210,11 @@ impl Engine {
                 if day <= m.end || i.status != Status::LeftOut {
                     continue;
                 }
-                if sums.keep.as_ref().is_some_and(|keep| !keep.contains(&i.id)) {
+                if sums
+                    .keep
+                    .as_ref()
+                    .is_some_and(|keep| !keep.contains_key(&i.id))
+                {
                     continue;
                 }
                 if !mv.decision {
@@ -247,31 +251,48 @@ impl Engine {
     }
 
     /// The movements for period `k` by id: the plans' instances at the cut and the decisions'
-    /// runs in the walks of `chain` whose `for` is k (refcore's `mv_for`). L §5.14.3.
+    /// runs in the walks of `chain` whose `for` is k, and the rows whose named tuple's is; each
+    /// with its period's hole where that is a hole, which the flows is then (refcore's
+    /// `mv_for`). L §5.14.3, §5.14 l.1363, §8.1 (tally 2.3.1 part 1's review B5).
     fn movements_for(
         &mut self,
         m: &Reality,
         k: &Value,
         chain: &[(usize, At)],
         ctx: Ctx,
-    ) -> Result<BTreeSet<String>, Stop> {
-        let mut out = BTreeSet::new();
+    ) -> Result<BTreeMap<String, Option<Hole>>, Stop> {
+        let mut out = BTreeMap::new();
         for mv in m.moves_in(self.timeline_world()) {
             if mv.decision {
                 continue;
             }
             for i in self.move_instances(m, mv, ctx.cut)?.iter() {
-                if i.for_period.as_ref() == Some(k) {
-                    out.insert(i.id.clone());
-                }
+                note_period(&mut out, &i.id, i.for_period.as_ref(), k);
             }
         }
         for (wid, _) in chain {
             for run in &self.walk(*wid)?.runs {
-                if run.inst.for_period.as_ref() == Some(k) {
-                    out.insert(run.inst.id.clone());
-                }
+                note_period(&mut out, &run.inst.id, run.inst.for_period.as_ref(), k);
             }
+        }
+        // a row that names a tuple is for the named tuple's period, read from its keys whether
+        // or not it exists (L §5.14 l.1363; tally 2.3.1 rulings 22 (1), the critic's P1-C6)
+        let named: Vec<(String, String, Vec<KeyVal>)> = self
+            .observations(m, ctx.cut)?
+            .iter()
+            .filter_map(|o| match &o.fulfils {
+                Some(crate::model::Fulfils::Instance(mid, keys)) => {
+                    Some((o.id.clone(), mid.clone(), keys.clone()))
+                }
+                Some(crate::model::Fulfils::Adjustment(..)) | None => None,
+            })
+            .collect();
+        for (id, mid, keys) in named {
+            let Some(mv) = m.moves.get(&mid) else {
+                continue;
+            };
+            let period = self.named_for(m, mv, &keys, ctx.cut)?;
+            note_period(&mut out, &id, period.as_ref(), k);
         }
         Ok(out)
     }
@@ -345,8 +366,9 @@ struct Sums {
     legs: Vec<(Hole, bool, HoleSrc)>,
     /// The register met.
     met: Collected,
-    /// Under `, for k`, the movements for period k by id; none counts every movement.
-    keep: Option<BTreeSet<String>>,
+    /// Under `, for k`, the movements for period k by id, each with its period's hole where
+    /// that is a hole; none counts every movement.
+    keep: Option<BTreeMap<String, Option<Hole>>>,
 }
 
 impl Sums {
@@ -381,7 +403,7 @@ impl Sums {
                     self.meet(e);
                     return Err(Stop::Refused(r.clone()));
                 }
-                Change::Perm(h) | Change::Hole(h) => {
+                Change::Perm(h) | Change::Hole(h) | Change::Open(h) => {
                     self.holes.push(h.clone());
                     if let Some(c) = &e.coll {
                         self.met.merge(c);
@@ -391,10 +413,23 @@ impl Sums {
                 | Change::PermBad(_)
                 | Change::Reset { .. }
                 | Change::Delta(_)
+                | Change::Close(_)
                 | Change::Mark => {}
             }
         }
         Ok(())
+    }
+
+    /// The hole of entry `e`'s period under `, for k`, where its movement's period is a hole
+    /// (L §5.14 l.1363, §8.1; tally 2.3.1 part 1's review B5).
+    fn period_hole(&self, e: &Ent) -> Option<Hole> {
+        self.hole_of(e.mv.as_ref()?)
+    }
+
+    /// The hole of movement `id`'s period under `, for k`, where that period is a hole, in
+    /// the run's span or after it (L §5.14 l.1363, §8.1; tally 2.3.1 rulings 23 (c)).
+    fn hole_of(&self, id: &str) -> Option<Hole> {
+        self.keep.as_ref()?.get(id)?.clone()
     }
 
     /// Whether `, for k` leaves entry `e` out: a movement not for period k, or a reset (a pad's
@@ -404,7 +439,7 @@ impl Sums {
             return false;
         };
         matches!(e.change, Change::Reset { .. })
-            || e.mv.as_ref().is_some_and(|id| !keep.contains(id))
+            || e.mv.as_ref().is_some_and(|id| !keep.contains_key(id))
     }
 
     /// One unit's log of the place over the span (refcore's `flows_place`, its logs). L §5.14.3.
@@ -427,12 +462,15 @@ impl Sums {
                         self.meet(e);
                         return Err(Stop::Refused(r.clone()));
                     }
+                    // a movement of two days, by its ends below
                     Change::Perm(_)
                     | Change::PermBad(_)
                     | Change::Bad(_)
                     | Change::Reset { .. }
                     | Change::Delta(_)
                     | Change::Hole(_)
+                    | Change::Open(_)
+                    | Change::Close(_)
                     | Change::Mark => {}
                 }
                 continue;
@@ -448,6 +486,11 @@ impl Sums {
                 return Err(Stop::Refused(r.clone()));
             }
             if self.other_period(e) {
+                continue;
+            }
+            // a movement whose period is a hole: `, for k` is that hole (L §8.1; B5)
+            if let Some(h) = self.period_hole(e) {
+                self.holes.push(h);
                 continue;
             }
             if let (Change::Hole(h), Some(leg)) = (&e.change, &e.hole_leg)
@@ -470,11 +513,15 @@ impl Sums {
                     Some(Amount::Refused(_)) | None => {}
                 },
                 // a mark in the span (an open instance, one that doesn't exist): what a balance
-                // lists of it, `flows` lists (S5, P43 on #241; L §8.2 One read set)
-                Change::Mark => self.meet(e),
+                // lists of it, `flows` lists (S5, P43 on #241; L §8.2 One read set); a
+                // movement of two days, by its ends below, its last day booking it as written
+                Change::Mark | Change::Open(_) => self.meet(e),
+                Change::Close(_) => {}
             }
         }
         self.holes.extend(open);
+        self.holes
+            .extend(one_end_inside(walk.entries(place, unit), (lo, limit)));
         Ok(())
     }
 
@@ -496,6 +543,12 @@ impl Sums {
             self.met.merge(&i.coll);
             if let Some(err) = &i.err {
                 return Err(Stop::Refused(err.clone()));
+            }
+            // a period that is a hole reaches a `, for k` read after the run's end too
+            // (tally 2.3.1 rulings 23 (c))
+            if let Some(h) = self.hole_of(&i.id) {
+                self.holes.push(h);
+                continue;
             }
             if let Exists::Unknown(h) = &i.exists {
                 self.holes.push(h.clone());
@@ -547,6 +600,35 @@ impl Sums {
         }
         Ok(())
     }
+}
+
+/// The holes of the movements of several days in log `ents`, each a [`Change::Open`] and its
+/// [`Change::Close`], whose days the span after `lo` up to `limit` meets without holding
+/// them all: one movement whose day is a hole from its first day to its last, it may fall in
+/// the span or out of it, a span strictly between its days included; one with all its days in
+/// the span counts as its last day books it, one whose days the span misses not at all; one
+/// whose last side ended no hole is the hole where its first day is in the span (L §6.1,
+/// §5.14 `on d`: `same`'s days are its bounds; tally 2.3.1 R1, N245.21, rulings 17
+/// statement B).
+fn one_end_inside(ents: &[Ent], (lo, limit): (At, At)) -> Vec<Hole> {
+    let inside = |at: At| lo < at && at <= limit;
+    let mut out = Vec::new();
+    for e in ents {
+        let Change::Open(h) = &e.change else {
+            continue;
+        };
+        let closed = ents
+            .iter()
+            .find(|c| c.at > e.at && matches!(&c.change, Change::Close(x) if x == h));
+        let may_fall = match closed {
+            Some(c) => e.at <= limit && lo < c.at && !(inside(e.at) && inside(c.at)),
+            None => inside(e.at),
+        };
+        if may_fall {
+            out.push(h.clone());
+        }
+    }
+    out
 }
 
 /// A place's flows in its one unit: `RUN-DOMAIN` for movements in two, or none whose unit is
@@ -608,5 +690,19 @@ fn keys_and_leg(posts: &[Postfix]) -> Result<(&[Key], Option<&str>), Stop> {
         [Postfix::Field(leg)] => Ok((&[], Some(leg.as_str()))),
         [Postfix::Keys(k), Postfix::Field(leg)] => Ok((k.as_slice(), Some(leg.as_str()))),
         [_, _, ..] => Err(Stop::NotBuilt("flows of a move's field")),
+    }
+}
+
+/// Notes movement `id` of period `p` in `out` where it is for period `k`, with its period's
+/// hole where that is a hole (L §5.14.3, §8.1; tally 2.3.1 part 1's review B5).
+fn note_period(out: &mut BTreeMap<String, Option<Hole>>, id: &str, p: Option<&Value>, k: &Value) {
+    match p {
+        Some(Value::Hole(h)) => {
+            out.insert(id.to_owned(), Some(h.clone()));
+        }
+        Some(p) if p == k => {
+            out.insert(id.to_owned(), None);
+        }
+        Some(_) | None => {}
     }
 }

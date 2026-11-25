@@ -22,7 +22,7 @@ use crate::model::{Reality, Value};
 use crate::syntax::Stop;
 use crate::time::Day;
 use crate::walk::{
-    ALL, Amount, At, Change, Dated, Ends, Ent, Exists, Inst, LegVal, Status, Step, invariant,
+    ALL, Amount, At, Change, Dated, End, Ends, Ent, Exists, Inst, LegVal, Status, Step, invariant,
 };
 
 /// What one end of a leg books under the `same` lines (refcore's `consol`). L §6.1.
@@ -37,6 +37,13 @@ pub(crate) enum EndBook {
     /// The group's disagreement there, a hole movement (`HOLE-SAME`), or a side's hole day
     /// where the amounts agree (S1, P43 on #241).
     Hole(Hole),
+    /// One movement of sides on several days, at a day before the last of them, whatever
+    /// each side's kind: not booked here, the place that group's `HOLE-SAME` hole, its first
+    /// side's, until the last; its register met here, so the result lists every side (tally
+    /// 2.3.1 R1, N245.21; rulings 14, 17 statement B).
+    Open(Hole),
+    /// The same at the last of their days: booked as written, ending that hole.
+    Close(Hole),
 }
 
 /// A member of a `same` group as the walk meets it (refcore's `movement`, `decs`).
@@ -90,6 +97,18 @@ fn amount_text(m: &Reality, lg: &LegVal) -> Result<String, Stop> {
     }
 }
 
+/// The positions of the legs among `legs` in unit `unit` with an end at place `p`, in their
+/// order (refcore's `consol`, its `at_p`). L §6.1 What `same` does; tally 2.3.1 N245.18.
+fn at_place(legs: &[LegVal], (p, unit): (&str, Option<&str>)) -> Vec<usize> {
+    (0..legs.len())
+        .zip(legs)
+        .filter(|(_, g)| {
+            g.unit.as_deref() == unit && (g.from.place() == Some(p) || g.to.place() == Some(p))
+        })
+        .map(|(li, _)| li)
+        .collect()
+}
+
 impl Engine {
     /// The ends of leg `lg` of `mover` its booking keeps under the `same` lines: an end the
     /// group's latest member books instead, or one waiting for a decision's point, is dropped;
@@ -123,6 +142,14 @@ impl Engine {
             match book {
                 EndBook::Written => continue,
                 EndBook::Skip => {}
+                EndBook::Open(h) => {
+                    self.same_entry(m, id, (mover, lg, end), (at, reg, coll), Change::Open(h))?;
+                }
+                EndBook::Close(h) => {
+                    self.same_entry(m, id, (mover, lg, end), (at, reg, coll), Change::Close(h))?;
+                    // the last day books the end as written
+                    continue;
+                }
                 EndBook::Wait(decision) => {
                     let waiting = (
                         mover.id().to_owned(),
@@ -138,23 +165,44 @@ impl Engine {
                         .push(waiting);
                 }
                 EndBook::Hole(h) => {
-                    let Some(p) = end.place() else {
+                    if end.place().is_none() {
                         continue;
-                    };
-                    let mut ent = Ent::new(at, Change::Hole(h));
-                    ent.mv = Some(mover.id().to_owned());
-                    ent.leg = Some(lg.name.clone());
-                    ent.reg = reg.to_vec();
-                    ent.coll = Some(coll.clone());
+                    }
                     let unit = lg.unit.clone().unwrap_or_else(|| ALL.to_owned());
-                    let walk = self.walk_mut(id)?;
-                    walk.worth_add(&unit, None)?;
-                    walk.add(m, p, &unit, ent)?;
+                    self.walk_mut(id)?.worth_add(&unit, None)?;
+                    self.same_entry(m, id, (mover, lg, end), (at, reg, coll), Change::Hole(h))?;
                 }
             }
             *on = false;
         }
         Ok(mask)
+    }
+
+    /// An entry `change` of `mover`'s leg `lg` at its end `end`: the group's `HOLE-SAME` hole,
+    /// or a movement of two days' first day, a day between, or its last (tally 2.3.1 R1,
+    /// N245.21). L §6.1, E §4.2.
+    ///
+    /// # Errors
+    ///
+    /// A refusal adding the entry.
+    fn same_entry(
+        &mut self,
+        m: &Reality,
+        id: usize,
+        (mover, lg, end): (&Member, &LegVal, &End),
+        (at, reg, coll): (At, &[EntryId], &Collected),
+        change: Change,
+    ) -> Result<(), Stop> {
+        let Some(p) = end.place() else {
+            return Ok(());
+        };
+        let mut ent = Ent::new(at, change);
+        ent.mv = Some(mover.id().to_owned());
+        ent.leg = Some(lg.name.clone());
+        ent.reg = reg.to_vec();
+        ent.coll = Some(coll.clone());
+        let unit = lg.unit.clone().unwrap_or_else(|| ALL.to_owned());
+        self.walk_mut(id)?.add(m, p, &unit, ent)
     }
 
     /// Instance `inst` as a member of its `same` group: a decision with its point once this
@@ -201,7 +249,10 @@ impl Engine {
                     format!("same {left} = {right}: {x} doesn't exist"),
                 )));
             };
-            if matches!(found, Member::Decision(_, None)) && !decides {
+            // a decision not yet run waits for its point: a plan's side always, a decision's
+            // where its day is another (rulings 17 statement B: whatever each side's kind)
+            let later = found.day().is_some() && found.day() != mover.day();
+            if matches!(found, Member::Decision(_, None)) && (!decides || later) {
                 waiting.push(found);
             } else {
                 others.push(found);
@@ -216,12 +267,28 @@ impl Engine {
             let Some(p) = end.place() else {
                 continue;
             };
-            *slot = match self.same_wait_for(m, id, (mover, lg), p, &waiting)? {
+            *slot = match self.same_wait_for(m, id, (mover, lg), (p, group), &waiting)? {
                 Some(wait) => wait,
                 None => self.same_end(m, id, (mover, lg, side), p, &others)?,
             };
         }
         Ok(out)
+    }
+
+    /// The `HOLE-SAME` hole a side of group `group` opened at place `p` in unit `unit`, its
+    /// movement's first day booked: the hole each later side books, so that its last day
+    /// ends it (rulings 17 statement B; L §6.1). E §4.2.
+    fn group_open(
+        &self,
+        id: usize,
+        (p, unit): (&str, &str),
+        group: &[String],
+    ) -> Result<Option<Hole>, Stop> {
+        let ents = self.walk(id)?.entries(p, unit);
+        Ok(ents.iter().rev().find_map(|e| match (&e.change, &e.mv) {
+            (Change::Open(h), Some(mv)) if group.contains(mv) => Some(h.clone()),
+            _ => None,
+        }))
     }
 
     /// A member of a `same` group by id: a decision as this walk ran it, else a plan's or a
@@ -249,16 +316,18 @@ impl Engine {
         Ok(rows.iter().find(|o| o.id == x).cloned().map(Member::Obs))
     }
 
-    /// An end at place `p` of a movement stated `same` as a decision not yet run: waiting for
-    /// the decision's point where it books `p` that day, the `HOLE-SAME` hole where their days
-    /// differ, none where no waiting decision books `p` (refcore's `same_wait_for`). L §6.1
-    /// (a decision's amount is known only at its point), §5.14.2.
+    /// An end at place `p` of a movement stated `same` in group `group` as a decision not yet
+    /// run: waiting for the decision's point where it books `p` that day; where their days
+    /// differ, the group's `HOLE-SAME` hole opened here, the decision's point to end it, the
+    /// one a side before opened if one did (rulings 17 statement B); none where no waiting
+    /// decision books `p` (refcore's `same_wait_for`). L §6.1 (a decision's amount is known
+    /// only at its point), §5.14.2.
     fn same_wait_for(
         &mut self,
         m: &Reality,
         id: usize,
         (mover, lg): (&Member, &LegVal),
-        p: &str,
+        (p, group): (&str, &[String]),
         waiting: &[Member],
     ) -> Result<Option<EndBook>, Stop> {
         for dec in waiting {
@@ -285,7 +354,12 @@ impl Engine {
                 inst.id
             );
             let figure = format!("{}, {}", mover.id(), inst.id);
-            return Ok(Some(EndBook::Hole(Hole::asked(&text, &figure))));
+            let unit = lg.unit.as_deref().unwrap_or(ALL);
+            let hole = match self.group_open(id, (p, unit), group)? {
+                Some(opened) => opened,
+                None => Hole::asked(&text, &figure),
+            };
+            return Ok(Some(EndBook::Open(hole)));
         }
         Ok(None)
     }
@@ -329,26 +403,46 @@ impl Engine {
         p: &str,
         others: &[Member],
     ) -> Result<EndBook, Stop> {
+        let unit = lg.unit.as_deref();
         let mut touch: Vec<(&Member, &LegVal, usize)> = vec![(mover, lg, side)];
+        // the mover's leg's place among its legs at `p`, by its name, one a movement's legs
+        // never share (`LOAD-LEG`, `leg l twice`): the other side's leg there in that place
+        // is paired with it
+        let k = at_place(mover.legs(), (p, unit))
+            .into_iter()
+            .filter_map(|li| mover.legs().get(li))
+            .position(|g| g.name == lg.name)
+            .ok_or_else(|| invariant("a leg with no end at its own place"))?;
         for o in others {
             if matches!(o, Member::Plan(i) if i.status == Status::Modelled) {
                 // a plan instance modelled past is never booked (L §5.19 Coverage)
                 continue;
             }
-            let mut theirs = Vec::new();
-            for (li, sj) in self.touching(m, id, o, (p, lg.unit.as_deref()))? {
+            // each leg is compared with the other side's of its name, where it states one: two
+            // movements that agree in full leave no hole (L §6.1; N6, P36 on #241); where their
+            // names differ, each leg at `p` with the other's there by order, so each row is
+            // named once, one question per leg (tally 2.3.1 N245.18)
+            let named: Vec<usize> = (0..o.legs().len())
+                .zip(o.legs())
+                .filter(|(_, g)| g.name == lg.name)
+                .map(|(li, _)| li)
+                .collect();
+            let legs = if named.is_empty() {
+                at_place(o.legs(), (p, unit))
+                    .into_iter()
+                    .skip(k)
+                    .take(1)
+                    .collect()
+            } else {
+                named
+            };
+            for (li, sj) in self.touching(m, id, o, &legs, (p, unit))? {
                 let g = o
                     .legs()
                     .get(li)
                     .ok_or_else(|| invariant("a leg the member lacks"))?;
-                theirs.push((g, sj));
+                touch.push((o, g, sj));
             }
-            // each leg is compared with the other side's of its name, where it states one: two
-            // movements that agree in full leave no hole (L §6.1; N6, P36 on #241)
-            if theirs.iter().any(|(g, _)| g.name == lg.name) {
-                theirs.retain(|(g, _)| g.name == lg.name);
-            }
-            touch.extend(theirs.into_iter().map(|(g, sj)| (o, g, sj)));
         }
         let mut movers: Vec<&str> = touch.iter().map(|(x, _, _)| x.id()).collect();
         movers.dedup();
@@ -364,20 +458,28 @@ impl Engine {
         let mut sides: Vec<(&str, &Dated)> =
             touch.iter().map(|(x, g, _)| (x.id(), &g.day)).collect();
         sides.sort_by_cached_key(|(x, _)| m.id_order(x));
-        let agree = match compare_days(&sides) {
+        let (agree, two_days) = match compare_days(&sides) {
             DayCmp::Hole(h) if amounts_agree => return Ok(EndBook::Hole(h)),
-            DayCmp::Agree => amounts_agree,
-            DayCmp::Differ(_) | DayCmp::Hole(_) => false,
+            DayCmp::Agree => (amounts_agree, false),
+            // instances, a plan's or a decision's, that agree on the amount and differ on the
+            // day: `same`'s two days are its bounds (L §5.14 `on d`; tally 2.3.1 R1, N245.21,
+            // rulings 14); an observed row books as written
+            DayCmp::Differ(_) => (
+                false,
+                amounts_agree && !touch.iter().any(|(x, _, _)| matches!(x, Member::Obs(_))),
+            ),
+            DayCmp::Hole(_) => (false, false),
         };
-        if agree {
-            let mut latest: Option<(Option<At>, &str)> = None;
-            for (x, g, _) in &touch {
-                let key = self.book_key(id, x, g)?;
-                if latest.as_ref().is_none_or(|(best, _)| key > *best) {
-                    latest = Some((key, x.id()));
-                }
+        // the last member in the day's order, the latest booking it
+        let mut latest: Option<(Option<At>, &str)> = None;
+        for (x, g, _) in touch.iter().filter(|_| agree || two_days) {
+            let key = self.book_key(id, x, g)?;
+            if latest.as_ref().is_none_or(|(best, _)| key > *best) {
+                latest = Some((key, x.id()));
             }
-            let mine = latest.is_some_and(|(_, x)| x == mover.id());
+        }
+        let mine = latest.is_some_and(|(_, x)| x == mover.id());
+        if agree {
             return Ok(if mine {
                 EndBook::Written
             } else {
@@ -407,22 +509,40 @@ impl Engine {
             days.join(", "),
             and_list(&parts)
         );
-        Ok(EndBook::Hole(Hole::asked(&text, &ids.join(", "))))
+        let hole = Hole::asked(&text, &ids.join(", "));
+        if !two_days {
+            return Ok(EndBook::Hole(hole));
+        }
+        // one movement: each side before the last books the hole its first side opened, the
+        // last ends it (rulings 17 statement B)
+        let opened = self
+            .group_open(id, (p, unit.unwrap_or(ALL)), &ids)?
+            .unwrap_or(hole);
+        Ok(if mine {
+            EndBook::Close(opened)
+        } else {
+            EndBook::Open(opened)
+        })
     }
 
-    /// The legs of member `o` that touch place `p` in unit `unit`, by position, each with
-    /// its side; an observed row's only where it books that end (refcore's `consol`, its
-    /// `touch`). L §6.1, §5.19 Booking an observation.
+    /// Of member `o`'s legs `legs`, by position, those that touch place `p` in unit `unit`,
+    /// each with its side; an observed row's only where it books that end (refcore's
+    /// `consol`, its `touch`). L §6.1, §5.19 Booking an observation.
     fn touching(
         &mut self,
         m: &Reality,
         id: usize,
         o: &Member,
+        legs: &[usize],
         (p, unit): (&str, Option<&str>),
     ) -> Result<Vec<(usize, usize)>, Stop> {
         let cut = self.walk(id)?.cut;
         let mut out = Vec::new();
-        for (li, g) in o.legs().iter().enumerate() {
+        for &li in legs {
+            let g = o
+                .legs()
+                .get(li)
+                .ok_or_else(|| invariant("a leg the member lacks"))?;
             if g.unit.as_deref() != unit {
                 continue;
             }
@@ -530,5 +650,466 @@ impl Engine {
             self.book_leg_ends(m, id, (&mover, &lg), after, (&reg, &coll), ends)?;
         }
         Ok(())
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use crate::api::{Asks, Files, Given, Request, run};
+
+    /// Two planned movements stated `same`, of one amount, on 5 and 7 March.
+    const TWO_DAYS: &str = r#"model two_days
+  tally 2
+  on 2026-06-10
+  start 2026-01-01
+  end 2026-12-31
+
+source s "invented values"
+
+unit PLN: currency minor 0.01
+
+place wallet: accounts PLN lives 2025-01-01..
+
+place world: outside lives 1900-01-01..
+
+input d1: date
+
+input d2: date
+
+input a: money PLN
+
+move in1: transfers
+  on d1
+  leg cash from world to wallet amount a
+
+move in2: transfers
+  on d2
+  leg cash from world to wallet amount a
+
+version v
+  cite s
+  governs always
+  known 2025-12-01
+  opening[wallet] = 0.00 PLN at 2026-01-01 start "s"
+  d1 = 2026-03-05 "s"
+  d2 = 2026-03-07 "s"
+  a = 100.00 PLN "s"
+
+version later
+  cite s
+  governs always
+  known 2026-05-01
+  same in1 = in2
+
+ask b_before: bal(wallet, 2026-03-04)
+
+ask b_between: bal(wallet, 2026-03-06)
+
+ask b_after: bal(wallet, 2026-03-31)
+
+ask f_both: flows(wallet, 2026-03)
+
+ask f_one: flows(wallet, 2026-03-01 .. 2026-03-06)
+
+ask f_between: flows(wallet, 2026-03-06 .. 2026-03-06)
+"#;
+
+    #[test]
+    fn a_same_movement_of_two_days_is_known_after_both() {
+        // L §5.14 `on d`, §6.1 (tally 2.3.1 R1, N245.21, rulings 17 statement B): `same`'s two
+        // days are its bounds, so the balance is known before the first and after the last,
+        // the hole between them; a span holding both days counts it, one holding one day or
+        // lying between them is that hole
+        let given = vec![Given {
+            path: "two_days.tally".to_owned(),
+            bytes: Some(TWO_DAYS.as_bytes().to_vec()),
+        }];
+        let request = Request::new(Asks::Every);
+        let answer = run(Files::new(given), &request).expect("an answer");
+        let hole = "?\"in1 and in2 are one, but leg cash differs on 2026-03-05, 2026-03-07: 100.00 PLN (in1) and 100.00 PLN (in2)\" (in1, in2)";
+        let values: Vec<&str> = answer
+            .lines()
+            .iter()
+            .filter(|line| line.starts_with("b_") || line.starts_with("f_"))
+            .map(String::as_str)
+            .collect();
+        assert_eq!(
+            values,
+            [
+                "b_after: 100.00 PLN".to_owned(),
+                "b_before: 0.00 PLN".to_owned(),
+                format!("b_between: {hole}"),
+                format!("f_between: {hole}"),
+                "f_both: 100.00 PLN".to_owned(),
+                format!("f_one: {hole}")
+            ],
+            "known outside the two days, the hole between"
+        );
+    }
+
+    /// Three plans of one amount on three days, stated `same` in two lines.
+    const THREE_DAYS: &str = r#"model three_days
+  tally 2
+  on 2026-06-10
+  start 2026-01-01
+  end 2026-12-31
+
+source s "invented values"
+
+unit PLN: currency minor 0.01
+
+place wallet: accounts PLN lives 2025-01-01..
+
+place world: outside lives 1900-01-01..
+
+input d1: date
+
+input d2: date
+
+input d3: date
+
+input a: money PLN
+
+move p1: transfers
+  on d1
+  leg cash from world to wallet amount a
+
+move p2: transfers
+  on d2
+  leg cash from world to wallet amount a
+
+move p3: transfers
+  on d3
+  leg cash from world to wallet amount a
+
+version v
+  cite s
+  governs always
+  known 2025-12-01
+  opening[wallet] = 0.00 PLN at 2026-01-01 start "s"
+  d1 = 2026-02-03 "s"
+  d2 = 2026-02-05 "s"
+  d3 = 2026-02-07 "s"
+  a = 25.00 PLN "s"
+  same p1 = p2
+  same p2 = p3
+
+ask b_after: bal(wallet, 2026-02-28)
+"#;
+
+    #[test]
+    fn a_three_sided_two_day_result_lists_every_side() {
+        // tally 2.3.1, rulings 14 on G1's review N1: the middle side books nothing, but the
+        // result lists it beside the first and the last (L §6.1, §8.2)
+        let given = vec![Given {
+            path: "three_days.tally".to_owned(),
+            bytes: Some(THREE_DAYS.as_bytes().to_vec()),
+        }];
+        let answer = run(Files::new(given), &Request::new(Asks::Every)).expect("an answer");
+        let lines: Vec<&str> = answer
+            .lines()
+            .iter()
+            .map(String::as_str)
+            .filter(|line| !line.starts_with("  cut"))
+            .collect();
+        assert_eq!(
+            lines,
+            [
+                "b_after: 25.00 PLN",
+                "  unfulfilled: p1",
+                "  unfulfilled: p2",
+                "  unfulfilled: p3"
+            ],
+            "every side the lines name"
+        );
+    }
+
+    /// Two decisions of one amount on two days, stated `same`, each reading another place.
+    const BOTH_DECIDE: &str = r#"model both_decide
+  tally 2
+  on 2026-06-10
+  start 2026-01-01
+  end 2026-12-31
+
+source s "invented values"
+
+unit PLN: currency minor 0.01
+
+place wallet: accounts PLN lives 2025-01-01..
+
+place spare: accounts PLN lives 2025-01-01..
+
+place world: outside lives 1900-01-01..
+
+input a: money PLN
+
+input d1: date
+
+input d2: date
+
+move early: transfers
+  reads spare
+  on d1
+  leg cash from world to wallet amount a + 0 * bal(spare)
+
+move late: transfers
+  reads spare
+  on d2
+  leg cash from world to wallet amount a + 0 * bal(spare)
+
+version v
+  cite s
+  governs always
+  known 2025-12-01
+  opening[wallet] = 0.00 PLN at 2026-01-01 start "s"
+  opening[spare] = 5.00 PLN at 2026-01-01 start "s"
+  a = 70.00 PLN "s"
+  d1 = 2026-04-03 "s"
+  d2 = 2026-04-08 "s"
+  same early = late
+
+ask b_between: bal(wallet, 2026-04-05)
+
+ask b_after: bal(wallet, 2026-04-30)
+
+ask n_one: count(t in transfers over 2026-04)
+"#;
+
+    #[test]
+    fn two_decisions_of_two_days_are_one_movement() {
+        // tally 2.3.1, rulings 17 statement B: whatever each side's kind, the group is one
+        // movement, the hole between its days, booked from the last on; a binding over it
+        // binds it once and lists every side (L §6.1, §8.2)
+        let given = vec![Given {
+            path: "both_decide.tally".to_owned(),
+            bytes: Some(BOTH_DECIDE.as_bytes().to_vec()),
+        }];
+        let answer = run(Files::new(given), &Request::new(Asks::Every)).expect("an answer");
+        let lines: Vec<&str> = answer
+            .lines()
+            .iter()
+            .map(String::as_str)
+            .filter(|line| !line.starts_with("  cut"))
+            .collect();
+        assert_eq!(
+            lines,
+            [
+                "b_after: 70.00 PLN",
+                "  unfulfilled: early",
+                "  unfulfilled: late",
+                "b_between: ?\"early and late are one, but the leg at wallet differs on 2026-04-03: 70.00 PLN (early) and its day 2026-04-08 (late)\" (early, late)",
+                "  unfulfilled: early",
+                "n_one: 1",
+                "  unfulfilled: early",
+                "  unfulfilled: late"
+            ],
+            "known after both days, the hole between, every side listed"
+        );
+    }
+
+    /// A decision on the first day, stated `same` as a plan on the second, of one amount.
+    const DECISION_FIRST: &str = r#"model decision_first
+  tally 2
+  on 2026-06-10
+  start 2026-01-01
+  end 2026-12-31
+
+source s "invented values"
+
+unit PLN: currency minor 0.01
+
+place wallet: accounts PLN lives 2025-01-01..
+
+place world: outside lives 1900-01-01..
+
+input d1: date
+
+input d2: date
+
+input a: money PLN
+
+move top: transfers
+  reads wallet
+  on d1
+  leg cash from world to wallet amount a + 0 * bal(wallet)
+
+move pay: transfers
+  on d2
+  leg cash from world to wallet amount a
+
+version v
+  cite s
+  governs always
+  known 2025-12-01
+  opening[wallet] = 0.00 PLN at 2026-01-01 start "s"
+  d1 = 2026-04-02 "s"
+  d2 = 2026-04-09 "s"
+  a = 40.00 PLN "s"
+  same top = pay
+
+ask b_between: bal(wallet, 2026-04-05)
+
+ask b_after: bal(wallet, 2026-04-30)
+"#;
+
+    #[test]
+    fn a_decision_side_of_two_days_is_bounded_too() {
+        // L §5.14 `on d`, §6.1 (tally 2.3.1, rulings 14 on G1's review B5): the two days
+        // bound every instance, a decision's too: known after both, the hole between
+        let given = vec![Given {
+            path: "decision_first.tally".to_owned(),
+            bytes: Some(DECISION_FIRST.as_bytes().to_vec()),
+        }];
+        let answer = run(Files::new(given), &Request::new(Asks::Every)).expect("an answer");
+        let values: Vec<&str> = answer
+            .lines()
+            .iter()
+            .filter(|line| line.starts_with("b_"))
+            .map(String::as_str)
+            .collect();
+        assert_eq!(
+            values,
+            [
+                "b_after: 40.00 PLN",
+                "b_between: ?\"pay and top are one, but leg cash differs on 2026-04-02, 2026-04-09: 40.00 PLN (pay) and 40.00 PLN (top)\" (pay, top)"
+            ],
+            "known after both days"
+        );
+    }
+
+    /// The asks' lines of `text`, a model named `name`, that start with one of `asks`.
+    fn lines_of(name: &str, text: &str, asks: &[&str]) -> Vec<String> {
+        let given = vec![Given {
+            path: name.to_owned(),
+            bytes: Some(text.as_bytes().to_vec()),
+        }];
+        let answer = run(Files::new(given), &Request::new(Asks::Every)).expect("an answer");
+        answer
+            .lines()
+            .iter()
+            .filter(|line| asks.iter().any(|a| line.starts_with(&format!("{a}: "))))
+            .cloned()
+            .collect()
+    }
+
+    /// Two rows stated `same` whose kinds name their legs differently, each with two legs
+    /// from konto, the second side's both larger (W9's probe `sm18`).
+    const NAMES_DIFFER: &str = r#"model sm18
+  tally 2
+  on 2026-05-20
+  start 2026-01-01
+  end 2026-03-31
+
+source s "probe"
+unit PLN: currency minor 0.01
+kind paid: event certain
+  leg cash: PLN
+  leg fee: PLN
+kind cpaid: event certain
+  leg pay: PLN
+  leg charge: PLN
+place konto: accounts PLN lives 2026-01-01..
+place karta: accounts PLN lives 2026-01-01..
+place bankfee: outside lives 1900-01-01..
+input bank: observed
+input card: observed
+
+ask b: bal(konto, 2026-03-31)
+ask c2: bal(karta, 2026-03-31)
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  opening[konto] = 1 000.00 PLN at 2026-01-01 start "s"
+  opening[karta] = 1 000.00 PLN at 2026-01-01 start "s"
+
+version q1
+  cite s
+  governs 2026-01-01..2026-03-31
+  known 2026-04-01
+  covers konto, karta
+  bank[a1] = (on: 2026-01-07, kind: paid, leg cash from konto to karta amount 100.00 PLN, leg fee from konto to bankfee amount 2.00 PLN) "bank"
+  card[b1] = (on: 2026-01-07, kind: cpaid, leg pay from konto to karta amount 110.00 PLN, leg charge from konto to bankfee amount 3.00 PLN) "card"
+  same card[b1] = bank[a1]
+"#;
+
+    #[test]
+    fn sides_whose_leg_names_differ_pair_their_legs_by_order() {
+        // L §6.1 What `same` does, §8.1 (tally 2.3.1 N245.18): at a place, each leg with the
+        // other side's there in the same order, each row named once, one question per leg
+        let at = |place: &str, a: &str, b: &str| {
+            format!(
+                "?\"bank[a1] and card[b1] are one, but the leg at {place} differs on 2026-01-07: \
+                 {a} PLN (bank[a1]) and {b} PLN (card[b1])\" (bank[a1], card[b1])"
+            )
+        };
+        assert_eq!(
+            lines_of("sm18.tally", NAMES_DIFFER, &["b", "c2"]),
+            [
+                format!(
+                    "b: {} {}",
+                    at("konto", "100.00", "110.00"),
+                    at("konto", "2.00", "3.00")
+                ),
+                format!("c2: {}", at("karta", "100.00", "110.00")),
+            ],
+            "cash with pay, fee with charge"
+        );
+    }
+
+    /// One transfer seen by two rows stated `same`, a day apart, of different amounts (W9's
+    /// probe `s1_same`, cut down).
+    const DAYS_APART: &str = r#"model s1
+  tally 2
+  on 2026-05-20
+  start 2026-01-01
+  end 2026-03-31
+
+source s "probe"
+unit PLN: currency minor 0.01
+place konto: accounts PLN lives 2026-01-01..
+place sav: accounts PLN lives 2026-01-01..
+input bank: observed
+input card: observed
+
+ask ob: bank[a1].cash.amount
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  opening[konto] = 1000.00 PLN at 2026-01-01 start "s"
+  opening[sav] = 0.00 PLN at 2026-01-01 start "s"
+
+version q1
+  cite s
+  governs 2026-01-01..2026-03-31
+  known 2026-04-01
+  covers konto
+  bank[a1] = (on: 2026-01-07, kind: transfers, leg cash from konto to sav amount 100.00 PLN) "jan"
+
+version q2
+  cite s
+  governs 2026-01-01..2026-03-31
+  known 2026-04-01
+  covers sav
+  card[b1] = (on: 2026-01-08, kind: transfers, leg cash from konto to sav amount 110.00 PLN) "jan, the other side"
+  same card[b1] = bank[a1]
+"#;
+
+    #[test]
+    fn an_amount_that_differs_names_the_leg_and_both_days() {
+        // L §8.1 HOLE-SAME (tally 2.3.1 N245.3, N245.20): one question in the leg's form, on
+        // every side's day
+        assert_eq!(
+            lines_of("s1.tally", DAYS_APART, &["ob"]),
+            [
+                "ob: ?\"bank[a1] and card[b1] are one, but leg cash differs on 2026-01-07, \
+                 2026-01-08: 100.00 PLN (bank[a1]) and 110.00 PLN (card[b1])\" (bank[a1], card[b1])"
+                    .to_owned()
+            ],
+            "the read's question as the booking's"
+        );
     }
 }

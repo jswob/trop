@@ -56,6 +56,6 @@ ask x2: explain in2
 ask ck: check (flows(in1, 2026-03)) == (flows(in2, 2026-03))
 ask old: bal(wallet, 2026-03-31) as known 2026-04-01
 === expect f2d
-f2d: ?"in1 and in2 are one, but the day of cash differs on 2026-03-05: 2026-03-05 (in1) and 2026-03-09 (in2)" (in1, in2)
+f2d: ?"in1 and in2 are one, but leg cash differs on 2026-03-05: 2026-03-05 (in1) and 2026-03-09 (in2)" (in1, in2)
   pinned: d2 = 2026-03-09
   cut 2026-06-10

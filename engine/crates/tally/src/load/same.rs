@@ -18,7 +18,7 @@ use super::keys::{KeyLit, lit_of_expr, lit_text, resolve_key};
 use super::steps::{Loader, refuse};
 use super::texts::text;
 use crate::base::Load;
-use crate::model::{KeyVal, NameKind, SamePair, pattern_text};
+use crate::model::{KeyVal, NameKind, SamePair};
 use crate::syntax::{Expr, Key, Lit, Postfix, Stop};
 
 /// One `same` line as written: its two sides, where it stands, and the version that holds it
@@ -194,7 +194,7 @@ impl Loader {
                 let message = format!(
                     "the joint model states {}{}, an item of member {member} that no same line joins",
                     super::joint::shown(id),
-                    pattern_text(&row.pattern)
+                    row.keys_text()
                 );
                 return Err(refuse(Load::Same, message, &file, row.line));
             }

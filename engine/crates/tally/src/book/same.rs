@@ -393,40 +393,53 @@ pub(crate) fn sides_differ(
         {
             continue;
         }
-        let mut class: Vec<(&str, &LegVal)> = vec![(row_id, mine)];
-        for (other, _, their_legs) in others {
+        let mut class: Vec<(&str, Option<Day>, &LegVal)> = vec![(row_id, row_day, mine)];
+        for (other, other_day, their_legs) in others {
             for theirs in their_legs.iter().filter(|lg| lg.name == mine.name) {
-                class.push((other, theirs));
+                class.push((other, *other_day, theirs));
             }
         }
         if class.len() < 2 {
             continue;
         }
         // the rows in id order (L §8.1 HOLE-SAME, §2.5; P50)
-        class.sort_by_cached_key(|(o, _)| m.id_order(o));
-        let ids: Vec<String> = class.iter().map(|(o, _)| (*o).to_owned()).collect();
+        class.sort_by_cached_key(|(o, _, _)| m.id_order(o));
+        let ids: Vec<String> = class.iter().map(|(o, _, _)| (*o).to_owned()).collect();
         let amounts = match fact {
             Fact::Day => None,
             Fact::Any | Fact::Amounts | Fact::Leg(_) => amounts_differ(m, &class)?,
         };
-        let (what, figures, day) = if let Some(figures) = amounts {
-            let day = match mine.day.day().or(row_day) {
-                Some(day) => day.text(),
-                None => mine.day.value().text(m).map_err(num_stop)?,
+        // one disagreement is one question in the leg's form, an amount's or a day's
+        // (tally 2.3.1 N245.20)
+        let what = format!("leg {}", mine.name);
+        let (figures, day) = if let Some(figures) = amounts {
+            // an amount differs on every side's day, each once (tally 2.3.1 N245.3)
+            let days: BTreeSet<Day> = class
+                .iter()
+                .filter_map(|(_, side_day, lg)| lg.day.day().or(*side_day))
+                .collect();
+            let day = if days.is_empty() {
+                mine.day.value().text(m).map_err(num_stop)?
+            } else {
+                days.into_iter()
+                    .map(Day::text)
+                    .collect::<Vec<_>>()
+                    .join(", ")
             };
-            (format!("the amount of {}", mine.name), figures, day)
+            (figures, day)
         } else if matches!(fact, Fact::Leg(_) | Fact::Amounts) {
             // a leg's amount is its fact: the days are another (Q1, Q3, S2)
             continue;
         } else {
-            let sides: Vec<(&str, &Dated)> = class.iter().map(|(id, lg)| (*id, &lg.day)).collect();
+            let sides: Vec<(&str, &Dated)> =
+                class.iter().map(|(id, _, lg)| (*id, &lg.day)).collect();
             match compare_days(&sides) {
                 // the day it differs on is the first side's in id order, as stated (P45 (a))
                 DayCmp::Differ(figures) => {
                     let Some(first) = figures.first().cloned() else {
                         return Err(invariant("a class of movements stated same with no side"));
                     };
-                    (format!("the day of {}", mine.name), figures, first)
+                    (figures, first)
                 }
                 DayCmp::Hole(hole) => return Ok(Some(hole)),
                 DayCmp::Agree => continue,
@@ -460,9 +473,12 @@ pub(crate) fn and_list(items: &[String]) -> String {
 
 /// The legs' amounts as they print where every one is a number and they don't all agree
 /// (refcore's `vkey` compare). L §5.19.
-fn amounts_differ(m: &Reality, class: &[(&str, &LegVal)]) -> Result<Option<Vec<String>>, Stop> {
+fn amounts_differ(
+    m: &Reality,
+    class: &[(&str, Option<Day>, &LegVal)],
+) -> Result<Option<Vec<String>>, Stop> {
     let mut figures: Vec<(&Num, &str)> = Vec::with_capacity(class.len());
-    for (_, lg) in class {
+    for (_, _, lg) in class {
         let Amount::Qty(amount) = &lg.amount else {
             return Ok(None);
         };
@@ -623,8 +639,8 @@ impl Engine {
     /// sum the legs of the observations that fulfil it, rows stated `same` counted once and
     /// their disagreement a leg's `HOLE-SAME` amount, a `from` or `to` none where their legs
     /// name different places, and whose `day` is the last of their days; none when nothing
-    /// fulfils it (refcore's `m_c_observed`). L §5.19 Realised amounts, One movement on two
-    /// statements.
+    /// fulfils it (refcore's `m_c_observed`); the rows that name it by the name alone (tally
+    /// 2.3.1 rulings 22 (1)). L §5.19 Links, Realised amounts, One movement on two statements.
     ///
     /// # Errors
     ///
@@ -632,10 +648,14 @@ impl Engine {
     /// observations lack one of its legs.
     pub(crate) fn observed_of(&mut self, m: &Reality, v: &MvRef, ctx: Ctx) -> Result<Value, Stop> {
         let cut = ctx.cut;
-        let links = self.obs_links_for(m, &v.id, cut)?;
+        // its links judged, a refusal of judging them its own
+        self.obs_links_for(m, &v.id, cut)?;
         if let Some(bad) = self.bad_links.get(&(cut, v.id.clone())) {
             return Err(Stop::Refused(bad.clone()));
         }
+        let Some(links) = self.judged(m, &v.id, cut)? else {
+            return Err(invariant("a link judged and not kept"));
+        };
         if links.is_empty() {
             return Ok(Value::None);
         }
@@ -710,7 +730,10 @@ impl Engine {
             }
             let row = match self.end_book_at(m, id, o, place)? {
                 EndBook::Skip => continue,
-                EndBook::Written | EndBook::Wait(_) => o.clone(),
+                // a movement of two days is of planned sides only, never a row's
+                EndBook::Written | EndBook::Wait(_) | EndBook::Open(_) | EndBook::Close(_) => {
+                    o.clone()
+                }
                 // the walk books the movement there once, as the hole: listed once with it
                 EndBook::Hole(hole) => {
                     let lead = group.first().map_or(o.id.as_str(), String::as_str);
@@ -774,9 +797,9 @@ impl Engine {
                     continue;
                 }
                 match book {
-                    EndBook::Hole(h) => holes.push(h),
+                    EndBook::Hole(h) | EndBook::Open(h) => holes.push(h),
                     EndBook::Skip => skip = true,
-                    EndBook::Wait(_) | EndBook::Written => {}
+                    EndBook::Wait(_) | EndBook::Written | EndBook::Close(_) => {}
                 }
             }
         }

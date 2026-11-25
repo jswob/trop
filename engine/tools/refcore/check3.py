@@ -225,10 +225,18 @@ def m_movement_field(self, n, t, sc):
     name = n.name
     kid = t.ix
     legs = m.kind_legs(kid)
-    if n.obj.k == 'field' and n.obj.name == 'fulfils':
+    base = n.obj
+    while base.k == 'paren':
+        base = base.e
+    if base.k == 'field' and base.name == 'fulfils':
         # a field read through `o.fulfils` is a field read of the instance (L §5.19; tally 2.3.1 rulings 22, P1-C6):
-        # it reaches a decision a row of any version can name (E §3.1 step 7), marked in check_moves_graph
+        # it reaches a decision a row of any version can name (E §3.1 step 7), marked in check_moves_graph; however
+        # spelled: `(o.fulfils).cash` too (tally 2.3.1 P32 B1, m2_paren)
         self.__dict__.setdefault('fulfils_items', set()).add(sc.item)
+    elif base.k == 'name' and sc.item is not None and sc.item[0] == 'def' and base.id in sc.keyvars:
+        # a def that reads a field of its movement key: keyed by an `o.fulfils`, that read is through the fulfils
+        # (E §3.1 step 5, "through whoever names or binds the key"; tally 2.3.1 P32 B1, m2_keyed)
+        self.__dict__.setdefault('keyfield_defs', set()).add(sc.item[1])
     for ld in legs:
         if ld.name == name:
             n._r = ('mvfield', 'leg', name)
@@ -1444,7 +1452,9 @@ def m_check_moves_graph(self):
                         o.sid, tid, lack[0]), o.loc)
             if isinstance(f, tuple) and f and f[0] != 'adj' and f[1] in m.moves and m.moves[f[1]].decision:
                 named.setdefault(inf.id, set()).add(f[1])
-    for item in getattr(self, 'fulfils_items', ()):
+    kf = getattr(self, 'keyfield_defs', set())
+    for item in set(getattr(self, 'fulfils_items', ())) | set(
+            it for it, did in getattr(self, 'fulfils_keyed', ()) if did in kf):
         # a decision's legs, day and attributes are running reads (E §3.1 step 7): a field read through the
         # `fulfils` of a row of any version that names a decision reaches them
         bound = [t[1] for t, rels in E.get(item, {}).items() if t[0] == 'input' and 'bind' in rels]

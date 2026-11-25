@@ -941,7 +941,7 @@ version bank_a
             (tier, format!("{tier}{same}  rate[q2] = 5 \"same day\""), "loaded"),
             (tier, format!("{tier}\nversion card_c\n  cite card\n  governs always\n  known 2026-01-01\n  rate[q2] = 5 \"same day\""), "LOAD-OVERLAP rows a.tally:53 and a.tally:67 of rate overlap at [q2], neither replacing the other (a.tally:67)"),
             (fee, format!("{fee}\n  fee[*, t1] = 2 \"all\""), "loaded"),
-            (fee, format!("{fee}\n  fee[q1, *] = 2 \"all\"\n  fee[*, t1] = 3 \"all\""), "LOAD-OVERLAP rows a.tally:55 and a.tally:56 of fee overlap at [q1] and [*, t1] and tie (a.tally:56)"),
+            (fee, format!("{fee}\n  fee[q1, *] = 2 \"all\"\n  fee[*, t1] = 3 \"all\""), "LOAD-OVERLAP rows a.tally:55 and a.tally:56 of fee overlap at [q1, *] and [*, t1] and tie (a.tally:56)"),
             (fee, "  fee[q1, t1..t2] = 2 \"a\"\n  fee[q1, t2..t3] = 3 \"b\"".to_owned(), "LOAD-OVERLAP rows a.tally:54 and a.tally:55 of fee overlap at [q1, t1..t2] and [q1, t2..t3] and tie (a.tally:55)"),
             (fee, "  fee[q1, t1..t3] = 2 \"a\"\n  fee[q1, t2..t3] = 3 \"b\"".to_owned(), "loaded"),
             (fee, format!("{fee}\n  fee[q1, t1..t3] = 3 \"b\""), "loaded"),

@@ -62,7 +62,7 @@ d_on2: (1 050.00 PLN, 900.00 PLN, 1, 900.00 PLN)
   cut 2026-04-05
 e_after: (1 050.00 PLN, 900.00 PLN, 1, 900.00 PLN)
   cut 2026-04-30
-f_amt: ?"bank[a2] and sbank[b1] are one, but the amount of cash differs on 2026-03-18: 950.00 PLN (bank[a2]) and 900.00 PLN (sbank[b1])" (bank[a2], sbank[b1])
+f_amt: ?"bank[a2] and sbank[b1] are one, but leg cash differs on 2026-03-18: 950.00 PLN (bank[a2]) and 900.00 PLN (sbank[b1])" (bank[a2], sbank[b1])
   cut 2026-04-30
 g_amt_mid: 950.00 PLN
   cut 2026-04-03

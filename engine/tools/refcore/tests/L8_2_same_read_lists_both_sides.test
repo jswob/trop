@@ -39,7 +39,7 @@ ask f2: flows(in2, 2026-03)
 sp: 100.00 PLN
   pinned: a2 = 100.00 PLN
   cut 2026-01-01
-sq: ?"in1 and in2 are one, but the amount of cash differs on 2026-03-05: 100.00 PLN (in1) and 130.00 PLN (in2)" (in1, in2)
+sq: ?"in1 and in2 are one, but leg cash differs on 2026-03-05: 100.00 PLN (in1) and 130.00 PLN (in2)" (in1, in2)
   pinned: a2 = 130.00 PLN
   cut 2026-01-01
 bp: 600.00 PLN

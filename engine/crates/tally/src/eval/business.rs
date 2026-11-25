@@ -16,7 +16,7 @@
 use std::collections::BTreeSet;
 
 use super::arith::whole_of;
-use super::builtin::read_parts;
+use super::builtin::{named_none, read_parts};
 use super::dates::period_arg;
 use super::expr::hole_of;
 use super::state::{
@@ -103,8 +103,11 @@ impl Engine {
         let d = self.ev(m, call.args.first().ok_or_else(arity)?, env, ctx)?;
         let k = self.ev(m, call.args.get(1).ok_or_else(arity)?, env, ctx)?;
         // refusals outrank holes (L §8; pick P12): each argument in written order, `none`
-        // refused, a known one's own check run, a hole's or a window's waiting
+        // refused (named as written and by the built-in, R4), a known one's own check run, a
+        // hole's or a window's waiting
+        named_none(m, call, (0, &d), env)?;
         day_given(&d, "add_business")?;
+        named_none(m, call, (1, &k), env)?;
         if count_given(m, &k)?.is_some_and(|n| n.is_zero()) {
             // n = 0 refuses for every d (L §4.2), so a hole or a window d prints in the
             // message (pick P14)
@@ -143,10 +146,13 @@ impl Engine {
         };
         let (of, nth) = (self.ev(m, of, env, ctx)?, self.ev(m, nth, env, ctx)?);
         // refusals outrank holes (L §8; pick P12): each argument in written order, `none`
-        // refused, a known one's own check run, a hole's or a window's waiting
+        // refused (named as written and by the built-in, R4), a known one's own check run, a
+        // hole's or a window's waiting
+        named_none(m, call, (0, &of), env)?;
         if !waits(&of) {
             period_arg(m, (call.args.first(), &single(&of)), "last_business")?;
         }
+        named_none(m, call, (1, &nth), env)?;
         if let Some(count) = count_given(m, &nth)?
             && (count.is_negative() || count.is_zero())
         {
@@ -193,11 +199,15 @@ impl Engine {
             self.ev(m, roll_arg, env, ctx)?,
         );
         // refusals outrank holes (L §8; pick P12): each argument in written order, `none`
-        // refused, a known one's own check run, a hole's or a window's waiting
+        // refused (named as written and by the built-in, R4), a known one's own check run, a
+        // hole's or a window's waiting
+        named_none(m, call, (0, &month), env)?;
         if !waits(&month) {
             period_arg(m, (call.args.first(), &single(&month)), "schedule")?;
         }
+        named_none(m, call, (1, &dom), env)?;
         count_given(m, &dom)?;
+        named_none(m, call, (2, &word), env)?;
         given(&word, "schedule")?;
         if let Some(h) = spread(&[month.as_hole(), dom.as_hole(), word.as_hole()]) {
             return Ok(Value::Hole(h));

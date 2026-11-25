@@ -48,7 +48,7 @@ c0: 1
   cut 2026-01-01
 c4: 0
   cut 2026-01-01
-dy (m = in1): ?"in1 and in2 are one, but the day of cash differs on 2026-03-05: 2026-03-05 (in1) and 2026-03-10 (in2)" (in1, in2)
+dy (m = in1): ?"in1 and in2 are one, but leg cash differs on 2026-03-05: 2026-03-05 (in1) and 2026-03-10 (in2)" (in1, in2)
   cut 2026-01-01
 f1: 100.00 PLN
   cut 2026-01-01

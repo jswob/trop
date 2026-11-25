@@ -20,7 +20,7 @@ use crate::base::{Refusal, Run};
 use crate::book::{Fact, Obs, inst_side, once_obs, same_differ};
 use crate::eval::{Collected, Ctx, Engine, Entries, Entry, Env, GUARDED, TraceKeep, UNSET_AXIS};
 use crate::hole::{Hole, spread};
-use crate::model::{KeyVal, MoveInfo, Reality, Span, Value};
+use crate::model::{Fulfils, KeyVal, MoveInfo, Reality, Span, Value};
 use crate::num::Num;
 use crate::syntax::{Expr, Key, Stop};
 use crate::time::Day;
@@ -167,8 +167,22 @@ impl Engine {
         ctx: Ctx,
         acc: &mut Counted,
     ) -> Result<(), Stop> {
+        // the tuples rows name stand in for by the name in every read over movements: one the
+        // model doesn't hold, one that is none here, or one with no day of its own, a hole or a
+        // refusal, is counted by its rows, on their own days, whatever its existence, legs or
+        // amounts (L §5.19 l.1718; tally 2.3.1 rulings 22 (1), P1-C7, rulings 23 (b))
+        let named = self.named_tuples(m, mv, want, ctx.cut)?;
+        let mut by_rows: BTreeSet<String> = named.clone();
+        for i in insts {
+            by_rows.remove(&i.id);
+        }
         for i in insts {
             if !i.keys.starts_with(want) {
+                continue;
+            }
+            let dayless = !matches!(i.day, Some(Dated::Day(_)));
+            if named.contains(&i.id) && (dayless || i.status == Status::None) {
+                by_rows.insert(i.id.clone());
                 continue;
             }
             // a movement the span doesn't count: what decided it is in the read set (L §8.2
@@ -194,6 +208,15 @@ impl Engine {
                 continue;
             }
             let day = match &i.day {
+                // a refused movement on a hole day reaches every span refused: a refusal
+                // outranks a hole (L §8.4, §8 What an operation decides; tally 2.3.1 R6)
+                Some(Dated::Hole(_)) if i.err.is_some() => {
+                    acc.met.merge(&i.coll);
+                    return Err(i
+                        .err
+                        .clone()
+                        .map_or_else(|| invariant("a refused instance"), Stop::Refused));
+                }
                 Some(Dated::Hole(h)) => {
                     acc.holes.push(h.clone());
                     continue;
@@ -227,6 +250,13 @@ impl Engine {
                 return Err(Stop::Refused(e));
             }
             if i.status == Status::Modelled {
+                // what decided a decision exists at its point rests under the rows that stand
+                // in for it (refcore's `flows_move`; L §8.2 One read set; G2's review B3)
+                if mv.decision
+                    && let Some(ex) = &i.exist_coll
+                {
+                    acc.met.merge(ex);
+                }
                 self.count_standing_in(m, i, leg, ctx.cut, acc)?;
                 continue;
             }
@@ -284,6 +314,9 @@ impl Engine {
                 acc.add(q, lg.unit.as_ref())?;
             }
         }
+        for tid in &by_rows {
+            self.count_by_rows(m, (mv, tid), (leg, fk), (sp, ctx.cut), acc)?;
+        }
         if !mv.decision {
             let before = self.trace_walked();
             let mut settling = Vec::new();
@@ -297,6 +330,100 @@ impl Engine {
             // read holds their holes and the rows settling them in its span (E §10; P20, P37)
             self.trace_walked_back(before);
             self.trace_settling(m, &settling, ctx.cut)?;
+        }
+        Ok(())
+    }
+
+    /// The instances of move `mv` at keys starting `want` that rows name under cut `cut`, by
+    /// id, by the name alone (refcore's `flows_move`, its `named`). L §5.19 Links (tally 2.3.1
+    /// rulings 22 (1)).
+    ///
+    /// # Errors
+    ///
+    /// As [`Engine::observations`].
+    fn named_tuples(
+        &mut self,
+        m: &Reality,
+        mv: &MoveInfo,
+        want: &[KeyVal],
+        cut: Day,
+    ) -> Result<BTreeSet<String>, Stop> {
+        let mut named = BTreeSet::new();
+        for o in self.observations(m, cut)? {
+            if let Some(Fulfils::Instance(mid, keys)) = &o.fulfils
+                && *mid == mv.id
+                && keys.starts_with(want)
+            {
+                named.insert(crate::book::inst_id(mid, keys));
+            }
+        }
+        Ok(named)
+    }
+
+    /// The flows of tuple `tid` of move `mv`, counted by the rows that name it, each on its own
+    /// day in span `sp`, for the named tuple's period under `for k`; rows stated `same` counted
+    /// once, their disagreement on the leg its `HOLE-SAME` (refcore's `flows_move`, its
+    /// `by_rows`). L §5.19 l.1718, §5.14.3 (tally 2.3.1 rulings 22 (1), P1-C6, P1-C7).
+    ///
+    /// # Errors
+    ///
+    /// As [`Engine::obs_links_for`]; a refused leg amount.
+    fn count_by_rows(
+        &mut self,
+        m: &Reality,
+        (mv, tid): (&MoveInfo, &str),
+        (leg, fk): (Option<&str>, Option<&Value>),
+        (sp, cut): (&Span, Day),
+        acc: &mut Counted,
+    ) -> Result<(), Stop> {
+        let ids = self.obs_links_for(m, tid, cut)?;
+        let all = self.observations(m, cut)?;
+        let obs: Vec<Obs> = all
+            .iter()
+            .filter(|o| ids.contains(&o.id))
+            .cloned()
+            .collect();
+        let Some(Fulfils::Instance(_, keys)) = obs.first().and_then(|o| o.fulfils.clone()) else {
+            return Ok(());
+        };
+        let period = match fk {
+            Some(_) => self.named_for(m, mv, &keys, cut)?,
+            None => None,
+        };
+        let groups = self.same_groups(m, cut)?;
+        for (first, rest) in once_obs(&groups, &obs) {
+            let others: Vec<&Obs> = rest.iter().filter_map(|&k| obs.get(k)).collect();
+            let Some(o) = obs.get(first) else {
+                return Err(invariant("a same group with no first row"));
+            };
+            acc.met.merge(&o.coll);
+            for x in &others {
+                acc.met.merge(&x.coll);
+            }
+            if let Some(k) = fk {
+                match &period {
+                    Some(Value::Hole(h)) => {
+                        acc.holes.push(h.clone());
+                        continue;
+                    }
+                    Some(p) if p == k => {}
+                    Some(_) | None => continue,
+                }
+            }
+            if let Some(h) = same_differ(m, o, &others, leg)? {
+                acc.holes.push(h);
+                continue;
+            }
+            if !sp.contains(o.day) {
+                continue;
+            }
+            for lg in o.legs.iter().filter(|lg| wanted(leg, &lg.name)) {
+                match &lg.amount {
+                    Amount::Qty(q) => acc.add(q, lg.unit.as_ref())?,
+                    Amount::Hole(h) => acc.holes.push(h.clone()),
+                    Amount::Refused(r) => return Err(Stop::Refused(r.clone())),
+                }
+            }
         }
         Ok(())
     }

@@ -665,8 +665,9 @@ impl Engine {
     }
 
     /// The day's close: conservation, `WARN-NEGATIVE` at the accounts and cash it touched, and
-    /// `RUN-LIFESPAN` for a place whose lifespan ends holding something (refcore's
-    /// `close_day`). E §4.2 steps 4–5, E §9 items 1 and 6.
+    /// `RUN-LIFESPAN` for a place whose lifespan ends holding something, each tested only where
+    /// the balance is known (refcore's `close_day`). E §4.2 steps 4–5, E §9 items 1 and 6; L §8
+    /// (tally 2.3.1 R1, #248).
     fn close_day(&mut self, m: &Reality, id: usize, day: Day) -> Result<(), Stop> {
         let at = At::close(day);
         #[cfg(feature = "fault-injection")]
@@ -721,12 +722,12 @@ impl Engine {
         for place in ending {
             for unit in walk.units_of(&place) {
                 let st = walk.pstate(m, &place, &unit, at);
-                let Some(v) = st.val.clone().filter(|v| !v.is_zero()) else {
+                // on a balance that is a hole the check isn't made: the balance stays its hole
+                // (L §8, what an operation decides; tally 2.3.1 R1, #248's face (b)); a refused
+                // one keeps its refusal
+                let Some(v) = st.known().filter(|v| !v.is_zero()).cloned() else {
                     continue;
                 };
-                if st.bad.is_some() {
-                    continue;
-                }
                 let shown = qty_value(m, &v, &unit)?
                     .text(m)
                     .map_err(crate::eval::num_stop)?;
@@ -905,7 +906,72 @@ fn accounts_and_cash(m: &Reality) -> BTreeSet<String> {
 #[cfg(test)]
 mod tests {
     use super::signed;
+    use crate::api::{Asks, Files, Given, Request, run};
     use crate::num::Num;
+
+    /// A place whose lifespan ends on 30 June, emptied by a movement whose amount is a hole,
+    /// and the same pinned to an amount that leaves something (`critic/life_amt`, #248).
+    const LIFE: &str = r#"model life
+  tally 2
+  on 2026-06-30
+  start 2026-01-01
+  end 2026-12-31
+
+source s "invented values"
+
+unit PLN: currency minor 0.01
+
+place konto: accounts PLN lives 2026-01-01..
+
+place spare: accounts PLN lives 2026-01-01..2026-06-30
+
+input out_amt: money PLN
+
+input out_day: date
+
+move empty: transfers
+  on out_day
+  leg cash from spare to konto amount out_amt
+
+ask s_end: bal(spare, 2026-06-30)
+
+ask s_p60: bal(spare, 2026-06-30) with out_amt = 60.00 PLN
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  opening[spare] = 100.00 PLN at 2026-01-01 start "s"
+  opening[konto] = 0.00 PLN at 2026-01-01 start "s"
+  out_amt = ?"how much was moved out?" "s"
+  out_day = 2026-03-10 "s"
+"#;
+
+    #[test]
+    fn a_lifespan_end_on_a_hole_balance_is_the_balances_hole() {
+        // L §8 (tally 2.3.1 R1, #248's face (b)): the check isn't made on a balance that is a
+        // hole, so the balance prints its hole; on a known one it refuses
+        let given = vec![Given {
+            path: "life.tally".to_owned(),
+            bytes: Some(LIFE.as_bytes().to_vec()),
+        }];
+        let request = Request::new(Asks::Every);
+        let answer = run(Files::new(given), &request).expect("an answer");
+        let values: Vec<&str> = answer
+            .lines()
+            .iter()
+            .filter(|line| line.starts_with("s_"))
+            .map(String::as_str)
+            .collect();
+        assert_eq!(
+            values,
+            [
+                "s_end: ?\"how much was moved out?\" (out_amt)",
+                "s_p60: refused: RUN-LIFESPAN spare ends on 2026-06-30 holding 40.00 PLN"
+            ],
+            "the hole, and the known balance's refusal"
+        );
+    }
 
     #[test]
     fn a_sign_turns_a_quantity_round() {

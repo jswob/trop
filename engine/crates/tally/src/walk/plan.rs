@@ -20,10 +20,9 @@
 use super::instance::{
     Amount, Booked, BookedLeg, Dated, End, Exists, Inst, LegVal, Seed, Status, inst_order,
 };
-use super::legs::leg_unit_static;
 use super::tuples::Tuple;
 use crate::base::{Code, Load, Refusal, Run};
-use crate::eval::{Collected, Ctx, Engine, Env, Snap, TracePart, one_day, thing_seen};
+use crate::eval::{Ctx, Engine, Env, Snap, TracePart, one_day, thing_seen};
 use crate::model::{
     Domain, KeyVal, MoveInfo, Node, NodeKind, Number, Reality, Value, World, currency_id,
     money_num, num_money,
@@ -32,18 +31,6 @@ use crate::num::Num;
 use crate::syntax::{Certainty, Expr, Stop};
 use crate::time::{Day, PeriodKind};
 use std::rc::Rc;
-
-/// Who reads a move's list: a reader of its instances (their flows, amounts and statuses,
-/// the walk), which takes what judging their links meets the first time the list is read; or
-/// an existence read (`o.fulfils`), which takes only the reads that decide that an instance
-/// exists, none of the links' (L §5.19 Links, §8.2; P30, P40).
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-enum Reader {
-    /// A reader of the instances.
-    Instances,
-    /// An existence read.
-    Existence,
-}
 
 impl Engine {
     /// A move's instances at cut `cut`, each dated at the cut and evaluated at its booking
@@ -61,53 +48,25 @@ impl Engine {
         mv: &MoveInfo,
         cut: Day,
     ) -> Result<Rc<Vec<Inst>>, Stop> {
-        self.list_read(m, mv, cut, Reader::Instances)
+        self.list_read(m, mv, cut)
     }
 
-    /// A move's instances at cut `cut` for an existence read (`o.fulfils`): the list
-    /// [`Engine::move_instances`] makes, but what judging its links meets is left to the list's
-    /// next reader of its instances, since an existence read takes only the reads that decide
-    /// that an instance exists (refcore's `find_inst`, which reads no status). L §5.19 Links,
-    /// §8.2; E §4.1 step 3, §3.2 (P30, P40).
+    /// A move's list at cut `cut`: the kept list; else the list made, what it booked kept with
+    /// it or, where it stops, taken back, so every later read of it meets the same stop
+    /// whatever was read before. E §4.1, §9 item 5 (P40).
     ///
     /// # Errors
     ///
     /// As [`Engine::move_instances`].
-    pub(crate) fn existence_list(
-        &mut self,
-        m: &Reality,
-        mv: &MoveInfo,
-        cut: Day,
-    ) -> Result<Rc<Vec<Inst>>, Stop> {
-        self.list_read(m, mv, cut, Reader::Existence)
-    }
-
-    /// A move's list at cut `cut` as `reader` reads it: the kept list, a reader of its
-    /// instances taking what judging its links met where an existence read made it; else the
-    /// list made, what it booked kept with it or, where it stops, taken back, so every later
-    /// read of it meets the same stop whatever was read before. E §4.1, §9 item 5 (P40).
-    ///
-    /// # Errors
-    ///
-    /// As [`Engine::move_instances`].
-    fn list_read(
-        &mut self,
-        m: &Reality,
-        mv: &MoveInfo,
-        cut: Day,
-        reader: Reader,
-    ) -> Result<Rc<Vec<Inst>>, Stop> {
+    fn list_read(&mut self, m: &Reality, mv: &MoveInfo, cut: Day) -> Result<Rc<Vec<Inst>>, Stop> {
         let key = (mv.id.clone(), cut);
         if let Some(hit) = self.plans.get(&key).map(Rc::clone) {
-            if reader == Reader::Instances
-                && let Some(met) = self.links_unread.remove(&key)
-            {
-                self.absorb(&met);
-            }
             return Ok(hit);
         }
         let mark = self.booked_open.len();
-        let made = self.make_list(m, mv, cut, reader);
+        self.making_open(mv)?;
+        let made = self.make_list(m, mv, cut);
+        self.making_close(mv)?;
         if self.plans.contains_key(&key) {
             self.booked_kept(mark);
         } else {
@@ -117,19 +76,14 @@ impl Engine {
     }
 
     /// The list [`Engine::list_read`] makes: the instances, kept, then their statuses, what
-    /// judging their links meets the reader's, or the list's next reader's for an existence
-    /// read; then the hole bookings a later version answers. E §4.1, §5 steps 0–1.
+    /// judging an instance's links meets that instance's own reads, which a reader that counts
+    /// it takes and no other (L §8.2 One read set; E §3.2; tally 2.3.1 R2, item 6); then the
+    /// hole bookings a later version answers. E §4.1, §5 steps 0–1.
     ///
     /// # Errors
     ///
     /// As [`Engine::move_instances`].
-    fn make_list(
-        &mut self,
-        m: &Reality,
-        mv: &MoveInfo,
-        cut: Day,
-        reader: Reader,
-    ) -> Result<Rc<Vec<Inst>>, Stop> {
+    fn make_list(&mut self, m: &Reality, mv: &MoveInfo, cut: Day) -> Result<Rc<Vec<Inst>>, Stop> {
         let key = (mv.id.clone(), cut);
         if self.plan_active.contains(&key) {
             self.narrow_open_to_days();
@@ -149,16 +103,12 @@ impl Engine {
         let (mut out, back) = made?;
         // refcore computes a status when it is first read, after the instances are kept
         self.plans.insert(key.clone(), Rc::new(out.clone()));
-        // the links a narrow read judged at this cut went to its first reader (fence F7)
-        let judged = self.links_judged(&mv.id, cut);
         let mut due = false;
         for inst in &mut out {
             self.push();
             let status = self.status(m, mv, inst, cut);
             let met = self.pop_alone();
-            if !judged {
-                self.links_met(&key, &met, reader);
-            }
+            inst.coll.merge(&met);
             inst.status = status?;
             due = due || crate::book::hole_booked_before(inst, cut);
         }
@@ -314,7 +264,9 @@ impl Engine {
         }
         // what it books stays with it, or is taken back, as a whole list's (P40)
         let mark = self.booked_open.len();
+        self.making_open(mv)?;
         let made = self.make_prefix(m, mv, cut, upto);
+        self.making_close(mv)?;
         if self.prefixes.plans.contains_key(&key) {
             self.booked_kept(mark);
         } else {
@@ -356,7 +308,12 @@ impl Engine {
             .insert(key.clone(), Rc::new(out.clone()));
         let mut due = false;
         for inst in &mut out {
-            inst.status = self.status(m, mv, inst, cut)?;
+            // what judging its links meets is the instance's own, as in the whole list
+            self.push();
+            let status = self.status(m, mv, inst, cut);
+            let met = self.pop_alone();
+            inst.coll.merge(&met);
+            inst.status = status?;
             due = due || crate::book::hole_booked_before(inst, cut);
         }
         let shared = Rc::new(out);
@@ -401,11 +358,15 @@ impl Engine {
         if scenario_early(m, mv, inst) {
             return Ok(Status::LeftOut);
         }
+        // a row stands in for the instance it names by the name alone, never its existence or
+        // its day: a refused plan instance, and a decision's whose day is a hole, never run, are
+        // modelled; a field read of either keeps its refusal or its hole (L §5.19 l.1713,
+        // l.1718, l.1723, §8.4 l.2355; tally 2.3.1 rulings 22 (1); part 1's review B2, B3)
+        if applied && (!mv.decision || day.is_none()) {
+            return Ok(Status::Modelled);
+        }
         if inst.err.is_some() {
             return Ok(Status::Refused);
-        }
-        if applied && !mv.decision {
-            return Ok(Status::Modelled);
         }
         let Some(d) = day else {
             return Ok(Status::Hole);
@@ -539,21 +500,25 @@ impl Engine {
             self.check_booked(&inst, (booking, cut), upto)?;
         }
         inst.coll.merge(&tuple.coll);
+        if let Some(exist) = &mut inst.exist_coll {
+            exist.merge(&tuple.coll);
+        }
         if let (Some(marks), Some(mark)) = (marks, self.trace_snap()) {
             marks.push((inst.id.clone(), mark));
         }
         Ok(Some(inst))
     }
 
-    /// The instance of a tuple whose last key's `where` is refused: a refused instance, its
-    /// day and legs read as any instance's, none where its `when` is false or its keys weren't
-    /// there; a tuple whose later keys are unbound has no day or places to read, so the move's
-    /// instances are refused, every place from the run's start (refcore's `insts_of_tuples`,
-    /// its refused tuples). L §5.14 Keys, §8.4 (tally 2.1.6); E §4.1 step 2.
+    /// The instance of a tuple whose key's `where` is refused: a refused instance, its day and
+    /// legs read as any instance's, none where its `when` is false or its keys weren't there;
+    /// a tuple whose later keys are unbound stands for itself alone
+    /// ([`Engine::stopped_tuple`]), never for the move's list (refcore's `insts_of_tuples`,
+    /// its refused tuples). L §5.14 Keys, An instance's existence is a cell, §8.4 (tally
+    /// 2.1.6, 2.3.1 R6); E §4.1 step 2.
     ///
     /// # Errors
     ///
-    /// The refusal, for a tuple whose later keys are unbound; a load refusal met at run.
+    /// A load refusal met at run.
     pub(super) fn refused_tuple(
         &mut self,
         m: &Reality,
@@ -563,7 +528,7 @@ impl Engine {
         tctx: Ctx,
     ) -> Result<Option<Inst>, Stop> {
         if tuple.keys.len() < mv.binds.len() {
-            return Err(Stop::Refused(err));
+            return self.stopped_tuple(m, mv, (tuple, upto), err, tctx);
         }
         let seed = Seed {
             env: tuple.env,
@@ -581,6 +546,129 @@ impl Engine {
         inst.err = Some(err);
         inst.coll.merge(&tuple.coll);
         Ok(Some(inst))
+    }
+
+    /// The instance of a tuple refused before its later keys are bound: a refused movement
+    /// standing for itself alone, its existence read on in its order, its day, then its
+    /// `when`, each left unread where it reads a key the refusal left unbound: none where the
+    /// day is `never` or `none` or the `when` false; a hole day reaches every span, a day
+    /// refused or unread every place from the run's start; its legs' places read where they
+    /// need no such key, else every place from its day (L §5.14 An instance's existence is a
+    /// cell, §8.4; tally 2.3.1 R6, P40's list stop overturned). E §4.1 step 2.
+    ///
+    /// # Errors
+    ///
+    /// A load refusal met at run.
+    fn stopped_tuple(
+        &mut self,
+        m: &Reality,
+        mv: &MoveInfo,
+        (tuple, upto): (Tuple, Option<Day>),
+        err: Refusal,
+        tctx: Ctx,
+    ) -> Result<Option<Inst>, Stop> {
+        let mut inst = Inst::new(mv, tuple.keys, tuple.env);
+        inst.err = Some(err);
+        self.push();
+        let made = self.stopped_parts(m, mv, &mut inst, (tctx, upto));
+        let met = self.pop_alone();
+        inst.coll.merge(&met);
+        inst.coll.merge(&tuple.coll);
+        Ok(made?.then_some(inst))
+    }
+
+    /// The parts [`Engine::stopped_tuple`] reads into refused instance `inst`; false where it
+    /// doesn't exist. L §5.14, §8.4; E §5 steps 0–1.
+    ///
+    /// # Errors
+    ///
+    /// A load refusal met at run.
+    fn stopped_parts(
+        &mut self,
+        m: &Reality,
+        mv: &MoveInfo,
+        inst: &mut Inst,
+        (tctx, upto): (Ctx, Option<Day>),
+    ) -> Result<bool, Stop> {
+        let bound = inst.keys.len();
+        if !reads_unbound(mv, bound, &mv.decl.on) {
+            self.push();
+            let read = self.law_and_day(m, mv, inst, tctx);
+            let day_coll = self.pop_alone();
+            self.absorb(&day_coll);
+            inst.day_coll = day_coll;
+            let day = match read {
+                Ok(Ok(Value::Never | Value::None)) => return Ok(false),
+                Ok(Ok(v)) => day_dated(m, v, &inst.id).map(Some),
+                Ok(Err(h)) => Ok(Some(Dated::Hole(h))),
+                Err(stop) => Err(stop),
+            };
+            match day {
+                Ok(day) => inst.day = day,
+                // a refused day as a hole one: the where's refusal is the instance's (R1)
+                Err(Stop::Refused(r)) if !matches!(r.code(), Code::Load(_)) => {}
+                Err(stop) => return Err(stop),
+            }
+        }
+        let day = match inst.day {
+            // a hole day has no booking cut to read the rest at, as `eval_inst`'s
+            Some(Dated::Hole(_)) => return Ok(true),
+            Some(Dated::Day(d)) => Some(d),
+            None => None,
+        };
+        if mv.decision {
+            return Ok(true);
+        }
+        if let Some(d) = day {
+            if upto.is_some_and(|u| d > u) {
+                // a walk up to a day books nothing after it (refcore's `eval_inst`, `upto`)
+                return Ok(false);
+            }
+            let cut = d.min(tctx.cut);
+            inst.cut = Some(cut);
+            if !keys_seen(m, mv, &inst.keys, (cut, self.timeline_world()))
+                || !self.stopped_when(m, mv, inst, cut)?
+            {
+                return Ok(false);
+            }
+        }
+        let places = mv
+            .decl
+            .legs
+            .iter()
+            .all(|lg| !reads_unbound(mv, bound, &lg.from) && !reads_unbound(mv, bound, &lg.to));
+        if places {
+            self.refused_legs(m, mv, inst, (tctx, None))?;
+        }
+        Ok(true)
+    }
+
+    /// Whether refused instance `inst`, dated, may exist by its move's `when` at booking cut
+    /// `cut`: false only for a `when` that is false; one that reads a key left unbound isn't
+    /// read. L §5.14 An instance's existence is a cell (tally 2.3.1 R6, P42).
+    ///
+    /// # Errors
+    ///
+    /// A load refusal met at run.
+    fn stopped_when(
+        &mut self,
+        m: &Reality,
+        mv: &MoveInfo,
+        inst: &Inst,
+        cut: Day,
+    ) -> Result<bool, Stop> {
+        let Some(when) = &mv.decl.when else {
+            return Ok(true);
+        };
+        if reads_unbound(mv, inst.keys.len(), when) {
+            return Ok(true);
+        }
+        let ctx = self.timeline_ctx(inst.law.day(), cut);
+        match self.ev(m, when, &inst.env, ctx) {
+            Ok(w) => Ok(w != Value::Bool(false)),
+            Err(Stop::Refused(r)) if !matches!(r.code(), Code::Load(_)) => Ok(true),
+            Err(stop) => Err(stop),
+        }
     }
 
     /// A booked plan amount never changes: an instance's A₀, its existence and legs as read at
@@ -618,6 +706,38 @@ impl Engine {
         )))
     }
 
+    /// Opens the making of a list of move `mv`, counted where it is a plan: a decision's
+    /// existence traced inside one is a plan reaching a running read (E §3.1 step 7; tally
+    /// 2.3.1 R6, P43).
+    ///
+    /// # Errors
+    ///
+    /// `ENGINE-INVARIANT` past the counter.
+    pub(super) fn making_open(&mut self, mv: &MoveInfo) -> Result<(), Stop> {
+        if !mv.decision {
+            self.plans_making = self
+                .plans_making
+                .checked_add(1)
+                .ok_or_else(|| invariant("the plan lists being made"))?;
+        }
+        Ok(())
+    }
+
+    /// Closes what [`Engine::making_open`] opened. E §3.1 step 7.
+    ///
+    /// # Errors
+    ///
+    /// `ENGINE-INVARIANT` for a close with none open.
+    pub(super) fn making_close(&mut self, mv: &MoveInfo) -> Result<(), Stop> {
+        if !mv.decision {
+            self.plans_making = self
+                .plans_making
+                .checked_sub(1)
+                .ok_or_else(|| invariant("the plan lists being made"))?;
+        }
+        Ok(())
+    }
+
     /// The amounts a list or an instance booked first since `mark`, once it is kept: they stay
     /// booked with it. E §9 item 5 (P40).
     pub(super) fn booked_kept(&mut self, mark: usize) {
@@ -633,27 +753,6 @@ impl Engine {
             && let Some(key) = self.booked_open.pop()
         {
             self.booked.remove(&key);
-        }
-    }
-
-    /// What judging one instance's links met, `met`, given to the reader of list `key`: a
-    /// reader of the instances takes it; an existence read leaves it to the list's next one
-    /// (L §5.19 Links, §8.2; E §4.1 step 3; P30, P40).
-    fn links_met(&mut self, key: &(String, Day), met: &Collected, reader: Reader) {
-        match reader {
-            Reader::Instances => self.absorb(met),
-            Reader::Existence => self.links_left(key, met),
-        }
-    }
-
-    /// What judging one instance's links met, `met`, kept for list `key`'s next reader of its
-    /// instances, with what the list's other instances' links met (L §5.19 Links, §8.2; P40).
-    fn links_left(&mut self, key: &(String, Day), met: &Collected) {
-        match self.links_unread.get_mut(key) {
-            Some(kept) => kept.merge(met),
-            None => {
-                self.links_unread.insert(key.clone(), met.clone());
-            }
         }
     }
 
@@ -767,52 +866,6 @@ impl Engine {
                 src: None,
             })
             .collect();
-        Ok(Some(legs))
-    }
-
-    /// The legs of decision instance `inst`, whose day is a hole, as a binding meets it: the
-    /// walk never runs it, so its places are read as a refused instance's are, at cut `cut`,
-    /// their reads its own and no reader's, and each amount and day is the day's hole; none
-    /// where a place isn't a thing here, or for an instance with a day (refcore's
-    /// `hole_day_dec_body`). L §5.14, §5.19 Bindings.
-    ///
-    /// # Errors
-    ///
-    /// A load refusal met at run.
-    pub(crate) fn hole_day_legs(
-        &mut self,
-        m: &Reality,
-        mv: &MoveInfo,
-        inst: &Inst,
-        cut: Day,
-    ) -> Result<Option<Vec<LegVal>>, Stop> {
-        let Some(Dated::Hole(h)) = &inst.day else {
-            return Ok(None);
-        };
-        self.push();
-        let ends = self.leg_ends(m, mv, inst, self.timeline_ctx(inst.law.day(), cut));
-        self.pop_alone();
-        let Some(places) = ends? else {
-            return Ok(None);
-        };
-        let kind_legs = m.kind_legs(&mv.kind);
-        let mut legs = Vec::with_capacity(places.len());
-        for (leg, (from, to)) in mv.decl.legs.iter().zip(places) {
-            let (from, to) = (End::Place(from), End::Place(to));
-            let unit = kind_legs
-                .iter()
-                .find(|(name, _, _)| *name == leg.name)
-                .and_then(|(_, unit, _)| leg_unit_static(m, unit, &from, &to));
-            legs.push(LegVal {
-                name: leg.name.clone(),
-                from,
-                to,
-                amount: Amount::Hole(h.clone()),
-                unit,
-                day: Dated::Hole(h.clone()),
-                src: None,
-            });
-        }
         Ok(Some(legs))
     }
 
@@ -969,11 +1022,21 @@ impl Engine {
         inst.exists = body.exists;
         inst.legs = body.legs;
         inst.leg_reads = body.leg_reads;
+        inst.exist_coll = Some(body.exist);
         inst.attrs = body.attrs;
         inst.for_period = body.for_period;
         inst.fulfils = body.fulfils;
         Ok(true)
     }
+}
+
+/// Whether `e` reads a key of move `mv` past its first `bound` bindings, which a tuple refused
+/// before them leaves unbound (the walk's `move_law`, by the same `reads_var`). L §5.14 Keys.
+fn reads_unbound(mv: &MoveInfo, bound: usize, e: &Expr) -> bool {
+    mv.binds
+        .iter()
+        .skip(bound)
+        .any(|b| crate::eval::reads_var(e, &b.var))
 }
 
 /// Whether the keys of an instance were there at cut `cut` in world `world`: an index's key
@@ -1224,10 +1287,11 @@ version facts
 "#;
 
     #[test]
-    fn a_refused_where_before_a_later_binding_refuses_every_place_from_the_start() {
-        // L §5.14 Keys, §8.4 (tally 2.1.6): topup[2026-02]'s where is refused before its tier
-        // is bound, so it has no day or places to read and the move's instances are refused,
-        // every place from the run's start, as refcore's insts_of_tuples raises
+    fn a_refused_where_before_a_later_binding_is_one_refused_movement_on_its_day() {
+        // L §5.14 An instance's existence is a cell, §8.4 (tally 2.3.1 R6, P40's list stop
+        // overturned): topup[2026-02]'s where is refused before its tier is bound; its day
+        // and its leg's places need no tier, so it is one refused movement on 2026-02-20 at
+        // box, and the other instances stand
         let given = vec![Given {
             path: "later_key.tally".to_owned(),
             bytes: Some(LATER_KEY.as_bytes().to_vec()),
@@ -1237,12 +1301,42 @@ version facts
         assert_eq!(
             answer.lines(),
             [
-                "q_bal (d = 2026-01-20): (refused: RUN-DIV division by zero, refused: RUN-DIV division by zero)",
+                "q_bal (d = 2026-01-20): (100.00 PLN, 6.00 PLN)",
+                "  unfulfilled: topup[2026-01, 1]",
+                "  unfulfilled: topup[2026-01, 2]",
                 "  cut 2026-02-15",
-                "q_bal (d = 2026-03-20): (refused: RUN-DIV division by zero, refused: RUN-DIV division by zero)",
+                "q_bal (d = 2026-03-20): (100.00 PLN, refused: RUN-DIV division by zero)",
+                "  unfulfilled: topup[2026-01, 1]",
+                "  unfulfilled: topup[2026-01, 2]",
                 "  cut 2026-02-15"
             ],
-            "every place refused from the start"
+            "box refused from February's day, konto untouched"
+        );
+    }
+
+    #[test]
+    fn a_refused_tuple_whose_day_needs_a_later_key_refuses_its_places_from_the_start() {
+        // L §5.14, §8.4 (tally 2.3.1 R6): the day reads the tier the refusal left unbound, so
+        // it can't be read, a refused day as a hole one: box is refused from the run's start;
+        // its leg's places are still read, so konto stands
+        let text = LATER_KEY.replace("on day_of(m, dec_dom)", "on day_of(m, dec_dom + t)");
+        let given = vec![Given {
+            path: "later_key.tally".to_owned(),
+            bytes: Some(text.into_bytes()),
+        }];
+        let request = Request::new(Asks::Named(vec!["q_bal".to_owned()]));
+        let answer = run(Files::new(given), &request).expect("an answer");
+        assert_eq!(
+            answer.lines(),
+            [
+                "q_bal (d = 2026-01-20): (100.00 PLN, refused: RUN-DIV division by zero)",
+                "  cut 2026-02-15",
+                "q_bal (d = 2026-03-20): (100.00 PLN, refused: RUN-DIV division by zero)",
+                "  unfulfilled: topup[2026-01, 1]",
+                "  unfulfilled: topup[2026-01, 2]",
+                "  cut 2026-02-15"
+            ],
+            "box refused from the start"
         );
     }
 
@@ -1660,6 +1754,294 @@ ask day_pin: pay_at.day with wl = 2026-02-10
                 "  cut 2026-04-20"
             ],
             "a pin of wl books it"
+        );
+    }
+
+    /// Monthly rent whose January `when` is an assumed row OK, a January bank row fulfilling
+    /// it: the planner's `first.tally`.
+    const FIRST: &str = r#"model first
+  tally 2
+  on 2026-05-20
+  start 2026-01-01
+  end 2026-06-30
+
+source s "invented values"
+
+unit PLN: currency minor 0.01
+
+index month = month 2026-01..2026-06
+
+place pot: accounts PLN lives 2026-01-01..
+
+place landlord: outside lives 1900-01-01..
+
+input bank: observed
+
+input rent_amt: money PLN
+
+input ok[m in month]: bool
+
+input d5: int
+
+move rent[m in month]: transfers
+  on day_of(m, d5)
+  at start_of(m)
+  when ok[m]
+  leg cash from pot to landlord amount rent_amt
+
+ask a: flows(rent, 2026-01)
+
+ask b: flows(rent, 2026-03)
+
+ask c: bal(pot, 2026-03-31)
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  rent_amt = 100.00 PLN "s"
+  d5 = 5 "s"
+  ok[2026-01] = OK
+  ok[2026-02] = true "ok feb"
+  ok[2026-03] = true "ok mar"
+  ok[2026-04] = true "ok apr"
+  ok[2026-05] = true "ok may"
+  ok[2026-06] = true "ok jun"
+  opening[pot] = 9000.00 PLN at 2026-01-01 start "s"
+
+version jan
+  cite s
+  governs 2026-01
+  known 2026-01-21
+  covers pot
+  bank[a1] = (on: 2026-01-05, kind: transfers, leg cash from pot to landlord amount 100.00 PLN, fulfils: rent[2026-01]) "names jan"
+"#;
+
+    #[test]
+    fn a_row_stands_in_for_an_instance_whose_existence_is_refused() {
+        // L §5.19 l.1713, §8.4 l.2355 (tally 2.3.1 rulings 22 (1); part 1's review B2):
+        // January's `when` divides by zero; its row stands in by the name, so the balance and
+        // the flows read the row, and only a field read and `== none` keep the refusal
+        let text = FIRST
+            .replace("OK", "true \"ok jan\"")
+            .replace("  when ok[m]", "  when ok[m] and d5 / dz[m] > 0")
+            .replace(
+                "input d5: int",
+                "input d5: int\n\ninput dz[m in month]: int",
+            )
+            .replace(
+                "  d5 = 5 \"s\"",
+                "  d5 = 5 \"s\"\n  dz[2026-01] = 0 \"s\"\n  dz[2026-02] = 1 \"s\"\n  \
+                 dz[2026-03] = 1 \"s\"\n  dz[2026-04] = 1 \"s\"\n  dz[2026-05] = 1 \"s\"\n  \
+                 dz[2026-06] = 1 \"s\"",
+            )
+            .replace(
+                "ask c:",
+                "ask dy: rent[2026-01].day\n\nask e: rent[2026-01] == none\n\nask c:",
+            );
+        let files = [("first.tally", text.as_str())];
+        let first = |ask: &str| answer(&files, ask).first().cloned().expect("a line");
+        assert_eq!(first("c"), "c: 8 700.00 PLN", "the balance reads the row");
+        assert_eq!(first("a"), "a: 100.00 PLN", "the flows read the row");
+        for ask in ["dy", "e"] {
+            assert_eq!(
+                first(ask),
+                format!("{ask}: refused: RUN-DIV division by zero"),
+                "{ask} keeps the refusal"
+            );
+        }
+    }
+
+    #[test]
+    fn a_read_of_the_instance_carries_its_existence_cell_as_it_stands() {
+        // L §5.14 An instance's existence is a cell, §8.4 (tally 2.3.1 rulings 23 (a)): a
+        // field read and `== none` carry the existence as it stands, a hole with a row that
+        // names the instance (January) or without (February), a refusal of a decision's `when`
+        let hole = FIRST
+            .replace("OK", "?\"ok jan?\" \"s\"")
+            .replace(
+                "ok[2026-02] = true \"ok feb\"",
+                "ok[2026-02] = ?\"ok feb?\" \"s\"",
+            )
+            .replace(
+                "ask c:",
+                "ask dy: rent[2026-01].day\n\nask e: rent[2026-01] == none\n\nask dy2: \
+                 rent[2026-02].day\n\nask e2: rent[2026-02] == none\n\nask c:",
+            );
+        let files = [("first.tally", hole.as_str())];
+        let first = |ask: &str| answer(&files, ask).first().cloned().expect("a line");
+        for (ask, month, q) in [
+            ("dy", "01", "jan"),
+            ("e", "01", "jan"),
+            ("dy2", "02", "feb"),
+            ("e2", "02", "feb"),
+        ] {
+            assert_eq!(
+                first(ask),
+                format!("{ask}: ?\"ok {q}?\" (ok[2026-{month}])"),
+                "{ask}: the existence's hole"
+            );
+        }
+        let refused = FIRST
+            .replace("OK", "true \"ok jan\"")
+            .replace(
+                "  when ok[m]",
+                "  reads pot\n  when ok[m] and d5 / dz[m] > 0 and bal(pot) > 0.00 PLN",
+            )
+            .replace(
+                "input d5: int",
+                "input d5: int\n\ninput dz[m in month]: int",
+            )
+            .replace(
+                "  d5 = 5 \"s\"",
+                "  d5 = 5 \"s\"\n  dz[2026-01] = 0 \"s\"\n  dz[2026-02] = 1 \"s\"\n  \
+                 dz[2026-03] = 1 \"s\"\n  dz[2026-04] = 1 \"s\"\n  dz[2026-05] = 1 \"s\"\n  \
+                 dz[2026-06] = 1 \"s\"",
+            )
+            .replace("ask c:", "ask e: rent[2026-01] == none\n\nask c:");
+        let dec_files = [("first.tally", refused.as_str())];
+        let e = answer(&dec_files, "e").first().cloned().expect("a line");
+        assert_eq!(
+            e, "e: refused: RUN-DIV division by zero",
+            "a decision's refused when"
+        );
+    }
+
+    #[test]
+    fn a_row_stands_in_for_an_instance_whose_day_is_refused() {
+        // L §5.19 l.1713, §8.4 l.2355 (tally 2.3.1 rulings 23 (b), the part-1 fix review's gap
+        // 3): January's day divides by zero; its row stands in by the name, on a plan and on a
+        // decision, so the balance and the flows read the row, and only a read of the instance
+        // keeps the refusal
+        let text = |decision: bool| {
+            let when = if decision {
+                "  reads pot\n  when ok[m] and bal(pot) > 0.00 PLN"
+            } else {
+                "  when ok[m]"
+            };
+            FIRST
+                .replace("OK", "true \"ok jan\"")
+                .replace("  on day_of(m, d5)", "  on day_of(m, d5 / dz[m])")
+                .replace("  when ok[m]", when)
+                .replace(
+                    "input d5: int",
+                    "input d5: int\n\ninput dz[m in month]: int",
+                )
+                .replace(
+                    "  d5 = 5 \"s\"",
+                    "  d5 = 5 \"s\"\n  dz[2026-01] = 0 \"s\"\n  dz[2026-02] = 1 \"s\"\n  \
+                     dz[2026-03] = 1 \"s\"\n  dz[2026-04] = 1 \"s\"\n  dz[2026-05] = 1 \"s\"\n  \
+                     dz[2026-06] = 1 \"s\"",
+                )
+                .replace(
+                    "ask c:",
+                    "ask dy: rent[2026-01].day\n\nask e: rent[2026-01] == none\n\nask c:",
+                )
+        };
+        for (decision, what) in [(false, "a plan"), (true, "a decision")] {
+            let t = text(decision);
+            let files = [("first.tally", t.as_str())];
+            let first = |ask: &str| answer(&files, ask).first().cloned().expect("a line");
+            assert_eq!(
+                first("c"),
+                "c: 8 700.00 PLN",
+                "{what}: the balance reads the row"
+            );
+            assert_eq!(
+                first("a"),
+                "a: 100.00 PLN",
+                "{what}: the flows read the row"
+            );
+            for ask in ["dy", "e"] {
+                assert_eq!(
+                    first(ask),
+                    format!("{ask}: refused: RUN-DIV division by zero"),
+                    "{what}: {ask} keeps the refusal"
+                );
+            }
+        }
+    }
+
+    #[test]
+    fn flows_for_a_period_over_a_movement_whose_period_is_a_hole_is_that_hole() {
+        // L §5.14 l.1363, §8.1 (tally 2.3.1 part 1's review B5): a row is for its named tuple's
+        // period and an instance for its own; one that is a hole makes `, for k` that hole, on
+        // the row's path (January's row) and on the instance's (February's plan)
+        let text = |hole: &str| {
+            let rows: String = ["01", "02", "03", "04", "05", "06"]
+                .iter()
+                .map(|mm| {
+                    if *mm == hole {
+                        format!("\n  per[2026-{mm}] = ?\"which period?\" \"s\"")
+                    } else {
+                        format!("\n  per[2026-{mm}] = 2026-{mm} \"s\"")
+                    }
+                })
+                .collect();
+            FIRST
+                .replace("OK", "true \"ok jan\"")
+                .replace("  when ok[m]", "  when ok[m]\n  for per[m]")
+                .replace(
+                    "input d5: int",
+                    "input d5: int\n\ninput per[m in month]: month",
+                )
+                .replace("  d5 = 5 \"s\"", &format!("  d5 = 5 \"s\"{rows}"))
+                .replace(
+                    "ask c:",
+                    "ask ff: flows(pot, 2026-01-01..2026-03-31, for 2026-03)\n\nask c:",
+                )
+        };
+        for (hole, path) in [("01", "the row"), ("02", "the plan")] {
+            let t = text(hole);
+            let files = [("first.tally", t.as_str())];
+            let line = answer(&files, "ff").first().cloned().expect("a line");
+            assert_eq!(
+                line,
+                format!("ff: ?\"which period?\" (per[2026-{hole}])"),
+                "{path}"
+            );
+        }
+        // after the run's end too (tally 2.3.1 rulings 23 (c)): June's plan instance, past
+        // an end of 30 April, is for a hole period, so a span holding its day is that hole;
+        // one that leaves the day out isn't
+        let late = text("06").replace("end 2026-06-30", "end 2026-04-30");
+        let ask = |span: &str| {
+            let t = late.replace("2026-01-01..2026-03-31, for", &format!("{span}, for"));
+            let files = [("first.tally", t.as_str())];
+            answer(&files, "ff").first().cloned().expect("a line")
+        };
+        assert_eq!(
+            ask("2026-01-01..2026-06-30"),
+            "ff: ?\"which period?\" (per[2026-06])",
+            "after the run's end"
+        );
+        assert_eq!(
+            ask("2026-01-01..2026-05-31"),
+            "ff: -100.00 PLN",
+            "a span that leaves June out"
+        );
+    }
+
+    #[test]
+    fn a_binding_over_the_kind_carries_no_link_read_of_an_instance_outside_its_span() {
+        // L §8.2 l.2252 (tally 2.3.1 R2, item 6; G2's review B4): January's modelled instance
+        // and its row lie outside March's span, so March's sum over the kind lists none of
+        // January's link reads, as March's flows lists none
+        let text = FIRST
+            .replace("OK", "true assumed \"jan is a guess\" \"ok jan\"")
+            .replace(
+                "ask c:",
+                "ask sm: sum(t.cash.amount for t in transfers over 2026-03)\n\nask c:",
+            );
+        let files = [("first.tally", text.as_str())];
+        assert_eq!(
+            answer(&files, "sm"),
+            [
+                "sm: 100.00 PLN",
+                "  unfulfilled: rent[2026-03]",
+                "  cut 2026-05-20"
+            ],
+            "March's sum doesn't rest on January's link"
         );
     }
 }

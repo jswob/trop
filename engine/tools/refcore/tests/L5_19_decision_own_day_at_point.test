@@ -73,6 +73,8 @@ j: 200.00 PLN
   unfulfilled: skim[2026-02]
   cut 2026-04-20
 rs: residuals konto 2026-02
+  2026-02 move topup: model 0.00 PLN, observed 400.00 PLN, difference 400.00 PLN
+    matched topup[2026-02] on 2026-02-05: model 0.00 PLN, observed 400.00 PLN, difference 400.00 PLN, timing +0 days
   cut 2026-04-20
 sk: 200.00 PLN
   unfulfilled: skim[2026-02]

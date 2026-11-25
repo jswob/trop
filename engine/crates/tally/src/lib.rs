@@ -119,7 +119,7 @@ pub mod model {
         MoveInfo, ObsLeg, Observation, PlaceInfo, PlaceReadings, Row, RuleVer, Table as BandTable,
         TimePos,
     };
-    pub use graph::{Graph, Mark, Node, NodeKind, ReadRole, Rel, Shift, Target};
+    pub use graph::{ExistenceReads, Graph, Mark, Node, NodeKind, ReadRole, Rel, Shift, Target};
     pub use ids::{
         AxisId, BandId, DefId, FillId, IndexId, InputId, KindId, MoveId, Name, Names, PlaceId,
         SourceId, ThingId, VersionId,
@@ -290,7 +290,7 @@ pub mod book {
     pub use adjust::{Adjustment, Measured, Settled};
     pub use ledger::{Fig, Ledger, Line, UnitLedger, fig_text};
     pub use ledger_order::{Group, GroupKey};
-    pub(crate) use members::{MvDom, MvMember, inst_ref};
+    pub(crate) use members::{MvDom, MvMember, Reading, inst_ref};
     pub use observe::{Coverage, Linked, Obs, inst_id};
     pub use reading::{Pad, Seen, reading_rank};
     pub(crate) use reading::{first_readings, gap_text, instant_text, readings};

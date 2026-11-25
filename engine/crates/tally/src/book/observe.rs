@@ -173,7 +173,6 @@ impl Engine {
             id,
             day,
             src: MvSrc::Obs,
-            member: false,
         })))
     }
 
@@ -266,10 +265,9 @@ impl Engine {
         cov.is_empty() || cov.contains(&o.version)
     }
 
-    /// The observations that fulfil instance `tid` under cut `cut`, each link judged: the
-    /// instance must exist at the cut by its keys, `where` and `when`, touch the observation's
-    /// places and have no leg the observation lacks, else the observation is refused
-    /// `RUN-RECORD` (refcore's `obs_links_for`). L §5.19 Links.
+    /// The observations that fulfil instance `tid` under cut `cut`: each row that names it,
+    /// by the name alone, but a row two statements of one movement refuse (L §5.19 Links, One
+    /// movement on two statements; tally 2.3.1 rulings 22, pick P23).
     ///
     /// # Errors
     ///
@@ -376,8 +374,10 @@ impl Engine {
         Ok(())
     }
 
-    /// Each observation naming `tid`, its link judged (refcore's `obs_links_for`, its loop).
-    /// L §5.19 Links.
+    /// Each observation naming `tid`: a link names, by the name alone, and reads nothing of the
+    /// instance, its existence, day, legs or places; the rows a `same` class states are judged
+    /// on their class (tally 2.3.1 rulings 22, pick P23, the critic's part 1; L §5.19 Links,
+    /// l.1728).
     fn judge_links(
         &mut self,
         m: &Reality,
@@ -399,51 +399,7 @@ impl Engine {
                 shared.push(o.id);
                 continue;
             }
-            let Some(Fulfils::Instance(move_id, keys)) = &o.fulfils else {
-                continue;
-            };
-            let mv = m
-                .moves
-                .get(move_id)
-                .ok_or_else(|| invariant("a link to a move load didn't build"))?;
-            let found = self.link_tuple(m, mv, keys, cut)?;
-            let mut bad = found.is_none();
-            if let Some(env) = &found {
-                let places = self.link_places(m, mv, env, cut)?;
-                let touched: BTreeSet<&str> = o
-                    .legs
-                    .iter()
-                    .flat_map(|lg| [lg.from.place(), lg.to.place()])
-                    .flatten()
-                    .collect();
-                if !places.is_empty() && places.iter().all(|p| !touched.contains(p.as_str())) {
-                    bad = true;
-                }
-            }
-            if bad {
-                errs.push((
-                    o.id.clone(),
-                    record(format!(
-                        "observation {} fulfils {tid}, which doesn't exist or doesn't touch its places",
-                        o.id
-                    )),
-                ));
-                continue;
-            }
-            let lack = mv.decl.legs.iter().find(|lg| !states_leg(&o, &lg.name));
-            if let Some(lg) = lack
-                && !m.kind_legs(&o.kind).is_empty()
-            {
-                let err = record(format!(
-                    "observation {} fulfils {tid} and lacks its leg {}",
-                    o.id, lg.name
-                ));
-                // what reads the instance's realised movement rests on the refused record
-                // (L §8.4)
-                self.bad_links
-                    .entry((cut, tid.to_owned()))
-                    .or_insert_with(|| err.clone());
-                errs.push((o.id.clone(), err));
+            if !matches!(&o.fulfils, Some(Fulfils::Instance(..))) {
                 continue;
             }
             good.push(o);
@@ -513,8 +469,8 @@ impl Engine {
             .collect())
     }
 
-    /// The refusal of observation `o`'s record under cut `cut`, its link judged first: a link
-    /// to nothing, or a record that lacks the instance's leg (refcore's `ObsMv.err`). L §5.19.
+    /// The refusal of observation `o`'s record under cut `cut`, its link judged first: two
+    /// statements of one movement that the link refuses (refcore's `ObsMv.err`). L §5.19.
     ///
     /// # Errors
     ///
@@ -560,18 +516,24 @@ impl Engine {
     /// The links to `tid` judged, or `None` while judging them is refused by anything but
     /// load: the observation's verdict waits until it can be judged (refcore's
     /// `ObsMv._judge_link`). L §5.19 Links.
-    fn judged(&mut self, m: &Reality, tid: &str, cut: Day) -> Result<Option<Vec<String>>, Stop> {
-        match self.obs_links_for(m, tid, cut) {
-            Ok(good) => Ok(Some(good)),
-            Err(Stop::Refused(r)) if !matches!(r.code(), Code::Load(_)) => Ok(None),
-            Err(stop) => Err(stop),
-        }
+    pub(crate) fn judged(
+        &mut self,
+        m: &Reality,
+        tid: &str,
+        cut: Day,
+    ) -> Result<Option<Vec<String>>, Stop> {
+        let good = match self.obs_links_for(m, tid, cut) {
+            Ok(good) => good,
+            Err(Stop::Refused(r)) if !matches!(r.code(), Code::Load(_)) => return Ok(None),
+            Err(stop) => return Err(stop),
+        };
+        Ok(Some(good))
     }
 
-    /// The day of the decision instance observation `o` fulfils, its link standing; `None`
-    /// for one that fulfils a plan's instance or nothing. Such an observation is booked at
-    /// the instance's point on that day, not at its own (refcore's `book_obs_leg`, its
-    /// test). E §4.2 step 1, L §5.19.
+    /// The day of the decision tuple observation `o` names, by the name alone; `None` for one
+    /// that names a plan's instance or nothing. Such an observation is booked at that tuple's
+    /// point on that day, whether or not the tuple exists there, not at its own (refcore's
+    /// `book_obs_leg`, its test). E §4.2 step 1, L §5.19 (tally 2.3.1 rulings 22, pick P23).
     ///
     /// # Errors
     ///
@@ -770,11 +732,6 @@ fn differs(b: &Obs, la: &LegVal) -> bool {
             .any(|lb| lb.name == la.name && lb.amount != la.amount)
 }
 
-/// Whether observation `o` states a leg named `name`. L §5.19 Links.
-fn states_leg(o: &Obs, name: &str) -> bool {
-    o.legs.iter().any(|ol| ol.name == name)
-}
-
 /// An observation's leg amounts, by leg name, as `WARN-LEGS` prints them. E §6.1.
 fn amounts(m: &Reality, o: &Obs) -> Result<String, Stop> {
     let mut legs: Vec<&LegVal> = o.legs.iter().collect();
@@ -792,11 +749,6 @@ fn amounts(m: &Reality, o: &Obs) -> Result<String, Stop> {
         out.push(v.text(m).map_err(crate::eval::num_stop)?);
     }
     Ok(out.join(", "))
-}
-
-/// A `RUN-RECORD` refusal (L §8.4).
-fn record(message: String) -> Refusal {
-    Refusal::new(Code::Run(Run::Record), message)
 }
 
 /// Input `input`'s observation at position `at` (L §5.19).

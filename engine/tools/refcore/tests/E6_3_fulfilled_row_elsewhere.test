@@ -1,0 +1,63 @@
+# tally 2.3.1 P32 B4 (E §6.3: an instance an observation fulfils is a matched line on the instance's day,
+# whatever places the row touches; its difference the whole amount at each place): rent runs pot to landlord,
+# its rows pot2 to world2. rs (pot): matched, model -100.00, observed 0.00; rs2 (pot2): matched, model 0.00,
+# observed -110.00 and -120.00. Before: rs expected but missing, rs2 no line.
+=== r1_notouch_known_cov.tally
+model r1
+  tally 2
+  on 2026-05-20
+  start 2026-01-01
+  end 2026-03-31
+
+source s "probe"
+unit PLN: currency minor 0.01
+index month = month 2026-01..2026-02
+place pot: accounts PLN lives 2026-01-01..
+place pot2: accounts PLN lives 2026-01-01..
+place landlord: outside lives 1900-01-01..
+place world2: outside lives 1900-01-01..
+input bank: observed
+input amt[m in month]: money PLN
+input d5[m in month]: int
+
+move rent[m in month]: transfers
+  on day_of(m, d5[m])
+  leg cash from pot to landlord amount amt[m]
+
+ask c: bal(pot, 2026-03-31)
+ask c2: bal(pot2, 2026-03-31)
+ask rs: residuals pot 2026-01-01..2026-03-31
+ask rs2: residuals pot2 2026-01-01..2026-03-31
+ask fr: flows(rent, 2026-01-01..2026-03-31)
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  amt[2026-01] = 100.00 PLN "s"
+  amt[2026-02] = 100.00 PLN "s"
+  d5[2026-01] = 5 "s"
+  d5[2026-02] = 5 "s"
+  opening[pot] = 9000.00 PLN at 2026-01-01 start "s"
+  opening[pot2] = 500.00 PLN at 2026-01-01 start "s"
+
+version q1
+  cite s
+  governs 2026-01-01..2026-03-31
+  known 2026-04-01
+  covers pot, pot2
+  bank[a1] = (on: 2026-01-07, kind: transfers, leg cash from pot2 to world2 amount 110.00 PLN, fulfils: rent[2026-01]) "jan"
+  bank[a2] = (on: 2026-02-09, kind: transfers, leg cash from pot2 to world2 amount 120.00 PLN, fulfils: rent[2026-02]) "feb"
+=== expect rs rs2
+rs: residuals pot 2026-01-01 .. 2026-03-31
+  2026-01 move rent: model -100.00 PLN, observed 0.00 PLN, difference 100.00 PLN
+    matched rent[2026-01] on 2026-01-05: model -100.00 PLN, observed 0.00 PLN, difference 100.00 PLN, timing +2 days
+  2026-02 move rent: model -100.00 PLN, observed 0.00 PLN, difference 100.00 PLN
+    matched rent[2026-02] on 2026-02-05: model -100.00 PLN, observed 0.00 PLN, difference 100.00 PLN, timing +4 days
+  cut 2026-05-20
+rs2: residuals pot2 2026-01-01 .. 2026-03-31
+  2026-02 move rent: model 0.00 PLN, observed -120.00 PLN, difference -120.00 PLN
+    matched rent[2026-02] on 2026-02-05: model 0.00 PLN, observed -120.00 PLN, difference -120.00 PLN, timing +4 days
+  2026-01 move rent: model 0.00 PLN, observed -110.00 PLN, difference -110.00 PLN
+    matched rent[2026-01] on 2026-01-05: model 0.00 PLN, observed -110.00 PLN, difference -110.00 PLN, timing +2 days
+  cut 2026-05-20

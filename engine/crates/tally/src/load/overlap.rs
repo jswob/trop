@@ -1,7 +1,8 @@
 //! Load's replacement rule: rows at the same keys overlap only through `replace`, and each observation id is one movement on a covered day.
 //! Spec: L §4.6 steps 2–4 (replacement, precedence by layer, narrower row and span; ties),
 //! §5.3 (LOAD-OVERLAP, LOAD-REPLACE; rows of one version ordered by precedence), §5.19
-//! (an observation's id, restated with `replace`; `covers` and LOAD-COVERS), §6.4 (a
+//! (an observation's id, restated with `replace`; `covers` and LOAD-COVERS; a row that
+//! fulfils an instance states every leg of the move it names, LOAD-LEG), §6.4 (a
 //! scenario's row above its base's whatever their `known`), §8.3.
 //! Twin: engine/tools/refcore/loader.py (`check_overlap`, `_pos_rel`, `narrower`,
 //! `patterns_meet`, `key_order`, `row_layer`, `version_layer`, `check_obs`,
@@ -21,7 +22,6 @@ use super::steps::refuse;
 use crate::base::Load;
 use crate::model::{
     BindInfo, Domain, KeyVal, Observation, Pat, Reality, Row, Span, Value, VersionInfo, World,
-    pattern_text,
 };
 use crate::num::Num;
 use crate::syntax::Stop;
@@ -168,10 +168,7 @@ fn same_keys(m: &Reality, id: &str, rows: &[Row], group: &[usize]) -> Result<(),
             }
         }
         if !replaces {
-            let message = format!(
-                "replace {id}{}: no earlier row to replace",
-                pattern_text(&r.pattern)
-            );
+            let message = format!("replace {id}{}: no earlier row to replace", r.keys_text());
             return Err(at_row(m, r, Load::Replace, message)?);
         }
     }
@@ -265,8 +262,8 @@ fn ties_across(
                 "rows {} and {} of {id} overlap at {} and {} and tie",
                 row_loc(m, x)?,
                 row_loc(m, y)?,
-                pattern_text(&x.pattern),
-                pattern_text(&y.pattern)
+                x.keys_text(),
+                y.keys_text()
             );
             return Err(at_row(m, y, Load::Overlap, message)?);
         }
@@ -482,6 +479,42 @@ pub(super) fn check_obs(m: &Reality) -> Result<(), Stop> {
             ids.push(rows);
         }
         covers_standing(m, &input.observations, &ids)?;
+        legs_named(m, &input.observations)?;
+    }
+    Ok(())
+}
+
+/// Each standing row that fulfils an instance is of a kind that declares every leg of the
+/// move it names, a kind with legs; both sides are written, so no cell is read (L §5.19
+/// Links; tally 2.3.1 rulings 22 (5), the critic's P1-C4).
+///
+/// # Errors
+///
+/// `LOAD-LEG observation <r> fulfils <instance> and lacks its leg <leg>`, at the first such
+/// row, its first leg the move declares.
+fn legs_named(m: &Reality, rows: &[Observation]) -> Result<(), Stop> {
+    for o in rows.iter().filter(|o| !o.removed) {
+        let Some(crate::model::Fulfils::Instance(mid, keys)) = &o.fulfils else {
+            continue;
+        };
+        let (Some(mv), Some(kind)) = (m.moves.get(mid), &o.kind) else {
+            continue;
+        };
+        // a legless kind (a waiver) lacks none
+        let have: Vec<String> = m.kind_legs(kind).into_iter().map(|(n, _, _)| n).collect();
+        if have.is_empty() {
+            continue;
+        }
+        let lack = mv.decl.legs.iter().find(|lg| !have.contains(&lg.name));
+        if let Some(lg) = lack {
+            let message = format!(
+                "observation {} fulfils {} and lacks its leg {}",
+                o.sid(),
+                crate::book::inst_id(mid, keys),
+                lg.name
+            );
+            return Err(at_obs(m, o, Load::Leg, message)?);
+        }
     }
     Ok(())
 }
@@ -763,7 +796,7 @@ fn outside(
 
 /// A row's pattern as a message prints it, or `no keys`.
 fn keys_or_none(row: &Row) -> String {
-    let text = pattern_text(&row.pattern);
+    let text = row.keys_text();
     if text.is_empty() {
         "no keys".to_owned()
     } else {

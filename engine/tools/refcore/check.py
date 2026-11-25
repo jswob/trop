@@ -1419,6 +1419,13 @@ class Checker:
                 raise LoadError('LOAD-PARSE', 'cannot parse: * stands only in a pin', kn.loc)
             c = self.key_pos(kn, b.dom, ksc)
             convs.append(c)
+            kb = kn
+            while kb.k == 'paren':
+                kb = kb.e
+            if kind == 'def' and kb.k == 'field' and kb.name == 'fulfils':
+                # a def keyed by an `o.fulfils`: its field reads of the key are reads through the fulfils (E §3.1
+                # steps 5, 7; tally 2.3.1 P32 B1, m2_keyed), marked in check_moves_graph
+                self.__dict__.setdefault('fulfils_keyed', set()).add((sc.item, info.id))
             if c[0] == 'lit':
                 env[b.var] = key_text(c[1])
             elif kn.k == 'name' and kn.id in sc.vars:

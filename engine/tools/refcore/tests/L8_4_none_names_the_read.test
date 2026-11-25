@@ -52,11 +52,11 @@ ask o17: acct[k] in accounts on 2026-03-01 for k in ks
 === expect o1 o2 o7 o8 o9 o14 o15
 o1 (k = k1): false
   cut 2026-06-10
-o1 (k = k2): refused: RUN-NONE rate[k2] is none here: an ordering
+o1 (k = k2): refused: RUN-NONE rate[k2] is none here: ordering
   cut 2026-06-10
 o2 (k = k1): true
   cut 2026-06-10
-o2 (k = k2): refused: RUN-NONE rate[k2] is none here: an ordering
+o2 (k = k2): refused: RUN-NONE rate[k2] is none here: ordering
   cut 2026-06-10
 o7 (k = k1): 1
   cut 2026-06-10
@@ -74,5 +74,5 @@ o14 (k = k1): -1
   cut 2026-06-10
 o14 (k = k2): refused: RUN-NONE rate[k2] is none here: arithmetic
   cut 2026-06-10
-o15: refused: RUN-NONE rate[k2] is none here: an ordering
+o15: refused: RUN-NONE rate[k2] is none here: ordering
   cut 2026-06-10

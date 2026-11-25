@@ -59,7 +59,7 @@ fl_fee: 1.00 PLN
 cnt_d2: 1
   pinned: d2 = 2026-03-20
   cut 2026-01-01
-cnt_d2x: ?"in1 and in2 are one, but the day of cash differs on 2026-03-05: 2026-03-05 (in1) and 2026-04-20 (in2)" (in1, in2)
+cnt_d2x: ?"in1 and in2 are one, but leg cash differs on 2026-03-05: 2026-03-05 (in1) and 2026-04-20 (in2)" (in1, in2)
   pinned: d2 = 2026-04-20
   cut 2026-01-01
 day_a2 (m = in1): 2026-03-05
