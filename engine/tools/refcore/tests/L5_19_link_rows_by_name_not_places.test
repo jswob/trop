@@ -91,6 +91,8 @@ kt: 3
 ob: 120.00 PLN
   cut 2026-05-20
 rs: residuals pot 2026-01-01 .. 2026-03-31
-  ?: model -100.00 PLN, observed 0.00 PLN, difference 100.00 PLN
-    expected but missing rent[2026-01] on ?"which day was january's rent paid?" (d5[2026-01]): model -100.00 PLN
+  2026-02 move rent: model ?"how much was february's rent?" (rent_amt[2026-02]), observed 0.00 PLN, difference ?"how much was february's rent?" (rent_amt[2026-02])
+    matched rent[2026-02] on 2026-02-05: model ?"how much was february's rent?" (rent_amt[2026-02]), observed 0.00 PLN, difference ?"how much was february's rent?" (rent_amt[2026-02]), timing +4 days
+  2026-01 move rent: model -100.00 PLN, observed 0.00 PLN, difference 100.00 PLN
+    matched rent[2026-01] on 2026-01-07: model -100.00 PLN, observed 0.00 PLN, difference 100.00 PLN, timing +0 days
   cut 2026-05-20

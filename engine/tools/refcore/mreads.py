@@ -968,7 +968,12 @@ def m_span_members(self, dom, sp, ctx, owner=None):
                                          id(ctx.walk) if ctx.walk is not None else None, ctx.wp, owner), ()):
         if not (isinstance(i.day, datetime.date) and not sp.contains(i.day)):
             self.cur.merge(c_st)
+    # a refused instance a row names stands in by that row, by the name alone (L §5.19 l.1713, l.1718; tally 2.3.1
+    # P32 B2): not a refused member
+    named_ids = set(self.link_targets(ctx))
     for x in xs:
+        if isinstance(x, Inst) and x.err is not None and x.id in named_ids:
+            continue
         e1 = self.s1_refusal(getattr(x, 'id', None), ctx)
         if e1 is not None and (sp.contains(x.day) if isinstance(x.day, datetime.date) else True):
             # a binding over movements rests on each it takes (L §5.19 S1, P42): a count or a sum is refused

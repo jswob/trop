@@ -75,6 +75,8 @@ q_last: 70.00 PLN
 q_led: residuals konto 2026-03
   2026-03 balance: model 90.00 PLN, observed 70.00 PLN, difference -20.00 PLN
     balance konto 2026-03-10 end (anchored): booked 90.00 PLN, stated 70.00 PLN, gap -20.00 PLN
+  2026-03 move sw: model 0.00 PLN, observed -10.00 PLN, difference -10.00 PLN
+    matched sw[2026-03] on 2026-03-10: model 0.00 PLN, observed -10.00 PLN, difference -10.00 PLN, timing +0 days
   cut 2026-06-30
 q_obs: 10.00 PLN
   cut 2026-06-30
