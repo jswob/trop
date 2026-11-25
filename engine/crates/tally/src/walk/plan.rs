@@ -1853,6 +1853,61 @@ version jan
     }
 
     #[test]
+    fn a_read_of_the_instance_carries_its_existence_cell_as_it_stands() {
+        // L §5.14 An instance's existence is a cell, §8.4 (tally 2.3.1 rulings 23 (a)): a
+        // field read and `== none` carry the existence as it stands, a hole with a row that
+        // names the instance (January) or without (February), a refusal of a decision's `when`
+        let hole = FIRST
+            .replace("OK", "?\"ok jan?\" \"s\"")
+            .replace(
+                "ok[2026-02] = true \"ok feb\"",
+                "ok[2026-02] = ?\"ok feb?\" \"s\"",
+            )
+            .replace(
+                "ask c:",
+                "ask dy: rent[2026-01].day\n\nask e: rent[2026-01] == none\n\nask dy2: \
+                 rent[2026-02].day\n\nask e2: rent[2026-02] == none\n\nask c:",
+            );
+        let files = [("first.tally", hole.as_str())];
+        let first = |ask: &str| answer(&files, ask).first().cloned().expect("a line");
+        for (ask, month, q) in [
+            ("dy", "01", "jan"),
+            ("e", "01", "jan"),
+            ("dy2", "02", "feb"),
+            ("e2", "02", "feb"),
+        ] {
+            assert_eq!(
+                first(ask),
+                format!("{ask}: ?\"ok {q}?\" (ok[2026-{month}])"),
+                "{ask}: the existence's hole"
+            );
+        }
+        let refused = FIRST
+            .replace("OK", "true \"ok jan\"")
+            .replace(
+                "  when ok[m]",
+                "  reads pot\n  when ok[m] and d5 / dz[m] > 0 and bal(pot) > 0.00 PLN",
+            )
+            .replace(
+                "input d5: int",
+                "input d5: int\n\ninput dz[m in month]: int",
+            )
+            .replace(
+                "  d5 = 5 \"s\"",
+                "  d5 = 5 \"s\"\n  dz[2026-01] = 0 \"s\"\n  dz[2026-02] = 1 \"s\"\n  \
+                 dz[2026-03] = 1 \"s\"\n  dz[2026-04] = 1 \"s\"\n  dz[2026-05] = 1 \"s\"\n  \
+                 dz[2026-06] = 1 \"s\"",
+            )
+            .replace("ask c:", "ask e: rent[2026-01] == none\n\nask c:");
+        let dec_files = [("first.tally", refused.as_str())];
+        let e = answer(&dec_files, "e").first().cloned().expect("a line");
+        assert_eq!(
+            e, "e: refused: RUN-DIV division by zero",
+            "a decision's refused when"
+        );
+    }
+
+    #[test]
     fn flows_for_a_period_over_a_movement_whose_period_is_a_hole_is_that_hole() {
         // L §5.14 l.1363, §8.1 (tally 2.3.1 part 1's review B5): a row is for its named tuple's
         // period and an instance for its own; one that is a hole makes `, for k` that hole, on

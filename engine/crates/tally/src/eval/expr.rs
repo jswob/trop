@@ -538,16 +538,17 @@ impl Engine {
     ) -> Result<Value, Stop> {
         let left = self.ev(m, lhs, env, ctx)?;
         let right = self.ev(m, rhs, env, ctx)?;
-        // a refused instance written `m[k]` and compared with `none` is its refusal (L §8.4,
-        // §3.1 l.390; tally 2.3.1 R1, R6, rulings 16 Q3); its list was just read for that side;
+        // an instance written `m[k]` and compared with `none` is its existence cell as it
+        // stands, a refusal or a hole, whatever decided it (L §8.4, §3.1 l.390; tally 2.3.1
+        // R1, R6, rulings 16 Q3, rulings 23 (a)); its list was just read for that side;
         // compared with another movement, the two are compared by name (rulings 22 (1))
         for (side, other, operand) in [(&left, &right, lhs), (&right, &left, rhs)] {
             if let Value::Mv(v) = side
                 && *other == Value::None
                 && names_movement(m, operand, env)
-                && let Some(err) = self.refused_movement(m, v, ctx)?
+                && let Some(h) = self.existence_cell(m, v, ctx)?
             {
-                return Err(Stop::Refused(err));
+                return Ok(Value::Hole(h));
             }
         }
         let left = year_beside(lhs, left, &right);

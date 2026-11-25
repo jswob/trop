@@ -771,30 +771,30 @@ impl Engine {
         }
     }
 
-    /// The refusal of movement `v` where it is a plan's refused instance at the reader's cut;
-    /// none for any other, a decision's too, whose run's refusal is its point's (L §5.14 An
-    /// instance's existence is a cell, §8.4; tally 2.3.1 R6, rulings 16 Q3; rulings 22
-    /// replaces rulings 18's reach to a decision).
+    /// The existence cell of movement `v`, a move's instance at the reader's cut, a plan's or a
+    /// decision's run, where it is no plain value: the hole, or `Err` its refusal; none for any
+    /// other (L §5.14 An instance's existence is a cell, §8.4; tally 2.3.1 R6, rulings 16 Q3;
+    /// rulings 23 (a): as it stands, whatever decided it).
     ///
     /// # Errors
     ///
-    /// As [`Engine::move_instances`].
-    pub(crate) fn refused_movement(
+    /// The instance's refusal; as [`Engine::move_instances`].
+    pub(crate) fn existence_cell(
         &mut self,
         m: &Reality,
         v: &MvRef,
         ctx: Ctx,
-    ) -> Result<Option<Refusal>, Stop> {
+    ) -> Result<Option<Hole>, Stop> {
         let MvSrc::Inst(move_id, _) = &v.src else {
             return Ok(None);
         };
-        if m.moves.get(move_id).is_none_or(|mv| mv.decision) {
+        if m.moves.get(move_id).is_none() {
             return Ok(None);
         }
-        Ok(match self.mv_record(m, v, ctx)? {
-            Some(Moving::Plan(i)) => i.err,
-            Some(Moving::Obs(_) | Moving::Adj(_) | Moving::Pad(..)) | None => None,
-        })
+        match self.mv_record(m, v, ctx)? {
+            Some(Moving::Plan(i)) => cell_of(&i),
+            Some(Moving::Obs(_) | Moving::Adj(_) | Moving::Pad(..)) | None => Ok(None),
+        }
     }
 
     /// The pads a binding over pads ranges over: inside a decision, those its walk and the
@@ -930,9 +930,12 @@ impl Engine {
             }
         }
         match &src {
+            // a field read of the instance carries its existence cell as it stands (tally
+            // 2.3.1 rulings 23 (a))
             Moving::Plan(i) => {
-                if let Some(e) = &i.err {
-                    return Err(Stop::Refused(e.clone()));
+                if let Some(h) = cell_of(i)? {
+                    self.absorb(i.exist_coll.as_ref().unwrap_or(&i.coll));
+                    return Ok(Value::Hole(h));
                 }
             }
             Moving::Obs(o) => {
@@ -1794,6 +1797,19 @@ fn in_order(movements: Vec<Moving>) -> Result<Vec<Moving>, Stop> {
     }
     keyed.sort_by(|a, b| a.0.cmp(&b.0));
     Ok(keyed.into_iter().map(|(_, mv)| mv).collect())
+}
+
+/// Instance `i`'s existence cell where it is no plain value: `Err` its refusal, else the hole
+/// of an existence that is one; none where it exists or doesn't (L §5.14 An instance's
+/// existence is a cell, §8.4; tally 2.3.1 rulings 23 (a)).
+fn cell_of(i: &Inst) -> Result<Option<Hole>, Stop> {
+    if let Some(e) = &i.err {
+        return Err(Stop::Refused(e.clone()));
+    }
+    Ok(match &i.exists {
+        Exists::Unknown(h) => Some(h.clone()),
+        Exists::Yes | Exists::No => None,
+    })
 }
 
 /// The refusal of a field read of move instance `id`, which doesn't exist (L §5.14 An
