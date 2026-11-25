@@ -4654,8 +4654,7 @@ dup.tally	m3/check/dup.tally
 ,1:1,57:refused: LOAD-DUP amt is declared twice (model.tally:12)
 ,17:fixture/base/path,4:base,5:check,21:engine/tests/m3/check,28:check model.tally nope.tally,33:model.tally	m3/check/model.tally
 ,1:1,44:refused: LOAD-PATH nope.tally doesn't exist
-,20:fixture/base/no-path,4:base,5:check,21:engine/tests/m3/check,5:check,0:,1:1,67:refused: LOAD-HEADER 0 files have a model header; exactly one does
-,26:fixture/base/scenario-read,4:base,5:check,21:engine/tests/m3/check,50:check model.tally s_i_extra.tally reads_scen.tally,117:model.tally	m3/check/model.tally
+,20:fixture/base/no-path,4:base,4:rule,21:engine/tests/m3/check,5:check,0:,1:2,0:,26:fixture/base/scenario-read,4:base,5:check,21:engine/tests/m3/check,50:check model.tally s_i_extra.tally reads_scen.tally,117:model.tally	m3/check/model.tally
 s_i_extra.tally	m3/check/s_i_extra.tally
 reads_scen.tally	m3/check/reads_scen.tally
 ,1:1,91:refused: LOAD-SCENARIO extra_amt of scenario extra is read outside it (reads_scen.tally:4)

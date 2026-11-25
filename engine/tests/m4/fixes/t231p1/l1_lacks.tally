@@ -1,0 +1,46 @@
+model l1
+  tally 2
+  on 2026-05-20
+  start 2026-01-01
+  end 2026-06-30
+
+source s "invented values"
+unit PLN: currency minor 0.01
+index month = month 2026-01..2026-03
+kind paid: event certain
+  leg cash: PLN
+  leg fee: PLN
+place pot: accounts PLN lives 2026-01-01..
+place landlord: outside lives 1900-01-01..
+place bankfees: outside lives 1900-01-01..
+input bank: observed
+input rent_amt: money PLN
+input fee_amt: money PLN
+input d5: int
+
+move rent[m in month]: paid
+  on day_of(m, d5)
+  at start_of(m)
+  leg cash from pot to landlord amount rent_amt
+  leg fee from pot to bankfees amount fee_amt
+
+ask c: bal(pot, 2026-01-31)
+ask fb: flows(rent.fee, 2026-01-01..2026-03-31)
+ask fr: flows(rent.fee, 2026-01)
+ask rs: residuals pot 2026-01
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  rent_amt = 100.00 PLN "s"
+  fee_amt = 5.00 PLN "s"
+  d5 = 5 "s"
+  opening[pot] = 9000.00 PLN at 2026-01-01 start "s"
+
+version jan
+  cite s
+  governs 2026-01
+  known 2026-02-01
+  covers pot
+  bank[a1] = (on: 2026-01-05, kind: transfers, leg cash from pot to landlord amount 100.00 PLN, fulfils: rent[2026-01]) "names jan"

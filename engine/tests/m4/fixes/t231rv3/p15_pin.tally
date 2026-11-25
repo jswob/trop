@@ -1,0 +1,46 @@
+model b1p
+  tally 2
+  on 2026-04-20
+  start 2026-01-01
+  end 2026-05-31
+
+source s "probe"
+unit PLN: currency minor 0.01
+index month = month 2026-01..2026-05
+place konto: accounts PLN lives 2026-01-01..
+place save: accounts PLN lives 2026-01-01..
+input bank: observed
+input lim: money PLN
+input amt: money PLN
+input d5: int
+
+move topup[m in month]: transfers
+  reads konto
+  on day_of(m, d5)
+  when bal(konto) < lim
+  leg cash from save to konto amount amt
+
+ask fp: flows(topup, 2026-02) with lim = 500.00 PLN
+ask bp: bal(konto, 2026-03-31) with lim = 500.00 PLN
+ask b: bal(konto, 2026-03-31)
+ask dyp: topup[2026-02].day with lim = 500.00 PLN
+ask dy: topup[2026-02].day
+ask eqp: topup[2026-02] == none with lim = 500.00 PLN
+ask bdp: bal(konto, 2026-02-28) with lim = 500.00 PLN
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  opening[konto] = 100.00 PLN at 2026-01-01 start "s"
+  opening[save] = 5 000.00 PLN at 2026-01-01 start "s"
+  lim = 1 000.00 PLN "s"
+  amt = 400.00 PLN "s"
+  d5 = 5 "s"
+
+version feb
+  cite s
+  governs 2026-02
+  known 2026-03-01
+  covers konto
+  bank[r1] = (on: 2026-02-03, kind: transfers, leg cash from save to konto amount 400.00 PLN, fulfils: topup[2026-02]) "the top-up"

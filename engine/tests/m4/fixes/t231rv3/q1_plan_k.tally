@@ -1,0 +1,78 @@
+model q1
+  tally 2
+  on 2026-05-20
+  start 2026-01-01
+  end 2026-06-30
+
+source s "invented values"
+unit PLN: currency minor 0.01
+index month = month 2026-01..2026-06
+place pot: accounts PLN lives 2026-01-01..
+place landlord: outside lives 1900-01-01..
+input bank: observed
+input rent_amt: money PLN
+input dz[m in month]: int
+input ten: int
+input d5: int
+
+move rent[m in month where ten / dz[m] > 0]: transfers
+  on day_of(m, d5)
+  leg cash from pot to landlord amount rent_amt
+
+ask o1: observed(rent[2026-01]).cash.amount
+ask o3: observed(rent[2026-03]).cash.amount
+ask s1: sum(o.cash.amount for o in bank over 2026-01 where o.fulfils == none)
+ask s0: sum(o.cash.amount for o in bank over 2026-01 where o.fulfils != rent[2026-03])
+ask c1: count(o in bank over 2026-01 where o.fulfils == rent[2026-01])
+ask an: any(o.fulfils == none for o in bank over 2026-01)
+ask al: all(o.fulfils != none for o in bank over 2026-01)
+ask al2: all(o.fulfils == none for o in bank over 2026-01)
+ask cm: rent[2026-01] == none
+ask cn: rent[2026-01] != none
+ask cf: if rent[2026-01] == none then ten else d5
+ask k0: observed(rent[2026-01]).cash.amount as known 2026-01-25
+ask k1: observed(rent[2026-01]).cash.amount as known 2026-03-15
+ask kc: count(o in bank over 2026-01 where o.fulfils == none) as known 2026-01-25
+ask kc2: count(o in bank over 2026-01 where o.fulfils == none) as known 2026-03-15
+ask o3h: observed(rent[2026-03]).cash.amount as known 2026-03-15
+ask b: bal(pot, 2026-01-31)
+ask ks1: sum(o.cash.amount for o in bank over 2026-01 where o.fulfils == none) as known 2026-01-25
+ask kan: any(o.fulfils == none for o in bank over 2026-01) as known 2026-01-25
+ask kal: all(o.fulfils != none for o in bank over 2026-01) as known 2026-01-25
+ask kal2: all(o.fulfils == none for o in bank over 2026-01) as known 2026-01-25
+ask kcm: rent[2026-01] == none as known 2026-01-25
+ask kb: bal(pot, 2026-01-31) as known 2026-01-25
+ask kf: flows(rent, 2026-01) as known 2026-01-25
+ask ko3: observed(rent[2026-03]).cash.amount as known 2026-01-25
+ask ks0: sum(o.cash.amount for o in bank over 2026-01 where o.fulfils != rent[2026-03]) as known 2026-01-25
+ask f1: flows(rent, 2026-01)
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  rent_amt = 100.00 PLN "s"
+  d5 = 5 "s"
+  ten = 10 "s"
+  dz[2026-01] = 0 "z"
+  dz[2026-02] = 1 "z"
+  dz[2026-03] = ?"mar dz" "z"
+  dz[2026-04] = 1 "z"
+  dz[2026-05] = 1 "z"
+  dz[2026-06] = 1 "z"
+  opening[pot] = 9000.00 PLN at 2026-01-01 start "s"
+
+version fix
+  cite s
+  governs always
+  known 2026-03-01
+  replace dz[2026-01] = 1 "fixed"
+
+version jan
+  cite s
+  governs 2026-01..2026-03
+  known 2026-01-21
+  covers pot
+  bank[a1] = (on: 2026-01-05, kind: transfers, leg cash from pot to landlord amount 100.00 PLN, fulfils: rent[2026-01]) "names jan"
+  bank[a2] = (on: 2026-01-20, kind: transfers, leg cash from pot to landlord amount 100.00 PLN, fulfils: rent[2026-03]) "names mar early"
+  bank[a3] = (on: 2026-01-22, kind: transfers, leg cash from pot to landlord amount 7.00 PLN) "loose"

@@ -68,42 +68,12 @@ pit37 (p = wife, y = 2027): -2.00 PLN
 pit37 (p = wife, y = 2028): -743.00 PLN
   assumed: indeks płac +4% rocznie, założenie prototypu (wage_growth)
   missing record counted by wage_fc_2026
-  held: ee_rate[disability] = 0.015 (sus_2026), read for 2028-07-01
-  held: ee_rate[disability] = 0.015 (sus_2026), read for 2028-08-01
-  held: ee_rate[disability] = 0.015 (sus_2026), read for 2028-09-01
-  held: ee_rate[disability] = 0.015 (sus_2026), read for 2028-10-01
-  held: ee_rate[disability] = 0.015 (sus_2026), read for 2028-11-01
-  held: ee_rate[disability] = 0.015 (sus_2026), read for 2028-12-01
-  held: ee_rate[pension] = 0.0976 (sus_2026), read for 2028-07-01
-  held: ee_rate[pension] = 0.0976 (sus_2026), read for 2028-08-01
-  held: ee_rate[pension] = 0.0976 (sus_2026), read for 2028-09-01
-  held: ee_rate[pension] = 0.0976 (sus_2026), read for 2028-10-01
-  held: ee_rate[pension] = 0.0976 (sus_2026), read for 2028-11-01
-  held: ee_rate[pension] = 0.0976 (sus_2026), read for 2028-12-01
-  held: ee_rate[sickness] = 0.0245 (sus_2026), read for 2028-07-01
-  held: ee_rate[sickness] = 0.0245 (sus_2026), read for 2028-08-01
-  held: ee_rate[sickness] = 0.0245 (sus_2026), read for 2028-09-01
-  held: ee_rate[sickness] = 0.0245 (sus_2026), read for 2028-10-01
-  held: ee_rate[sickness] = 0.0245 (sus_2026), read for 2028-11-01
-  held: ee_rate[sickness] = 0.0245 (sus_2026), read for 2028-12-01
-  held: kup_month = 250.00 PLN (pit_2022), read for 2028-07-01
-  held: kup_month = 250.00 PLN (pit_2022), read for 2028-08-01
-  held: kup_month = 250.00 PLN (pit_2022), read for 2028-09-01
-  held: kup_month = 250.00 PLN (pit_2022), read for 2028-10-01
-  held: kup_month = 250.00 PLN (pit_2022), read for 2028-11-01
-  held: kup_month = 250.00 PLN (pit_2022), read for 2028-12-01
-  held: pit_reduction_month = 300.00 PLN (pit_2022), read for 2028-07-01
-  held: pit_reduction_month = 300.00 PLN (pit_2022), read for 2028-08-01
-  held: pit_reduction_month = 300.00 PLN (pit_2022), read for 2028-09-01
-  held: pit_reduction_month = 300.00 PLN (pit_2022), read for 2028-10-01
-  held: pit_reduction_month = 300.00 PLN (pit_2022), read for 2028-11-01
-  held: pit_reduction_month = 300.00 PLN (pit_2022), read for 2028-12-01
-  held: pit_scale row [0, 120 000] (pit_2022), read for 2028-07-01
-  held: pit_scale row [0, 120 000] (pit_2022), read for 2028-08-01
-  held: pit_scale row [0, 120 000] (pit_2022), read for 2028-09-01
-  held: pit_scale row [0, 120 000] (pit_2022), read for 2028-10-01
-  held: pit_scale row [0, 120 000] (pit_2022), read for 2028-11-01
-  held: pit_scale row [0, 120 000] (pit_2022), read for 2028-12-01
+  held: ee_rate[disability] = 0.015 (sus_2026), read for 2028-07-01, 2028-08-01, 2028-09-01, 2028-10-01, 2028-11-01, 2028-12-01
+  held: ee_rate[pension] = 0.0976 (sus_2026), read for 2028-07-01, 2028-08-01, 2028-09-01, 2028-10-01, 2028-11-01, 2028-12-01
+  held: ee_rate[sickness] = 0.0245 (sus_2026), read for 2028-07-01, 2028-08-01, 2028-09-01, 2028-10-01, 2028-11-01, 2028-12-01
+  held: kup_month = 250.00 PLN (pit_2022), read for 2028-07-01, 2028-08-01, 2028-09-01, 2028-10-01, 2028-11-01, 2028-12-01
+  held: pit_reduction_month = 300.00 PLN (pit_2022), read for 2028-07-01, 2028-08-01, 2028-09-01, 2028-10-01, 2028-11-01, 2028-12-01
+  held: pit_scale row [0, 120 000] (pit_2022), read for 2028-07-01, 2028-08-01, 2028-09-01, 2028-10-01, 2028-11-01, 2028-12-01
   held: residence[wife, 2028-07] = pl (people_2026), read for 2028-07
   held: residence[wife, 2028-08] = pl (people_2026), read for 2028-08
   held: residence[wife, 2028-09] = pl (people_2026), read for 2028-09
@@ -117,4 +87,3 @@ pit37 (p = wife, y = 2028): -743.00 PLN
   held: salary[wife_acme, 2028-11] = 7 000.00 PLN (home_2026), read for 2028-11
   held: salary[wife_acme, 2028-12] = 7 000.00 PLN (home_2026), read for 2028-12
   law date 2028-06-02, cut 2028-06-02
-

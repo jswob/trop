@@ -1,0 +1,26 @@
+model w8
+  tally 2
+  on 2026-06-30
+  start 2026-01-01
+  end 2026-12-31
+
+source s "probe"
+unit PLN: currency minor 0.01
+index ks = [k1, k2]
+input r[k in ks]: rate
+input pct: num %
+input base: money PLN
+def fee: num PLN = base * pct
+
+ask a1: mean(r[k] for k in ks) + r[k1]
+ask a2: check mean(r[k] for k in ks) == r[k2]
+ask a3: periodic(mean(r[k] for k in ks), year, effective)
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  r[k1] = 2 %/year "s"
+  r[k2] = 4 %/year "s"
+  pct = 1 % "s"
+  base = 300.00 PLN "s"

@@ -143,7 +143,6 @@ replay_september: residuals konto 2026-09
     matched vat_pay[2026-08] on 2026-09-25: model -3 818.00 PLN, observed -3 818.00 PLN, difference 0.00 PLN, timing +0 days
   2026-09 move wage: model 5 101.67 PLN, observed 5 101.67 PLN, difference 0.00 PLN
     matched wage[wife_acme, 2026-08] on 2026-09-10: model 5 101.67 PLN, observed 5 101.67 PLN, difference 0.00 PLN, timing +0 days
-  unfulfilled: health_pay[2026-07]
   law date 2026-10-19, cut 2026-10-19
 warning: WARN-NEGATIVE konto is below zero from 2026-03-01
 warning: WARN-NEGATIVE konto is below zero from 2026-03-17

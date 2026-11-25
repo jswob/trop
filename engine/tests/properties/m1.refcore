@@ -4296,7 +4296,7 @@ pre_s: (4 097.58 DUK, 1 898.09 DUK, 4 097.58 DUK, 1 898.09 DUK, 4 759.79 DUK, 1 
   unfulfilled: split[q2]
   unfulfilled: split[q3]
   cut 2025-02-22
-,18:scenario-before-01,3:one,1:0,1118:post_m: (5 219.90 DUK, 750.83 DUK, 3 386.27 DUK)
+,18:scenario-before-01,3:one,1:0,986:post_m: (5 219.90 DUK, 750.83 DUK, 3 386.27 DUK)
   unfulfilled: pay_fee
   unfulfilled: plan[2025-01]
   unfulfilled: plan[2025-02]
@@ -4306,10 +4306,7 @@ post_s: (4 588.66 DUK, 750.83 DUK, 3 386.27 DUK)
   unfulfilled: pay_fee
   unfulfilled: plan[2025-01]
   unfulfilled: plan[2025-02]
-  held: plan_amt = 261.14 DUK (sv), read for 2025-03-01
-  held: plan_amt = 261.14 DUK (sv), read for 2025-04-01
-  held: plan_amt = 261.14 DUK (sv), read for 2025-05-01
-  held: plan_amt = 261.14 DUK (sv), read for 2025-06-01
+  held: plan_amt = 261.14 DUK (sv), read for 2025-03-01, 2025-04-01, 2025-05-01, 2025-06-01
   cut 2025-02-11
 pre_m: (3 125.15 DUK, 1 272.31 DUK, 4 318.14 DUK, 3 544.10 DUK, 1 272.31 DUK, 4 318.14 DUK, 3 544.10 DUK, 1 272.31 DUK, 4 318.14 DUK, -760.94 DUK, 0.00 DUK, 837.90 DUK, -76.96 DUK, 0.00 DUK)
   unfulfilled: pay_fee
@@ -4322,7 +4319,7 @@ pre_s: (3 125.15 DUK, 1 272.31 DUK, 4 318.14 DUK, 3 544.10 DUK, 1 272.31 DUK, 4 
   unfulfilled: plan[2025-01]
   unfulfilled: plan[2025-02]
   cut 2025-02-11
-,18:scenario-before-02,3:one,1:0,1238:post_m: (-139.69 DUK, -131.10 DUK, 7 987.16 DUK)
+,18:scenario-before-02,3:one,1:0,1150:post_m: (-139.69 DUK, -131.10 DUK, 7 987.16 DUK)
   unfulfilled: plan[2025-01]
   unfulfilled: plan[2025-02]
   unfulfilled: plan[2025-03]
@@ -4333,9 +4330,7 @@ post_s: (-576.99 DUK, -131.10 DUK, 7 414.37 DUK)
   unfulfilled: plan[2025-02]
   unfulfilled: plan[2025-03]
   held: amt_mv_1 = 194.04 DUK (sv), read for 2025-04-13
-  held: plan_amt = 534.02 DUK (sv), read for 2025-04-01
-  held: plan_amt = 534.02 DUK (sv), read for 2025-05-01
-  held: plan_amt = 534.02 DUK (sv), read for 2025-06-01
+  held: plan_amt = 534.02 DUK (sv), read for 2025-04-01, 2025-05-01, 2025-06-01
   cut 2025-03-29
 pre_m: (247.99 DUK, 1 132.31 DUK, 4 398.54 DUK, 247.99 DUK, 1 132.31 DUK, 5 123.49 DUK, 247.99 DUK, 1 132.31 DUK, 5 123.49 DUK, 346.32 DUK, -1 796.22 DUK, 0.00 DUK, 0.00 DUK, 1 449.90 DUK)
   unfulfilled: mv_3
@@ -4350,7 +4345,7 @@ pre_s: (247.99 DUK, 1 132.31 DUK, 4 398.54 DUK, 247.99 DUK, 1 132.31 DUK, 5 123.
   cut 2025-03-29
 warning: WARN-NEGATIVE acc_0 is below zero from 2025-05-10
 warning: WARN-NEGATIVE acc_1 is below zero from 2025-06-19
-,18:scenario-before-03,3:one,1:0,1146:post_m: (6 817.18 DUK, 4 583.71 DUK)
+,18:scenario-before-03,3:one,1:0,1058:post_m: (6 817.18 DUK, 4 583.71 DUK)
   unfulfilled: mv_l
   unfulfilled: plan[2025-01]
   unfulfilled: plan[2025-02]
@@ -4363,9 +4358,7 @@ post_s: (6 001.39 DUK, 5 190.31 DUK)
   unfulfilled: plan[2025-02]
   held: amt_mv_0 = 1 750.01 DUK (sv), read for 2025-05-03
   held: amt_mv_l = 331.08 DUK (sv), read for 2025-05-07
-  held: plan_amt = 519.15 DUK (sv), read for 2025-04-01
-  held: plan_amt = 519.15 DUK (sv), read for 2025-05-01
-  held: plan_amt = 519.15 DUK (sv), read for 2025-06-01
+  held: plan_amt = 519.15 DUK (sv), read for 2025-04-01, 2025-05-01, 2025-06-01
   cut 2025-03-11
 pre_m: (4 927.68 DUK, 4 075.34 DUK, 5 382.92 DUK, 4 075.34 DUK, -1 365.72 DUK, -1 298.94 DUK, 2 664.66 DUK, 0.00 DUK)
   unfulfilled: mv_l
@@ -4380,7 +4373,7 @@ pre_s: (3 920.16 DUK, 4 075.34 DUK, 4 375.40 DUK, 4 075.34 DUK, -1 365.72 DUK, -
   unfulfilled: plan[2025-02]
   held: amt_mv_l = 331.08 DUK (sv), read for 2025-05-07
   cut 2025-03-11
-,18:scenario-before-04,3:one,1:0,1426:post_m: (7 353.73 DUK, 451.66 DUK)
+,18:scenario-before-04,3:one,1:0,1338:post_m: (7 353.73 DUK, 451.66 DUK)
   unfulfilled: mv_0
   unfulfilled: pay_fee
   unfulfilled: plan[2025-01]
@@ -4400,9 +4393,7 @@ post_s: (9 452.71 DUK, 451.66 DUK)
   unfulfilled: split[q1]
   unfulfilled: split[q2]
   unfulfilled: split[q3]
-  held: plan_amt = 972.88 DUK (sv), read for 2025-04-01
-  held: plan_amt = 972.88 DUK (sv), read for 2025-05-01
-  held: plan_amt = 972.88 DUK (sv), read for 2025-06-01
+  held: plan_amt = 972.88 DUK (sv), read for 2025-04-01, 2025-05-01, 2025-06-01
   cut 2025-03-26
 pre_m: (2 938.79 DUK, 3 874.19 DUK, 2 938.79 DUK, 3 874.19 DUK, 3 027.94 DUK, 3 874.19 DUK, -881.09 DUK, 0.00 DUK, 635.59 DUK, 245.50 DUK)
   unfulfilled: mv_0
@@ -4501,7 +4492,7 @@ pre_s: (3 835.01 DUK, 1 689.48 DUK, 4 884.59 DUK, 1 955.62 DUK, 4 149.23 DUK, 4 
   unfulfilled: plan[2025-03]
   unfulfilled: sweep
   cut 2025-05-27
-,18:scenario-before-07,3:one,1:0,1782:post_m: (7 978.83 DUK, 1 542.54 DUK, 3 247.31 DUK)
+,18:scenario-before-07,3:one,1:0,1650:post_m: (7 978.83 DUK, 1 542.54 DUK, 3 247.31 DUK)
   unfulfilled: mv_l
   unfulfilled: pay_fee
   unfulfilled: plan[2025-01]
@@ -4522,10 +4513,7 @@ post_s: (6 328.23 DUK, 3 035.98 DUK, 3 247.31 DUK)
   unfulfilled: split[q3]
   held: amt_mv_0 = 1 860.29 DUK (sv), read for 2025-05-24
   held: amt_mv_l = 991.81 DUK (sv), read for 2025-03-15
-  held: plan_amt = 455.32 DUK (sv), read for 2025-03-01
-  held: plan_amt = 455.32 DUK (sv), read for 2025-04-01
-  held: plan_amt = 455.32 DUK (sv), read for 2025-05-01
-  held: plan_amt = 455.32 DUK (sv), read for 2025-06-01
+  held: plan_amt = 455.32 DUK (sv), read for 2025-03-01, 2025-04-01, 2025-05-01, 2025-06-01
   cut 2025-02-16
 pre_m: (3 638.98 DUK, 207.53 DUK, 3 436.19 DUK, 3 638.98 DUK, 1 515.54 DUK, 3 247.31 DUK, 3 638.98 DUK, 1 515.54 DUK, 3 247.31 DUK, -2 855.07 DUK, 0.00 DUK, 1 735.94 DUK, 1 308.01 DUK, -188.88 DUK)
   unfulfilled: mv_l
@@ -4597,7 +4585,7 @@ pre_s: (3 396.40 DUK, 18.83 DUK, 2 125.23 DUK, 1 338.96 DUK, 3 396.40 DUK, -5.36
   unfulfilled: sweep
   cut 2025-05-14
 warning: WARN-NEGATIVE acc_1 is below zero from 2025-02-22
-,18:scenario-before-09,3:one,1:0,1532:post_m: (4 066.82 DUK, 1 140.35 DUK, 1 675.01 DUK, 5 516.85 DUK)
+,18:scenario-before-09,3:one,1:0,1444:post_m: (4 066.82 DUK, 1 140.35 DUK, 1 675.01 DUK, 5 516.85 DUK)
   unfulfilled: mv_0
   unfulfilled: plan[2025-01]
   unfulfilled: plan[2025-02]
@@ -4614,9 +4602,7 @@ post_s: (2 756.30 DUK, 1 140.35 DUK, 1 849.09 DUK, 5 342.77 DUK)
   unfulfilled: split[q2]
   unfulfilled: split[q3]
   held: amt_mv_3 = 1 507.75 DUK (sv), read for 2025-06-13
-  held: plan_amt = 428.19 DUK (sv), read for 2025-04-01
-  held: plan_amt = 428.19 DUK (sv), read for 2025-05-01
-  held: plan_amt = 428.19 DUK (sv), read for 2025-06-01
+  held: plan_amt = 428.19 DUK (sv), read for 2025-04-01, 2025-05-01, 2025-06-01
   cut 2025-03-08
 pre_m: (77.91 DUK, 1 140.35 DUK, 3 605.13 DUK, 2 774.86 DUK, 942.94 DUK, 1 140.35 DUK, 3 313.69 DUK, 2 774.86 DUK, 1 807.97 DUK, 1 140.35 DUK, 3 313.69 DUK, 2 774.86 DUK, -2 303.65 DUK, 2 595.09 DUK, -1 078.90 DUK, 787.46 DUK, 0.00 DUK)
   unfulfilled: mv_0
@@ -4635,7 +4621,7 @@ pre_s: (77.91 DUK, 1 140.35 DUK, 3 605.13 DUK, 2 774.86 DUK, 942.94 DUK, 1 140.3
   unfulfilled: split[q2]
   unfulfilled: split[q3]
   cut 2025-03-08
-,18:scenario-before-10,3:one,1:0,1355:post_m: (2 970.72 DUK, 5 774.56 DUK, -925.04 DUK)
+,18:scenario-before-10,3:one,1:0,1311:post_m: (2 970.72 DUK, 5 774.56 DUK, -925.04 DUK)
   unfulfilled: mv_0
   unfulfilled: pay_fee
   unfulfilled: plan[2025-01]
@@ -4657,8 +4643,7 @@ post_s: (3 434.37 DUK, 4 641.76 DUK, -925.04 DUK)
   unfulfilled: split[q2]
   unfulfilled: split[q3]
   unfulfilled: sweep
-  held: plan_amt = 366.42 DUK (sv), read for 2025-05-01
-  held: plan_amt = 366.42 DUK (sv), read for 2025-06-01
+  held: plan_amt = 366.42 DUK (sv), read for 2025-05-01, 2025-06-01
   cut 2025-04-28
 pre_m: (1 571.95 DUK, 1 674.77 DUK, 468.64 DUK, 1 571.95 DUK, 1 674.77 DUK, 468.64 DUK, 1 571.95 DUK, 2 418.79 DUK, 152.69 DUK, -1 172.09 DUK, 0.00 DUK, 0.00 DUK, 1 488.04 DUK, -315.95 DUK)
   unfulfilled: pay_fee
@@ -4672,7 +4657,7 @@ pre_s: (1 571.95 DUK, 1 674.77 DUK, 468.64 DUK, 1 571.95 DUK, 1 674.77 DUK, 468.
   unfulfilled: plan[2025-02]
   cut 2025-04-28
 warning: WARN-NEGATIVE acc_2 is below zero from 2025-05-15
-,18:scenario-before-11,3:one,1:0,1094:post_m: (3 959.16 DUK, 7 307.12 DUK)
+,18:scenario-before-11,3:one,1:0,1006:post_m: (3 959.16 DUK, 7 307.12 DUK)
   unfulfilled: plan[2025-01]
   unfulfilled: plan[2025-02]
   cut 2025-02-10
@@ -4683,9 +4668,7 @@ post_s: (3 959.16 DUK, 5 429.49 DUK)
   unfulfilled: plan[2025-02]
   held: amt_mv_0 = 1 031.00 DUK (sv), read for 2025-05-18
   held: amt_mv_l = 569.50 DUK (sv), read for 2025-06-29
-  held: plan_amt = 176.81 DUK (sv), read for 2025-04-01
-  held: plan_amt = 176.81 DUK (sv), read for 2025-05-01
-  held: plan_amt = 176.81 DUK (sv), read for 2025-06-01
+  held: plan_amt = 176.81 DUK (sv), read for 2025-04-01, 2025-05-01, 2025-06-01
   cut 2025-02-10
 pre_m: (3 959.16 DUK, 4 271.00 DUK, 3 959.16 DUK, 4 757.49 DUK, 3 959.16 DUK, 5 243.98 DUK, -3 273.92 DUK, 0.00 DUK, 3 273.92 DUK)
   unfulfilled: plan[2025-01]
@@ -4698,7 +4681,7 @@ pre_s: (3 959.16 DUK, 4 271.00 DUK, 3 959.16 DUK, 4 757.49 DUK, 3 959.16 DUK, 5 
   unfulfilled: plan[2025-02]
   held: amt_mv_l = 569.50 DUK (sv), read for 2025-06-29
   cut 2025-02-10
-,18:scenario-before-12,3:one,1:0,1194:post_m: (4 111.56 DUK, 711.48 DUK, 1 390.27 DUK, 1 350.66 DUK)
+,18:scenario-before-12,3:one,1:0,1150:post_m: (4 111.56 DUK, 711.48 DUK, 1 390.27 DUK, 1 350.66 DUK)
   unfulfilled: plan[2025-01]
   unfulfilled: plan[2025-02]
   unfulfilled: plan[2025-03]
@@ -4709,8 +4692,7 @@ post_s: (4 307.85 DUK, 1 998.96 DUK, 1 193.98 DUK, 1 350.66 DUK)
   unfulfilled: plan[2025-02]
   unfulfilled: plan[2025-03]
   held: amt_mv_0 = 1 012.19 DUK (sv), read for 2025-04-26
-  held: plan_amt = 701.28 DUK (sv), read for 2025-05-01
-  held: plan_amt = 701.28 DUK (sv), read for 2025-06-01
+  held: plan_amt = 701.28 DUK (sv), read for 2025-05-01, 2025-06-01
   cut 2025-04-02
 pre_m: (3 295.66 DUK, 602.89 DUK, 2 255.42 DUK, 347.60 DUK, 3 295.66 DUK, 602.89 DUK, 2 255.42 DUK, 347.60 DUK, 3 295.66 DUK, 602.89 DUK, 2 255.42 DUK, 347.60 DUK, -816.36 DUK, 0.00 DUK, 0.00 DUK, 816.36 DUK, 0.00 DUK, 0.00 DUK)
   unfulfilled: plan[2025-01]
@@ -4771,7 +4753,7 @@ pre_s: (591.40 DUK, 3 428.45 DUK, 572.54 DUK, 6 262.07 DUK, 572.54 DUK, 7 231.89
   unfulfilled: split[q2]
   unfulfilled: split[q3]
   cut 2025-06-09
-,18:scenario-before-14,3:one,1:0,1593:post_m: (-2 024.94 DUK, 12 681.71 DUK)
+,18:scenario-before-14,3:one,1:0,1549:post_m: (-2 024.94 DUK, 12 681.71 DUK)
   unfulfilled: mv_2
   unfulfilled: plan[2025-01]
   unfulfilled: plan[2025-02]
@@ -4794,8 +4776,7 @@ post_s: (-2 024.94 DUK, 10 629.83 DUK)
   unfulfilled: split[q3]
   unfulfilled: sweep
   held: amt_mv_0 = 1 232.90 DUK (sv), read for 2025-05-07
-  held: plan_amt = 214.54 DUK (sv), read for 2025-05-01
-  held: plan_amt = 214.54 DUK (sv), read for 2025-06-01
+  held: plan_amt = 214.54 DUK (sv), read for 2025-05-01, 2025-06-01
   cut 2025-04-13
 pre_m: (4 820.86 DUK, 3 549.59 DUK, 4 820.86 DUK, 3 549.59 DUK, 483.16 DUK, 8 932.17 DUK, -2 509.34 DUK, -4 337.70 DUK, 6 847.04 DUK)
   unfulfilled: mv_2
@@ -4980,15 +4961,14 @@ pre_s: (2 211.89 DUK, 2 940.55 DUK, 3 807.75 DUK, -789.07 DUK, 2 211.89 DUK, 2 9
   unfulfilled: split[q3]
   cut 2025-05-29
 warning: WARN-NEGATIVE acc_3 is below zero from 2025-01-11
-,18:scenario-before-18,3:one,1:0,1043:post_m: (4 043.60 DUK, 6 155.80 DUK, 4 222.34 DUK, -2 470.62 DUK)
+,18:scenario-before-18,3:one,1:0,999:post_m: (4 043.60 DUK, 6 155.80 DUK, 4 222.34 DUK, -2 470.62 DUK)
   unfulfilled: plan[2025-01]
   cut 2025-02-12
 post_s: (3 787.50 DUK, 4 615.22 DUK, 4 478.44 DUK, -2 470.62 DUK)
   world: s
   unfulfilled: plan[2025-01]
   held: amt_mv_2 = 1 168.35 DUK (sv), read for 2025-06-18
-  held: plan_amt = 211.01 DUK (sv), read for 2025-05-01
-  held: plan_amt = 211.01 DUK (sv), read for 2025-06-01
+  held: plan_amt = 211.01 DUK (sv), read for 2025-05-01, 2025-06-01
   cut 2025-02-12
 pre_m: (766.38 DUK, 3 240.92 DUK, 4 555.21 DUK, 682.01 DUK, 766.38 DUK, 3 240.92 DUK, 4 555.21 DUK, 682.01 DUK, 766.38 DUK, 4 222.22 DUK, 4 555.21 DUK, 682.01 DUK, 0.00 DUK, -2 625.34 DUK, 0.00 DUK, 3 925.20 DUK, 0.00 DUK, -1 299.86 DUK)
   unfulfilled: plan[2025-01]
@@ -5103,7 +5083,7 @@ pre_s: (1 966.93 DUK, 3 748.38 DUK, 1 966.93 DUK, 3 748.38 DUK, 1 922.71 DUK, 3 
   unfulfilled: plan[2025-01]
   unfulfilled: plan[2025-02]
   cut 2025-05-16
-,18:scenario-before-22,3:one,1:0,868:post_m: (6 994.50 DUK, 5 834.45 DUK)
+,18:scenario-before-22,3:one,1:0,824:post_m: (6 994.50 DUK, 5 834.45 DUK)
   unfulfilled: mv_0
   unfulfilled: plan[2025-01]
   unfulfilled: plan[2025-02]
@@ -5115,8 +5095,7 @@ post_s: (7 141.58 DUK, 4 565.99 DUK)
   unfulfilled: plan[2025-01]
   unfulfilled: plan[2025-02]
   unfulfilled: plan[2025-03]
-  held: plan_amt = 560.92 DUK (sv), read for 2025-05-01
-  held: plan_amt = 560.92 DUK (sv), read for 2025-06-01
+  held: plan_amt = 560.92 DUK (sv), read for 2025-05-01, 2025-06-01
   cut 2025-04-03
 pre_m: (5 146.90 DUK, 3 842.35 DUK, 5 146.90 DUK, 3 842.35 DUK, 5 146.90 DUK, 3 842.35 DUK, -1 048.30 DUK, 1 048.30 DUK, 0.00 DUK)
   unfulfilled: plan[2025-01]
@@ -5127,7 +5106,7 @@ pre_s: (5 146.90 DUK, 3 842.35 DUK, 5 146.90 DUK, 3 842.35 DUK, 5 146.90 DUK, 3 
   unfulfilled: plan[2025-01]
   unfulfilled: plan[2025-02]
   cut 2025-04-03
-,18:scenario-before-23,3:one,1:0,1425:post_m: (5 990.58 DUK, 969.46 DUK, 1 862.65 DUK, 1 974.33 DUK)
+,18:scenario-before-23,3:one,1:0,1339:post_m: (5 990.58 DUK, 969.46 DUK, 1 862.65 DUK, 1 974.33 DUK)
   unfulfilled: mv_2
   unfulfilled: mv_l
   unfulfilled: plan[2025-01]
@@ -5140,9 +5119,7 @@ post_s: (4 867.89 DUK, 571.92 DUK, 1 862.65 DUK, 3 167.94 DUK)
   unfulfilled: plan[2025-01]
   held: amt_mv_3 = 1 812.45 DUK (sv), read for 2025-06-26
   held: amt_mv_l = 1 879.76 DUK (sv), read for 2025-06-18
-  held: plan_amt = 56.59 DUK (sv), read for 2025-04-01
-  held: plan_amt = 56.59 DUK (sv), read for 2025-05-01
-  held: plan_amt = 56.59 DUK (sv), read for 2025-06-01
+  held: plan_amt = 56.59 DUK (sv), read for 2025-04-01, 2025-05-01, 2025-06-01
   cut 2025-02-11
 pre_m: (4 654.97 DUK, 2 384.37 DUK, 3 028.72 DUK, 544.37 DUK, 4 801.04 DUK, 2 384.37 DUK, 3 028.72 DUK, 1 974.33 DUK, 4 801.04 DUK, 2 384.37 DUK, 3 028.72 DUK, 1 974.33 DUK, -459.06 DUK, -1 547.79 DUK, 576.89 DUK, 0.00 DUK, 0.00 DUK, 1 429.96 DUK)
   unfulfilled: mv_2
@@ -5183,7 +5160,7 @@ p_flows_out_1: (-489.90 DUK, -489.90 DUK, -489.90 DUK, -489.90 DUK, 1 317.33 DUK
   unfulfilled: split[q3]
   cut 2025-02-11
 warning: WARN-NEGATIVE acc_1 is below zero from 2025-05-02
-,16:asks-no-money-00,6:beside,1:0,1736:k_asif: (65.15 DUK, -2 148.29 DUK)
+,16:asks-no-money-00,6:beside,1:0,1692:k_asif: (65.15 DUK, -2 148.29 DUK)
   pinned: fee_rate = 0.2
   cut 2025-02-11
 k_diff: diff in s against an00: 1 changed, 0 added, 0 removed, 0 unchanged
@@ -5194,8 +5171,7 @@ k_diff: diff in s against an00: 1 changed, 0 added, 0 removed, 0 unchanged
   unfulfilled: split[q1]
   unfulfilled: split[q2]
   unfulfilled: split[q3]
-  held: plan_amt = 681.13 DUK (sv), read for 2025-05-01
-  held: plan_amt = 681.13 DUK (sv), read for 2025-06-01
+  held: plan_amt = 681.13 DUK (sv), read for 2025-05-01, 2025-06-01
   cut 2025-02-11
 k_solve: 0.02
   cut 2025-02-11
@@ -5282,7 +5258,7 @@ p_flows_out_0: (-529.98 DUK, -396.62 DUK, -529.98 DUK, -512.29 DUK, 3 739.21 DUK
   unfulfilled: plan[2025-02]
   unfulfilled: plan[2025-03]
   cut 2025-04-04
-,16:asks-no-money-01,6:beside,1:0,1616:k_asif: (111.13 DUK, 542.12 DUK)
+,16:asks-no-money-01,6:beside,1:0,1572:k_asif: (111.13 DUK, 542.12 DUK)
   pinned: fee_rate = 0.03
   unfulfilled: mv_1
   unfulfilled: pay_fee
@@ -5295,8 +5271,7 @@ k_diff: diff in s against an01: 1 changed, 0 added, 0 removed, 0 unchanged
   unfulfilled: plan[2025-01]
   unfulfilled: plan[2025-02]
   unfulfilled: plan[2025-03]
-  held: plan_amt = 980.16 DUK (sv), read for 2025-05-01
-  held: plan_amt = 980.16 DUK (sv), read for 2025-06-01
+  held: plan_amt = 980.16 DUK (sv), read for 2025-05-01, 2025-06-01
   cut 2025-04-04
 k_solve: 0.02
   cut 2025-04-04
@@ -5388,7 +5363,7 @@ p_flows_out_0: (-393.54 DUK, -693.97 DUK, -693.97 DUK, -693.97 DUK, -693.97 DUK,
   unfulfilled: split[q2]
   unfulfilled: split[q3]
   cut 2025-02-22
-,16:asks-no-money-02,6:beside,1:0,1896:k_asif: (12.31 DUK, 3 016.77 DUK)
+,16:asks-no-money-02,6:beside,1:0,1852:k_asif: (12.31 DUK, 3 016.77 DUK)
   pinned: fee_rate = 0.2
   unfulfilled: mv_0
   unfulfilled: pay_fee
@@ -5399,8 +5374,7 @@ k_diff: diff in s against an02: 1 changed, 0 added, 0 removed, 0 unchanged
   world: s
   unfulfilled: plan[2025-01]
   unfulfilled: plan[2025-02]
-  held: plan_amt = 862.22 DUK (sv), read for 2025-05-01
-  held: plan_amt = 862.22 DUK (sv), read for 2025-06-01
+  held: plan_amt = 862.22 DUK (sv), read for 2025-05-01, 2025-06-01
   cut 2025-02-22
 k_solve: 0.02
   cut 2025-02-22
@@ -5498,7 +5472,7 @@ p_flows_out_0: (156.64 DUK, -184.10 DUK, -184.10 DUK, -184.10 DUK, -184.10 DUK, 
   unfulfilled: split[q2]
   unfulfilled: split[q3]
   cut 2025-02-26
-,16:asks-no-money-03,6:beside,1:0,1736:k_asif: (91.60 DUK, 3 100.12 DUK)
+,16:asks-no-money-03,6:beside,1:0,1692:k_asif: (91.60 DUK, 3 100.12 DUK)
   pinned: fee_rate = 0.5
   unfulfilled: plan[2025-01]
   unfulfilled: plan[2025-02]
@@ -5515,8 +5489,7 @@ k_diff: diff in s against an03: 1 changed, 0 added, 0 removed, 0 unchanged
   unfulfilled: split[q1]
   unfulfilled: split[q2]
   unfulfilled: split[q3]
-  held: plan_amt = 695.07 DUK (sv), read for 2025-05-01
-  held: plan_amt = 695.07 DUK (sv), read for 2025-06-01
+  held: plan_amt = 695.07 DUK (sv), read for 2025-05-01, 2025-06-01
   cut 2025-02-26
 k_solve: 0.01
   cut 2025-02-26
@@ -5781,7 +5754,7 @@ p_flows_out_1: (-315.53 DUK, -248.34 DUK, -315.53 DUK, -315.53 DUK, -315.53 DUK,
   unfulfilled: split[q2]
   unfulfilled: split[q3]
   cut 2025-03-07
-,16:asks-no-money-05,6:beside,1:0,2013:k_asif: (38.30 DUK, 3 977.57 DUK)
+,16:asks-no-money-05,6:beside,1:0,1925:k_asif: (38.30 DUK, 3 977.57 DUK)
   pinned: fee_rate = 0.03
   unfulfilled: pay_fee
   cut 2025-03-07
@@ -5791,9 +5764,7 @@ k_diff: diff in s against an05: 1 changed, 0 added, 0 removed, 0 unchanged
   world: s
   unfulfilled: plan[2025-01]
   unfulfilled: plan[2025-02]
-  held: plan_amt = 953.14 DUK (sv), read for 2025-04-01
-  held: plan_amt = 953.14 DUK (sv), read for 2025-05-01
-  held: plan_amt = 953.14 DUK (sv), read for 2025-06-01
+  held: plan_amt = 953.14 DUK (sv), read for 2025-04-01, 2025-05-01, 2025-06-01
   cut 2025-03-07
 k_solve: 0.02
   cut 2025-03-07
@@ -5889,7 +5860,7 @@ p_flows_out_0: (-73.32 DUK, 643.15 DUK, -826.50 DUK, -826.50 DUK, 4.51 DUK, -826
   unfulfilled: plan[2025-01]
   unfulfilled: plan[2025-02]
   cut 2025-02-20
-,16:asks-no-money-06,6:beside,1:0,1690:k_asif: (2.40 DUK, 4 075.40 DUK)
+,16:asks-no-money-06,6:beside,1:0,1602:k_asif: (2.40 DUK, 4 075.40 DUK)
   pinned: fee_rate = 0.5
   unfulfilled: mv_1
   unfulfilled: mv_2
@@ -5904,9 +5875,7 @@ k_diff: diff in s against an06: 1 changed, 0 added, 0 removed, 0 unchanged
   unfulfilled: mv_2
   unfulfilled: plan[2025-01]
   unfulfilled: plan[2025-02]
-  held: plan_amt = 160.93 DUK (sv), read for 2025-04-01
-  held: plan_amt = 160.93 DUK (sv), read for 2025-05-01
-  held: plan_amt = 160.93 DUK (sv), read for 2025-06-01
+  held: plan_amt = 160.93 DUK (sv), read for 2025-04-01, 2025-05-01, 2025-06-01
   cut 2025-02-20
 k_solve: 0.01
   cut 2025-02-20
@@ -6133,7 +6102,7 @@ p_flows_out_0: (-938.75 DUK, -897.10 DUK, -1 449.56 DUK, -938.75 DUK, -938.75 DU
   unfulfilled: plan[2025-02]
   cut 2025-03-12
 warning: WARN-NEGATIVE acc_1 is below zero from 2025-05-22
-,16:asks-no-money-08,6:beside,1:0,2212:k_asif: (34.71 DUK, -270.09 DUK)
+,16:asks-no-money-08,6:beside,1:0,2168:k_asif: (34.71 DUK, -270.09 DUK)
   pinned: fee_rate = 0.03
   unfulfilled: ksweep[2025-01]
   unfulfilled: ksweep[2025-03]
@@ -6151,8 +6120,7 @@ k_diff: diff in s against an08: 1 changed, 0 added, 0 removed, 0 unchanged
   unfulfilled: pay_fee
   unfulfilled: plan[2025-01]
   unfulfilled: plan[2025-02]
-  held: plan_amt = 321.88 DUK (sv), read for 2025-05-01
-  held: plan_amt = 321.88 DUK (sv), read for 2025-06-01
+  held: plan_amt = 321.88 DUK (sv), read for 2025-05-01, 2025-06-01
   cut 2025-03-12
 k_solve: 0.01
   cut 2025-03-12
@@ -6262,7 +6230,7 @@ p_flows_out_0: (-205.26 DUK, -201.67 DUK, -205.26 DUK, -205.26 DUK, -124.64 DUK,
   unfulfilled: split[q2]
   unfulfilled: split[q3]
   cut 2025-04-05
-,16:asks-no-money-09,6:beside,1:0,1883:k_asif: (40.31 DUK, 1 258.15 DUK)
+,16:asks-no-money-09,6:beside,1:0,1839:k_asif: (40.31 DUK, 1 258.15 DUK)
   pinned: fee_rate = 0.5
   cut 2025-04-05
 k_diff: diff in s against an09: 1 changed, 0 added, 0 removed, 0 unchanged
@@ -6275,8 +6243,7 @@ k_diff: diff in s against an09: 1 changed, 0 added, 0 removed, 0 unchanged
   unfulfilled: split[q1]
   unfulfilled: split[q2]
   unfulfilled: split[q3]
-  held: plan_amt = 225.73 DUK (sv), read for 2025-05-01
-  held: plan_amt = 225.73 DUK (sv), read for 2025-06-01
+  held: plan_amt = 225.73 DUK (sv), read for 2025-05-01, 2025-06-01
   cut 2025-04-05
 k_solve: 0.02
   cut 2025-04-05
@@ -6376,7 +6343,7 @@ p_flows_out_1: (-800.28 DUK, -882.43 DUK, -376.91 DUK, -882.43 DUK, -882.43 DUK,
   unfulfilled: split[q2]
   unfulfilled: split[q3]
   cut 2025-04-15
-,16:asks-no-money-10,6:beside,1:0,2167:k_asif: (58.68 DUK, 8 947.03 DUK)
+,16:asks-no-money-10,6:beside,1:0,2124:k_asif: (58.68 DUK, 8 947.03 DUK)
   pinned: fee_rate = 0.03
   unfulfilled: pay_fee
   unfulfilled: plan[2025-01]
@@ -6397,8 +6364,7 @@ k_diff: diff in s against an10: 1 changed, 0 added, 0 removed, 0 unchanged
   unfulfilled: split[q1]
   unfulfilled: split[q2]
   unfulfilled: split[q3]
-  held: plan_amt = 37.80 DUK (sv), read for 2025-05-01
-  held: plan_amt = 37.80 DUK (sv), read for 2025-06-01
+  held: plan_amt = 37.80 DUK (sv), read for 2025-05-01, 2025-06-01
   cut 2025-04-15
 k_solve: 0.02
   cut 2025-04-15
@@ -6508,7 +6474,7 @@ p_flows_out_0: (-645.22 DUK, 42.98 DUK, -667.41 DUK, -667.41 DUK, -667.41 DUK, -
   unfulfilled: split[q2]
   unfulfilled: split[q3]
   cut 2025-03-26
-,16:asks-no-money-11,6:beside,1:0,2290:k_asif: (36.93 DUK, 6 796.66 DUK)
+,16:asks-no-money-11,6:beside,1:0,2202:k_asif: (36.93 DUK, 6 796.66 DUK)
   pinned: fee_rate = 0.5
   unfulfilled: pay_fee
   unfulfilled: plan[2025-01]
@@ -6529,9 +6495,7 @@ k_diff: diff in s against an11: 1 changed, 0 added, 0 removed, 0 unchanged
   unfulfilled: split[q1]
   unfulfilled: split[q2]
   unfulfilled: split[q3]
-  held: plan_amt = 530.80 DUK (sv), read for 2025-04-01
-  held: plan_amt = 530.80 DUK (sv), read for 2025-05-01
-  held: plan_amt = 530.80 DUK (sv), read for 2025-06-01
+  held: plan_amt = 530.80 DUK (sv), read for 2025-04-01, 2025-05-01, 2025-06-01
   cut 2025-03-26
 k_solve: 0.01
   cut 2025-03-26
@@ -7125,7 +7089,7 @@ p_flows_out_1: (1 808.03 DUK, 851.95 DUK, 0.00 DUK, 0.00 DUK, 0.00 DUK, 0.00 DUK
   unfulfilled: split[q3]
   cut 2025-02-05
 warning: WARN-NEGATIVE acc_0 is below zero from 2025-02-03
-,16:asks-no-money-15,6:beside,1:0,2060:k_asif: (11.49 DUK, 4 304.12 DUK)
+,16:asks-no-money-15,6:beside,1:0,1972:k_asif: (11.49 DUK, 4 304.12 DUK)
   pinned: fee_rate = 0.5
   unfulfilled: pay_fee
   unfulfilled: plan[2025-01]
@@ -7136,9 +7100,7 @@ k_diff: diff in s against an15: 1 changed, 0 added, 0 removed, 0 unchanged
   world: s
   unfulfilled: pay_fee
   unfulfilled: plan[2025-01]
-  held: plan_amt = 997.34 DUK (sv), read for 2025-04-01
-  held: plan_amt = 997.34 DUK (sv), read for 2025-05-01
-  held: plan_amt = 997.34 DUK (sv), read for 2025-06-01
+  held: plan_amt = 997.34 DUK (sv), read for 2025-04-01, 2025-05-01, 2025-06-01
   cut 2025-02-05
 k_solve: 0.01
   cut 2025-02-05
@@ -7258,7 +7220,7 @@ p_flows_out_1: (-482.33 DUK, -363.85 DUK, -482.33 DUK, -104.91 DUK, -482.33 DUK,
   unfulfilled: split[q2]
   unfulfilled: split[q3]
   cut 2025-04-29
-,16:asks-no-money-16,6:beside,1:0,2335:k_asif: (59.24 DUK, 2 906.88 DUK)
+,16:asks-no-money-16,6:beside,1:0,2291:k_asif: (59.24 DUK, 2 906.88 DUK)
   pinned: fee_rate = 0.2
   unfulfilled: pay_fee
   cut 2025-04-29
@@ -7271,8 +7233,7 @@ k_diff: diff in s against an16: 1 changed, 0 added, 0 removed, 0 unchanged
   unfulfilled: plan[2025-02]
   unfulfilled: plan[2025-03]
   unfulfilled: plan[2025-04]
-  held: plan_amt = 699.52 DUK (sv), read for 2025-05-01
-  held: plan_amt = 699.52 DUK (sv), read for 2025-06-01
+  held: plan_amt = 699.52 DUK (sv), read for 2025-05-01, 2025-06-01
   cut 2025-04-29
 k_solve: 0.02
   cut 2025-04-29
@@ -7390,7 +7351,7 @@ p_flows_out_1: (-35.29 DUK, -1 326.42 DUK, -35.29 DUK, -35.29 DUK, -35.29 DUK, 7
   unfulfilled: plan[2025-01]
   unfulfilled: plan[2025-02]
   cut 2025-02-25
-,16:asks-no-money-17,6:beside,1:0,1660:k_asif: (104.98 DUK, 779.79 DUK)
+,16:asks-no-money-17,6:beside,1:0,1616:k_asif: (104.98 DUK, 779.79 DUK)
   pinned: fee_rate = 0.03
   unfulfilled: plan[2025-01]
   unfulfilled: plan[2025-02]
@@ -7401,8 +7362,7 @@ k_diff: diff in s against an17: 1 changed, 0 added, 0 removed, 0 unchanged
   world: s
   unfulfilled: plan[2025-01]
   unfulfilled: plan[2025-02]
-  held: plan_amt = 821.33 DUK (sv), read for 2025-05-01
-  held: plan_amt = 821.33 DUK (sv), read for 2025-06-01
+  held: plan_amt = 821.33 DUK (sv), read for 2025-05-01, 2025-06-01
   cut 2025-02-25
 k_solve: 0.02
   cut 2025-02-25
@@ -7605,7 +7565,7 @@ p_flows_out_1: (0.00 DUK, 916.04 DUK, 0.00 DUK, 0.00 DUK, 0.00 DUK, 0.00 DUK)
   unfulfilled: split[q2]
   unfulfilled: split[q3]
   cut 2025-02-15
-,16:asks-no-money-19,6:beside,1:0,2015:k_asif: (0.00 DUK, 76.00 DUK)
+,16:asks-no-money-19,6:beside,1:0,1927:k_asif: (0.00 DUK, 76.00 DUK)
   pinned: fee_rate = 0.5
   unfulfilled: ksweep[2025-01]
   cut 2025-02-15
@@ -7616,9 +7576,7 @@ k_diff: diff in s against an19: 1 changed, 0 added, 0 removed, 0 unchanged
   unfulfilled: ksweep[2025-01]
   unfulfilled: plan[2025-01]
   unfulfilled: plan[2025-02]
-  held: plan_amt = 403.01 DUK (sv), read for 2025-04-01
-  held: plan_amt = 403.01 DUK (sv), read for 2025-05-01
-  held: plan_amt = 403.01 DUK (sv), read for 2025-06-01
+  held: plan_amt = 403.01 DUK (sv), read for 2025-04-01, 2025-05-01, 2025-06-01
   cut 2025-02-15
 k_solve: 0.01
   cut 2025-02-15

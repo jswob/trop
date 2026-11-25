@@ -3788,7 +3788,7 @@ version mbank_2026_09
   bank[r20260926a] = (on: 2026-09-26, kind: spending, leg cash from konto to niewyjasnione amount 120.00 PLN, cat: other) "RESTAURACJA"
   bank[r20260929a] = (on: 2026-09-29, kind: spending, leg cash from konto to niewyjasnione amount 401.09 PLN, cat: groceries) "BIEDRONKA KRAKOW"
   stated[konto] = 41386.27 at 2026-09-30 end "saldo końcowe"
-,,1:0,5921:replay_september: residuals konto 2026-09
+,,1:0,5886:replay_september: residuals konto 2026-09
   2026-09 balance: model 9 289.04 PLN, observed 41 386.27 PLN, difference 32 097.23 PLN
     balance konto 2026-09-30 end (anchored): booked 9 289.04 PLN, stated 41 386.27 PLN, gap 32 097.23 PLN
   2026-09 move spend: model -4 599.90 PLN, observed 0.00 PLN, difference 4 599.90 PLN
@@ -3855,7 +3855,6 @@ version mbank_2026_09
     matched vat_pay[2026-08] on 2026-09-25: model -3 818.00 PLN, observed -3 818.00 PLN, difference 0.00 PLN, timing +0 days
   2026-09 move wage: model 5 101.67 PLN, observed 5 101.67 PLN, difference 0.00 PLN
     matched wage[wife_acme, 2026-08] on 2026-09-10: model 5 101.67 PLN, observed 5 101.67 PLN, difference 0.00 PLN, timing +0 days
-  unfulfilled: health_pay[2026-07]
   law date 2026-10-19, cut 2026-10-19
 warning: WARN-NEGATIVE konto is below zero from 2026-03-01
 warning: WARN-NEGATIVE konto is below zero from 2026-03-17
@@ -4961,7 +4960,7 @@ version mbank_2026_09
   bank[r20260926a] = (on: 2026-09-26, kind: spending, leg cash from konto to niewyjasnione amount 120.00 PLN, cat: other) "RESTAURACJA"
   bank[r20260929a] = (on: 2026-09-29, kind: spending, leg cash from konto to niewyjasnione amount 401.09 PLN, cat: groceries) "BIEDRONKA KRAKOW"
   stated[konto] = 41386.27 at 2026-09-30 end "saldo końcowe"
-,,1:0,5921:replay_september: residuals konto 2026-09
+,,1:0,5886:replay_september: residuals konto 2026-09
   2026-09 balance: model 9 289.04 PLN, observed 41 386.27 PLN, difference 32 097.23 PLN
     balance konto 2026-09-30 end (anchored): booked 9 289.04 PLN, stated 41 386.27 PLN, gap 32 097.23 PLN
   2026-09 move spend: model -4 599.90 PLN, observed 0.00 PLN, difference 4 599.90 PLN
@@ -5028,7 +5027,6 @@ version mbank_2026_09
     matched vat_pay[2026-08] on 2026-09-25: model -3 818.00 PLN, observed -3 818.00 PLN, difference 0.00 PLN, timing +0 days
   2026-09 move wage: model 5 101.67 PLN, observed 5 101.67 PLN, difference 0.00 PLN
     matched wage[wife_acme, 2026-08] on 2026-09-10: model 5 101.67 PLN, observed 5 101.67 PLN, difference 0.00 PLN, timing +0 days
-  unfulfilled: health_pay[2026-07]
   law date 2026-10-19, cut 2026-10-19
 warning: WARN-NEGATIVE konto is below zero from 2026-03-01
 warning: WARN-NEGATIVE konto is below zero from 2026-03-17
@@ -10720,39 +10718,7 @@ version bank_3
   known 2026-02-05
   covers k3
   bank[k3_gift] = (on: 2026-01-15, kind: transfers, leg cash from k3 to shop amount 9.00 PLN, fulfils: gift) "names the gift into save, which doesn't touch k3 or shop"
-,,1:0,1789:q_bal (d = 2026-01-04): (3 000.00 PLN, 100.00 PLN, 500.00 PLN, 500.00 PLN, 0 etf_unit)
-  law date 2026-03-15, cut 2026-03-15
-q_bal (d = 2026-01-10): (2 350.00 PLN, 150.00 PLN, 500.00 PLN, 500.00 PLN, 0 etf_unit)
-  law date 2026-03-15, cut 2026-03-15
-q_bal (d = 2026-01-31): (2 330.00 PLN, 150.00 PLN, refused: RUN-RECORD observation bank[k2_buy] fulfils buy2[2026-01] and lacks its leg units, refused: RUN-RECORD observation bank[k3_gift] fulfils gift, which doesn't exist or doesn't touch its places, 4 etf_unit)
-  open: buy2[2026-01]
-  open: gift
-  law date 2026-03-15, cut 2026-03-15
-q_bal (d = 2026-02-28): (1 730.00 PLN, 150.00 PLN, refused: RUN-RECORD observation bank[k2_buy] fulfils buy2[2026-01] and lacks its leg units, refused: RUN-RECORD observation bank[k3_gift] fulfils gift, which doesn't exist or doesn't touch its places, 4 etf_unit)
-  unfulfilled: buy2[2026-02]
-  open: buy2[2026-01]
-  open: buy[2026-02]
-  open: gift
-  law date 2026-03-15, cut 2026-03-15
-q_cov: (true, false, true)
-  law date 2026-03-15, cut 2026-03-15
-q_cov_before: false
-  law date 2026-03-01, cut 2026-03-01
-q_cov_on: true
-  law date 2026-03-02, cut 2026-03-02
-q_early (d = 2026-01-10): (2 350.00 PLN, 150.00 PLN)
-  law date 2026-02-10, cut 2026-02-10
-q_early (d = 2026-01-31): (2 330.00 PLN, 150.00 PLN)
-  open: gift
-  law date 2026-02-10, cut 2026-02-10
-q_rare_k6: 88.00 PLN
-  assumed: the rare payment runs this year (rare_ok)
-  law date 2026-03-15, cut 2026-03-15
-q_rare_konto: 1 730.00 PLN
-  open: buy[2026-02]
-  law date 2026-03-15, cut 2026-03-15
-warning: WARN-LEGS the two observations of rent[2026-01] disagree: bank[k_rent] (600.00 PLN) and bank[x_rent] (610.00 PLN)
-warning: WARN-LEGS the two observations of rent[2026-01] disagree: bank[k_rent] (600.00 PLN) and bank[x_rent] (620.00 PLN)
+,,1:1,113:refused: LOAD-LEG observation bank[k2_buy] fulfils buy2[2026-01] and lacks its leg units (g10/observe.tally:182)
 ,10:g10/ledger,3:g10,20:run g10/ledger.tally,7794:16:g10/ledger.tally,7768:model g10_ledger
   tally 2
   on 2026-03-15
@@ -11012,7 +10978,7 @@ version bank_5
   governs 2026-01
   known 2026-02-05
   covers k5
-,,1:0,6355:q_bal (d = 2026-01-09): (2 430.00 PLN, 970.00 PLN, 0.00 PLN)
+,,1:0,6756:q_bal (d = 2026-01-09): (2 430.00 PLN, 970.00 PLN, 0.00 PLN)
   pad: konto 2026-01-09 end, pads:bank_k:konto@2026-01-09 end of 30.00 PLN
   open: tip[t01]
   open: tip[t02]
@@ -11133,7 +11099,14 @@ q_res_buf: residuals buffer 2026-01
   2026-01 balance: model 965.00 PLN, observed 990.00 PLN, difference 25.00 PLN
     balance buffer 2026-01-28 end (padded): booked 965.00 PLN, stated 990.00 PLN, gap 25.00 PLN
   law date 2026-03-15, cut 2026-03-15
-q_res_feb: refused: RUN-RECORD observation bank[k_flag2] fulfils flagged2[2026-01], which doesn't exist or doesn't touch its places
+q_res_feb: residuals konto 2026-02
+  2026-02 move rent: model -600.00 PLN, observed 0.00 PLN, difference 600.00 PLN
+    expected but missing rent[2026-02] on 2026-02-05: model -600.00 PLN
+  2026-02 move sweep: model -10.00 PLN, observed 0.00 PLN, difference 10.00 PLN
+    expected but missing sweep[2026-02] on 2026-02-25: model -10.00 PLN
+  2026-02 move flagged2: model -8.00 PLN, observed 0.00 PLN, difference 8.00 PLN
+    expected but missing flagged2[2026-02] on 2026-02-27: model -8.00 PLN
+  law date 2026-03-15, cut 2026-03-15
 q_res_save: residuals save 2026-01
   2026-01 balance: model 0.00 PLN, observed 15.00 PLN, difference 15.00 PLN
     balance save 2026-01-28 end (anchored): booked 0.00 PLN, stated 15.00 PLN, gap 15.00 PLN

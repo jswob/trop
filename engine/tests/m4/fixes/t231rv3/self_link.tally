@@ -1,0 +1,42 @@
+model cy
+  tally 2
+  on 2026-04-20
+  start 2026-01-01
+  end 2026-03-31
+
+source s "probe"
+unit PLN: currency minor 0.01
+index month = month 2026-01..2026-03
+place pot: accounts PLN lives 2026-01-01..
+place shop: outside lives 1900-01-01..
+input bank: observed
+input amt: money PLN
+input zero: int
+input d5: int
+input d6: int
+
+move a[m in month]: transfers
+  on day_of(m, d5)
+  when count(o in bank over m where o.fulfils == a[m]) == zero
+  leg cash from pot to shop amount amt
+
+ask oa: observed(a[2026-02]).cash.amount
+ask fa: flows(a, 2026-02)
+ask bp: bal(pot, 2026-03-31)
+ask da: a[2026-02].day
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  opening[pot] = 1 000.00 PLN at 2026-01-01 start "s"
+  amt = 10.00 PLN "s"
+  zero = 0 "s"
+  d5 = 5 "s"
+  d6 = 6 "s"
+
+version feb
+  cite s
+  governs 2026-02
+  known 2026-03-01
+  bank[r1] = (on: 2026-02-05, kind: transfers, leg cash from pot to shop amount 10.00 PLN, fulfils: a[2026-02]) "a"
