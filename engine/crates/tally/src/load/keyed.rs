@@ -13,6 +13,7 @@
 //! movement's field its kind lacks is read through the kind test that narrows its name, else
 //! refused; every recursion is counted (R-16).
 
+use super::across::bare;
 use super::check::{AxisRead, Checker, Figure, Narrowed, Scope, Var, VarDom, invariant};
 use super::keys::{RangeKey, resolve_key};
 use super::random::DrawKey;
@@ -130,6 +131,9 @@ impl Checker {
                 ));
             };
             let lit = self.bind_key(m, scope, kn, bind, depth)?;
+            if matches!(bind.domain, Domain::Kind(_)) {
+                self.kind_key(scope, kn, Node::new(node_kind, id));
+            }
             let mut value = "$?".to_owned();
             if let Expr::Name(name) = kn
                 && scope.is_var(name)
@@ -165,6 +169,24 @@ impl Checker {
         }
         self.note_read(scope, &target);
         Ok(ty)
+    }
+
+    /// Key `key` of item `target`, keyed by a kind: what `target` reads of its key reaches the
+    /// graph through this reader, so a key `o.fulfils` is noted for step 7's mark, and the
+    /// reader's own key variable passes on what `target` reads of it (E §3.1 steps 5 and 7;
+    /// tally 2.3.1 rulings 22 (6), part 1's review B1).
+    fn kind_key(&mut self, scope: &Scope, key: &Expr, target: Node) {
+        let by_item = if names_fulfils(key) {
+            &mut self.graph.fulfils_keyed
+        } else if matches!(bare(key), Expr::Name(var) if scope.keyvars.contains(var)) {
+            &mut self.graph.key_passes
+        } else {
+            return;
+        };
+        by_item
+            .entry(scope.item.clone())
+            .or_insert_with(BTreeSet::new)
+            .insert(target);
     }
 
     /// Whether a read's one key is the tuple `argmin`, `argmax`, `first` or `last` returns over
@@ -558,6 +580,11 @@ impl Checker {
         let ty = match first {
             Postfix::Keys(keys) => self.index(m, scope, base, keys, depth)?,
             Postfix::Field(field) => {
+                if names_fulfils(base) {
+                    // a field read through a bracketed `(o.fulfils)` is one through `.fulfils`
+                    // (L §5.19 Links; tally 2.3.1 rulings 22 (6), part 1's review B1)
+                    self.graph.fulfils_fields.insert(scope.item.clone());
+                }
                 let t = self.expr(m, scope, base, None, depth)?;
                 self.field(m, scope, Some(base), &t, field)?
             }
@@ -683,6 +710,16 @@ impl Checker {
         let (ty, used) = Self::field_of(m, scope, base, t, field)?;
         if let Some(test) = used {
             self.narrow_used.insert(test);
+        }
+        if let Some(Expr::Name(var)) = base.map(bare)
+            && scope.keyvars.contains(var)
+            && scope
+                .vars
+                .get(var)
+                .is_some_and(|v| matches!(v.dom, VarDom::Kind(_)))
+        {
+            // a field of a key over a kind: whoever names the key reads it (E §3.1 step 5)
+            self.graph.key_fields.insert(scope.item.clone());
         }
         if let Ty::Key(kind) = t
             && self.reads_guarded_leg(m, kind, field)?
@@ -1021,4 +1058,12 @@ fn event_field(m: &Reality, field: &str) -> Result<Option<Ty>, Stop> {
         }
     }
     Ok(None)
+}
+
+/// Whether `e`, its brackets off, is a row's link `o.fulfils` (L §5.19 Links).
+fn names_fulfils(e: &Expr) -> bool {
+    let Expr::Post(_, fixes) = bare(e) else {
+        return false;
+    };
+    matches!(fixes.last(), Some(Postfix::Field(field)) if field == "fulfils")
 }

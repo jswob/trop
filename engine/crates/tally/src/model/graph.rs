@@ -318,6 +318,15 @@ pub struct Graph {
     /// The items that read a field through `.fulfils`, `o.fulfils.day`: a field read of the
     /// instance the row names (L §5.19 Links; tally 2.3.1 rulings 22 (6)).
     pub fulfils_fields: BTreeSet<Node>,
+    /// The items keyed by a kind that each item reads at a key `.fulfils` gives,
+    /// `amt_of[o.fulfils]` (E §3.1 step 5; tally 2.3.1 part 1's review B1).
+    pub fulfils_keyed: BTreeMap<Node, BTreeSet<Node>>,
+    /// The items keyed by a kind that read a field of their key, `t.cash.amount` (E §3.1 step
+    /// 5: what such an item reads of its key reaches through whoever names the key).
+    pub key_fields: BTreeSet<Node>,
+    /// The items keyed by a kind that each item reads at its own key variable, `amt[t]`
+    /// (E §3.1 step 5).
+    pub key_passes: BTreeMap<Node, BTreeSet<Node>>,
 }
 
 impl Graph {

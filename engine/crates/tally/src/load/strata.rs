@@ -808,6 +808,7 @@ fn reached_link(m: &Reality, graph: &Graph, id: &str) -> Option<String> {
 /// `bank[r2]`, where it reads the input no other way, else every row (`None`) (E §3.1 step
 /// 7; tally 2.3.1 rulings 19 D: the mark is row-precise; rulings 22 (6): for that read only).
 fn rows_read(graph: &Graph, id: &str) -> BTreeMap<String, Option<BTreeSet<String>>> {
+    let readers = fulfils_readers(graph);
     let mut rows: BTreeMap<String, Option<BTreeSet<String>>> = BTreeMap::new();
     let mut seen = BTreeSet::new();
     let mut stack = vec![
@@ -825,7 +826,7 @@ fn rows_read(graph: &Graph, id: &str) -> BTreeMap<String, Option<BTreeSet<String
                 }
                 continue;
             }
-            if !graph.fulfils_fields.contains(&next) {
+            if !readers.contains(&next) {
                 continue;
             }
             let only_by_id = rels.iter().all(|rel| *rel == Rel::Any);
@@ -845,6 +846,33 @@ fn rows_read(graph: &Graph, id: &str) -> BTreeMap<String, Option<BTreeSet<String
         }
     }
     rows
+}
+
+/// The items that read a field through `.fulfils`: written so, or reading at a key `.fulfils`
+/// gives an item keyed by a kind that reads a field of its key, itself or through the items it
+/// passes its key to (E §3.1 steps 5 and 7; tally 2.3.1 rulings 22 (6), part 1's review B1).
+fn fulfils_readers(graph: &Graph) -> BTreeSet<Node> {
+    let mut fields = graph.key_fields.clone();
+    loop {
+        let more: Vec<Node> = graph
+            .key_passes
+            .iter()
+            .filter(|(item, to)| !fields.contains(*item) && to.iter().any(|t| fields.contains(t)))
+            .map(|(item, _)| item.clone())
+            .collect();
+        if more.is_empty() {
+            break;
+        }
+        fields.extend(more);
+    }
+    let mut readers = graph.fulfils_fields.clone();
+    let keyed = graph.fulfils_keyed.iter();
+    readers.extend(
+        keyed
+            .filter(|(_, to)| to.iter().any(|t| fields.contains(t)))
+            .map(|(item, _)| item.clone()),
+    );
+    readers
 }
 
 /// The decisions whose existence, their keys' `where`s and their `when`, reads a running

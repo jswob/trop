@@ -1548,4 +1548,56 @@ version feb
         );
         assert_eq!(named, "q: 400.00 PLN", "{named}");
     }
+
+    #[test]
+    fn step_7s_mark_finds_a_field_read_through_fulfils_however_spelled() {
+        // E §3.1 steps 5 and 7 (tally 2.3.1 rulings 22 (6); part 1's review B1): a bracketed
+        // `(o.fulfils)` and a def keyed by a kind read at `o.fulfils` read a field of the
+        // instance, the def itself or through the def it passes its key to; a keyed def that
+        // reads no field of its key reads none
+        let dated = DEC_LINK
+            .replace("LIM", "600.00 PLN")
+            .replace(
+                "when bal(konto) < lim",
+                "when bal(konto, start_of(m)) < lim",
+            )
+            .replace("input d5: int", "input d5: int\n\ninput fm: month")
+            .replace("  d5 = 5 \"s\"", "  d5 = 5 \"s\"\n  fm = 2026-02 \"s\"");
+        let first = |defs: &str, read: &str| {
+            let plan = format!(
+                "{defs}def lo[m in month]: money PLN at start_of(m)\n  rule guessed = 0.00 PLN\n  \
+                 rule seen beats guessed = {read} when covered(konto, m)\n\nmove pay[m in \
+                 month]: transfers\n  on day_of(m, d5)\n  leg cash from konto to shop amount \
+                 lo[fm]\n\nask q: amt\n\nask loose:"
+            );
+            let given = vec![Given {
+                path: "dec_s7s.tally".to_owned(),
+                bytes: Some(dated.replace("ask loose:", &plan).into_bytes()),
+            }];
+            let asks = Asks::Named(vec!["q".to_owned()]);
+            let answer = run(Files::new(given), &Request::new(asks)).expect("an answer");
+            answer.lines().first().cloned().expect("a line")
+        };
+        let refused = "refused: LOAD-READS pay reaches a running read or projection of topup \
+                       without reads topup (dec_s7s.tally:";
+        let keyed = "sum(amt_of[o.fulfils] for o in bank over m where o.fulfils != none)";
+        let field = "def amt_of[t in transfers]: money PLN\n  rule a = t.cash.amount\n\n";
+        let passed = "def amt_of[t in transfers]: money PLN\n  rule a = inner[t]\n\ndef \
+                      inner[t in transfers]: money PLN\n  rule a = (t).cash.amount\n\n";
+        let no_field = "def amt_of[t in transfers]: money PLN\n  rule a = amt\n\n";
+        let paren = first(
+            "",
+            "sum((o.fulfils).cash.amount for o in bank over m where o.fulfils != none)",
+        );
+        assert!(paren.starts_with(refused), "bracketed: {paren}");
+        let read = first(field, keyed);
+        assert!(read.starts_with(refused), "keyed: {read}");
+        let through = first(passed, keyed);
+        assert!(through.starts_with(refused), "passed on: {through}");
+        let none = first(no_field, keyed);
+        assert_eq!(
+            none, "q: 400.00 PLN",
+            "a keyed def reading no field: {none}"
+        );
+    }
 }
