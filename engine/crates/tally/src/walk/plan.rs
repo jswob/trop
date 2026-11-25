@@ -358,11 +358,14 @@ impl Engine {
         if scenario_early(m, mv, inst) {
             return Ok(Status::LeftOut);
         }
-        if inst.err.is_some() {
-            return Ok(Status::Refused);
-        }
+        // a row stands in for the instance it names by the name alone, never its existence: a
+        // refused plan instance is modelled, and a field read of it keeps its refusal (L §5.19
+        // l.1713, §8.4 l.2355; tally 2.3.1 rulings 22 (1); part 1's review B2)
         if applied && !mv.decision {
             return Ok(Status::Modelled);
+        }
+        if inst.err.is_some() {
+            return Ok(Status::Refused);
         }
         let Some(d) = day else {
             return Ok(Status::Hole);
@@ -1812,6 +1815,41 @@ version jan
   covers pot
   bank[a1] = (on: 2026-01-05, kind: transfers, leg cash from pot to landlord amount 100.00 PLN, fulfils: rent[2026-01]) "names jan"
 "#;
+
+    #[test]
+    fn a_row_stands_in_for_an_instance_whose_existence_is_refused() {
+        // L §5.19 l.1713, §8.4 l.2355 (tally 2.3.1 rulings 22 (1); part 1's review B2):
+        // January's `when` divides by zero; its row stands in by the name, so the balance and
+        // the flows read the row, and only a field read and `== none` keep the refusal
+        let text = FIRST
+            .replace("OK", "true \"ok jan\"")
+            .replace("  when ok[m]", "  when ok[m] and d5 / dz[m] > 0")
+            .replace(
+                "input d5: int",
+                "input d5: int\n\ninput dz[m in month]: int",
+            )
+            .replace(
+                "  d5 = 5 \"s\"",
+                "  d5 = 5 \"s\"\n  dz[2026-01] = 0 \"s\"\n  dz[2026-02] = 1 \"s\"\n  \
+                 dz[2026-03] = 1 \"s\"\n  dz[2026-04] = 1 \"s\"\n  dz[2026-05] = 1 \"s\"\n  \
+                 dz[2026-06] = 1 \"s\"",
+            )
+            .replace(
+                "ask c:",
+                "ask dy: rent[2026-01].day\n\nask e: rent[2026-01] == none\n\nask c:",
+            );
+        let files = [("first.tally", text.as_str())];
+        let first = |ask: &str| answer(&files, ask).first().cloned().expect("a line");
+        assert_eq!(first("c"), "c: 8 700.00 PLN", "the balance reads the row");
+        assert_eq!(first("a"), "a: 100.00 PLN", "the flows read the row");
+        for ask in ["dy", "e"] {
+            assert_eq!(
+                first(ask),
+                format!("{ask}: refused: RUN-DIV division by zero"),
+                "{ask} keeps the refusal"
+            );
+        }
+    }
 
     #[test]
     fn a_binding_over_the_kind_carries_no_link_read_of_an_instance_outside_its_span() {

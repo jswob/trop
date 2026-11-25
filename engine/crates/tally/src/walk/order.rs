@@ -761,8 +761,11 @@ impl Engine {
         // their own fields, whether it is refused here or not: the instance is never booked
         // (L §5.19, E §4.2 steps 1 and 3; tally 2.3.1 rulings 22 (1), (2), P1-C1)
         if run.inst.err.is_some() && !run.inst.obs.is_empty() {
-            run.inst.status = Status::Refused;
+            // modelled, as a plan's refused instance a row names: every read over movements
+            // takes the rows, a field read of the run its refusal (part 1's review B2)
+            run.inst.status = Status::Modelled;
             let inst = run.inst.clone();
+            walk.modelled.push(inst.clone());
             walk.record(run);
             self.book_own_obs(m, id, &inst, key)?;
             return Ok(ix);
