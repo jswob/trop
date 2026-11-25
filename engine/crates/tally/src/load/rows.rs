@@ -21,7 +21,7 @@ use super::worlds::no_version;
 use crate::base::Load;
 use crate::model::{
     BalanceRow, BandRow, BandTable, Domain, GapRole, IndexForm, KeyVal, NameKind, Pat,
-    PlaceReadings, Row, RuleVer, Value, pattern_text,
+    PlaceReadings, Row, RuleVer, Value,
 };
 use crate::syntax::{
     BandRow as WrittenBand, Gap, Instant, Item, ItemForm, Row as WrittenRow, RowKey, Rule, Section,
@@ -387,6 +387,10 @@ impl Loader {
             target: id.clone(),
             pattern,
             stated,
+            written: match &row.keys {
+                Some(keys) => keys.len(),
+                None => 0,
+            },
             value: row.value.clone(),
             assumed: row.assumed.clone(),
             version: vid.to_owned(),
@@ -689,14 +693,14 @@ fn set_sids(id: &str, rows: &mut [Row]) {
     let mut count: BTreeMap<(String, String), usize> = BTreeMap::new();
     for row in rows.iter() {
         let slot = count
-            .entry((row.version.clone(), pattern_text(&row.pattern)))
+            .entry((row.version.clone(), row.keys_text()))
             .or_insert(0);
         if let Some(more) = slot.checked_add(1) {
             *slot = more;
         }
     }
     for row in rows.iter_mut() {
-        let keys = pattern_text(&row.pattern);
+        let keys = row.keys_text();
         let mut sid = format!("{}:{id}{keys}", row.version);
         let shared = count
             .get(&(row.version.clone(), keys))

@@ -22,7 +22,6 @@ use super::steps::refuse;
 use crate::base::Load;
 use crate::model::{
     BindInfo, Domain, KeyVal, Observation, Pat, Reality, Row, Span, Value, VersionInfo, World,
-    pattern_text,
 };
 use crate::num::Num;
 use crate::syntax::Stop;
@@ -169,10 +168,7 @@ fn same_keys(m: &Reality, id: &str, rows: &[Row], group: &[usize]) -> Result<(),
             }
         }
         if !replaces {
-            let message = format!(
-                "replace {id}{}: no earlier row to replace",
-                pattern_text(&r.pattern)
-            );
+            let message = format!("replace {id}{}: no earlier row to replace", r.keys_text());
             return Err(at_row(m, r, Load::Replace, message)?);
         }
     }
@@ -266,8 +262,8 @@ fn ties_across(
                 "rows {} and {} of {id} overlap at {} and {} and tie",
                 row_loc(m, x)?,
                 row_loc(m, y)?,
-                pattern_text(&x.pattern),
-                pattern_text(&y.pattern)
+                x.keys_text(),
+                y.keys_text()
             );
             return Err(at_row(m, y, Load::Overlap, message)?);
         }
@@ -800,7 +796,7 @@ fn outside(
 
 /// A row's pattern as a message prints it, or `no keys`.
 fn keys_or_none(row: &Row) -> String {
-    let text = pattern_text(&row.pattern);
+    let text = row.keys_text();
     if text.is_empty() {
         "no keys".to_owned()
     } else {

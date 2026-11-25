@@ -20,7 +20,7 @@ use crate::base::{Load, Run};
 use crate::hole::{Hole, spread};
 use crate::model::{
     Class, DefInfo, KeyVal, Node, NodeKind, Number, Reality, RuleVer, Shown, Ty, Unit, Value,
-    Window, pattern_text,
+    Window,
 };
 use crate::read::{Clocks, Test, candidates, choose, held, origin, rule_in_force, worded};
 use crate::syntax::{LawDate, RuleValue, Stop};
@@ -704,7 +704,7 @@ impl Engine {
             }
         };
         let shown = shown(m, &value)?;
-        let keys_text = pattern_text(&row.pattern);
+        let keys_text = row.keys_text();
         self.note(
             "given",
             format!("{}{keys_text} = {shown} ({})", def.id, row.version),

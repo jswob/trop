@@ -9,7 +9,7 @@
 //! place, a day's start or end, and its place's one unit.
 
 use super::graph::Target;
-use super::key::{KeyVal, Pat, Span};
+use super::key::{KeyVal, Pat, Span, written_pattern_text};
 use super::ty::Ty;
 use crate::num::Num;
 use crate::syntax::{
@@ -64,6 +64,8 @@ pub struct Row {
     pub pattern: Vec<Pat>,
     /// How many positions it states.
     pub stated: usize,
+    /// How many keys the text writes, a `*` among them (refcore's `nwritten`).
+    pub written: usize,
     /// Its value, as written.
     pub value: Value,
     /// `assumed "…"`.
@@ -89,6 +91,16 @@ pub struct Row {
     /// `of q`: a stated part of a balance reading, kept beside the readings and never a total
     /// (refcore's `row.of`). L §5.19.
     pub of: Option<OfRow>,
+}
+
+impl Row {
+    /// Its keys as they print: as the text writes them, a written `*` kept, the positions it
+    /// leaves out dropped (`given h[*] = …`; refcore's `Row.keys_text`). L §2.4 Values, §2.5
+    /// (tally 2.3.1 R4, Q1.14), §8.2.
+    #[must_use]
+    pub fn keys_text(&self) -> String {
+        written_pattern_text(&self.pattern, self.written)
+    }
 }
 
 /// A place's balance readings, typed at load: the unit and type a reading of it states, and
