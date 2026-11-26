@@ -22,7 +22,9 @@ ids file's folder, n the session's place among that job's lines) in WORKTREE:
       --command "<this tool> --exec <ids file's folder>/out/<id>.<n>.spec.json"
 
 and `--exec` sets the same environment and replaces itself with an interactive
-`nice -n 10 claude --model M --effort E --add-dir … -n "<title>" --session-id <id> "<prompt>"`.
+`nice -n 10 claude --model M --effort E --permission-mode auto --add-dir … -n "<title>"
+--session-id <id> "<prompt>"` (auto mode: the user, 2026-11-26, "always start sessions in
+AUTO mode!"; a tab in the default mode sat on an approval for seven hours).
 The study measured 14.4 k more tokens a call for an interactive session (2026-11-25), so
 role sessions stay headless unless a brief asks for the Orca form; when `orca status`
 fails, `--orca` falls back to the headless form by itself and says so (`TALLY_ORCA` names
@@ -107,7 +109,8 @@ DEFAULT_JOB = {"build": "builder", "tests": "tests", "rules": "rules-step", "spe
 COORDINATORS = ("coordinator", "round-lead")
 MIN_FREE_GB = 30
 ENV = {"CARGO_BUILD_JOBS": "6", "NEXTEST_TEST_THREADS": "6"}
-LEFT_TO_CHECK = ("TALLY_ROLE", "CARGO_INCREMENTAL")  # the role is set here; check picks incremental
+AUTO = ("--permission-mode", "auto")  # the Orca form's interactive session; `-p` doesn't prompt
+LEFT_TO_CHECK =("TALLY_ROLE", "CARGO_INCREMENTAL")  # the role is set here; check picks incremental
 TURNS = "TALLY_TURN_LOG"
 SPEC_ENV = (*ENV, "TALLY_ROLE", TURNS)
 HEAVY = ("cargo build", "cargo test", "cargo nextest", "cargo clippy", "cargo fuzz", "cargo mutants", "cargo-nextest",
@@ -297,7 +300,7 @@ def launch(argv, env_in):
     title = title_of(ids, lines, job, sid) if orca else None
     resume = ["--resume", sid] if opts["--resume"] else ["--session-id", sid]
     if orca:
-        claude = ["claude", "--model", model, "--effort", effort, "--add-dir", active, "-n", title, *resume, prompt]
+        claude = ["claude", "--model", model, "--effort", effort, *AUTO, "--add-dir", active, "-n", title, *resume, prompt]
     else:
         claude = ["claude", "-p", prompt, "--model", model, "--effort", effort, "--output-format", "json", *budget,
                   "--add-dir", active, *resume]
@@ -310,7 +313,7 @@ def launch(argv, env_in):
     if orca:
         print(f"launch: orca terminal create --worktree path:{worktree} --title {shlex.quote(title)} --command "
               f"\"{os.path.join(TOOLS, 'launch')} --exec <spec>\"; the spec: {shown} nice -n 10 claude --model {model} "
-              f"--effort {effort} --add-dir {active} -n {shlex.quote(title)} {' '.join(resume)} "
+              f"--effort {effort} {' '.join(AUTO)} --add-dir {active} -n {shlex.quote(title)} {' '.join(resume)} "
               f"<{prompt_file}, {len(prompt)} chars>")
     else:
         print(f"launch: {shown} nice -n 10 claude -p <{prompt_file}, {len(prompt)} chars> --model {model} "
