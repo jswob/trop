@@ -6,7 +6,7 @@
      Fable job (a critic, the gate's review, a study) gives the goal, the bar,
      the inputs and the output's form, and leaves the method to the session. -->
 
-**You are the <run> coordinator,** a lead-role session: the job `coordinator`, Opus 5.5 at effort high (a spec round's is `round-lead`, also Opus 5.5 at high). The master session wrote this brief on <date>. Invoke the skill `engine-coordinator` first; it holds the procedure. Your run folder is `tmp/<run>/`.
+**You are the <run> coordinator,** a lead-role session: the job `coordinator`, Opus 5.5 at effort high (a spec round's is `round-lead`, also Opus 5.5 at high). The master session wrote this brief on <date>. Invoke the skill `engine-coordinator` first; it holds the procedure. Your run folder is `tmp/<run>/`. The measure this run's designs are judged against is `engine/MANIFEST.md`.
 
 **How the user starts you,** in the main folder, on an up-to-date master:
 

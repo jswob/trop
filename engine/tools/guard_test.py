@@ -1223,7 +1223,7 @@ def launch_orca_checks(root, prompt, launch, expect, failures):
     expect("launch --orca --dry-run", r.returncode, 0, r.stderr)
     for says in (f"orca terminal create --worktree path:{os.path.realpath(root)}", "'run-orca · tests · 1'",
                  "--exec <spec>", "TALLY_ROLE=tests", "TALLY_TURN_LOG=", "nice -n 10 claude --model claude-opus-5-5",
-                 "--effort xhigh", "--session-id", "dry run: nothing started"):
+                 "--effort xhigh --permission-mode auto", "--session-id", "dry run: nothing started"):
         if says not in r.stdout:
             failures.append(f"launch --orca --dry-run: lacks {says!r}: {r.stdout.strip()[:400]}")
     if " -p " in r.stdout or os.path.exists(ids):
@@ -1260,7 +1260,7 @@ def launch_orca_checks(root, prompt, launch, expect, failures):
     exec_env = {"PATH": fakes + os.pathsep + os.environ.get("PATH", ""), "CARGO_INCREMENTAL": "0"}
     r = launch("--exec", spec, role="unset", extra=exec_env)
     expect("launch --exec of its spec", r.returncode, 0, r.stderr)
-    for says in ("argv: [-n] [10] [claude] [--model] [claude-opus-5-5]",
+    for says in ("argv: [-n] [10] [claude] [--model] [claude-opus-5-5]", "[--permission-mode] [auto]",
                  "[-n] [run-orca · tests · 1]", f"[--session-id] [{sid}] [You are T. Read the brief.",
                  "TALLY_ROLE=tests", f"TALLY_TURN_LOG={os.path.join(os.path.realpath(run), 'turns.log')}",
                  "CARGO_BUILD_JOBS=6", os.path.realpath(root)):

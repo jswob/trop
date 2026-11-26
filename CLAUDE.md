@@ -11,6 +11,7 @@ This repo is the Tally engine and nothing else: the language's spec, its referen
 
 ## Where to read on
 
+- `engine/MANIFEST.md`: what Tally must be able to do, the measure every brief, study and design is judged against; only the user changes it.
 - `engine/PLAYBOOK.md`: how engine sessions are briefed, staffed, launched, paced and handed over.
 - `engine/CLAUDE.md`: the build session's rules; `engine/RULEBOOK.md` and `engine/BUILDER.md` behind them.
 - `engine/README.md`: the spec, the reference interpreter and the engine's seams.

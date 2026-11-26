@@ -19,6 +19,7 @@
 
 ## Risks and follow-ups
 
+- **Frozen in this run:** <!-- each feature signal A froze (engine/PLAYBOOK.md D21), its issue and its held rows; or "none" -->
 - <!-- each with its issue and impact -->
 
 ## How it was checked
